@@ -1,6 +1,21 @@
 # Development-Time Prompt Injection
 
-RAD-0006 · 2026-08-14 · v5
+RAD-0006 · 2026-08-14 · v6
+
+**v6 (2026-08-22).** The literature this record flagged as unread has been found, and it
+narrows what this record may claim. Three papers — AgentTrap, SkillJect and SkillGuard-Robust
+— measure injection through third-party agent skills at greater scale and on more realistic
+corpora, and **three findings here are corroboration rather than discovery**: the
+tool-enabled agent completing the visible task while performing the unsafe side effect
+(AgentTrap's central finding, 141 tasks); workflow-aligned payloads succeeding where blatant
+ones are refused (SkillJect's premise); and data-framing helping substantially without being
+sufficient (SkillJect, 97.3% → 48.3%). Two were measured on the same model families tested
+here, one through the same Claude Code harness. What survives is narrower — the **system
+channel measured against the mitigation**, the **locally-served open-weight tier**, the
+**dependency-graph corpus** rather than authored skills, and **structure grounding**, which
+only a library corpus makes possible. Filed in full as the third correction in
+[RAD-0008](0008-the-field-as-it-stands.md) v2. Corroboration is not a loss: independent
+large-N agreement says the method here is sound.
 
 **v5 (2026-08-22).** Two open questions in this record are now measured. **`experiments/test4`**
 closes the language gap: one payload in each of the five native doc conventions, harvested

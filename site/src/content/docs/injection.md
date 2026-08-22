@@ -153,10 +153,27 @@ That is a stronger class of control than the positional discipline this page arg
 it does not depend on the model resisting anything, which is precisely where our measurement
 found the weakness. We have not tested it, and we are investigating adopting the model.
 
-**We are also not first.** There is published academic work measuring injection through
-third-party agent skills, including automated skill-based injection and runtime trust-failure
-measurement. This page reports what we measured on our own design and on the agents we could
-reach; it should be read alongside that literature, not as a discovery.
+**We are also not first, and the literature is ahead of us on most of this.** Three papers
+measure injection through third-party agent skills at greater scale and on more realistic
+corpora. **AgentTrap** ([arXiv:2605.13940](https://arxiv.org/abs/2605.13940)) benchmarks 141
+tasks across 16 security dimensions, using skills drawn from real ecosystems and run through
+Claude Code among other harnesses; its central finding — that models complete the visible task
+while treating the skill's unsafe side effect as part of the normal workflow — **is** our
+tool-enabled result, measured properly. **SkillJect**
+([arXiv:2602.14211](https://arxiv.org/abs/2602.14211)) automates poisoned-skill generation over
+100 real skills, measures an instruction-level prompt defence at 97.3% → 48.3%, and takes as
+its premise that workflow-aligned payloads succeed where blatant ones fail. **SkillGuard-Robust**
+([arXiv:2604.25109](https://arxiv.org/abs/2604.25109)) performs pre-load auditing at 97–99%
+accuracy.
+
+So several results on this page are **corroboration rather than discovery**, and two were
+measured on the same model families we tested. What we can still claim is narrower: the
+**system channel measured against the mitigation** (neither paper varies placement into the
+system prompt); the **locally-served open-weight tier** both evaluate around; a corpus of
+**library documentation nobody wrote for an agent**, most of it transitive, rather than
+deliberately-authored skills; and **structure grounding**, which only a library corpus makes
+possible because a library has a symbol graph and a skill does not. Independent agreement at
+larger N is not a loss — it says the method here is sound.
 
 ## What this changes in the design
 

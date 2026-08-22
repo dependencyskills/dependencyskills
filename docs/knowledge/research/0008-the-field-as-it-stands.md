@@ -1,6 +1,13 @@
 # The Field as It Stands, and What This Research Rejects
 
-RAD-0008 · 2026-08-16 · v1
+RAD-0008 · 2026-08-16 · v2
+
+**v2 (2026-08-22).** Adds the **academic literature on injection through agent-facing
+content**, which this record's v1 survey missed entirely and which RAD-0006 v4 flagged as
+outstanding. Three papers cover most of what RAD-0006 measured independently, at greater
+scale and on more realistic corpora, so a third correction is filed below: several RAD-0006
+findings are corroboration rather than discovery. Papers read 2026-08-22 (abstracts, plus
+targeted reads of two full texts — see the caveat on that section).
 
 **Measured against:** sources read 2026-08-16. `docs/knowledge/reference/landscape.md`
 was compiled 2026-08-02 and reviewed 2026-08-13; the field moved in between and
@@ -119,6 +126,33 @@ result is independent support for the claim that fewer candidates in front of
 the model improves selection, which the proposal currently supports only with a
 tool-selection figure from adjacent work.
 
+### Security — measured, at greater scale, by someone else
+
+Three papers measure injection through third-party agent skills. Between them they cover
+most of what RAD-0006 arrived at independently.
+
+**AgentTrap** ([arXiv:2605.13940](https://arxiv.org/abs/2605.13940), Zhuang et al., May 2026)
+is a dynamic benchmark of **141 tasks** — 91 malicious, 50 benign — across 16
+security-impact dimensions, judging complete agent trajectories in a sandbox. Its skills are
+drawn from real ecosystems (most-downloaded ClawHub skills, Anthropic's own skills
+repository, a curated Composio set) with payloads injected into benign seed workflows. It
+evaluates Claude Haiku, Claude Sonnet 4.6, GPT-5.4-mini, GPT-5.3 Codex, Qwen3-Coder-Next and
+others, run both directly and through **Claude Code**, Codex CLI and OpenClaw. Its central
+finding: *models often complete the visible user task while treating unsafe side effects
+introduced by the skill as part of the normal workflow.*
+
+**SkillJect** ([arXiv:2602.14211](https://arxiv.org/abs/2602.14211), Jia et al., Feb 2026)
+automates the generation of poisoned skills over **100 skills** taken from ClawHub. Its
+stated premise is that explicit malicious instructions are refused or ignored when they do
+not align with the host workflow, so an effective attack must be workflow-aligned. It
+measures an **instruction-level prompt defence at 97.3% → 48.3%** attack success, and
+benchmarks four existing skill scanners at **61.5%** average detection accuracy.
+
+**SkillGuard-Robust** ([arXiv:2604.25109](https://arxiv.org/abs/2604.25109), Lv et al., Apr
+2026) formulates pre-load auditing as a robust three-way classification over 254–404
+packages, reporting 97.30% exact match and 98.33% malicious-risk recall on a held-out
+aggregate, while noting that transfer to harsher external sources remains open.
+
 ### Query and serving — already operating, in adjacent form
 
 `maven-tools-mcp` is a live MCP server giving agents structured Maven Central
@@ -133,7 +167,7 @@ versions, security and upgrade advice rather than capability guidance, and it
 is JVM-only. But the architecture is not hypothetical, the ingestion problem is
 evidently tractable, and someone is already operating one.
 
-## Two claims this project must correct
+## Three claims this project must correct
 
 ### "Nobody has costed this" is false
 
@@ -151,6 +185,48 @@ away by overclaiming.
 
 The 55,315-skill corpus is also simply better data than 67 skills, and the
 description-length figures in RAD-0002 should be checked against it.
+
+### "Nobody has measured injection through agent-facing content" is false
+
+RAD-0006 was written because this objection had no answer anywhere in the repository, and
+v4 of that record already suspected the claim would not survive contact with the literature.
+It does not. Three of RAD-0006's findings are **corroboration rather than discovery**:
+
+| RAD-0006 finding | already established by |
+|---|---|
+| A tool-enabled agent performs an unsafe side effect while completing the visible task | AgentTrap's central finding, across 141 tasks |
+| Workflow-aligned payloads succeed where blatant ones are refused | SkillJect's stated premise |
+| Framing content as untrusted data helps substantially but is not sufficient | SkillJect, 97.3% → 48.3%, over 100 skills |
+
+Two of those were measured on the same model families this project tested, and AgentTrap ran
+them through **Claude Code** — the same harness ADR-0010 commits this project to. On scale,
+corpus realism and resourcing, this project is behind, and the record should say so plainly
+rather than let a reader infer priority.
+
+**What survives is narrower, and worth stating precisely.**
+
+- **Channel position measured against the mitigation.** SkillJect does not vary placement
+  into the system prompt; AgentTrap varies attack *surface* — which file or artifact carries
+  the payload — rather than position relative to a defence. RAD-0006's arm C result, that
+  data-framing holds at 0/12 while the identical text in the system channel reaches 11/12,
+  is addressed by neither.
+- **Locally-served open-weight models.** Both papers evaluate hosted API models. RAD-0006's
+  matrix runs quantised gpt-oss, qwen3-coder, gemma-4, nemotron and devstral on a developer's
+  own machine — the tier this project exists to serve, and the tier where data-framing failed
+  outright.
+- **The corpus, again.** All three study *authored skills*: packages written to instruct an
+  agent. This project studies *library documentation harvested from a resolved dependency
+  graph* — content nobody wrote for an agent, 70–90% of it transitive. It is the same
+  distinction that survives the cost correction above, and it is the contribution.
+- **Structure grounding.** test3's signal — checking prose against the declared surface of
+  the library that shipped it — is available only in this corpus, because a library has a
+  symbol graph and an authored skill does not. The scanners SkillJect benchmarks are
+  semantic; this one is structural, and it is the basis of the harvest-time filter proposed
+  in [RAD-0020](0020-information-flow-control.md).
+
+**Unverified.** These four survivals rest on abstracts plus targeted reads of two full
+papers. Confirm them against the full texts before any is published as a novelty claim —
+this record has now had to withdraw two claims of priority, and the pattern is the risk.
 
 ### "Maven has nothing" is false
 

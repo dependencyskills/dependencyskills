@@ -1,6 +1,11 @@
 # Information-Flow Control as the Trust Model
 
-RAD-0020 · 2026-08-22 · v1
+RAD-0020 · 2026-08-22 · v2
+
+**v2 (2026-08-22).** Corrects v1's central claim that the codex "can label but not enforce".
+It can enforce — at **harvest**, the one boundary it fully owns — by discarding content that
+fails structure grounding rather than indexing it. That question is split out as
+[RAD-0021](0021-admission-control-at-harvest.md).
 
 **Design; not yet measured.** This record opens the investigation into adopting
 information-flow control (IFC) as the codex's trust model, in place of — or beneath — the
@@ -83,6 +88,22 @@ That reframes adoption from "implement FIDES" to "**emit labels a FIDES-style en
 consume**", which is a far smaller and more tractable commitment — and is exactly the shape
 [ADR-0007](../adr/0007-conform-to-existing-conventions.md) counsels: conform to a convention
 we do not control rather than mint our own.
+
+### The one enforcement point the codex does own (added v2)
+
+The section above concluded that the adoptable half is labelling, because enforcement lives in
+an agent runtime the codex does not control. That is true of enforcement *at the sink*, and it
+is incomplete. There is a boundary the codex owns outright: **the moment content enters the
+index.** A harvest-time gate — *if the documentation does not match the code it ships with, do
+not index it* — is enforcement in the strict sense, needs no runtime cooperation, and protects
+consumers who run no flow-control layer at all.
+
+That is a separable question with its own trade-offs and its own experiment, so it is written
+up as **[RAD-0021](0021-admission-control-at-harvest.md)** rather than carried here. The two
+are complementary and neither subsumes the other: **a gate handles content that names
+something foreign; flow control handles persuasion that names nothing** — RAD-0006's P3
+payload passes any grounding check untouched, and is exactly what a policy refusing the sink
+would stop.
 
 ### The codex already has a label lattice in embryo
 
@@ -170,26 +191,39 @@ expressiveness.
 
 ## Recommendation
 
-**Investigate, with a bias toward adopting the model and not the implementation.**
+**Find out whether the model applies to a pipeline like this one.** Nothing is proposed for
+adoption here; the useful output of this record is four answers, in this order, because each
+one can end the investigation.
 
-1. **Read the paper (arXiv:2505.23643) and the developer guide**, and verify the mechanism
-   described above against the artifacts. Everything in this record is second-hand until then.
-2. **Design the entry's label fields** as a proposed change to RAD-0013, using the lattice
-   sketched above. Labels are computed from provenance the pipeline already has, so this is
-   metadata work, not new analysis.
-3. **Run the three-arm sink experiment** on the existing tool-action sandbox, scored on harm
-   prevented *and* task completed.
-4. **Do not take a dependency on `agent_framework` to do it.** A minimal labelling +
-   policy-check shim is enough to test the model, keeps the result framework-agnostic per
-   ADR-0010, and avoids binding the codex to one vendor's experimental API.
-5. **If it holds, this supersedes the positional recommendation** in RAD-0006 rather than
-   supplementing it — positional discipline becomes the fallback for runtimes that cannot
-   enforce, and an ADR should record the choice.
+1. **Is the mechanism what the second-hand sources say it is?** Read the paper
+   (arXiv:2505.23643) and the developer guide and check the description in this record against
+   the artifacts. Everything above is currently other people's summaries.
+2. **Can a label survive the pipeline at all?** An entry derived from a `-sources.jar` has
+   nowhere to carry one unless the entry format defines a field for it
+   ([RAD-0013](0013-the-codex-entry.md)). If it cannot, the codex cannot participate in
+   information-flow control in any form, and the rest of this record is moot.
+3. **Does enforcement actually prevent harm here?** The three-arm sink experiment on the
+   existing tool-action sandbox, scored on harm prevented *and* task still completed. The
+   interesting outcome is deliberately falsifiable: the flow-control arm may fail the
+   compliance test provided the write is refused.
+4. **What does it cost in expressiveness?** The vendor's counter-intuitive claim is that
+   guarded agents completed *more* tasks; the paper reportedly treats this as planner
+   expressiveness. Whether that survives contact with a retrieval workload is unknown.
 
-**What would change the answer.** If labels cannot survive the entry format or the transport,
-the codex cannot participate in IFC at all and positional discipline is all that remains. If
-a policy strict enough to prevent harm also prevents useful retrieval, the trade may not be
-worth it at the codex layer even if it is worth it at the agent layer.
+Any test of (3) should use a minimal labelling and policy-check shim rather than a dependency
+on `agent_framework`, so the answer is about the *model* and not about one vendor's
+experimental API — which is also what keeps it comparable under ADR-0010.
+
+**What each answer would mean.** If labels cannot survive the format, the codex cannot
+participate and positional discipline is all that remains. If enforcement prevents harm at
+acceptable expressiveness cost, that is a finding strong enough to graduate into an ADR, where
+it would supersede rather than supplement RAD-0006's positional recommendation — positional
+discipline becoming the fallback for runtimes that cannot enforce. If a policy strict enough to
+prevent harm also prevents useful retrieval, the trade may be worth taking at the agent layer
+and not at the codex layer, and this record ends with that as its finding.
+
+[RAD-0021](0021-admission-control-at-harvest.md) asks a related question that does not depend
+on any of these answers.
 
 ## Connections
 
@@ -202,6 +236,8 @@ worth it at the codex layer even if it is worth it at the agent layer.
   highest-integrity harvested content.
 - [RAD-0003](0003-central-capability-server.md) — where the *confidentiality* axis bites: a
   query describing the user's work sent to a third party.
+- [RAD-0021](0021-admission-control-at-harvest.md) — the harvest gate split out of this
+  record; complementary enforcement at a boundary the codex owns.
 - [RAD-0008](0008-the-field-as-it-stands.md) — the field record; this is prior art that
   belongs in it.
 - [ADR-0007](../adr/0007-conform-to-existing-conventions.md) — conform to a convention we do

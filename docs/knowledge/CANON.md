@@ -32,9 +32,9 @@ case studies are historical; none is part of the versioned canon.
 | RAD-0003 — A Central Capability Server for Library Discovery | v1 |
 | RAD-0004 — External Review of the Publishing Proposal | v1 |
 | RAD-0005 — A Git-Hosted Codex | v1 |
-| RAD-0006 — Development-Time Prompt Injection | v5 |
+| RAD-0006 — Development-Time Prompt Injection | v6 |
 | RAD-0007 — Choosing Between Overlapping Libraries | v3 |
-| RAD-0008 — The Field as It Stands | v1 |
+| RAD-0008 — The Field as It Stands | v2 |
 | RAD-0009 — Parsing the Documentation, and What to Index | v6 |
 | RAD-0010 — How the Codex Is Stored and Served | v3 |
 | RAD-0011 — Existing Documentation Systems as Skill Content | v2 |
@@ -46,7 +46,8 @@ case studies are historical; none is part of the versioned canon.
 | RAD-0017 — The Retrieval / Disambiguation A/B | v1 |
 | RAD-0018 — The Selection A/B | v1 |
 | RAD-0019 — Retrieval at Scale (Layer 1 recall + Layer 2 agent loop) | v2 |
-| RAD-0020 — Information-Flow Control as the Trust Model | v1 |
+| RAD-0020 — Information-Flow Control as the Trust Model | v2 |
+| RAD-0021 — Admission Control at Harvest | v1 |
 
 ## Changelog
 

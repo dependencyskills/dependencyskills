@@ -33,6 +33,7 @@ graduates to an ADR, cross-linked both ways.
 | [0018](0018-the-selection-ab.md) | The Selection A/B | The measurement of RAD-0007 — unaided 0/18, the declared dependency tree redirects a single-choice classpath, only an authored preference resolves genuine ambiguity |
 | [0019](0019-retrieval-at-scale.md) | Retrieval at Scale | Layer 1 index recall (vector-primary vs equal-RRF, BGE-M3) and Layer 2 the agent loop — authoring a query beats verbatim recall (10/10 pilot) |
 | [0020](0020-information-flow-control.md) | Information-Flow Control as the Trust Model | Adopting IFC (integrity/confidentiality labels enforced before a sink) instead of positional discipline — the codex as label *source*, and the sink experiment that would settle it |
+| [0021](0021-admission-control-at-harvest.md) | Admission Control at Harvest | Refusing to index documentation that does not match the code it ships with — the one enforcement point the harvester owns, and what gating costs retrieval |
 
 Numbering is sequential and does not imply order of reading. 0001 and 0002
 carry the measurements the rest lean on.

@@ -45,7 +45,7 @@ pass rate — with a "less-is-more" effect that *raised* performance 2.8%. It
 measures a skill *corpus*; this project measures cost per library in a resolved
 dependency *graph*. Different populations, same direction.
 
-## Three corrections this research forces
+## Four corrections this research forces
 
 **"Nobody has costed this" is false.** SkillReducer costed it three orders of
 magnitude past this project's own corpus. The defensible, still-novel claim is
@@ -68,12 +68,29 @@ sensitive tool runs. Untrusted text can be held behind a reference and read
 only by a quarantined model with no tool access. That is a **stronger class of
 control than this project's own recommendation**, because it never asks the
 model to decline — and the model declining is exactly where our measurement
-found the weakness. There is also published academic work measuring injection
-through third-party agent skills, which we have not read. The narrower
-defensible claim: this project measured the failure against a *library
-documentation* corpus, across agents a developer actually runs locally, and it
-is now [investigating adopting the flow-control model](/research/) rather than
-competing with it.
+found the weakness. The narrower defensible claim: we are now
+[investigating adopting the flow-control model](/research/) rather than competing
+with it.
+
+**"Nobody has measured this" would be false too — and three papers say so.**
+**AgentTrap** ([arXiv:2605.13940](https://arxiv.org/abs/2605.13940)) benchmarks
+141 tasks across 16 security dimensions using skills from real ecosystems, run
+through Claude Code among others, and finds that *models often complete the
+visible user task while treating unsafe side effects introduced by the skill as
+part of the normal workflow* — which is precisely our tool-enabled result, at
+scale. **SkillJect** ([arXiv:2602.14211](https://arxiv.org/abs/2602.14211))
+automates poisoned-skill generation over 100 real skills, measures an
+instruction-level prompt defence at 97.3% → 48.3%, and takes as its *premise*
+that workflow-aligned payloads succeed where blatant ones are refused — two more
+of our findings. **SkillGuard-Robust**
+([arXiv:2604.25109](https://arxiv.org/abs/2604.25109)) does pre-load auditing at
+97–99% accuracy. Several of our results are **corroboration, not discovery**,
+and two were measured on the same model families we tested. What is left is
+narrower: the system channel measured *against the mitigation*, the
+locally-served open-weight tier both papers omit, a corpus of library
+documentation nobody authored for an agent rather than deliberately-written
+skills, and structure grounding — which only a library corpus makes possible,
+because a library has a symbol graph and a skill does not.
 
 ## Where the limits are
 
