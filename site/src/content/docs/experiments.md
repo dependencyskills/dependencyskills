@@ -99,12 +99,24 @@ excluded by default — because no property of the agent can be relied on instea
 method, payloads, transcripts and a runnable kit are public, and the per-model numbers are
 small-sample single measurements meant to be re-run rather than believed.
 
+**[The full study, with the per-agent numbers and the mitigation, is here](/injection/).**
+
 ## Still open
 
 These tests measured whether an agent *uses* a capability placed in front of it, whether
 it *disambiguates* the right one among look-alikes, whether it reaches for the library
 this project *prefers* among several that overlap, and whether library-supplied text can
-redirect it — all now measured. One harder question remains: whether the agent can *find*
-the right entry among **hundreds**, retrieved from an index rather than placed in front of
-it (retrieval at scale). That is an engineering build — the searchable index — as much as
-a measurement, and it is the next step.
+redirect it. **Retrieval at scale is now measured too**, in two layers: search over an
+index of hundreds of entries, and the full loop where the agent writes its own query
+against that index. Recall alone found the right entry for 77% of needs described in a
+caller's own words — and the agent loop found it every time in a pilot, because the agent
+translates a plain-language need into the vocabulary the entry actually uses. That is the
+single strongest argument for an index over a pile of documents.
+
+What remains is less about whether the idea works and more about building it honestly.
+Whether the *harvesting* stage is riskier in some languages than others is untested — the
+injection work planted text directly rather than parsing it out of real source, and doc
+conventions differ enormously in how much free text they invite. Whether documentation can
+be automatically checked against the structure of the library that shipped it — the most
+promising mitigation on the table — is a hypothesis, not a result. And the index itself
+still has to be built for real corpora rather than a synthetic one.

@@ -31,6 +31,12 @@ export default defineConfig({
 					],
 				},
 				{
+					label: 'Security',
+					items: [
+						{ label: 'Prompt Injection', link: '/injection/' },
+					],
+				},
+				{
 					label: 'Case studies',
 					items: [
 						{ label: 'Thirteen slug functions', link: '/case-studies/thirteen-slug-functions/' },

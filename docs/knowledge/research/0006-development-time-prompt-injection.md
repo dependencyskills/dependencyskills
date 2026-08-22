@@ -183,6 +183,41 @@ record's design.
 visible; this is what makes the git-hosted route
 ([RAD-0005](0005-a-git-hosted-codex.md)) auditable rather than merely fetchable.
 
+### The result generalises to every standard in the category (added v4)
+
+The v4 measurement's worst arm — content in the instruction or system channel — is **where
+essentially every current standard places third-party text**: a skill body loaded from a
+`SKILL.md`, a rules file, a fetched `llms.txt`, an MCP tool description. They arrive as
+instructions because that is their purpose.
+
+The field's converged answer, **progressive disclosure**, does not help here and was never
+meant to: it solves a *context-budget* problem (keep the description resident, load the body
+on demand), not a *trust* problem. A body loaded on demand is still loaded as instruction, and
+position is the variable the measurement says dominates. So **any tool that loads third-party
+content into an agent's instruction context inherits this result**, whether or not it harvests
+documentation the way this project proposes. That includes this project, which adopted the
+format (ADR-0007). The finding is about the category's default architecture, not about a codex.
+
+**Two corrections that must travel with this claim.**
+
+- **Microsoft's Agent Framework is a real exception and goes further than this record's
+  recommendation.** Its **FIDES** middleware applies *information-flow control*: content
+  carries integrity labels (trusted/untrusted) and confidentiality labels, labels propagate
+  through tool calls, and policy is enforced before a sensitive tool runs. Its skills
+  documentation additionally treats MCP-sourced skills as untrusted input by design, does not
+  execute scripts fetched from remote sources, and gates skill-loading tools behind approval.
+  That is stronger than the positional discipline recommended here — closer to a type system
+  for trust than a placement rule — and it is prior art to learn from rather than reinvent.
+  Untested by this project. *(Reviewed 2026-08-22 from public documentation; verify before it
+  is load-bearing.)*
+- **This project is not first to measure skill injection.** There is published academic work
+  on injection through third-party agent skills — including automated skill-based injection
+  and runtime trust-failure measurement. It has not been read yet and is not characterised
+  here; it is recorded so that nothing in this record reads as a claim of novelty.
+  [RAD-0008](0008-the-field-as-it-stands.md) already had to correct one such overclaim, and
+  this is the same failure mode in a new area. **Reading that literature is outstanding work
+  and should precede any public claim about what is unmeasured.**
+
 ### Constraining the channel: structure as a trusted spine (added v4)
 
 Two narrower proposals were raised after the v4 measurement — *trust only our own tags*, and

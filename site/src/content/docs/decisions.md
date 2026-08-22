@@ -58,16 +58,26 @@ known, unfixed class, so there is no patch to wait for.
 
 Current research directions, not commitments:
 
-- **Parsing, storing and querying the content — and whether it is worth it.**
-  Getting the content is decided; extracting the documentation from the carrier
-  (reusing the API-extraction tooling IDEs already run at scale), storing it as
-  a codex, and serving it are the next stages. The open measurement underneath
-  them all: whether harvested documentation, at its real ~33% coverage,
-  actually changes an agent's behaviour.
+- **Parsing, storing and querying the content.** Getting the content is
+  decided; extracting the documentation from the carrier (reusing the
+  API-extraction tooling IDEs already run at scale), storing it as a codex and
+  serving it are the next stages. The measurement underneath them — whether
+  harvested documentation actually changes what an agent writes — has since
+  been run, and it does; what remains is building the pipeline against real
+  corpora rather than synthetic ones.
 - **A two-layer index** — a small always-present trigger, plus an on-demand
   catalogue that maps a need to a library and records which one *this* project
-  reaches for. Several vendors have independently converged on the shape; the
-  design here is still open.
+  reaches for. Several vendors have independently converged on the shape.
+  Retrieval has now been measured in both layers, so what is still open is the
+  engineering rather than the premise.
+- **Information-flow control as the trust model.** The injection mitigation
+  above is positional — it puts library prose where it cannot be followed — but
+  it still depends on the agent declining to act, which is where the
+  measurement found the weakness. A published alternative labels content and
+  enforces policy before a sensitive tool runs, so persuasion cannot reach
+  anything that matters. A codex cannot enforce that, but it is the natural
+  place to compute the labels. Under investigation, with a falsifiable
+  experiment specified.
 - **A capability server**, local first, as a query front-end over the corpus.
   What injection means for it is now settled above; what remains open is the
   server's own shape.

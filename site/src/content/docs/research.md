@@ -82,7 +82,7 @@ target is the model's *judgement* — which no existing supply-chain control
 (signatures, SBOMs, SAST) addresses. The load-bearing question — whether an
 instruction planted in a doc comment actually redirects an agent — is now
 measured, across agents from several vendors, and the answer is yes for many of
-them. More usefully, it is measured against the obvious mitigation.
+them. More usefully, it is measured against the obvious mitigation. [The full study is here](/injection/).
 
 Presenting the text as quoted, untrusted data helps a great deal, and on several
 agents it stopped every attempt. But it is **not sufficient**, in two ways that
@@ -109,6 +109,28 @@ roughly tenfold. Per-model numbers, the payloads, the transcripts and a runnable
 kit are published with the finding; they are single measurements at small sample
 sizes, date- and version-stamped, and are meant to be re-run rather than
 believed.
+
+## Information-flow control as the trust model
+
+The mitigation above still routes the decision through the model: the text
+arrives, the agent reads it, and whether harm follows depends on the agent
+declining to act. Every failure measured was a failure of exactly that
+judgement. Is there a control that does not depend on it — and is it already
+specified well enough to adopt rather than invent?
+
+**Findings.** Not yet measured; this opens the investigation. There is a
+published model to adopt — information-flow control, where content carries
+integrity and confidentiality labels that propagate through tool calls and
+policy is enforced deterministically before a sensitive tool runs, so
+persuasion is assumed to succeed and simply cannot reach anything that matters.
+The seam is the interesting part: enforcement lives in an agent runtime, and a
+codex sits upstream of one, so the adoptable half is **labelling rather than
+enforcing** — the codex is the only component that knows whether an entry came
+from first-party source, a declared dependency or the transitive tail. The
+experiment reuses the tool-action rig with the question changed from *did the
+model comply* to *did compliance reach a sink*, and is deliberately falsifiable:
+the flow-control arm is allowed to fail the compliance test provided the write
+is refused every time.
 
 ## Choosing between overlapping libraries
 

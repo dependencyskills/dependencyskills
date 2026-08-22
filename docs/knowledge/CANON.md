@@ -46,6 +46,7 @@ case studies are historical; none is part of the versioned canon.
 | RAD-0017 — The Retrieval / Disambiguation A/B | v1 |
 | RAD-0018 — The Selection A/B | v1 |
 | RAD-0019 — Retrieval at Scale (Layer 1 recall + Layer 2 agent loop) | v2 |
+| RAD-0020 — Information-Flow Control as the Trust Model | v1 |
 
 ## Changelog
 
