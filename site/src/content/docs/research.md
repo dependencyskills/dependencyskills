@@ -58,7 +58,8 @@ project's load-bearing claims — that a better model does not fix this, that th
 discriminating knowledge is local, that packaging is per-ecosystem. Two things
 changed: selection should weight *declared over transitive* dependencies (a ~10×
 filter, and the same filter shrinks the injection surface), and
-development-time prompt injection is a real objection with no answer yet.
+development-time prompt injection is a real objection — since measured, and
+answered in the architecture rather than in the prose.
 
 ## A git-hosted codex
 
@@ -78,11 +79,36 @@ prompt-injection surface through transitive dependencies?
 
 **Findings.** The surface is 112–995 libraries, 70–90% of it transitive, and the
 target is the model's *judgement* — which no existing supply-chain control
-(signatures, SBOMs, SAST) addresses. The load-bearing question, whether an
-injected instruction in a doc comment actually redirects an agent, is unmeasured
-and cheaply testable. The mitigations: treat library content as quoted evidence,
-never a directive; and weight declared over transitive, which cuts the trusted
-surface roughly tenfold.
+(signatures, SBOMs, SAST) addresses. The load-bearing question — whether an
+instruction planted in a doc comment actually redirects an agent — is now
+measured, across agents from several vendors, and the answer is yes for many of
+them. More usefully, it is measured against the obvious mitigation.
+
+Presenting the text as quoted, untrusted data helps a great deal, and on several
+agents it stopped every attempt. But it is **not sufficient**, in two ways that
+matter for anyone building this. Moving the identical text into the *system*
+channel defeats it outright — one model that resisted every quoted attempt
+complied with almost all of them once the same words sat in the system prompt.
+And a payload that simply argues the untrusted-data framing is itself a test
+harness defeats it on models it otherwise protects: the framing is a piece of
+text a model can be talked out of. On strongly instruction-tuned local coding
+models it showed no protective effect at all.
+
+Exposure varied enormously between models of comparable capability, including
+within a single vendor's range — which is evidence that resistance is a training
+choice rather than a scale effect, and that a bigger model is not a safer
+reader. That is the reason the control cannot be left to the agent: the codex
+cannot choose or verify which agent reads it. With real tools rather than code
+generation the stakes are concrete — given a plausible pretext, an agent copied
+a planted credentials file into a log.
+
+So the mitigations are architectural: library prose goes where it *cannot* be
+followed rather than where it is merely labelled untrustworthy, and declared
+dependencies are weighted over transitive, which cuts the trusted surface
+roughly tenfold. Per-model numbers, the payloads, the transcripts and a runnable
+kit are published with the finding; they are single measurements at small sample
+sizes, date- and version-stamped, and are meant to be re-run rather than
+believed.
 
 ## Choosing between overlapping libraries
 

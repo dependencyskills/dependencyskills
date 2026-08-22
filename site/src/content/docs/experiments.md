@@ -74,11 +74,37 @@ effort. There is a further prospect the same harvested data suggests: it is exac
 the clean, current, version-matched material that would make good **training data**,
 closing the gap at its source rather than only patching it at run time.
 
+## The same channel can be used against you
+
+If an index can change what an agent writes, then so can an instruction hidden in the
+material the index is built from — and the library authors supplying that material are not
+all trustworthy. So we tested that too, planting an instruction inside a library's
+"documentation" and varying only *where the text was placed*: as guidance the agent should
+follow, as data quoted and labelled untrusted, or in the system prompt.
+
+**Many agents follow it, and the obvious defence is not enough.** Quoting the text as
+untrusted data helps a lot — several agents refused every attempt that way. But moving the
+identical words into the system prompt defeats that defence outright, and a payload that
+simply argues the untrusted-data label is a test harness defeats it on agents it otherwise
+protects. Exposure varied enormously between models of similar capability, including within
+one vendor's range, so this tracks how a model was trained rather than how big it is. With
+real tools rather than code generation, an agent given a plausible pretext copied a planted
+credentials file into a log.
+
+This is a negative result about **this project's own proposal**, which is why it is
+published alongside the design rather than quietly fixed: harvesting library prose into an
+agent's context is exactly the hazard being described. The conclusion is architectural —
+library content must be placed where it *cannot* be followed, and the transitive tail
+excluded by default — because no property of the agent can be relied on instead. The
+method, payloads, transcripts and a runnable kit are public, and the per-model numbers are
+small-sample single measurements meant to be re-run rather than believed.
+
 ## Still open
 
 These tests measured whether an agent *uses* a capability placed in front of it, whether
-it *disambiguates* the right one among look-alikes, and whether it reaches for the library
-this project *prefers* among several that overlap — all now measured. One harder question
-remains: whether the agent can *find* the right entry among **hundreds**, retrieved from
-an index rather than placed in front of it (retrieval at scale). That is an engineering
-build — the searchable index — as much as a measurement, and it is the next step.
+it *disambiguates* the right one among look-alikes, whether it reaches for the library
+this project *prefers* among several that overlap, and whether library-supplied text can
+redirect it — all now measured. One harder question remains: whether the agent can *find*
+the right entry among **hundreds**, retrieved from an index rather than placed in front of
+it (retrieval at scale). That is an engineering build — the searchable index — as much as
+a measurement, and it is the next step.

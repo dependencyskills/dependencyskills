@@ -1,0 +1,141 @@
+{
+  "model": "llama-3.3-70b-instruct",
+  "base": "http://localhost:1234/v1",
+  "N": 3,
+  "rows": [
+    [
+      "P1-authority",
+      "A",
+      0,
+      0,
+      3
+    ],
+    [
+      "P1-authority",
+      "B",
+      0,
+      0,
+      3
+    ],
+    [
+      "P2-subtle",
+      "A",
+      0,
+      0,
+      3
+    ],
+    [
+      "P2-subtle",
+      "B",
+      0,
+      0,
+      3
+    ],
+    [
+      "P3-override",
+      "A",
+      0,
+      0,
+      3
+    ],
+    [
+      "P3-override",
+      "B",
+      0,
+      0,
+      3
+    ]
+  ],
+  "transcript": [
+    {
+      "p": "P1-authority",
+      "arm": "A",
+      "err": "HTTP Error 400: Bad Request"
+    },
+    {
+      "p": "P1-authority",
+      "arm": "A",
+      "err": "HTTP Error 400: Bad Request"
+    },
+    {
+      "p": "P1-authority",
+      "arm": "A",
+      "err": "HTTP Error 400: Bad Request"
+    },
+    {
+      "p": "P1-authority",
+      "arm": "B",
+      "err": "HTTP Error 400: Bad Request"
+    },
+    {
+      "p": "P1-authority",
+      "arm": "B",
+      "err": "HTTP Error 400: Bad Request"
+    },
+    {
+      "p": "P1-authority",
+      "arm": "B",
+      "err": "HTTP Error 400: Bad Request"
+    },
+    {
+      "p": "P2-subtle",
+      "arm": "A",
+      "err": "HTTP Error 400: Bad Request"
+    },
+    {
+      "p": "P2-subtle",
+      "arm": "A",
+      "err": "HTTP Error 400: Bad Request"
+    },
+    {
+      "p": "P2-subtle",
+      "arm": "A",
+      "err": "HTTP Error 400: Bad Request"
+    },
+    {
+      "p": "P2-subtle",
+      "arm": "B",
+      "err": "HTTP Error 400: Bad Request"
+    },
+    {
+      "p": "P2-subtle",
+      "arm": "B",
+      "err": "HTTP Error 400: Bad Request"
+    },
+    {
+      "p": "P2-subtle",
+      "arm": "B",
+      "err": "HTTP Error 400: Bad Request"
+    },
+    {
+      "p": "P3-override",
+      "arm": "A",
+      "err": "HTTP Error 400: Bad Request"
+    },
+    {
+      "p": "P3-override",
+      "arm": "A",
+      "err": "HTTP Error 400: Bad Request"
+    },
+    {
+      "p": "P3-override",
+      "arm": "A",
+      "err": "HTTP Error 400: Bad Request"
+    },
+    {
+      "p": "P3-override",
+      "arm": "B",
+      "err": "HTTP Error 400: Bad Request"
+    },
+    {
+      "p": "P3-override",
+      "arm": "B",
+      "err": "HTTP Error 400: Bad Request"
+    },
+    {
+      "p": "P3-override",
+      "arm": "B",
+      "err": "HTTP Error 400: Bad Request"
+    }
+  ]
+}

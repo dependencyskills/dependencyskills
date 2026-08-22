@@ -26,12 +26,13 @@ case studies are historical; none is part of the versioned canon.
 | ADR-0008 — One knowledge tree under docs/knowledge | v1 |
 | ADR-0009 — Library content is got from `-sources.jar` | v1 |
 | ADR-0010 — Measure agent behaviour through developer tools | v1 |
+| ADR-0011 — Publish security findings as observations, not verdicts | v1 |
 | RAD-0001 — Cost of a Skill Per Dependency | v1 |
 | RAD-0002 — Existing Documentation Systems as Skill Transport | v2 |
 | RAD-0003 — A Central Capability Server for Library Discovery | v1 |
 | RAD-0004 — External Review of the Publishing Proposal | v1 |
 | RAD-0005 — A Git-Hosted Codex | v1 |
-| RAD-0006 — Development-Time Prompt Injection | v1 |
+| RAD-0006 — Development-Time Prompt Injection | v4 |
 | RAD-0007 — Choosing Between Overlapping Libraries | v3 |
 | RAD-0008 — The Field as It Stands | v1 |
 | RAD-0009 — Parsing the Documentation, and What to Index | v6 |
@@ -44,7 +45,7 @@ case studies are historical; none is part of the versioned canon.
 | RAD-0016 — The Content-Value A/B | v2 |
 | RAD-0017 — The Retrieval / Disambiguation A/B | v1 |
 | RAD-0018 — The Selection A/B | v1 |
-| RAD-0019 — Retrieval at Scale (Layer 1: index recall) | v1 |
+| RAD-0019 — Retrieval at Scale (Layer 1 recall + Layer 2 agent loop) | v2 |
 
 ## Changelog
 

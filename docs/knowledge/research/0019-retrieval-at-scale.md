@@ -1,10 +1,18 @@
-# Retrieval at Scale (Layer 1: index recall)
+# Retrieval at Scale
 
-RAD-0019 · 2026-08-20 · v1
+RAD-0019 · 2026-08-20 · v2
 
-**Design; measured.** Specifies and reports Layer 1 of retrieval-at-scale — pure index
-recall, no agent. Layer 2 (the agent authoring a query against the index via an MCP tool)
-is future work.
+**Design; measured.** Specifies and reports both layers of retrieval-at-scale — Layer 1
+(pure index recall, no agent) and Layer 2 (the agent authoring a query against the index
+exposed as a tool, then selecting from the results).
+
+**v2 (2026-08-21).** Adds the **Layer 2** measurement (`experiments/test0/measurement/
+retrieval-scale/layer2-agent-loop.md`): a 10-query pilot, blind Claude Opus 4.8 subagents
+driving `search-codex.py` through developer tooling (ADR-0010). **10/10** — the agent loop
+recovered every case, including all three Layer-1 hard misses (#27/#62/#120), because the
+agent **authors its own query**, translating the caller's plain words into the capability's
+technical vocabulary. The full loop **beats** raw recall (100% vs 77% r@1). See the Layer 2
+findings below.
 
 **Pinned (all public).** Encoders compared (via mlx-embeddings, Apache-2.0, in-process on
 Apple MLX): **BAAI BGE-M3** (`mlx-community/bge-m3-mlx-fp16`, MIT), **intfloat
@@ -89,20 +97,36 @@ embedding. The store still holds both (BM25 is cheap and Lucene indexes it anywa
 change is in **fusion policy** — weight the lexical arm up only when the query has
 high-IDF exact terms, rather than fusing equally. A query-adaptive fusion is the follow-on.
 
-**What this does not close.** This is **recall of the index**, not the **agent loop**: the
-query was the caller's need verbatim, not a query the agent *authored*, and the entry was
-retrieved, not *used*. Layer 2 — expose the index as an MCP tool (RAD-0003), let the agent
-write its own query and use the result — is the remaining measurement. Also: the corpus is
-synthetic; a real harvested corpus (RAD-0011) would carry messier prose and is the external
+**Measured — Layer 2, the agent loop (2026-08-21; 10-query pilot, blind Claude Opus 4.8
+subagents; `retrieval-scale/layer2-agent-loop.md`).** Where Layer 1 fed the caller's need
+verbatim, Layer 2 gives an agent the need and lets it **author its own query** against
+`search-codex.py` (the index as a tool, RAD-0003), read the top-10, and select — blind to
+the target. Pilot spanning all three Layer-1 difficulty bands: **10/10 correct, one tool
+call each, high confidence** — including all three cases Layer-1 vector missed beyond top-10
+(BloomFilter #27, StateMachine #62, EventBus #120). The mechanism: the agent maps the
+caller's deliberately-vocabulary-free need onto the capability's technical terms ("have I
+probably seen this id, false yes ok" → *probabilistic set membership, false positives*),
+and that authored query retrieves the target at #1. **The full loop beats raw recall** (100%
+vs vector 77% r@1 / 88% r@10) — query authoring closes the semantic tail; selection-from-
+candidates was barely the deciding step because authoring alone lifted the target to #1.
+
+**What this does not close.** The Layer-2 corpus is **well-known CS patterns**, so the agent
+already knows the canonical vocabulary to author. For genuinely novel or *local* capabilities
+— the codex's distinctive value (RAD-0016) — the agent may not know what to search for, and
+query authoring gets harder; that is the boundary this pilot does not cross and the next
+Layer-2 test. Also unscaled: N=10, single model, one attempt each (full 26 + local/Gemini is
+the follow-on), and the corpus is synthetic — a harvested one (RAD-0011) is the external
 -validity check.
 
 ## Recommendation
 
 **Vector-primary retrieval over a strong, permissively-licensed encoder (BGE-M3), with
 lexical as a term-match supplement, not an equal-RRF partner.** Keep both arms in the store
-(Lucene holds BM25 + HNSW in one artifact — RAD-0010) but make fusion query-adaptive. Next:
-**Layer 2** (the MCP agent loop), then port the Layer-1 rig to the JVM/Lucene substrate and
-re-measure, and swap the synthetic corpus for a harvested one.
+(Lucene holds BM25 + HNSW in one artifact — RAD-0010) but make fusion query-adaptive. Layer
+2 (the agent loop) is now measured and **passed** (10/10 pilot; the agent's authored query
+beats verbatim recall). Next: scale Layer 2 (full 26 + cross-model), test it against *novel/
+local* capabilities where the agent does not already know the vocabulary, port the rig to the
+JVM/Lucene substrate, and swap the synthetic corpus for a harvested one.
 
 ## Connections
 

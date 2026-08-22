@@ -4,9 +4,10 @@ import starlight from '@astrojs/starlight';
 
 // https://astro.build/config
 export default defineConfig({
-	// Set `site` to the published URL once the domain is confirmed — it enables
-	// the sitemap and canonical links.
-	// site: 'https://<your-domain>',
+	// Custom domain (verified at the org level), served at the apex — so no `base`
+	// is needed and root-absolute asset paths are correct. `site` enables the
+	// sitemap and canonical links. The CNAME in public/ ships in the build output.
+	site: 'https://dependencyskills.org',
 	integrations: [
 		starlight({
 			title: 'Dependency Skills',

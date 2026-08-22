@@ -18,7 +18,7 @@ graduates to an ADR, cross-linked both ways.
 | [0003](0003-central-capability-server.md) | A Central Capability Server for Library Discovery | A query front-end over the corpus, local and central |
 | [0004](0004-external-review-of-the-proposal.md) | External Review of the Publishing Proposal | Five objections from outside the project, and what each changed |
 | [0005](0005-a-git-hosted-codex.md) | A Git-Hosted Codex | Reaching library guidance through the repository the publishing metadata already names |
-| [0006](0006-development-time-prompt-injection.md) | Development-Time Prompt Injection | The one objection with no answer yet, and the experiment that would settle it |
+| [0006](0006-development-time-prompt-injection.md) | Development-Time Prompt Injection | The injection surface, the measured model×payload×arm matrix (+ system-channel, tool-action, aggressive payloads) and a model trust table — data-framing is necessary but beaten by system-channel placement and meta-arguments |
 | [0007](0007-choosing-between-overlapping-libraries.md) | Choosing Between Overlapping Libraries | Which signals discriminate when several libraries do the same job |
 | [0008](0008-the-field-as-it-stands.md) | The Field as It Stands, and What This Research Rejects | What others have built, where it corroborates this work, and where each pattern's limits are |
 | [0009](0009-reusing-indexers-and-what-to-index.md) | Parsing the Documentation, and What to Index | The parse layer — tree-sitter/Dokka per ecosystem behind a common contract, the summarise step as the new work, and whether to index the whole graph or only libraries that ship a skill |
@@ -31,7 +31,7 @@ graduates to an ADR, cross-linked both ways.
 | [0016](0016-the-content-value-ab.md) | The Content-Value A/B | The thesis test — does the codex change what an agent does; synthetic subject, content-value-first, first-party-vs-dependency scenarios, a cross-model matrix run through developer tools |
 | [0017](0017-the-retrieval-disambiguation-ab.md) | The Retrieval / Disambiguation A/B | Disambiguation *within a presented catalogue* — the syntactic face for differing signatures, the semantic face required when signatures collide |
 | [0018](0018-the-selection-ab.md) | The Selection A/B | The measurement of RAD-0007 — unaided 0/18, the declared dependency tree redirects a single-choice classpath, only an authored preference resolves genuine ambiguity |
-| [0019](0019-retrieval-at-scale.md) | Retrieval at Scale (Layer 1: index recall) | Pure index recall over hundreds of entries, no agent — vector-primary vs equal-RRF hybrid, the BGE-M3 encoder |
+| [0019](0019-retrieval-at-scale.md) | Retrieval at Scale | Layer 1 index recall (vector-primary vs equal-RRF, BGE-M3) and Layer 2 the agent loop — authoring a query beats verbatim recall (10/10 pilot) |
 
 Numbering is sequential and does not imply order of reading. 0001 and 0002
 carry the measurements the rest lean on.

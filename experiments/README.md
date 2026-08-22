@@ -25,8 +25,9 @@ which is working code.
 |---|---|---|
 | [cost-model](cost-model/) | What one skill per dependency costs across real graphs (RAD-0001) | collectors + raw graphs |
 | [test0](test0/) | Does a codex from graded docs change agent behaviour, and tree-sitter vs Dokka? (RAD-0009/0011) | `test0/harness` — `./gradlew test` |
-| test1 *(planned)* | The multi-language KMP read/parse story (RAD-0015/0009) | — |
-| test2 *(planned)* | Structure from bytecode — the undocumented-tail signal, kept separate from the doc-parse (RAD-0012) | — |
+| [test0/measurement](test0/measurement/) | The behaviour A/Bs — content-value, disambiguation, selection, and retrieval-at-scale (Layer 1 recall + Layer 2 agent loop) (RAD-0016/0017/0018/0019) | Python harnesses (`uv run`) |
+| [test1](test1/) | The multi-language read/parse story on real `-sources.jar` — tree-sitter across five languages, Dokka arm, resolve-in-index (RAD-0015/0009) | Python (`uv run`) + `dokka-arm` Gradle |
+| [test2](test2/) | Structure from bytecode — the undocumented-tail signal, kept separate from the doc-parse (RAD-0012) | `extract_bytecode.py` (`uv run`) |
 
 A runnable experiment is added to the public site once its harness works — a
 scaffold-only test is not yet listed.

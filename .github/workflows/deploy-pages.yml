@@ -2,9 +2,10 @@ name: Deploy site to GitHub Pages
 
 # Builds site/ (Astro Starlight) and publishes it to GitHub Pages.
 #
-# Dormant until the repo can serve Pages: on GitHub Free that requires the
-# repository to be PUBLIC, and the Pages source must be set to "GitHub Actions"
-# in Settings -> Pages. Until then this workflow builds but does not deploy.
+# The deploy job needs the Pages source set to "GitHub Actions" in
+# Settings -> Pages; without it the build succeeds and the deploy fails 404.
+# The custom domain (dependencyskills.org) is set there too, and ships in the
+# artifact as site/public/CNAME so a redeploy cannot drop it.
 
 on:
   push:
@@ -31,15 +32,15 @@ jobs:
       run:
         working-directory: site
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: site/package-lock.json
       - run: npm ci
       - run: npm run build
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: site/dist
 
@@ -51,4 +52,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

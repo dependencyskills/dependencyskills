@@ -19,3 +19,7 @@ node_modules/
 docs/stories/
 .agents/config/dimensions.md
 # END story-tools
+
+# Python bytecode caches (experiments import shared modules)
+__pycache__/
+*.pyc
