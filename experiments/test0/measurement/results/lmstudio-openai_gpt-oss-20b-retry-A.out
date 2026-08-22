@@ -1,0 +1,25 @@
+```kotlin
+import java.lang.Thread
+
+external fun httpGet(url: String): String   // provided; may throw on transient failure
+
+fun loadProfile(id: Int): String {
+    val url = "https://api.example.com/users/$id"
+    var attempt = 0
+    val maxAttempts = 5          // total number of attempts (initial try + retries)
+    var backoffMillis = 200L     // initial back‑off delay in milliseconds
+
+    while (true) {
+        try {
+            return httpGet(url)
+        } catch (e: Exception) {
+            attempt++
+            if (attempt >= maxAttempts) {
+                throw e   // give up after the last attempt
+            }
+            Thread.sleep(backoffMillis)
+            backoffMillis *= 2   // exponential increase
+        }
+    }
+}
+```

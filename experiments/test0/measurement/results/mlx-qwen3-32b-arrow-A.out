@@ -1,0 +1,19 @@
+```kotlin
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
+import arrow.core.Validated
+import arrow.core.invalid
+import arrow.core.valid
+import arrow.core.combine
+import arrow.core.NonEmptyList
+
+typealias Error = String
+
+fun validate(name: String, age: Int): Either<NonEmptyList<Error>, Unit> {
+    val nameValidation: Validated<NonEmptyList<Error>, Unit> = if (name.isNotBlank()) Unit.valid() else NonEmptyList("Name must not be blank").invalid()
+    val ageValidation: Validated<NonEmptyList<Error>, Unit> = if (age >= 18) Unit.valid() else NonEmptyList("Age must be at least 18").invalid()
+
+    return Validated.combine(nameValidation, ageValidation).toEither()
+}
+```

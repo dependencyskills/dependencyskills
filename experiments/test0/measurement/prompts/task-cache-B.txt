@@ -1,0 +1,22 @@
+You are working in a Kotlin project that depends on `org.test0:cache:1.0.0`.
+
+Relevant capability from that library, from the project's dependency index:
+
+    Capability: an in-memory cache bounded to a maximum size, evicting the
+                least-recently-used entry when full.
+    Symbol:     org.test0.BoundedStore
+    Signature:  class BoundedStore<K, V>(maxEntries: Int)
+                fun getOrPut(key: K, compute: () -> V): V
+    Not for:    time-based expiry.
+
+Implement `cachedLookup` so repeated lookups for the same key are served from an
+in-memory cache that holds at most 100 entries, evicting the least-recently-used
+entry when full:
+
+    external fun fetchWidget(key: String): String   // provided; expensive
+
+    fun cachedLookup(key: String): String {
+        // TODO: cache results of fetchWidget(key); bounded to 100 entries, LRU eviction
+    }
+
+Reply with only the Kotlin implementation of cachedLookup (and any imports you would use).

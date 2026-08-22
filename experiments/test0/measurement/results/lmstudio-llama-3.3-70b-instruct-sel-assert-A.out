@@ -1,0 +1,9 @@
+```kotlin
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+
+fun checkOutput(result: Int, name: String) {
+    assertEquals(42, result)
+    assertFalse(name.isBlank())
+}
+```

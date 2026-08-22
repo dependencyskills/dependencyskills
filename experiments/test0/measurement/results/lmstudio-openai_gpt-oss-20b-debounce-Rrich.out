@@ -1,0 +1,10 @@
+```kotlin
+import org.test0.Coalescer
+
+private val searchCoalescer = Coalescer(quietMs = 300)
+
+fun onSearchInput(text: String) {
+    // Submit the latest search action; it will be executed only after 300 ms of silence
+    searchCoalescer.submit { runSearch(text) }
+}
+```

@@ -1,0 +1,28 @@
+```kotlin
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
+
+typealias ValidationError = String
+typealias Validated<T> = Either<List<ValidationError>, T>
+
+data class Person(val name: String, val age: Int)
+
+fun validate(name: String, age: Int): Validated<Person> {
+    val errors = mutableListOf<ValidationError>()
+
+    if (name.isBlank()) {
+        errors.add("Name must not be blank")
+    }
+
+    if (age < 18) {
+        errors.add("Age must be at least 18")
+    }
+
+    return if (errors.isEmpty()) {
+        Person(name, age).right()
+    } else {
+        errors.left()
+    }
+}
+```

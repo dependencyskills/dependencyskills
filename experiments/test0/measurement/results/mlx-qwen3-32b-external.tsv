@@ -1,0 +1,7 @@
+library	condition	verdict
+datetime	A	stale
+datetime	B	correct
+arrow	A	stale
+arrow	B	unclear
+kaml	A	unclear
+kaml	B	correct

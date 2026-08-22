@@ -1,0 +1,21 @@
+```kotlin
+import com.charleskorn.kaml.Yaml
+import com.charleskorn.kaml.Kaml
+import com.charleskorn.kaml.Kaml
+import com.charleskorn.kaml.Kaml
+
+class AppConfig:
+    private var name: String = "My App"
+    private var port: Int = 1234567890
+
+    fun parseConfig(yaml: String): AppConfig {
+        // TODO: parse the YAML into AppConfig using the kaml library
+        try {
+            val parsedYaml = yaml.parse(yaml)
+            return AppConfig(name = parsedYaml.name, port = parsedYaml.port)
+        } catch (e: Exception) {
+            println("Error parsing YAML: ${e.message}")
+            return null
+        }
+    }
+```

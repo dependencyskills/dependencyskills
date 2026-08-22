@@ -1,0 +1,13 @@
+```kotlin
+import org.test0.async.*
+
+private var job: Job? = null
+
+fun onSearchInput(text: String) {
+    job?.cancel()
+    job = async {
+        delay(300)
+        runSearch(text)
+    }
+}
+```

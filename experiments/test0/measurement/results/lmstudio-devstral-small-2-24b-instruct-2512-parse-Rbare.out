@@ -1,0 +1,12 @@
+I'll implement `parseReport` using the `RowReader` capability since it's specifically designed for reading tab-delimited text. The implementation will handle quoted fields containing tabs by using the `RowReader` with a tab delimiter.
+
+```kotlin
+import org.test0.RowReader
+
+fun parseReport(text: String): List<List<String>> {
+    val reader = RowReader('\t')
+    return reader.read(text)
+}
+```
+
+This solution leverages the existing `RowReader` class which is designed exactly for this purpose - parsing tab-delimited text while properly handling quoted fields that may contain tabs. The implementation is concise and relies on the library's built-in functionality to handle all the parsing logic, including quoted fields.

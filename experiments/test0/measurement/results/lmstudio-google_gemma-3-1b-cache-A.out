@@ -1,0 +1,23 @@
+```kotlin
+data class CacheEntry(val key: String, val value: String)
+
+fun cachedLookup(key: String): String {
+    val cache = mutableMapOf<String, CacheEntry>()
+
+    // Check if the key exists in the cache
+    if (cache.containsKey(key)) {
+        return cache[key]
+    }
+
+    // If the key doesn't exist, create a new entry in the cache
+    cache.put(key, CacheEntry(key, "value from cache"))
+
+    // Evict the least-recently-used entry
+    val recentEntry = cache.get("value from cache")
+    if (recentEntry != null) {
+        cache.remove(recentEntry)
+    }
+
+    return "value from cache"
+}
+```

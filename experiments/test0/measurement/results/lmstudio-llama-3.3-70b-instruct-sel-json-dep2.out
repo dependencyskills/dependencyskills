@@ -1,0 +1,25 @@
+```kotlin
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+
+data class User(val id: Int, val name: String)
+
+fun toJson(u: User): String {
+    return Json.encodeToString(u)
+}
+```
+
+Note: The `User` data class needs to be annotated with `@Serializable` for this to work. Here's the corrected code:
+
+```kotlin
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+
+@Serializable
+data class User(val id: Int, val name: String)
+
+fun toJson(u: User): String {
+    return Json.encodeToString(u)
+}
+```

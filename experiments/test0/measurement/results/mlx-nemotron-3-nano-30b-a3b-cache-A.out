@@ -1,0 +1,14 @@
+import java.util.LinkedHashMap
+
+external fun fetchWidget(key: String): String
+
+private val cache = LinkedHashMap<String, String>(100, 0.75f, true)
+
+fun cachedLookup(key: String): String {
+    val result = cache[key] ?: (val v = fetchWidget(key); cache[key] = v; v)
+    if (cache.size > 100) {
+        val first = cache.entries.iterator().next().key
+        cache.remove(first)
+    }
+    return result
+}

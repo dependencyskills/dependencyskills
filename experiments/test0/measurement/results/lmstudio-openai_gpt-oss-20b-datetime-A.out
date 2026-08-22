@@ -1,0 +1,4 @@
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+
+fun currentInstant(): Instant = Clock.System.now()

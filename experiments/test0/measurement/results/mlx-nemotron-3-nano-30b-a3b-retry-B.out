@@ -1,0 +1,6 @@
+```kotlin
+fun loadProfile(id: Int): String {
+    val url = "https://api.example.com/users/$id"
+    return Policy().apply { httpGet(url) }
+}
+```

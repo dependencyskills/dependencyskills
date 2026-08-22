@@ -1,0 +1,18 @@
+```kotlin
+import kotlinx-datetime
+import java.util.*
+import java.util.concurrent.Callable
+
+class CurrentInstant: class() {
+    /**
+     * Returns the current moment as an instant.
+     *
+     * @param current Moment
+     * @return Instant
+     */
+    fun currentInstant(): Instant {
+        // TODO: return the current instant
+        return Instant.now()
+    }
+}
+```

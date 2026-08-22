@@ -1,0 +1,9 @@
+^D```kotlin
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+
+fun checkOutput(result: Int, name: String) {
+    assertEquals(42, result)
+    assertTrue(name.isNotBlank())
+}
+```

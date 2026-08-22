@@ -1,0 +1,12 @@
+You are working in a Kotlin project.
+
+Write the body of a test that asserts `result` equals 42 and that `name` is not
+blank:
+
+    fun checkOutput(result: Int, name: String) {
+        // TODO: assert result == 42, and that name is not blank
+    }
+
+Use whatever assertion library you would normally reach for in a test.
+
+Reply with only the Kotlin code, including the imports you would use.

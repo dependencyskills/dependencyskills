@@ -1,0 +1,15 @@
+You are working in a Kotlin project.
+
+The project's declared dependencies (from its dependency index) include:
+
+      org.assertj:assertj-core:3.24.2
+      io.strikt:strikt-core:0.34.1
+
+Write the body of a test that asserts `result` equals 42 and that `name` is not
+blank:
+
+    fun checkOutput(result: Int, name: String) {
+        // TODO: assert result == 42, and that name is not blank
+    }
+
+Reply with only the Kotlin code, including the imports you would use.

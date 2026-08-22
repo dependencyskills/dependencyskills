@@ -1,0 +1,83 @@
+```kotlin
+import org.test0.Coalescer
+
+private val searchCoalescer = Coalescer(quietMs = 300)
+
+fun onSearchInput(text: String) {
+    searchCoalescer.submit { runSearch(text) }
+}
+```
+
+However, this implementation has a flaw. The `submit` function in the `Coalescer` class will submit all actions that are passed to it, but we only want to run the most recent search query after the quiet period.
+
+To fix this issue, we need to cancel any pending submissions before submitting a new one:
+
+```kotlin
+import org.test0.Coalescer
+
+private val searchCoalescer = Coalescer(quietMs = 300)
+private var latestText: String? = null
+
+fun onSearchInput(text: String) {
+    latestText = text
+    searchCoalescer.submit { runSearch(latestText!!) }
+}
+```
+
+But this still doesn't guarantee that only the most recent query will be executed, because `latestText` could change after the submission but before it's actually executed.
+
+To ensure that only the most recent query is executed, we need to use a different approach. Unfortunately, with the given capabilities, there isn't a straightforward way to achieve this. However, one possible solution would be to use the `Metronome` class to repeatedly check for new input and submit the latest query:
+
+```kotlin
+import org.test0.Metronome
+
+private val searchMetronome = Metronome(intervalMs = 300)
+private var latestText: String? = null
+private var isRunning = false
+
+init {
+    searchMetronome.submit { checkForNewInput() }
+}
+
+fun onSearchInput(text: String) {
+    latestText = text
+}
+
+private fun checkForNewInput() {
+    if (isRunning) return
+    isRunning = true
+    
+    val text = latestText
+    if (text != null) {
+        runSearch(text)
+    }
+    
+    isRunning = false
+}
+```
+
+However, this solution still has issues. A better approach would be to use a capability that allows us to cancel pending submissions or to use a more advanced concurrency control mechanism.
+
+Given the provided capabilities, we can achieve the desired behavior using the `Coalescer` class in combination with a flag to track whether a submission is currently pending:
+
+```kotlin
+import org.test0.Coalescer
+
+private val searchCoalescer = Coalescer(quietMs = 300)
+private var latestText: String? = null
+private var isPending = false
+
+fun onSearchInput(text: String) {
+    latestText = text
+    
+    if (isPending) return
+    isPending = true
+    
+    searchCoalescer.submit {
+        runSearch(latestText!!)
+        isPending = false
+    }
+}
+```
+
+This solution ensures that only the most recent query will be executed after the quiet period.

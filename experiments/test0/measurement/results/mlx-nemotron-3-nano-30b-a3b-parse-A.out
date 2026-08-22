@@ -1,0 +1,29 @@
+```kotlin
+import java.lang.StringBuilder
+
+fun parseReport(text: String): List<List<String>> {
+    val rows = mutableListOf<List<String>>()
+    for (line in text.lines()) {
+        val fields = mutableListOf<String>()
+        val sb = StringBuilder()
+        var inQuotes = false
+        for (c in line) {
+            when (c) {
+                '"' -> inQuotes = !inQuotes
+                '\t' -> {
+                    if (!inQuotes) {
+                        fields.add(sb.toString())
+                        sb.clear()
+                    } else {
+                        sb.append(c)
+                    }
+                }
+                else -> sb.append(c)
+            }
+        }
+        fields.add(sb.toString())          // last field on the line
+        rows.add(fields)
+    }
+    return rows
+}
+```

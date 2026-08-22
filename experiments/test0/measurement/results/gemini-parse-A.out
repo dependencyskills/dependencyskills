@@ -1,0 +1,53 @@
+^D```kotlin
+fun parseReport(text: String): List<List<String>> {
+    if (text.isEmpty()) return emptyList()
+
+    val rows = mutableListOf<List<String>>()
+    val currentRow = mutableListOf<String>()
+    val currentField = StringBuilder()
+    var inQuotes = false
+    var i = 0
+
+    while (i < text.length) {
+        val c = text[i]
+        when {
+            c == '"' -> {
+                if (inQuotes) {
+                    if (i + 1 < text.length && text[i + 1] == '"') {
+                        currentField.append('"')
+                        i++
+                    } else {
+                        inQuotes = false
+                    }
+                } else {
+                    inQuotes = true
+                }
+            }
+            c == '\t' && !inQuotes -> {
+                currentRow.add(currentField.toString())
+                currentField.clear()
+            }
+            (c == '\r' || c == '\n') && !inQuotes -> {
+                if (c == '\r' && i + 1 < text.length && text[i + 1] == '\n') {
+                    i++
+                }
+                currentRow.add(currentField.toString())
+                currentField.clear()
+                rows.add(currentRow.toList())
+                currentRow.clear()
+            }
+            else -> {
+                currentField.append(c)
+            }
+        }
+        i++
+    }
+
+    if (text.last() != '\n' && text.last() != '\r') {
+        currentRow.add(currentField.toString())
+        rows.add(currentRow.toList())
+    }
+
+    return rows
+}
+```

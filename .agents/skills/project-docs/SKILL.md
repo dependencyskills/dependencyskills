@@ -5,7 +5,7 @@ license: MIT
 compatibility: Standalone for filing/creating docs. Syncing requires git on PATH plus the binding's connection - YouTrack REST (story-tools connection or YOUTRACK_URL/TOKEN env), or a GitHub token with Contents RW and an initialized wiki.
 metadata:
   author: bpappin
-  version: "1.14"
+  version: "1.15"
 ---
 
 # Project Docs
@@ -207,7 +207,7 @@ server. Never push blind after a move. The ritual:
    aside (keep it - it holds local-only edits), let an empty-dir sync
    pull the migrated KB fresh from the new server, then port the
    local-only documents into the pulled tree and sync again.
-4. **Refresh the snapshots.** `docs/stories/` and `docs/dimensions.md`
+4. **Refresh the snapshots.** `docs/stories/` and `.agents/config/dimensions.md`
    are old-server data until the binding's pull is re-run.
 
 The installer warns about all of this when it detects a rebind; this

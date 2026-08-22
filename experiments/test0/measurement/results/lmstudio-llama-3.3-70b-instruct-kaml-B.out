@@ -1,0 +1,11 @@
+```kotlin
+import com.charleskorn.kaml.Yaml
+import kotlinx.serialization.decodeFromString
+
+@Serializable
+data class AppConfig(val name: String, val port: Int)
+
+fun parseConfig(yaml: String): AppConfig {
+    return Yaml.default.decodeFromString<AppConfig>(yaml)
+}
+```

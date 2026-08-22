@@ -1,0 +1,46 @@
+```kotlin
+import kotlinx.coroutines.*
+
+// Assuming this class exists within a CoroutineScope provided by the library
+class SearchHandler {
+
+    // The job holds the reference to the currently pending search task.
+    private var searchJob: Job? = null
+
+    // The delay period required for quiet input
+    private val DEBOUNCE_DELAY = 300L
+
+    // We need a scope to launch our background tasks.
+    // In a real application, this would be tied to the lifecycle of the component.
+    private val searchScope = CoroutineScope(Dispatchers.Main) 
+
+    /**
+     * Executes the search after a quiet period (300ms).
+     */
+    fun onSearchInput(text: String) {
+        // 1. Cancel any previously scheduled search attempt.
+        searchJob?.cancel()
+
+        // 2. Launch a new coroutine/task.
+        searchJob = searchScope.launch {
+            // 3. Wait for the debounce period (quiet time).
+            delay(DEBOUNCE_DELAY)
+
+            // 4. If the coroutine hasn't been cancelled during the delay, execute the search.
+            // We use isActive check for robustness, though 'delay' handles cancellation well.
+            if (isActive) {
+                runSearch(text)
+            }
+        }
+    }
+
+    // --- Provided external function (for context) ---
+    external fun runSearch(text: String) 
+
+    // Note: In a production environment, you must cancel searchScope when the handler is destroyed.
+    fun dispose() {
+        searchJob?.cancel()
+        searchScope.cancel()
+    }
+}
+```

@@ -1,0 +1,11 @@
+```kotlin
+import org.test0.Coalescer
+
+private val coalescer = Coalescer(300L)
+
+fun onSearchInput(text: String) {
+    coalescer.submit {
+        runSearch(text)
+    }
+}
+```

@@ -1,0 +1,22 @@
+^DChecking for any library skills or cached dependencies...
+I'm checking for any project context or library skills.
+Waiting for search to complete...
+```kotlin
+fun loadProfile(id: Int): String {
+    val maxAttempts = 3
+    var delayMillis = 1000L
+
+    for (attempt in 1..maxAttempts) {
+        try {
+            return httpGet("https://api.example.com/users/$id")
+        } catch (e: Exception) {
+            if (attempt == maxAttempts) {
+                throw e
+            }
+            Thread.sleep(delayMillis)
+            delayMillis *= 2
+        }
+    }
+    error("Failed to load profile for user $id after $maxAttempts attempts")
+}
+```

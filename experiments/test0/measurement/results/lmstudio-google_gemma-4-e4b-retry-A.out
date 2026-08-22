@@ -1,0 +1,22 @@
+```kotlin
+// Assuming the retry library provides a function signature like this:
+// fun <T> retry(maxAttempts: Int, initialDelayMs: Long, backoffMultiplier: Double, operation: () -> T): T
+
+fun loadProfile(id: Int): String {
+    val url = "https://api.example.com/users/$id"
+
+    // Define the retry parameters
+    val maxAttempts = 5 // Initial attempt + 4 retries
+    val initialDelayMs = 100L // Start with a small delay
+    val backoffMultiplier = 2.0 // Double the delay each time
+
+    // Use the retry utility provided by org.test0:retry
+    return retry(maxAttempts, initialDelayMs, backoffMultiplier) {
+        // The operation that might fail transiently
+        httpGet(url) 
+    }
+}
+
+// NOTE: The actual implementation of 'retry' and the exception handling 
+// (catching transient failures) would be provided by the org.test0:retry library.
+```

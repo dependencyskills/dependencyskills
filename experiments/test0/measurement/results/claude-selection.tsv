@@ -1,0 +1,13 @@
+domain	condition	verdict
+json	A	other
+json	dep1	preferred
+json	dep2	other
+json	dep2pref	preferred
+http	A	other
+http	dep1	preferred
+http	dep2	other
+http	dep2pref	preferred
+assert	A	other
+assert	dep1	preferred
+assert	dep2	other
+assert	dep2pref	preferred

@@ -1,0 +1,16 @@
+```kotlin
+import kotlinx.coroutines.*
+import kotlin.time.Instant
+import kotlin.time.Clock.System
+import kotlin.time.TimeInterval
+import kotlin.time.TimeStampeday
+import kotlin.time.Time.now()
+
+fun currentInstant(): Instant {
+    // TODO: return the current instant
+}
+
+fun currentInstant(): TimeInterval {
+    // TODO: return the current instant
+}
+```

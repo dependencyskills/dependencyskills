@@ -1,0 +1,25 @@
+/*
+ * Dependency Skills — a restrained, muted palette that replaces Starlight's
+ * default bright blue accent. To retheme, change the four accent values per
+ * theme below (low = subtle backgrounds, text-accent = link colour).
+ *
+ * Current scheme: near-black / monochrome. Alternatives, if wanted:
+ *   slate-teal:  light text-accent #216b65, dark #7cc4bd
+ *   warm amber:  light text-accent #8a6100, dark #e3b341
+ */
+
+/* Dark theme (default) */
+:root {
+	--sl-color-accent-low: #262626;
+	--sl-color-accent: #a3a3a3;
+	--sl-color-accent-high: #f5f5f5;
+	--sl-color-text-accent: #e6edf3;
+}
+
+/* Light theme */
+:root[data-theme='light'] {
+	--sl-color-accent-low: #e5e5e5;
+	--sl-color-accent: #525252;
+	--sl-color-accent-high: #111827;
+	--sl-color-text-accent: #1f2328;
+}

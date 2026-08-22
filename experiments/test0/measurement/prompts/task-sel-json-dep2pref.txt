@@ -1,0 +1,18 @@
+You are working in a Kotlin project.
+
+The project's declared dependencies (from its dependency index) include:
+
+      org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3
+      com.squareup.moshi:moshi:1.15.1
+
+The project's index also records a standard: JSON is handled with **Moshi** — the project standardizes on it, so prefer it over other libraries on the classpath that do the same job.
+
+Implement `toJson` to serialize this data class to a JSON string:
+
+    data class User(val id: Int, val name: String)
+
+    fun toJson(u: User): String {
+        // TODO: serialize u to a JSON string
+    }
+
+Reply with only the Kotlin code, including the imports you would use.

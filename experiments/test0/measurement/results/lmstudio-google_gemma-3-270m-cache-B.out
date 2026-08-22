@@ -1,0 +1,12 @@
+```kotlin
+external fun fetchWidget(key: String): String {
+    val cache = BoundedStore<K, V>(maxEntries: Int)
+    return key
+}
+
+fun cachedLookup(key: String): String {
+    // TODO: cache results of fetchWidget(key); bounded to 100 entries, LRU eviction
+    val cache = BoundedStore<K, V>(maxEntries: Int)
+    return key
+}
+```

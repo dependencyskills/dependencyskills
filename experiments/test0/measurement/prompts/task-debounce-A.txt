@@ -1,0 +1,15 @@
+You are working in a Kotlin project that depends on `org.test0:async:1.0.0`, a small
+library providing asynchronous utilities. You do not have its documentation and
+cannot browse its source (it is a compiled dependency).
+
+Implement `onSearchInput` so that rapid successive calls are coalesced: `runSearch`
+should fire only after 300ms elapse with no further input, and only with the most
+recent text.
+
+    external fun runSearch(text: String)   // provided
+
+    fun onSearchInput(text: String) {
+        // TODO: coalesce rapid calls; run runSearch(latest text) after a 300ms quiet period
+    }
+
+Reply with only the Kotlin implementation of onSearchInput (and any imports/fields you would use).

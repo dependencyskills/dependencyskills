@@ -1,0 +1,10 @@
+```kotlin
+external fun httpGet(url: String): String {
+    val response = httpGet(url)
+    if (response == null) {
+        throw IllegalArgumentException("Failed to get HTTP response from URL: ${url}")
+    }
+
+    return response.text()
+}
+```

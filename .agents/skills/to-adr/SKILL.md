@@ -5,7 +5,7 @@ license: MIT
 compatibility: Standalone for authoring. The project-docs skill owns where docs live and the tracker KB sync; run its sync after writing if the project has one.
 metadata:
   author: bpappin
-  version: "1.1"
+  version: "1.2"
 ---
 
 # Architecture Decision Records (to-adr)
@@ -15,6 +15,12 @@ agent - does not relitigate it, and can tell when the reasons have expired.
 
 Works with the project-docs skill: this skill is the authoring workflow;
 project-docs owns the conventions, the section, and the KB sync.
+
+
+> **An ADR is a technical decision, not a capture.** If you are recording
+> something you noticed rather than making the call, file it as an issue
+> and let triage route it. Nobody should be pushed into writing one because
+> the story they picked up turned out to be thin.
 
 ## When it is an ADR
 

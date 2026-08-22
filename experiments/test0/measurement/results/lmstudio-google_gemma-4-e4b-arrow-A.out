@@ -1,0 +1,32 @@
+```kotlin
+import arrow.core.NonEmptyList
+import arrow.core.Validated
+import arrow.core.combine
+import arrow.core.valid
+import arrow.core.invalid
+
+/**
+ * Validates the name and age, accumulating all errors if present.
+ * Returns a Validated object which is either successful (Unit) or contains a NonEmptyList of errors.
+ */
+fun validate(name: String, age: Int): Validated<NonEmptyList<String>, Unit> {
+    // Check 1: Name validation
+    val nameCheck = if (name.isNotBlank()) {
+        Validated.Valid(()) // Success, unit value
+    } else {
+        // Failure: Name is blank
+        Validated.Invalid(NonEmptyList.of("Name cannot be blank"))
+    }
+
+    // Check 2: Age validation
+    val ageCheck = if (age >= 18) {
+        Validated.Valid(()) // Success, unit value
+    } else {
+        // Failure: Age is too low
+        Validated.Invalid(NonEmptyList.of("Age must be 18 or older"))
+    }
+
+    // Accumulate the results using combine (Applicative style)
+    return nameCheck.combine(ageCheck) { _, _ -> Unit }
+}
+```

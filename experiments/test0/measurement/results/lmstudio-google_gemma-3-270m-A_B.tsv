@@ -1,0 +1,9 @@
+case	condition	used
+retry	A	no
+retry	B	no
+cache	A	no
+cache	B	yes
+debounce	A	no
+debounce	B	yes
+parse	A	no
+parse	B	yes

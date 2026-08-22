@@ -1,0 +1,11 @@
+You are working in a Kotlin project that depends on `com.charleskorn.kaml:kaml:0.104.0`,
+a YAML library. Implement `parseConfig` to parse a YAML string into this class:
+
+    @Serializable
+    data class AppConfig(val name: String, val port: Int)
+
+    fun parseConfig(yaml: String): AppConfig {
+        // TODO: parse the YAML into AppConfig using the kaml library
+    }
+
+Include the imports you would use. Reply with only the Kotlin code.

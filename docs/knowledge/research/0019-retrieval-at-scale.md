@@ -1,0 +1,117 @@
+# Retrieval at Scale (Layer 1: index recall)
+
+RAD-0019 · 2026-08-20 · v1
+
+**Design; measured.** Specifies and reports Layer 1 of retrieval-at-scale — pure index
+recall, no agent. Layer 2 (the agent authoring a query against the index via an MCP tool)
+is future work.
+
+**Pinned (all public).** Encoders compared (via mlx-embeddings, Apache-2.0, in-process on
+Apple MLX): **BAAI BGE-M3** (`mlx-community/bge-m3-mlx-fp16`, MIT), **intfloat
+multilingual-e5-large** (MIT), **all-MiniLM-L6-v2** (Apache); nomic-embed-text-v1.5 (an
+early run, via LM Studio, since dropped for licence clarity). Corpus: 220 synthetic
+capability entries, 26 paraphrastic queries (`retrieval-scale/`), invented so training
+exposure is nil.
+
+## Question
+
+Content-value, disambiguation and selection all placed candidate entries *in front of*
+the agent. Retrieval-at-scale asks the prior question: when the right capability is one of
+**hundreds** in an index, does a search return it for a caller who describes their need in
+**their own words**? This is where the entry's **semantic face** must work as a *retrieval
+key* — the half RAD-0013 predicted and RAD-0011 rests on ("capability in the caller's
+words") but that had never been measured.
+
+## Trail
+
+### Layer 1 before Layer 2
+
+Two questions hide here: does the **index** return the right entry (recall — an IR
+question, no agent needed), and does an **agent** author a good query and use the result
+(the full loop, needing the MCP tool). Layer 1 measures recall alone — cheap,
+deterministic, no model calls — and validates the index before the MCP build.
+
+### The corpus is adversarial, and the queries are paraphrastic
+
+Random-noise distractors make recall trivially ~100% and teach nothing. So the 220 entries
+are built as **adversarial clusters**: ~22 target capabilities each surrounded by 4–5
+semantically-near siblings (a bounded-LRU cache next to a TTL cache, a write-through cache,
+a memoizer…), plus broad noise. Crucially the **26 queries are paraphrastic** — the
+caller's need in plain words that *deliberately avoid the entry's own trigger vocabulary*
+("occasionally fails for no lasting reason; attempt it a few more times with growing
+pauses" — never "retry", never "backoff"). That is the honest test of semantic retrieval:
+match by meaning, not word overlap.
+
+### The rig
+
+Semantic face only (`capability` + `triggers`) is the retrieval key — never the opaque
+symbol. Three rankings: **vector** (cosine over the embedded semantic face), **lexical**
+(BM25 over the same text), **hybrid** (Reciprocal Rank Fusion), plus a **vector-weighted**
+hybrid. Embeddings run **in-process** via mlx-embeddings (the production-shaped, fully-open
+choice — no LM Studio, no server); retrieval math is pure Python. Scored by recall@k over
+the whole corpus. `build-corpus.py`, `eval-retrieval.py`.
+
+## Findings
+
+**Measured — encoder matters, and a strong open one wins (N=58 pilot).** Vector recall@1
+across encoders: MiniLM-4bit 4/8, e5-large 5/8, nomic 6/8, **BGE-M3 7/8**. At small N the
+weak encoders clustered and looked "within noise"; a genuinely strong one (BGE-M3, MIT)
+separated and got the hardest paraphrastic case to #1. **BGE-M3 is the pick** — top recall
+*and* the cleanest licence (MIT, unrestricted commercial). (Encoder shortlist and licence
+audit contributed by a second model cross-check — NV-Embed ruled out on CC-BY-NC.)
+
+**Measured — at scale, vector decisively beats lexical (N=220, 26 queries, BGE-M3).**
+
+| method | r@1 | r@3 | r@5 | r@10 |
+|---|---|---|---|---|
+| vector | **20/26 (77%)** | 21/26 | 22/26 | 23/26 (88%) |
+| lexical | 10/26 (38%) | 14/26 | 15/26 | 15/26 (58%) |
+| hybrid (equal RRF) | 13/26 | 14/26 | 15/26 | 18/26 |
+| hybrid + vector-weighted (2:1) | 14/26 | 16/26 | 20/26 | 22/26 |
+
+- **The semantic face is the retrieval mechanism for caller's-words queries.** Vector 77%
+  r@1 vs lexical 38%; lexical plateaus at 58% by r@10. Keyword search cannot find a
+  capability described in words that avoid the library's vocabulary — exactly the realistic
+  case. This is RAD-0011's thesis at full strength, and the strongest evidence yet for the
+  vector index (RAD-0010).
+- **Naive equal-RRF hybrid *hurts*.** 13/26 r@1, **below vector's 20/26** — fusing the
+  strong vector arm with the near-useless lexical arm drags the good hits down. Weighting
+  the vector arm 2:1 recovers most of it (up to 20/26 by r@5) but **still does not beat
+  vector alone.** So "hybrid ≥ either arm" is **false** for this regime.
+- **A genuine hard tail.** 3/26 queries miss top-10 even on vector — the densest adversarial
+  clusters, where an oblique need sits among near-identical siblings. A realistic ceiling.
+
+**What this revises.** RAD-0010 assumed a hybrid keyword+vector store as the default. Layer
+1 sharpens that: for **caller's-words (semantic) retrieval with a strong encoder, the design
+is vector-primary**, not equal fusion — lexical earns its keep only for queries carrying
+exact high-signal terms (a known symbol, "LRU"), where BM25's exact match beats the
+embedding. The store still holds both (BM25 is cheap and Lucene indexes it anyway); the
+change is in **fusion policy** — weight the lexical arm up only when the query has
+high-IDF exact terms, rather than fusing equally. A query-adaptive fusion is the follow-on.
+
+**What this does not close.** This is **recall of the index**, not the **agent loop**: the
+query was the caller's need verbatim, not a query the agent *authored*, and the entry was
+retrieved, not *used*. Layer 2 — expose the index as an MCP tool (RAD-0003), let the agent
+write its own query and use the result — is the remaining measurement. Also: the corpus is
+synthetic; a real harvested corpus (RAD-0011) would carry messier prose and is the external
+-validity check.
+
+## Recommendation
+
+**Vector-primary retrieval over a strong, permissively-licensed encoder (BGE-M3), with
+lexical as a term-match supplement, not an equal-RRF partner.** Keep both arms in the store
+(Lucene holds BM25 + HNSW in one artifact — RAD-0010) but make fusion query-adaptive. Next:
+**Layer 2** (the MCP agent loop), then port the Layer-1 rig to the JVM/Lucene substrate and
+re-measure, and swap the synthetic corpus for a harvested one.
+
+## Connections
+
+- [RAD-0011](0011-existing-documentation-systems-as-skill-content.md) — "capability in the
+  caller's words"; this measures it as retrieval.
+- [RAD-0013](0013-the-codex-entry.md) — the two-faced entry; the semantic face now shown to
+  work as a *retrieval key*, not only a disambiguation cue.
+- [RAD-0010](0010-how-the-codex-is-stored-and-served.md) — the hybrid store; this revises
+  the fusion policy to vector-primary.
+- [RAD-0017](0017-the-retrieval-disambiguation-ab.md) — disambiguation among inlined
+  candidates; this is the retrieval step that precedes it.
+- [RAD-0003](0003-central-capability-server.md) — the MCP query server Layer 2 needs.

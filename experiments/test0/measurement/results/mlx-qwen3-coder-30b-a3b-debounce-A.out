@@ -1,0 +1,100 @@
+```kotlin
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.actor
+
+fun onSearchInput(text: String) {
+    // Using a coroutine-based approach with a debouncing mechanism
+    // This creates a debounced search that waits 300ms after the last input
+    // before executing the search with the latest text
+    
+    // We'll use a coroutine scope to manage the debouncing
+    // and a channel to handle the text updates
+    
+    // Create a coroutine scope for this debounced search
+    val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    
+    // Create a channel to receive text updates
+    val channel = Channel<String>(1, BufferOverflow.DROP_OLDEST)
+    
+    // Start the actor that will handle the debouncing
+    scope.launch {
+        var job: Job? = null
+        for (textValue in channel) {
+            job?.cancel()
+            job = launch {
+                delay(300) // Wait 300ms
+                runSearch(textValue)
+            }
+        }
+    }
+    
+    // Send the current text to the channel
+    scope.launch {
+        try {
+            channel.send(text)
+        } catch (e: Exception) {
+            // Handle channel send exception if needed
+        }
+    }
+}
+```
+
+Wait, let me provide a cleaner implementation:
+
+```kotlin
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.*
+
+fun onSearchInput(text: String) {
+    // Using a coroutine-based debouncing approach
+    // This will coalesce rapid successive calls and execute runSearch
+    // only after 300ms of inactivity with the latest text
+    
+    // Create a coroutine scope for managing the debounced execution
+    val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    
+    // Create a channel to receive text updates
+    val channel = Channel<String>(1, BufferOverflow.DROP_OLDEST)
+    
+    // Launch the debouncing actor
+    scope.launch {
+        var job: Job? = null
+        for (textValue in channel) {
+            job?.cancel()
+            job = launch {
+                delay(300)
+                runSearch(textValue)
+            }
+        }
+    }
+    
+    // Send the current text to the channel
+    scope.launch {
+        try {
+            channel.send(text)
+        } catch (e: Exception) {
+            // Handle channel send exception if needed
+        }
+    }
+}
+```
+
+Actually, let me provide the most straightforward and correct implementation:
+
+```kotlin
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.*
+
+private val searchScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+private var searchJob: Job? = null
+
+fun onSearchInput(text: String) {
+    searchJob?.cancel()
+    searchJob = searchScope.launch {
+        delay(300)
+        runSearch(text)
+    }
+}
+```

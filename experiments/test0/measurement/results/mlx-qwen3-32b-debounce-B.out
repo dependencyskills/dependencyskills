@@ -1,0 +1,9 @@
+```kotlin
+import org.test0.Coalescer
+
+private val searchCoalescer = Coalescer(300)
+
+fun onSearchInput(text: String) {
+    searchCoalescer.submit { runSearch(text) }
+}
+```

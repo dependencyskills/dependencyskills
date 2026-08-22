@@ -1,0 +1,8 @@
+```kotlin
+import com.charleskorn.kaml.kaml
+
+fun parseConfig(yaml: String): AppConfig {
+    val appConfig = AppConfig(yaml.split(" ").first().trim(), yaml.split(" ").second().trim())
+    return appConfig
+}
+```

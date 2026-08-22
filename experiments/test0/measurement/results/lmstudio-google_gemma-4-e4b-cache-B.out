@@ -1,0 +1,12 @@
+```kotlin
+// Assuming this implementation resides within a class or object that holds the cache instance.
+private val cache = org.test0.BoundedStore<String, String>(100)
+
+fun cachedLookup(key: String): String {
+    // getOrPut attempts to retrieve the value for 'key'. If missing, it executes the lambda 
+    // (the expensive fetchWidget call) and stores the result before returning it.
+    return cache.getOrPut(key) { 
+        fetchWidget(key) 
+    }
+}
+```

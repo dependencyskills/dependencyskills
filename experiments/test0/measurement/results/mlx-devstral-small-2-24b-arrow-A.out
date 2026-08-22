@@ -1,0 +1,15 @@
+```kotlin
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
+import arrow.core.flatMap
+
+fun validate(name: String, age: Int): Either<List<String>, Unit> {
+    val nameError = if (name.isBlank()) "Name cannot be blank" else null
+    val ageError = if (age < 18) "Age must be at least 18" else null
+
+    val errors = listOfNotNull(nameError, ageError)
+    return if (errors.isEmpty()) Unit.right()
+           else errors.left()
+}
+```

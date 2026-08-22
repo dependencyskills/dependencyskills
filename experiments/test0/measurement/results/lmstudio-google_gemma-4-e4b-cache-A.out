@@ -1,0 +1,36 @@
+```kotlin
+import java.util.LinkedHashMap
+
+// Assume this function is provided and expensive:
+external fun fetchWidget(key: String): String
+
+// The cache implementation uses LinkedHashMap to maintain insertion/access order,
+// allowing us to easily identify and remove the Least Recently Used (LRU) entry.
+private val cache = object : LinkedHashMap<String, String>(101, 0.75f, true) {
+    // The 'true' parameter in the constructor enables access order tracking.
+    // This means when an entry is accessed (read or written), it moves to the end (MRU).
+
+    override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, String>?): Boolean {
+        // This method is called after a new entry has been added.
+        // If the size exceeds 100, we return true to signal that the eldest entry should be removed.
+        return size > 100
+    }
+}
+
+fun cachedLookup(key: String): String {
+    // 1. Check the cache (Cache Hit)
+    val cachedValue = cache[key]
+    if (cachedValue != null) {
+        // Accessing the entry via cache[key] automatically moves it to MRU position due to LinkedHashMap's accessOrder=true.
+        return cachedValue
+    }
+
+    // 2. Cache Miss: Fetch the expensive data
+    val newValue = fetchWidget(key)
+
+    // 3. Store the result in the cache (this insertion triggers the LRU check)
+    cache[key] = newValue
+
+    return newValue
+}
+```

@@ -1,0 +1,15 @@
+```kotlin
+import java.util.LinkedHashMap
+
+fun cachedLookup(key: String): String {
+    companion object {
+        private val cache = object : LinkedHashMap<String, String>(16, 0.75f, true) {
+            override fun removeEldestEntry(eldest: Map.Entry<String, String>?): Boolean {
+                return size > 100
+            }
+        }
+    }
+    
+    return cache.getOrPut(key) { fetchWidget(key) }
+}
+```

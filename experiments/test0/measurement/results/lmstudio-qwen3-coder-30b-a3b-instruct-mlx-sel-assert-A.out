@@ -1,0 +1,9 @@
+```kotlin
+import org.junit.jupiter.api.Assertions.*
+
+fun checkOutput(result: Int, name: String) {
+    assertEquals(42, result)
+    assertNotNull(name)
+    assertFalse(name.isBlank())
+}
+```

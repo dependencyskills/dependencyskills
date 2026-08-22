@@ -1,0 +1,20 @@
+```kotlin
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.net.HttpURLConnection
+import java.net.URL
+
+fun fetch(url: String): String {
+    val urlObject = URL(url)
+    val connection = urlObject.openConnection() as HttpURLConnection
+    connection.requestMethod = "GET"
+
+    return if (connection.responseCode == 200) {
+        BufferedReader(InputStreamReader(connection.inputStream)).use { reader ->
+            reader.readText()
+        }
+    } else {
+        throw Exception("Failed to fetch $url. Response code: ${connection.responseCode}")
+    }
+}
+```

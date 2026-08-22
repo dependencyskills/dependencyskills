@@ -1,0 +1,10 @@
+import charleskorn.kaml.KamlMapper
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class AppConfig(val name: String, val port: Int)
+
+fun parseConfig(yaml: String): AppConfig {
+    val mapper = KamlMapper()
+    return mapper.decodeFromString<AppConfig>(yaml)
+}

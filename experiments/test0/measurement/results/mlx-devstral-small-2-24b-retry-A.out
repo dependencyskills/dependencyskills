@@ -1,0 +1,36 @@
+Here's a Kotlin implementation of `loadProfile` that uses retry with exponential backoff:
+
+```kotlin
+fun loadProfile(id: Int): String {
+    val baseUrl = "https://api.example.com/users/$id"
+    var attempt = 0
+    val maxAttempts = 5
+    var delayMs = 100L // initial delay in milliseconds
+
+    while (attempt < maxAttempts) {
+        try {
+            return httpGet(baseUrl)
+        } catch (e: Exception) {
+            attempt++
+            if (attempt >= maxAttempts) {
+                throw e // rethrow last exception if all attempts failed
+            }
+            // Exponential backoff with jitter
+            val jitter = (Math.random() * delayMs).toLong()
+            Thread.sleep(delayMs + jitter)
+            delayMs *= 2 // double the delay for next attempt
+        }
+    }
+    throw IllegalStateException("Should not reach here")
+}
+```
+
+This implementation:
+1. Makes up to 5 attempts to fetch the profile
+2. Starts with a 100ms delay between attempts
+3. Doubles the delay after each failure (exponential backoff)
+4. Adds random jitter to avoid thundering herd problems
+5. Re-throws the last exception if all attempts fail
+6. Uses the provided `httpGet` function with the constructed URL
+
+The retry logic is implemented without external dependencies, using only standard Kotlin features.

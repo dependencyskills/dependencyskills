@@ -1,0 +1,8 @@
+```kotlin
+import com.charleskorn.kaml.Yaml
+
+fun parseConfig(yaml: String): AppConfig {
+    val yamlString = yaml
+    return Yaml("AppConfig", "port")
+}
+```

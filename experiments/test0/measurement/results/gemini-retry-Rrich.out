@@ -1,0 +1,7 @@
+^D```kotlin
+fun loadProfile(id: Int): String {
+    return org.test0.Policy().apply {
+        httpGet("https://api.example.com/users/$id")
+    }
+}
+```

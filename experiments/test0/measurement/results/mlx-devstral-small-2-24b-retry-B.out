@@ -1,0 +1,17 @@
+Here's the implementation of `loadProfile` using the retry-with-backoff policy from the `org.test0:retry` library:
+
+```kotlin
+fun loadProfile(id: Int): String {
+    return Policy().apply {
+        httpGet("https://api.example.com/users/$id")
+    }
+}
+```
+
+This implementation:
+1. Creates a default `Policy` instance with the default parameters (3 retries, 100ms initial delay, 2.0 factor)
+2. Uses the `apply` method to wrap the `httpGet` call with retry logic
+3. The policy will automatically retry the network call with exponential backoff if it fails
+4. Returns the successful result or throws an exception if all retries are exhausted
+
+The default parameters should provide reasonable retry behavior for most cases, but you could customize them if needed by passing arguments to the `Policy` constructor.

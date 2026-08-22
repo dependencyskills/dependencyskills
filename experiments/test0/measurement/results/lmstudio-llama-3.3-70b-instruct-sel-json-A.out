@@ -1,0 +1,11 @@
+```kotlin
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+
+data class User(val id: Int, val name: String)
+
+fun toJson(u: User): String {
+    val gson = GsonBuilder().create()
+    return gson.toJson(u)
+}
+```

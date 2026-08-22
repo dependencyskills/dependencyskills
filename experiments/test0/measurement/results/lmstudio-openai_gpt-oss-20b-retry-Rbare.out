@@ -1,0 +1,13 @@
+```kotlin
+import org.test0.Policy
+
+external fun httpGet(url: String): String   // provided; may throw on transient failure
+
+fun loadProfile(id: Int): String {
+    val url = "https://api.example.com/users/$id"
+    // Retry up to 3 times, starting with 100 ms delay and doubling each time
+    return Policy(times = 3, initialDelayMs = 100L, factor = 2.0).apply {
+        httpGet(url)
+    }
+}
+```

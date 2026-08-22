@@ -1,0 +1,17 @@
+```kotlin
+import org.arrow.core.raise.Either
+import org.arrow.core.raise.ZipOrAccumulate
+import org.arrow.core.raise.Violator
+import org.arrow.core.raise.ZipOrAccumulate
+
+fun validate(name: String, age: Int): /* Arrow result type */ {
+    // TODO: accumulate validation errors with Arrow
+    if (name == "John") {
+        return 18; // Or any other valid value
+    } else if (age >= 18) {
+        return 18; // Or any other valid value
+    } else {
+        return 0; // Or any other invalid value
+    }
+}
+```

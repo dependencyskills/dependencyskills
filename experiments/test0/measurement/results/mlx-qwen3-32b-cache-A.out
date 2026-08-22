@@ -1,0 +1,47 @@
+```kotlin
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
+
+val cache = object {
+    private val map = ConcurrentHashMap<String, Pair<String, AtomicInteger>>(100)
+    private val lruCounter = AtomicInteger(0)
+
+    fun get(key: String): String? {
+        val entry = map[key]
+        entry?.let {
+            // Update LRU counter to mark this entry as recently used
+            it.first.also { value ->
+                it.second.set(lruCounter.incrementAndGet())
+                return value
+            }
+        }
+        return null
+    }
+
+    fun put(key: String, value: String) {
+        val currentLru = lruCounter.get()
+        map.putIfAbsent(key, Pair(value, AtomicInteger(currentLru)))
+    }
+
+    fun compute(key: String, fetch: () -> String): String {
+        val cached = get(key)
+        if (cached != null) return cached
+
+        val value = fetch()
+        put(key, value)
+
+        // Enforce max size
+        if (map.size > 100) {
+            map.entries.minByOrNull { it.value.second.get() }?.key?.let { oldKey ->
+                map.remove(oldKey)
+            }
+        }
+
+        return value
+    }
+}
+
+fun cachedLookup(key: String): String {
+    return cache.compute(key) { fetchWidget(key) }
+}
+```

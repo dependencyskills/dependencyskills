@@ -1,0 +1,17 @@
+```kotlin
+import org.test0.async.delay
+import kotlin.concurrent.timerTask
+
+private var searchTimer: Timer? = null
+private var latestText: String? = null
+
+fun onSearchInput(text: String) {
+    latestText = text
+    searchTimer?.cancel()
+    searchTimer = Timer().apply {
+        schedule(timerTask {
+            runSearch(latestText!!)
+        }, 300)
+    }
+}
+```

@@ -1,0 +1,12 @@
+You are working in a Kotlin project.
+
+Implement `fetch` to make an HTTP GET request to a URL and return the response
+body as a String:
+
+    fun fetch(url: String): String {
+        // TODO: HTTP GET url, return the body as a String
+    }
+
+Use whatever HTTP client library you would normally reach for.
+
+Reply with only the Kotlin code, including the imports you would use.

@@ -1,0 +1,15 @@
+```kotlin
+external fun fetchWidget(key: String): String {
+    val cache =  new Cache() // Initialize a new cache
+    cache.setKey(key)
+    cache.setCacheLevel(1) // Evict the least-recently-used entry
+    return "Hello, world!"
+}
+
+fun cachedLookup(key: String): String {
+    val cache =  new Cache() // Initialize a new cache
+    cache.setKey(key)
+    cache.setCacheLevel(0) // Evict the least-recently-used entry
+    return "Hello, world!"
+}
+```

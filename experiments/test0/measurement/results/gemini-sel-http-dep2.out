@@ -1,0 +1,15 @@
+^D```kotlin
+import okhttp3.OkHttpClient
+import okhttp3.Request
+
+fun fetch(url: String): String {
+    val client = OkHttpClient()
+    val request = Request.Builder()
+        .url(url)
+        .build()
+    
+    return client.newCall(request).execute().use { response ->
+        response.body?.string() ?: ""
+    }
+}
+```

@@ -1,0 +1,15 @@
+```kotlin
+import io.strikt.api.expectThat
+import io.strikt.assertions.first
+import io.strikt.assertions.hasSize
+import io.strikt.assertions.isNotBlank
+
+fun checkOutput(result: Int, name: String) {
+    expectThat(listOf(result)) {
+        first().isEqualTo(42)
+    }
+    expectThat(name) {
+        isNotBlank()
+    }
+}
+```

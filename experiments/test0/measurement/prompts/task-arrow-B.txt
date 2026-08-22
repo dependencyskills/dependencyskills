@@ -1,0 +1,18 @@
+You are working in a Kotlin project that uses Arrow 2.0.
+
+From the project's dependency index (Arrow 2.0):
+
+    `Validated` / `ValidatedNel` were removed in Arrow 2.0. Accumulate errors with
+    `Either` inside an `either { }` block, using `zipOrAccumulate` (or
+    `mapOrAccumulate` for collections) and `raise` for failures.
+    Relevant imports: arrow.core.raise.either, arrow.core.raise.zipOrAccumulate
+
+Implement `validate` to check that `name` is non-blank and `age` is at least 18,
+**accumulating all errors** (if both fail, report both), using Arrow. Include the
+imports you would use.
+
+    fun validate(name: String, age: Int): /* Arrow result type */ {
+        // TODO: accumulate validation errors with Arrow
+    }
+
+Reply with only the Kotlin code (with imports).

@@ -29,7 +29,7 @@ pointer's connection env → legacy `github.env` → `gh auth token`.
 | `story.completeCheck` | Parse AC yourself: all checked? `needs-gherkin` label but no `## QA` section? Open discovered issues referencing this one? Report; don't close otherwise |
 | `effort.log` | GitHub has no work items - record approved effort as a comment on the FOCUSED issue (`Effort: 2h`), never silently. The developer's working day is not effort and does not go here - see the `worklog` skill |
 | `story.next` | Search: `label:ready-for-agent state:open` , prefer `priority:show-stopper` > `priority:critical` > ... labels when present |
-| Stage on pickup | Projects mode: `scripts/gh-stage.sh N "Develop"` (real column names from `docs/dimensions.md` or the script's error listing; auto-adds the issue to the project). Issues-only: no-op - say so once |
+| Stage on pickup | Projects mode: `scripts/gh-stage.sh N "Develop"` (real column names from `.agents/config/dimensions.md` or the script's error listing; auto-adds the issue to the project). Issues-only: no-op - say so once |
 | Stage on completion | Projects mode: move to the review/testing column when one exists (implementer-done = ready for verification; a human moves it to done), else the done column. Also close the issue when the board's done column implies it - ask if unsure. Issues-only: close the issue (completed) |
 | Priority / Estimate (planning, triage only) | Projects mode: project fields (edit in UI or GraphQL). Issues-only: `priority:<level>` labels |
 
@@ -87,4 +87,4 @@ The installer's bind step creates the reserved label set in the repo and
 verifies the Projects board when a project number is given. The board's
 Status columns should match the workflow (e.g. Backlog / Develop /
 Review / Done); `gh-pull.sh` snapshots whatever exists into
-`docs/dimensions.md` so agents use the real column names.
+`.agents/config/dimensions.md` so agents use the real column names.

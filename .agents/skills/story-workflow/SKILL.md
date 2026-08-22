@@ -5,7 +5,7 @@ license: MIT
 compatibility: Requires a connection to the project's issue tracker (see the tracker binding for specifics; YouTrack needs MCP, Cloud or Server 2025.3+)
 metadata:
   author: bpappin
-  version: "1.16"
+  version: "1.23"
 ---
 
 # Story Workflow
@@ -31,7 +31,7 @@ ONLY authoritative pointer: if some other config file names a different
 tracker server (legacy `.agents/youtrack.json`, `.agents/config/youtrack.json`,
 leftovers from earlier tooling), that file is stale — flag the
 disagreement to the user and stop; never pick a server by guessing.
-After a server move, local mirrors (`docs/stories/`, `docs/dimensions.md`,
+After a server move, local mirrors (`docs/stories/`, `.agents/config/dimensions.md`,
 docs sync state) reference the OLD server until refreshed — the
 project-docs skill has the recovery ritual.
 
@@ -133,7 +133,8 @@ On approval, `effort.log`.
   session actually took, and consider whether it is effort at all or the
   developer's day, which is the work log's business.
 - **"log time", "log 3h", "log my day" are NOT this.** Those phrases mean
-  the developer's work log — hand them to the `worklog` skill, which
+  the developer's work log — hand them to the `worklog` skill (à la carte;
+  if it is not installed, say so rather than logging anywhere else), which
   attributes to a project and feeds timesheets. Only an explicit "log 30m
   ON PROJ-123" is effort, and only because they named the issue.
 - Effort should be near-automatic: the session had a focused story and a
@@ -197,7 +198,7 @@ nagging:
 - **Session close**: walk the ritual unprompted - completion check, stage
   move, the time proposal, docs sync where the project has one. The user
   should never have to remember the checklist; that is what you are for.
-- **"How does this work again?"** - answer from `docs/WORKFLOW.md` (the
+- **"How does this work again?"** - answer from `WORKFLOW.md` (the
   project-local guide the installer maintains); keep the answer to the
   piece they asked about.
 
@@ -213,12 +214,42 @@ related case — see [references/offline.md](references/offline.md).)
 
 ## Guardrails
 
+- **If this developer has not run setup, say so before anything else.**
+  Per-developer state lives in `~/.agents/story-tools/` - the credential
+  and the role. If there is no entry for this project in
+  `~/.agents/story-tools/developer.json`, or tracker tools are missing or
+  unauthenticated, stop and tell them to run `.agents/setup.sh` in the
+  project (or `install.sh` from the skills repo if the project ships no
+  copy). Nothing in the repo carries it: skills and workflow docs are
+  committed and shared, so a fresh clone looks fully set up when the
+  person is not.
+- **Respect the roles recorded there.** `developer` works ready stories,
+  files issues and bugs, and routes anything unclear back to triage.
+  `lead` does triage routing: priority, subsystem, deciding a story is
+  ready. `architect` makes the technical calls - architecture decisions,
+  ADRs, research records. `product` decides what the product does: PRDs
+  and requirements. Someone can hold several; all of them is the ordinary
+  answer for a person working solo. If a role is missing, do not steer
+  them into that work - file it or hand it back instead. This is a hint
+  about whose call something is, not a permission: the tracker enforces.
+
 - One focused story per session; changing focus requires the user's
   explicit request.
 - If `ac.toggle` is refused for drift, re-read `story.context` and retry
   against the current list.
-- A story with no `## Acceptance Criteria` section: stop and draft AC with
-  the user before writing code.
+- **A story with no `## Acceptance Criteria` is not ready to be worked.**
+  Stop. Do not draft them here and do not write code. Tag it `needs-triage`,
+  say what is missing, and hand it back - a story arrives with its scope
+  already decided, or it is not a story yet.
+  - This is not a permissions rule, it applies to everyone. Requirements
+    invented inside a work session are invented by whoever happens to be
+    holding the ticket, under time pressure, with no one reviewing them.
+    That is the scope hole this skill exists to close.
+  - If you own this project's requirements and want to fix it now, that is
+    a **separate, deliberate step**: leave the work session, triage the
+    story properly, then pick it up. Not a detour mid-implementation.
+  - Filing the gap is always in scope. Anyone can create an issue or a bug
+    and let triage decide - that is the off-ramp, and it is never blocked.
 - **Never ask for or accept tokens, credentials, or connection secrets in
   conversation** — many organizations rightly prohibit it. All
   configuration, especially secrets, is entered only through the

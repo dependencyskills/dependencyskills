@@ -5,7 +5,7 @@ license: MIT
 compatibility: Requires a connection to the project's issue tracker (see the tracker binding; YouTrack today).
 metadata:
   author: bpappin
-  version: "1.9"
+  version: "1.11"
 ---
 
 # To Issues
@@ -70,6 +70,20 @@ any slices merge or split? Are HITL/AFK assignments right? Do the
 priorities and estimates look sane? Iterate until approved.
 
 ### 5. Publish to the tracker
+
+**Never write a dimension value you have not read.** Before creating or
+updating any issue, read the project's dimensions - the binding's dimensions
+tool, or `.agents/config/dimensions.md`. If you have not read them *in this session*,
+read them now. A value you invented is not a new value, it is a
+near-duplicate: the issue drops out of every filter, board and saved search
+the real value feeds, and nobody notices until someone wonders where the
+work went.
+
+**Topical tags come from the existing set.** Freeform is not permission.
+Proposing a genuinely new tag is a human decision - name it, say why nothing
+existing fits, and get confirmation before it is written. Never create one
+in passing, and never leave a dimension unset silently: if you cannot infer
+a value, say so and ask.
 
 For each approved slice, create a story via the tracker binding, in
 dependency order (blockers first) so you can reference real IDs. Each story

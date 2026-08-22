@@ -1,0 +1,27 @@
+```kotlin
+import org.test0.RowReader
+import org.test0.Textio
+import org.test0.Textio.Parser
+
+fun parseReport(text: String): List<List<String>> {
+    val rows = []
+    let delimiter = '\t'
+    let tab_chars = " \t\n" // Example tab characters
+    for (field in text) {
+        if (field == ' ') {
+            rows.append(field)
+        } else {
+            try {
+                val field = read(text)
+                if (field == ' ') {
+                    rows.append(field)
+                }
+            } catch (e: Exception) {
+                println("Error reading tab-delimited text: " + e.message)
+                return rows
+            }
+        }
+    }
+    return rows
+}
+```

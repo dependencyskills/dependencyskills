@@ -1,0 +1,9 @@
+case	condition	verdict
+retry	Rbare	correct
+retry	Rrich	correct
+cache	Rbare	correct
+cache	Rrich	correct
+debounce	Rbare	correct
+debounce	Rrich	correct
+parse	Rbare	reinvent
+parse	Rrich	correct

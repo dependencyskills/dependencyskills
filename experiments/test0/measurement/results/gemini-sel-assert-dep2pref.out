@@ -1,0 +1,10 @@
+^D```kotlin
+import strikt.api.expectThat
+import strikt.assertions.isEqualTo
+import strikt.assertions.isNotBlank
+
+fun checkOutput(result: Int, name: String) {
+    expectThat(result).isEqualTo(42)
+    expectThat(name).isNotBlank()
+}
+```

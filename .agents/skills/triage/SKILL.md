@@ -5,7 +5,7 @@ license: MIT
 compatibility: Requires a connection to the project's issue tracker (see the tracker binding; YouTrack today).
 metadata:
   author: bpappin
-  version: "1.18"
+  version: "1.24"
 ---
 
 # Triage
@@ -96,6 +96,39 @@ issue; let the maintainer pick.
 
 ## Triage a specific issue
 
+**Never write a dimension value you have not read.** Before creating or
+updating any issue, read the project's dimensions - the binding's dimensions
+tool, or `.agents/config/dimensions.md`. If you have not read them *in this session*,
+read them now. A value you invented is not a new value, it is a
+near-duplicate: the issue drops out of every filter, board and saved search
+the real value feeds, and nobody notices until someone wonders where the
+work went.
+
+**Topical tags come from the existing set.** Freeform is not permission.
+Proposing a genuinely new tag is a human decision - name it, say why nothing
+existing fits, and get confirmation before it is written. Never create one
+in passing, and never leave a dimension unset silently: if you cannot infer
+a value, say so and ask.
+
+- **If this developer has not run setup, say so before anything else.**
+  Per-developer state lives in `~/.agents/story-tools/` - the credential
+  and the role. If there is no entry for this project in
+  `~/.agents/story-tools/developer.json`, or tracker tools are missing or
+  unauthenticated, stop and tell them to run `.agents/setup.sh` in the
+  project (or `install.sh` from the skills repo if the project ships no
+  copy). Nothing in the repo carries it: skills and workflow docs are
+  committed and shared, so a fresh clone looks fully set up when the
+  person is not.
+- **Respect the roles recorded there.** `developer` works ready stories,
+  files issues and bugs, and routes anything unclear back to triage.
+  `lead` does triage routing: priority, subsystem, deciding a story is
+  ready. `architect` makes the technical calls - architecture decisions,
+  ADRs, research records. `product` decides what the product does: PRDs
+  and requirements. Someone can hold several; all of them is the ordinary
+  answer for a person working solo. If a role is missing, do not steer
+  them into that work - file it or hand it back instead. This is a hint
+  about whose call something is, not a permission: the tracker enforces.
+
 1. **Gather context.** Read the full issue (body, comments, roles,
    reporter, dates). Parse prior triage notes so you don't re-ask resolved
    questions. Explore the codebase using the project's domain glossary,
@@ -128,7 +161,10 @@ issue; let the maintainer pick.
    a new value ("CMS-Server" when "CMS Server" exists); adding one is a
    project-settings change and may need an admin. Curate topical tags:
    Title Case, human-readable ("Trust Insights"),
-   reusing existing tags over inventing near-duplicates. Reserved workflow
+   **chosen from the tags the project already uses** - freeform is not
+   permission to invent one. A genuinely new tag is a human decision:
+   name it, say why nothing existing fits, and get confirmation before
+   writing it. Reserved workflow
    tags (the role tags, `triaged`, `needs-gherkin`, `discovered`) are
    machinery, not topics. **Human-added tags are data**: users tag stories to group things
    their own way - never remove or rename a tag on your own initiative,

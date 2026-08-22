@@ -1,0 +1,19 @@
+```kotlin
+fun loadProfile(id: Int): String {
+    val policy = Policy(times = 3, initialDelayMs = 100, factor = 2.0)
+    return policy.apply {
+        var lastException: Exception? = null
+        repeat(times + 1) {
+            try {
+                return@apply httpGet("https://api.example.com/users/$id")
+            } catch (e: Exception) {
+                lastException = e
+                if (it < times) {
+                    Thread.sleep((initialDelayMs * Math.pow(factor, it.toDouble())).toLong())
+                }
+            }
+        }
+        throw lastException!!
+    }
+}
+```

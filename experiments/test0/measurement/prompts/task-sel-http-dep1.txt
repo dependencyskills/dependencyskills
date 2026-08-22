@@ -1,0 +1,14 @@
+You are working in a Kotlin project.
+
+The project's declared dependencies (from its dependency index) include:
+
+      io.ktor:ktor-client-core:2.3.12
+
+Implement `fetch` to make an HTTP GET request to a URL and return the response
+body as a String:
+
+    fun fetch(url: String): String {
+        // TODO: HTTP GET url, return the body as a String
+    }
+
+Reply with only the Kotlin code, including the imports you would use.

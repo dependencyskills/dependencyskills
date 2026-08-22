@@ -1,0 +1,30 @@
+---
+// Overrides Starlight's built-in Footer: render it unchanged, then append the
+// site licence line. Registered via `components.Footer` in astro.config.mjs.
+import Default from '@astrojs/starlight/components/Footer.astro';
+---
+
+<Default {...Astro.props}><slot /></Default>
+
+<div class="ds-license">
+	<p>
+		Text on this site is licensed
+		<a href="https://creativecommons.org/licenses/by/4.0/">CC&nbsp;BY&nbsp;4.0</a>;
+		source code under
+		<a href="https://www.apache.org/licenses/LICENSE-2.0">Apache&nbsp;2.0</a>.
+		© 2026 The Dependency Skills Authors.
+	</p>
+</div>
+
+<style>
+	.ds-license {
+		margin-top: 1.5rem;
+		padding-top: 1rem;
+		border-top: 1px solid var(--sl-color-hairline);
+		font-size: var(--sl-text-xs);
+		color: var(--sl-color-gray-3);
+	}
+	.ds-license a {
+		color: var(--sl-color-text-accent);
+	}
+</style>

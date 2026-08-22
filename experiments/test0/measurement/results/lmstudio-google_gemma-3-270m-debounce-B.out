@@ -1,0 +1,27 @@
+```kotlin
+import org.test0.Coalescer
+import org.test0.Async
+import org.test0.Async.Int
+import org.test0.Async.String
+
+class Coalescer(quietMs: Long) {
+    fun submit(action: () -> Unit) {
+        // TODO: coalesce rapid calls; run runSearch(latest text) after a 300ms quiet period
+        try {
+            if (action == "runSearch") {
+                // TODO: coalesce rapid calls; run runSearch(latest text) after a 300ms quiet period
+            } else {
+                // TODO: coalesce rapid calls; run runSearch(latest text) after a 300ms quiet period
+            }
+        } catch (e: Exception) {
+            // TODO: coalesce rapid calls; run runSearch(latest text) after a 300ms quiet period
+        } finally {
+            // TODO: coalesce rapid calls; run runSearch(latest text) after a 300ms quiet period
+        }
+    }
+
+    fun onSearchInput(text: String) {
+        // TODO: coalesce rapid calls; run runSearch(latest text) after a 300ms quiet period
+    }
+}
+```

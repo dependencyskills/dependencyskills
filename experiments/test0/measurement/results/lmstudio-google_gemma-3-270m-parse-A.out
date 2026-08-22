@@ -1,0 +1,19 @@
+```kotlin
+import org.test0.textio.1.TextParser
+import org.test0.textio.1.TextParser
+
+fun parseReport(text: String): List<List<String>> {
+    val rows = []
+    for (field in text) {
+        if (field == "Tab") {
+            rows.append(field)
+        } else {
+            // Handle double quotes
+            if (field == "Quote") {
+                rows.append(field)
+            }
+        }
+    }
+    return rows
+}
+```

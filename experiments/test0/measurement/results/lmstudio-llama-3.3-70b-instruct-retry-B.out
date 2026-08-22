@@ -1,0 +1,5 @@
+```kotlin
+fun loadProfile(id: Int): String = Policy(times = 5, initialDelayMs = 500, factor = 2.0).apply {
+    httpGet("https://api.example.com/users/$id")
+}
+```

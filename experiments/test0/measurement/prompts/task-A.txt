@@ -1,0 +1,14 @@
+You are working in a Kotlin project that depends on `org.test0:retry:1.2.0`, a
+small library providing retry utilities. You do not have its documentation and
+cannot browse its source (it is a compiled dependency).
+
+Implement `loadProfile` so the network call is retried a few times with increasing
+(exponential) backoff before giving up:
+
+    external fun httpGet(url: String): String   // provided; may throw on transient failure
+
+    fun loadProfile(id: Int): String {
+        // TODO: call httpGet("https://api.example.com/users/$id") with retry + backoff
+    }
+
+Output only the Kotlin implementation of loadProfile.

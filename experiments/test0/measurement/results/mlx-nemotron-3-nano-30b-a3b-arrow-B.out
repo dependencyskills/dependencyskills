@@ -1,0 +1,15 @@
+```kotlin
+import arrow.core.*
+import arrow.core.raise.either
+import arrow.core.raise.zipOrAccumulate
+
+fun validate(name: String, age: Int): Either<NonEmptyList<String>, Pair<String, Int>> {
+    val nameE = either {
+        if (name.isBlank()) left("Name must not be blank") else right(name)
+    }
+    val ageE = either {
+        if (age < 18) left("Age must be at least 18") else right(age)
+    }
+    return zipOrAccumulate(nameE, ageE) { n, a -> n to a }
+}
+```

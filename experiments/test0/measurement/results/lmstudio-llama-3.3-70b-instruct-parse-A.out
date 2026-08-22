@@ -1,0 +1,21 @@
+```kotlin
+import org.test0.textio.TextIO
+
+fun parseReport(text: String): List<List<String>> {
+    val parser = TextIO.ofString(text)
+    val result = mutableListOf<List<String>>()
+    
+    while (!parser.eof()) {
+        val row = mutableListOf<String>()
+        while (true) {
+            val field = parser.readQuotedOrUntil('\t')
+            if (field == null) break
+            row.add(field)
+        }
+        result.add(row)
+        if (!parser.eol()) parser.skip() // skip newline character
+    }
+    
+    return result
+}
+```

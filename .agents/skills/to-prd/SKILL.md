@@ -5,7 +5,7 @@ license: MIT
 compatibility: Standalone for the PRD document; creating the verification stories uses the to-issues skill and the project's tracker.
 metadata:
   author: bpappin
-  version: "1.4"
+  version: "1.5"
 ---
 
 # Product Requirements (to-prd)
@@ -18,6 +18,14 @@ AC file — the tracker is the source of truth for anything with done-ness.
 
 Works with the project-docs skill: this skill is the authoring workflow;
 project-docs owns the conventions, the template, and the KB sync.
+
+
+> **A PRD is a product decision, not a capture.** If you are recording
+> something you noticed - a bug, a gap, an idea, a story that needs
+> writing - file it as an issue and let triage route it. Only write a PRD
+> when deciding what the product does is your call to make. Nobody should
+> be pushed into authoring one because a story they picked up turned out
+> to be thin.
 
 ## Process
 

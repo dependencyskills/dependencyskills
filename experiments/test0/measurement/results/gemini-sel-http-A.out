@@ -1,0 +1,7 @@
+^D```kotlin
+import java.net.URL
+
+fun fetch(url: String): String {
+    return URL(url).readText()
+}
+```

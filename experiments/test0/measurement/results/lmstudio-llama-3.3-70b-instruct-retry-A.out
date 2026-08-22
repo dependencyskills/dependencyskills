@@ -1,0 +1,23 @@
+```kotlin
+fun loadProfile(id: Int): String {
+    val url = "https://api.example.com/users/$id"
+    var attempts = 0
+    var delay = 100L // initial delay in milliseconds
+
+    while (attempts < 5) { // retry up to 5 times
+        try {
+            return httpGet(url)
+        } catch (e: Exception) {
+            attempts++
+            if (attempts >= 5) {
+                throw e // rethrow exception after max attempts
+            }
+            Thread.sleep(delay) // wait before next attempt
+            delay *= 2L // exponential backoff
+        }
+    }
+
+    // this line should be unreachable, but Kotlin requires a return statement
+    throw RuntimeException("Unreachable code")
+}
+```

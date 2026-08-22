@@ -14,11 +14,11 @@ YouTrack app; YouTrack's built-in MCP tools are always present alongside.
 | `story.context` | `story_get_story_context` | `get_issue` → parse `## Acceptance Criteria` (`- [ ]`/`- [x]`, in order), `## References`, `## QA` yourself |
 | `ac.toggle` | `story_update_ac(index, textPrefix, done)` - refuses on drift | `get_issue` fresh → flip exactly one checkbox in the description → `update_issue` with the full text. Re-read immediately before writing; you have no drift guard |
 | `ac.add` | `story_add_ac(text)` | Same read-modify-write, appending a `- [ ]` line |
-| `work.discovered` | `story_add_discovered_work(summary, description)` - links "discovered from" (falls back to relates-to + `discovered` tag) | `create_issue` in the same project (canonical format) + `link_issues` relates-to the current story |
+| `work.discovered` | `story_add_discovered_work(summary, description)` - **pass the issue id explicitly**; omitted, it uses your focused story, which may be in another project - links "discovered from" (falls back to relates-to + `discovered` tag) | `create_issue` in the same project (canonical format) + `link_issues` relates-to the current story |
 | `story.completeCheck` | `story_complete_story` - checks AC, `needs-gherkin` tag vs `## QA` | Parse AC yourself: all checked? tag present but no QA section? Report; don't close otherwise |
 | `effort.log` | `story_log_work(minutes, comment?)` on the FOCUSED issue - human-approved only. Effort belongs to the issue being worked; a working day belongs to the `worklog` skill, never here | No work-item tool built in: tell the user the number to enter via YouTrack's `work` command, or post it as a comment (`Effort: 2h`) for later entry |
 | `story.next` | `search_issues`: `project: {KEY} tag: {ready-for-agent} #Unresolved sort by: priority asc` (drop the tag term if the project doesn't use triage) | same |
-| Stage on pickup | predefined `update_issue` - Stage → the in-progress column (read real values via `story_project_dimensions`; fallback: `docs/dimensions.md` from the last pull, else ask once) | same, values from the snapshot or board |
+| Stage on pickup | predefined `update_issue` - Stage → the in-progress column (read real values via `story_project_dimensions`; fallback: `.agents/config/dimensions.md` from the last pull, else ask once) | same, values from the snapshot or board |
 | State change on completion | predefined `update_issue` - boards with a testing/review column: Stage → that column (a human moves it to done after verification); otherwise Stage → done column. Stage+State projects also set State → resolution (e.g. Fixed); single-field projects set that field | same |
 | Priority / Estimation set (planning, triage only) | predefined `update_issue` field commands | same |
 

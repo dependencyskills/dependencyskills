@@ -12,3 +12,6 @@ contain.
 Fixtures belong to the spec, not to any one implementation. If a fixture
 only makes sense for one of them, it is probably a unit test in that
 implementation instead.
+
+Experiment fixtures (synthetic source sets for the research spikes) live under
+`experiments/`, not here — see `experiments/README.md`.

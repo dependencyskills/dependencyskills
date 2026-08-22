@@ -1,0 +1,29 @@
+Here's a Kotlin implementation that coalesces rapid successive calls to `onSearchInput` using a debounce mechanism:
+
+```kotlin
+import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+
+private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+private val debounceMutex = Mutex()
+private var debounceJob: Job? = null
+
+fun onSearchInput(text: String) {
+    debounceMutex.withLock {
+        debounceJob?.cancel()
+        debounceJob = scope.launch {
+            delay(300)
+            runSearch(text)
+        }
+    }
+}
+```
+
+This solution:
+1. Uses Kotlin coroutines for the debounce logic
+2. Maintains a single debounce job that gets cancelled and recreated on each input
+3. Uses a mutex to ensure thread safety when updating the debounce job
+4. Only calls `runSearch` after 300ms of no further input, with the latest text value
+
+Note that this requires the `kotlinx-coroutines-core` dependency to be available in your project. If you can't use coroutines, an alternative approach using `ScheduledExecutorService` would be needed.

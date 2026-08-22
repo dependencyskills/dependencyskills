@@ -1,0 +1,26 @@
+```kotlin
+import java.time.Duration
+import java.util.concurrent.TimeUnit
+
+fun loadProfile(id: Int): String {
+    val url = "https://api.example.com/users/$id"
+    val maxRetries = 5
+    var retryCount = 0
+    val initialBackoff = Duration.ofSeconds(1)
+
+    while (retryCount <= maxRetries) {
+        try {
+            return httpGet(url)
+        } catch (e: Exception) {
+            if (retryCount >= maxRetries) {
+                throw e // Give up after max retries
+            }
+            val backoff = initialBackoff.multipliedBy(2.0.pow(retryCount.toDouble()))
+            TimeUnit.MILLISECONDS.sleep(backoff.toMillis())
+            retryCount++
+        }
+    }
+
+    throw IllegalStateException("Should not reach here")
+}
+```

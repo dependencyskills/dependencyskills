@@ -1,0 +1,64 @@
+---
+title: Dependency Skills
+description: Give coding agents the current, version-matched knowledge a library already ships — and an index that makes hundreds of them usable at scale.
+---
+
+A convention, and the research behind it, for giving coding agents the
+knowledge a library already ships — current, version-matched, and reachable —
+and an index that makes hundreds of them usable without drowning the context
+window.
+
+## What goes wrong
+
+Three failures, in the order a developer meets them.
+
+**Reinvention.** An agent writes its own version of something the project
+already depends on, having never established the library was there.
+
+**Drift.** A model's knowledge of a library is averaged across every version
+it trained on, so it writes against a shape the library no longer has — most
+stubbornly where something long-established has recently moved or been
+renamed.
+
+**Selection.** A project with hundreds of dependencies, a dozen of which could
+plausibly answer the question, still has to pick one.
+
+A better model does not fix this. The agent reasons correctly over what it can
+see, and what it can see does not include the library — so this is a
+distribution problem, not a capability one. And the value of shipping a skill
+runs *inversely* to the model's training exposure: it helps least for the
+famous library it already half-knows, and most for the small, new, or private
+one it has never seen.
+
+## Three scenarios
+
+**Reinvention.** A service already depends on a resilience library, but the
+agent adds a hand-rolled retry-with-backoff loop. On the JVM — and worst on
+Kotlin Multiplatform — nothing told it the library was there: a resolved
+dependency is an archive in a cache, never unpacked, and none of it is on disk
+to search.
+
+**Drift.** A widely-used library moved a core class two releases ago. The
+model saw the old package ten thousand times in training and the new one once,
+so it writes the old import — and argues the point when corrected, because its
+confidence tracks how often a shape appeared, not whether it is still true.
+
+**Selection.** A Next.js app has `moment` *and* `date-fns` in reach, three
+HTTP clients, and four argument parsers — all pulled in transitively, all
+importable. The agent reaches for the one the team does not use, and nothing
+flags the wrong turn.
+
+## The finding
+
+The documentation already ships. Across twelve public projects in four
+ecosystems, the libraries a developer can actually call are most of the
+dependency graph — and most already publish their own documentation. Two gaps
+remain. On the JVM, and worst on Kotlin Multiplatform, the library **archives
+everything and never unpacks**, so the documentation it ships is not reachable
+on disk the way an npm or Python package's is. And everywhere, **nothing
+indexes that documentation against the dependency graph.**
+
+:::note[Research, not a product]
+This is a research project, not an adoptable tool yet. Start with
+[the findings](/findings/), then [what has been decided](/decisions/).
+:::

@@ -2,7 +2,7 @@
 # Pull YouTrack stories into a local markdown snapshot.
 #
 # Usage: yt-pull.sh [PROJECT_KEY] [OUT_DIR] [--dimensions-only]
-#   --dimensions-only   refresh docs/dimensions.md only (no issue snapshot)
+#   --dimensions-only   refresh .agents/config/dimensions.md only (no issue snapshot)
 #   PROJECT_KEY  defaults to $YOUTRACK_PROJECT from the selected profile
 #   OUT_DIR      defaults to ./docs/stories
 #
@@ -11,7 +11,7 @@
 # INDEX.md; a dimensions.md (the project's field values - Subsystem,
 # Type, Priority, Stage, Fix versions - plus existing topical tags, so
 # offline/fallback agents can pick from real values instead of guessing)
-# is written to the docs root, beside OUT_DIR;
+# is written to .agents/config/ (tool-read reference data, never docs);
 # files are GENERATED - YouTrack stays the source of truth.
 set -euo pipefail
 
@@ -127,7 +127,7 @@ tags: "{tags}"
 links: "{'; '.join(links)}"
 url: {url}/issue/{iid}
 ---
-<!-- GENERATED snapshot ({datetime.date.today()}): do not edit - YouTrack is the source of truth. Re-run scripts/yt-pull.sh to refresh. -->
+<!-- GENERATED: do not edit - YouTrack is the source of truth. Re-run scripts/yt-pull.sh to refresh. The pull date is in INDEX.md; keeping it out of every file means a story changes here only when the issue changed, so two people pulling do not conflict on 300 unchanged files. -->
 
 # {iid}: {it.get('summary','')}
 
@@ -151,7 +151,8 @@ fi
 # picking. Lives at the docs ROOT (parent of the stories dir), with the
 # agent's other indexes - git-native, never synced to the KB. Written on
 # every run, including --dimensions-only.
-DIM_DIR="$(dirname "$OUT")"
+DIM_DIR=".agents/config"   # generated reference data, not documentation
+mkdir -p "$DIM_DIR"
 DIM_DIR="$DIM_DIR" URL="$YOUTRACK_URL" TOKEN="$YOUTRACK_TOKEN" PROJECT="$PROJECT" python3 <<'EOF'
 import json, os, datetime, urllib.request, urllib.parse
 

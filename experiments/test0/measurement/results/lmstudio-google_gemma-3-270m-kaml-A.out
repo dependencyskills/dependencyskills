@@ -1,0 +1,8 @@
+```kotlin
+import com.charleskorn.kaml.kaml.0.104.0
+
+class AppConfig {
+    val name: String
+    val port: Int
+}
+```

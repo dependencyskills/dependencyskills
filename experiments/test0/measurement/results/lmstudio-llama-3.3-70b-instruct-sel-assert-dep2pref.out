@@ -1,0 +1,9 @@
+```kotlin
+import io.strikt.api.assertions.isEqualTo
+import io.strikt.api.assertions.isNotBlank
+
+fun checkOutput(result: Int, name: String) {
+    assert { result isEqualTo 42 }
+    assert { name isNotBlank }
+}
+```

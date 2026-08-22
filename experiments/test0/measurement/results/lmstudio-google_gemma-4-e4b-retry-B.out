@@ -1,0 +1,8 @@
+```kotlin
+    val policy = Policy()
+    val url = "https://api.example.com/users/$id"
+
+    return policy.apply {
+        { () -> httpGet(url) }
+    }
+```

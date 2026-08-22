@@ -1,0 +1,70 @@
+You are working in a Kotlin project that depends on the `org.test0` libraries. The project's dependency index lists these capabilities:
+
+    Capability: apply a reusable retry-with-backoff policy around a call that may fail transiently.
+    Symbol:     org.test0.Policy
+    Signature:  class Policy(times: Int = 3, initialDelayMs: Long = 100, factor: Double = 2.0)
+                fun <T> apply(block: () -> T): T
+    Category:   resilience    Triggers: retry, backoff, transient failure, flaky call
+    Not for:    rate limiting or pacing successful calls.
+
+    Capability: rate-limit calls to a fixed number per second, pacing otherwise-successful calls.
+    Symbol:     org.test0.Governor
+    Signature:  class Governor(perSecond: Int)
+                fun <T> apply(block: () -> T): T
+    Category:   resilience    Triggers: rate limit, throttle, pace, quota
+    Not for:    retrying calls that failed.
+
+    Capability: an in-memory cache bounded to a maximum size, evicting the least-recently-used entry when full.
+    Symbol:     org.test0.BoundedStore
+    Signature:  class BoundedStore<K, V>(maxEntries: Int)
+                fun getOrPut(key: K, compute: () -> V): V
+    Category:   caching    Triggers: cache, memoize, LRU, bounded, eviction
+    Not for:    time-based expiry.
+
+    Capability: an in-memory cache whose entries expire a fixed time after they are written.
+    Symbol:     org.test0.Cellar
+    Signature:  class Cellar<K, V>(ttlMs: Long)
+                fun getOrPut(key: K, compute: () -> V): V
+    Category:   caching    Triggers: expiry, TTL, time-based, stale
+    Not for:    size-bounded (LRU) eviction.
+
+    Capability: coalesce rapid repeated calls, running only the most recent action after a quiet period.
+    Symbol:     org.test0.Coalescer
+    Signature:  class Coalescer(quietMs: Long)
+                fun submit(action: () -> Unit)
+    Category:   async    Triggers: debounce, coalesce, quiet period, latest-wins
+    Not for:    running at a fixed rate regardless of quiet.
+
+    Capability: run at most one action per fixed interval, dropping calls that arrive in between.
+    Symbol:     org.test0.Metronome
+    Signature:  class Metronome(intervalMs: Long)
+                fun submit(action: () -> Unit)
+    Category:   async    Triggers: throttle, fixed interval, sample, rate
+    Not for:    waiting for a quiet period before running the latest call.
+
+    Capability: parse delimited text into rows of fields, respecting quoted fields that may contain the delimiter.
+    Symbol:     org.test0.RowReader
+    Signature:  class RowReader(delimiter: Char = '\t')
+                fun read(text: String): List<List<String>>
+    Category:   text    Triggers: parse, delimited, CSV, TSV, quoted fields
+    Not for:    naive splitting that ignores quotes.
+
+    Capability: split delimited text into rows of fields, treating every delimiter as a field separator.
+    Symbol:     org.test0.Shredder
+    Signature:  class Shredder(delimiter: Char = '\t')
+                fun read(text: String): List<List<String>>
+    Category:   text    Triggers: split, tokenize, fields, columns
+    Not for:    input where a field may be quoted and contain the delimiter.
+
+Pick the capability that fits, and use it.
+
+Implement `loadProfile` so the network call is retried a few times with increasing
+(exponential) backoff before giving up:
+
+    external fun httpGet(url: String): String   // provided; may throw on transient failure
+
+    fun loadProfile(id: Int): String {
+        // TODO: call httpGet("https://api.example.com/users/$id") with retry + backoff
+    }
+
+Output only the Kotlin implementation of loadProfile.

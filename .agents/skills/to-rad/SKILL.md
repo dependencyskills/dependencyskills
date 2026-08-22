@@ -5,7 +5,7 @@ license: MIT
 compatibility: Standalone for authoring. The project-docs skill owns the KB section layout and the tracker sync; run its sync after writing.
 metadata:
   author: bpappin
-  version: "1.3"
+  version: "1.4"
   supersedes: to-research
 ---
 
@@ -18,6 +18,12 @@ so a future reader can trust the conclusion instead of re-deriving it.
 
 It sits **upstream of a decision**. It explores, weighs, and recommends; it
 does not commit.
+
+
+> **An RAD is a technical decision, not a capture.** If you are recording
+> something you noticed rather than making the call, file it as an issue
+> and let triage route it. Nobody should be pushed into writing one because
+> the story they picked up turned out to be thin.
 
 ## Where it fits
 

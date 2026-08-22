@@ -1,0 +1,9 @@
+```kotlin
+import java.net.URL
+import java.io.BufferedReader
+
+fun fetch(url: String): String {
+    val connection = URL(url).openConnection()
+    BufferedReader(connection.getInputStream()).use { it.readText() }
+}
+```

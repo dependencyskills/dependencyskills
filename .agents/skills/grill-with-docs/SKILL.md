@@ -4,7 +4,7 @@ description: Interview the user relentlessly about a plan or design until reachi
 license: MIT
 metadata:
   author: bpappin
-  version: "2.0"
+  version: "2.1"
 ---
 
 <what-to-do>

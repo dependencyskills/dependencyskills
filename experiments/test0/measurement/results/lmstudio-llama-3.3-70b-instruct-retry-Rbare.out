@@ -1,0 +1,7 @@
+```kotlin
+fun loadProfile(id: Int): String = Policy().apply { 
+    httpGet("https://api.example.com/users/$id")
+}
+```
+
+This will call `httpGet` and apply a retry policy with exponential backoff if it fails, up to 3 times by default. If all retries fail, the last exception is re-thrown.

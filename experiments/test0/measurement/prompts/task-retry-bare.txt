@@ -1,0 +1,18 @@
+You are working in a Kotlin project that depends on `org.test0:retry:1.2.0`.
+
+From the project's dependency index:
+
+    Symbol:     org.test0.Policy
+    Signature:  class Policy(times: Int = 3, initialDelayMs: Long = 100, factor: Double = 2.0)
+                fun <T> apply(block: () -> T): T
+
+Implement `loadProfile` so the network call is retried a few times with increasing
+(exponential) backoff before giving up:
+
+    external fun httpGet(url: String): String   // provided; may throw on transient failure
+
+    fun loadProfile(id: Int): String {
+        // TODO: call httpGet("https://api.example.com/users/$id") with retry + backoff
+    }
+
+Output only the Kotlin implementation of loadProfile.

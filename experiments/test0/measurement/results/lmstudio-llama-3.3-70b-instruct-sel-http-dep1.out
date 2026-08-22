@@ -1,0 +1,15 @@
+```kotlin
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.get
+import io.ktor.http.ContentType
+
+suspend fun fetch(url: String): String {
+    val client = HttpClient(CIO) {
+        install(ContentNegotiation)
+    }
+
+    return client.get(url).readText()
+}
+```

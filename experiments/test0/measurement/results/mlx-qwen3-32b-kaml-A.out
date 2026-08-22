@@ -1,0 +1,16 @@
+```kotlin
+import com.charleskorn.kaml.Yaml
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.JsonObject
+
+@Serializable
+data class AppConfig(val name: String, val port: Int)
+
+fun parseConfig(yaml: String): AppConfig {
+    val yamlParser = Yaml的标准
+    val jsonNode = yamlParser.parseString(yaml)
+    val jsonString = Json.encodeToJsonElement(jsonNode).jsonObject.toString()
+    return Json.decodeFromString(jsonString)
+}
+```

@@ -1,0 +1,10 @@
+```kotlin
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+
+@Serializable
+data class User(val id: Int, val name: String)
+
+fun toJson(u: User): String = Json.encodeToString(u)
+```

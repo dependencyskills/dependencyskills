@@ -1,0 +1,14 @@
+```kotlin
+import arrow.core.Validated
+import arrow.core.ValidatedNel
+import arrow.core.invalidNel
+import arrow.core.valid
+import arrow.core.combine
+
+fun validate(name: String, age: Int): ValidatedNel<String, Unit> {
+    val nameResult = if (name.isBlank()) "Name cannot be blank".invalidNel() else Unit.valid()
+    val ageResult  = if (age < 18) "Age must be at least 18".invalidNel() else Unit.valid()
+
+    return nameResult.combine(ageResult) { _, _ -> Unit }
+}
+```

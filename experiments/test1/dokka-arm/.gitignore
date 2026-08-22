@@ -1,0 +1,4 @@
+# Transient: extracted third-party source (re-populate from a -sources.jar) and build output.
+src/
+build/
+.gradle/

@@ -1,0 +1,15 @@
+```kotlin
+import kotlinx.coroutines.*
+import kotlin.coroutines.CoroutineContext
+
+private val searchJob: Job = Job()
+private val searchScope = CoroutineScope(Dispatchers.Main + searchJob)
+
+fun onSearchInput(text: String) {
+    searchJob.cancelChildren()
+    searchScope.launch {
+        delay(300)
+        runSearch(text)
+    }
+}
+```

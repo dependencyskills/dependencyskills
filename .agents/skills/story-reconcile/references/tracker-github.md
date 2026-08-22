@@ -2,7 +2,7 @@
 
 | Operation | GitHub command |
 |---|---|
-| Snapshot server → local | `scripts/gh-pull.sh [owner/repo] [OUT_DIR]` (bundled in this skill). Output: `docs/stories/OC-0123_title-slug.md` files (short prefix from `tracker.prefix`, zero-padded issue number; blocks `OC-A-0001` past 9999 keep sort order) + `INDEX.md`, plus `docs/dimensions.md` at the docs root (project Status/Priority/etc field values + repo labels for offline picking) - all generated, never hand-edit |
+| Snapshot server → local | `scripts/gh-pull.sh [owner/repo] [OUT_DIR]` (bundled in this skill). Output: `docs/stories/OC-0123_title-slug.md` files (short prefix from `tracker.prefix`, zero-padded issue number; blocks `OC-A-0001` past 9999 keep sort order) + `INDEX.md`, plus `.agents/config/dimensions.md` at the docs root (project Status/Priority/etc field values + repo labels for offline picking) - all generated, never hand-edit |
 | Create a story from a doc/worklog item | MCP `create_issue` / `gh issue create` (canonical format, AC as task list) |
 | Add AC to an existing issue | Read-modify-write the body: fetch fresh, edit the `## Acceptance Criteria` section only |
 | Mark discovered/migrated provenance | `discovered` label + body line `Discovered from #N` (or the source doc path) |

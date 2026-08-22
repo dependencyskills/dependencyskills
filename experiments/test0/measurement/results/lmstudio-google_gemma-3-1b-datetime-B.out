@@ -1,0 +1,5 @@
+```kotlin
+fun currentInstant(): Instant {
+    return Kotlin.time.Clock.System.now()
+}
+```

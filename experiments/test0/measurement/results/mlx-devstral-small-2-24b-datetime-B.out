@@ -1,0 +1,7 @@
+```kotlin
+import kotlin.time.Clock
+
+fun currentInstant(): kotlin.time.Instant {
+    return Clock.System.now()
+}
+```

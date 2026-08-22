@@ -1,0 +1,37 @@
+Here's the Kotlin implementation of `cachedLookup` using an LRU cache with a maximum size of 100 entries:
+
+```kotlin
+import java.util.LinkedHashMap
+import java.util.concurrent.locks.ReentrantLock
+
+private val cache = object : LinkedHashMap<String, String>(100, 0.75f, true) {
+    override fun removeEldestEntry(eldest: Map.Entry<String, String>?): Boolean {
+        return size > 100
+    }
+}
+private val lock = ReentrantLock()
+
+fun cachedLookup(key: String): String {
+    lock.lock()
+    try {
+        // Check cache first
+        cache[key]?.let { return it }
+
+        // Fetch and cache if not found
+        val value = fetchWidget(key)
+        cache.put(key, value)
+        return value
+    } finally {
+        lock.unlock()
+    }
+}
+```
+
+This implementation:
+1. Uses a `LinkedHashMap` with access-order (true) to maintain LRU order
+2. Overrides `removeEldestEntry` to evict when size exceeds 100
+3. Uses a `ReentrantLock` for thread safety
+4. First checks the cache, then falls back to `fetchWidget` if not found
+5. Always stores the result in the cache for future lookups
+
+The lock ensures thread-safe access to the cache, which is important since `fetchWidget` is presumably expensive and might be called from multiple threads.

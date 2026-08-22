@@ -1,0 +1,17 @@
+You are working in a Kotlin project that uses kotlinx-datetime 0.7.0.
+
+From the project's dependency index (kotlinx-datetime 0.7.0):
+
+    As of 0.7.0, `Instant` and `Clock` were moved out of `kotlinx.datetime` into the
+    Kotlin standard library. Use `kotlin.time.Clock.System.now()`, which returns a
+    `kotlin.time.Instant`. `kotlinx.datetime.Instant` and `kotlinx.datetime.Clock`
+    do not exist in 0.7.0.
+
+Implement `currentInstant` to return the current moment as an instant, and include
+the imports you would use:
+
+    fun currentInstant(): /* instant type */ {
+        // TODO: return the current instant
+    }
+
+Reply with only the Kotlin code (with imports).

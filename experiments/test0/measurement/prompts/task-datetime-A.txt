@@ -1,0 +1,10 @@
+You are working in a Kotlin project that uses kotlinx-datetime 0.7.0.
+
+Implement `currentInstant` to return the current moment as an instant, and include
+the imports you would use:
+
+    fun currentInstant(): /* instant type */ {
+        // TODO: return the current instant
+    }
+
+Reply with only the Kotlin code (with imports).

@@ -1,0 +1,8 @@
+```kotlin
+import org.test0.Policy
+
+private val retryPolicy = Policy(times = 4, initialDelayMs = 100, factor = 2.0)
+
+fun loadProfile(id: Int): String =
+    retryPolicy.apply { httpGet("https://api.example.com/users/$id") }
+```

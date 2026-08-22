@@ -1,0 +1,20 @@
+Here's the implementation using `Policy` for retry with exponential backoff:
+
+```kotlin
+fun loadProfile(id: Int): String {
+    return Policy().apply {
+        httpGet("https://api.example.com/users/$id")
+    }
+}
+```
+
+The `Policy` class is perfect for this use case as it:
+1. Allows configuration of retry attempts (default 3)
+2. Implements exponential backoff with configurable initial delay and factor
+3. Provides a clean `apply` method that will retry the block on failure
+
+The default parameters (times=3, initialDelayMs=100, factor=2.0) will give us:
+- First attempt: immediate
+- Second attempt: after 100ms delay
+- Third attempt: after 200ms delay (100 * 2)
+- Then give up if all attempts fail

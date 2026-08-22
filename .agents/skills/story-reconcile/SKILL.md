@@ -5,7 +5,7 @@ license: MIT
 compatibility: Requires a connection to the project's issue tracker (read access minimum; see the tracker binding). Writes optional - produces a report instead when read-only.
 metadata:
   author: bpappin
-  version: "0.21"
+  version: "0.25"
 ---
 
 # Story Reconcile
@@ -99,3 +99,37 @@ Bundled resources:
 - If an item is ambiguous, put it in the mapping table as a question - do
   not guess silently.
 - Large backlogs: process in batches of ~20 items per approval round.
+
+## Conflicts in generated files
+
+**Never hand-merge one.** But "take either side" is only safe for some of
+them, and getting that wrong destroys work - so check which kind you have.
+
+**The snapshot** - `docs/stories/*`, `INDEX.md`,
+`.agents/config/dimensions.md`. Derived from the tracker on every pull.
+
+- If neither side holds a change the tracker does not already have: take
+  either side, re-run the pull, done.
+- If one side does - somebody edited a story file locally, or edited it in
+  the tracker while the other pulled - **the change goes to the tracker
+  first**, then re-pull. That is this skill's job: reconcile the local
+  document, push it, regenerate. Never resolve it by editing the file,
+  because the file is about to be overwritten and the tracker will not have
+  learned anything.
+- The files say "do not edit" for this reason. When one has been edited
+  anyway, treat the edit as real work to be reconciled, not as noise to
+  discard.
+
+**The pending log** - `.agents/offline/pending.md`. This one is NOT derived
+and NOT overwritten: it is append-only, and two people working offline
+produce different `## Session` blocks. **Keep both sides.** A union of the
+blocks is the correct resolution and taking either side silently loses
+somebody's session. Replay afterwards.
+
+**The setting, if this keeps happening.** The project chooses whether the
+snapshot is committed or local (`snapshot` in the pointer). **Committed**
+travels with the repo and is readable with no credential - valuable when
+the tracker is unreachable - but every pull rewrites it, so a team
+collides. **Synced** is gitignored and regenerated per developer: no
+conflicts, and a fresh clone has none until someone pulls. Frequent
+conflicts mean the setting is wrong, not that people should resolve harder.

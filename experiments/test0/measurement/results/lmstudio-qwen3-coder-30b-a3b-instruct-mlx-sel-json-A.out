@@ -1,0 +1,9 @@
+```kotlin
+import com.google.gson.Gson
+
+data class User(val id: Int, val name: String)
+
+fun toJson(u: User): String {
+    return Gson().toJson(u)
+}
+```

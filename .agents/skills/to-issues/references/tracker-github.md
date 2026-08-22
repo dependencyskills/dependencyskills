@@ -15,7 +15,7 @@ collected in chat.
 | Tag strict-rule slices | `needs-gherkin` label (gates completion on `## QA`) |
 | Topical batch tag | A Title Case label named for the feature/PRD ("Trust Insights"); query later with `label:"Trust Insights"` |
 | Set release | Milestone per batch when a target release was confirmed |
-| List dimension values | `docs/dimensions.md` (gh-pull) - project Status/Priority fields + existing labels; reuse before inventing |
+| List dimension values | `.agents/config/dimensions.md` (gh-pull) - project Status/Priority fields + existing labels; reuse before inventing |
 | Set Priority | Projects mode: project Priority field. Issues-only: `priority:<level>` label |
 | Set Estimate | Projects mode: project Estimate field if one exists; otherwise skip - GitHub has no native estimation |
 | Add to the board | Projects mode: `scripts/gh-stage.sh N "Backlog"` (story-workflow's script; adds the item and sets the column) |

@@ -1,0 +1,44 @@
+```kotlin
+import java.lang.StringBuilder
+
+fun parseReport(text: String): List<List<String>> {
+    val rows = mutableListOf<MutableList<String>>()
+    var currentRow = mutableListOf<String>()
+    val sb = StringBuilder()
+    var inQuotes = false
+    var i = 0
+
+    while (i < text.length) {
+        val c = text[i]
+        when {
+            c == '"' -> {
+                // toggle quote state, but ignore escaped quotes ("" inside a quoted field)
+                if (inQuotes && i + 1 < text.length && text[i + 1] == '"') {
+                    sb.append('"')
+                    i++ // skip the escaped quote
+                } else {
+                    inQuotes = !inQuotes
+                }
+            }
+            c == '\t' && !inQuotes -> {
+                currentRow.add(sb.toString())
+                sb.setLength(0)
+            }
+            c == '\n' && !inQuotes -> {
+                currentRow.add(sb.toString())
+                sb.setLength(0)
+                rows.add(currentRow)
+                currentRow = mutableListOf()
+            }
+            else -> sb.append(c)
+        }
+        i++
+    }
+
+    // add last field and row if any
+    currentRow.add(sb.toString())
+    rows.add(currentRow)
+
+    return rows
+}
+```

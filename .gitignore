@@ -1,0 +1,21 @@
+# Drafts of things not yet sent. Once sent, the version worth keeping goes
+# in docs/ - see outbox/README.md.
+outbox/
+
+# Scratch: removed but not yet deleted. device tooling cannot rm.
+_to_delete/
+
+# Builds
+build/
+.gradle/
+node_modules/
+.build/
+
+# Editors and OS
+.idea/
+*.iml
+.DS_Store
+# BEGIN story-tools (generated - do not edit between markers)
+docs/stories/
+.agents/config/dimensions.md
+# END story-tools

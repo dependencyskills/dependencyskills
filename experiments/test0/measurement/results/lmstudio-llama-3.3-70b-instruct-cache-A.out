@@ -1,0 +1,30 @@
+```kotlin
+import org.test0.cache.LRUCache
+
+fun cachedLookup(key: String): String {
+    val cache = LRUCache<String, String>(100)
+    return cache.getOrPut(key) { fetchWidget(key) }
+}
+```
+
+However, the above implementation will create a new `LRUCache` instance every time `cachedLookup` is called. To avoid this and ensure that the cache persists across multiple calls to `cachedLookup`, we can make the cache an object property:
+
+```kotlin
+import org.test0.cache.LRUCache
+
+object Cache {
+    private val cache = LRUCache<String, String>(100)
+
+    fun cachedLookup(key: String): String {
+        return cache.getOrPut(key) { fetchWidget(key) }
+    }
+}
+```
+
+Then you can call `cachedLookup` like this:
+
+```kotlin
+fun main() {
+    println(Cache.cachedLookup("key"))
+}
+```

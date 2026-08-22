@@ -1,0 +1,9 @@
+^D```kotlin
+import org.test0.BoundedStore
+
+private val cache = BoundedStore<String, String>(100)
+
+fun cachedLookup(key: String): String {
+    return cache.getOrPut(key) { fetchWidget(key) }
+}
+```

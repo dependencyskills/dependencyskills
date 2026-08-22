@@ -1,0 +1,5 @@
+```kotlin
+fun currentInstant(): Instant {
+    return 0.0
+}
+```

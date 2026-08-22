@@ -1,0 +1,13 @@
+```kotlin
+fun loadProfile(id: Int): String = Policy().apply { 
+    httpGet("https://api.example.com/users/$id")
+}
+```
+
+Or, using named parameters for clarity:
+
+```kotlin
+fun loadProfile(id: Int): String = Policy(times = 3).apply { 
+    httpGet("https://api.example.com/users/$id")
+}
+```

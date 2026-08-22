@@ -1,0 +1,18 @@
+You are working in a Kotlin project that depends on `org.test0:textio:1.0.0`.
+
+Relevant capability from that library, from the project's dependency index:
+
+    Capability: parse delimited text into rows of fields, respecting quoted fields
+                that may contain the delimiter.
+    Symbol:     org.test0.RowReader
+    Signature:  class RowReader(delimiter: Char = '\t')
+                fun read(text: String): List<List<String>>
+
+Implement `parseReport` to split tab-delimited text into rows of fields, where a
+field may be double-quoted and contain tab characters inside the quotes:
+
+    fun parseReport(text: String): List<List<String>> {
+        // TODO: parse tab-delimited text into rows of fields; respect quoted fields
+    }
+
+Reply with only the Kotlin implementation of parseReport (and any imports you would use).

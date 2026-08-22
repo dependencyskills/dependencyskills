@@ -1,0 +1,7 @@
+```kotlin
+import org.test0.BoundedStore
+
+fun cachedLookup(key: String): String {
+    return BoundedStore<String, String>(100).getOrPut(key) { fetchWidget(key) }
+}
+```

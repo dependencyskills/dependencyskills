@@ -1,0 +1,5 @@
+```kotlin
+import kotlinx.datetime.Instant
+import java.time.Instant as JavaInstant
+
+fun currentInstant(): Instant = Instant.fromJavaTime(JavaInstant.now())

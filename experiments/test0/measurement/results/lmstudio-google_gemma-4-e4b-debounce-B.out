@@ -1,0 +1,17 @@
+```kotlin
+// Assuming Coalescer and runSearch are available in scope, 
+// and Coalescer is initialized with the quiet period.
+
+private val coalescer = org.test0.Coalescer(300L)
+
+fun onSearchInput(text: String) {
+    // Capture the current text. This is the version that will be searched 
+    // if the quiet period expires.
+    val currentText = text
+
+    // Submit the action to the coalescer. The lambda captures 'currentText'.
+    coalescer.submit {
+        runSearch(currentText)
+    }
+}
+```

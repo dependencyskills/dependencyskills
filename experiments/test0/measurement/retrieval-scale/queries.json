@@ -1,0 +1,106 @@
+[
+  {
+    "query": "the request occasionally fails for no lasting reason; attempt it a few more times with growing pauses between tries, instead of giving up on the first error",
+    "target": "org.corpus.Policy"
+  },
+  {
+    "query": "hold recent lookup answers in memory but keep a lid on how many I store, discarding the least-recently-touched when it fills up",
+    "target": "org.corpus.BoundedStore"
+  },
+  {
+    "query": "the input box fires on every keystroke; only react once the person pauses for a moment, using just what they last typed",
+    "target": "org.corpus.Coalescer"
+  },
+  {
+    "query": "I have spreadsheet-style lines separated by tabs, except a cell can be wrapped in quotes and then may contain tabs that must not break the line",
+    "target": "org.corpus.RowReader"
+  },
+  {
+    "query": "when a downstream service is clearly down, stop calling it for a while and fail immediately instead of piling up requests",
+    "target": "org.corpus.Breaker"
+  },
+  {
+    "query": "give up on an operation that takes longer than a fixed time budget and move on",
+    "target": "org.corpus.Deadline"
+  },
+  {
+    "query": "this pure computation is expensive; keep its output for a given set of arguments so the same work is never done twice",
+    "target": "org.corpus.Memoizer"
+  },
+  {
+    "query": "gather items and send them onward together once I've collected enough or a little time has passed",
+    "target": "org.corpus.Batcher"
+  },
+  {
+    "query": "my list of results is enormous and new rows keep arriving while people flip through, so the second screen keeps repeating things from the first; I want a reliable way to pick up exactly where they stopped",
+    "target": "org.corpus.CursorPager"
+  },
+  {
+    "query": "we want only a slice of our audience to see the redesigned checkout at first, then widen it over the week, and the same visitor should always land on the same version",
+    "target": "org.corpus.RolloutGate"
+  },
+  {
+    "query": "I'm sick of hand-building every object and threading its collaborators down through the constructors; I want something that reads what each class needs and assembles the whole tree for me",
+    "target": "org.corpus.Injector"
+  },
+  {
+    "query": "several parts of my running program need to react when something happens elsewhere inside the same program, and I don't want them holding direct references to each other",
+    "target": "org.corpus.EventBus"
+  },
+  {
+    "query": "an order should only ever go placed then paid then shipped, never backwards or skipping a step, and I want any illegal jump rejected automatically",
+    "target": "org.corpus.StateMachine"
+  },
+  {
+    "query": "I want to lump together places that sit close to each other so I can quickly pull up whatever is near a spot, using a compact code where codes that look alike mean roughly the same area",
+    "target": "org.corpus.Geohasher"
+  },
+  {
+    "query": "people upload huge photos and I need small preview versions that slot into a fixed box without looking stretched or squashed",
+    "target": "org.corpus.Thumbnailer"
+  },
+  {
+    "query": "I've got an invoice laid out as a web page and I need to turn it into a proper printable file that keeps the layout and breaks cleanly across pages",
+    "target": "org.corpus.PdfRenderer"
+  },
+  {
+    "query": "my app speaks several languages and phrases like one item versus two items have to come out grammatically right in each, pulled from wherever the translators keep them",
+    "target": "org.corpus.MessageCatalog"
+  },
+  {
+    "query": "adding up prices with ordinary floating point keeps leaving me a penny off; I need cash amounts that add and multiply exactly",
+    "target": "org.corpus.Money"
+  },
+  {
+    "query": "given a map of towns with distances marked on the roads between them, I want the cheapest way to get from one town to another",
+    "target": "org.corpus.PathFinder"
+  },
+  {
+    "query": "I have billions of ids and just want a quick, memory-cheap way to ask have I probably run into this one before, and it's fine to occasionally get a false yes",
+    "target": "org.corpus.BloomFilter"
+  },
+  {
+    "query": "as jobs pile up I always want to handle the most urgent one next, not simply the one that has been waiting longest",
+    "target": "org.corpus.PriorityQueue"
+  },
+  {
+    "query": "opening a brand new link to the database on every single request is crushing us; I want to keep a handful open and lend them out as they're needed",
+    "target": "org.corpus.ConnectionPool"
+  },
+  {
+    "query": "my fast producer keeps overwhelming the slow stage after it and memory balloons; I want the producer to naturally wait rather than throwing work away",
+    "target": "org.corpus.BackpressureBuffer"
+  },
+  {
+    "query": "when a web request comes in for something like /users/42/orders I need to figure out which handler deals with it and pull the 42 out of the address",
+    "target": "org.corpus.PathRouter"
+  },
+  {
+    "query": "I'm keeping people's login secrets and need to turn each one into something that can't be reversed and is expensive to guess in bulk",
+    "target": "org.corpus.PasswordHasher"
+  },
+  {
+    "query": "a bunch of servers run the same nightly job and I need to make sure only one of them actually runs it at a time, even if the one holding it crashes partway through",
+    "target": "org.corpus.DistLock"
+  }
+]

@@ -1,0 +1,23 @@
+```kotlin
+import org.test0.async.runSearch
+import org.test0.async.text.String
+import org.test0.async.text.Text
+
+fun runSearch(text: String) {
+    // TODO: coalesce rapid calls; run runSearch(latest text) after a 300ms quiet period
+    if (text == "Hello") {
+        return "Hello"
+    } else {
+        return "Hello"
+    }
+}
+
+fun onSearchInput(text: String) {
+    // TODO: coalesce rapid calls; run runSearch(latest text) after a 300ms quiet period
+    if (text == "Hello") {
+        return "Hello"
+    } else {
+        return "Hello"
+    }
+}
+```

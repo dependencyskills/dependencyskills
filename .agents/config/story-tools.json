@@ -1,0 +1,16 @@
+{
+  "tracker": {
+    "type": "github",
+    "connection": "dependencyskills",
+    "mcpServer": "github-dependencyskills",
+    "repo": "dependencyskills/dependencyskills",
+    "prefix": "DE",
+    "project": "1"
+  },
+  "snapshot": "synced",
+  "updates": {
+    "check": true,
+    "skillsRepo": "bpappin/skills",
+    "skillsBranch": "master"
+  }
+}

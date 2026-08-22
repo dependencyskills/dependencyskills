@@ -1,0 +1,22 @@
+```kotlin
+fun loadProfile(id: Int): String {
+    val url = "https://api.example.com/users/$id"
+    var lastException: Exception? = null
+    
+    for (attempt in 0..3) {
+        try {
+            return httpGet(url)
+        } catch (e: Exception) {
+            lastException = e
+            if (attempt == 3) {
+                throw e
+            }
+            // Exponential backoff: 100ms, 200ms, 400ms
+            val delay = (100 * (1 shl attempt)).toLong()
+            Thread.sleep(delay)
+        }
+    }
+    
+    throw lastException!!
+}
+```

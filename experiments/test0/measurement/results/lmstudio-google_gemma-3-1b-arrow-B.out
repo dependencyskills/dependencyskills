@@ -1,0 +1,14 @@
+```kotlin
+import arrow.core.raise.either
+
+fun validate(name: String, age: Int): Either {
+    return if (name.isEmpty()) {
+        Either.left(Either.error("Name cannot be blank"))
+    } else if (age < 18) {
+        Either.left(Either.error("Age must be at least 18"))
+    } else {
+        // No errors occurred, return the result.
+        Either.right(Either.value)
+    }
+}
+```

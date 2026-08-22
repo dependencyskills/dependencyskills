@@ -1,0 +1,8 @@
+```kotlin
+import org.test0.RowReader
+
+fun parseReport(text: String): List<List<String>> {
+    val reader = RowReader('\t')
+    return reader.read(text)
+}
+```

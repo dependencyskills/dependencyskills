@@ -1,0 +1,20 @@
+```kotlin
+import org.test0.async.Coalescer
+
+class SearchCoalescer {
+    private var latestText: String? = null
+    private val coalescer = Coalescer(300L)          // 300 ms quiet period
+
+    // provided by the surrounding code
+    external fun runSearch(text: String)
+
+    fun onSearchInput(text: String) {
+        latestText = text
+        coalescer.submit {
+            // `latestText` is updated on each call, so the most recent value
+            // is used when the submitted action finally executes.
+            runSearch(latestText!!)
+        }
+    }
+}
+```

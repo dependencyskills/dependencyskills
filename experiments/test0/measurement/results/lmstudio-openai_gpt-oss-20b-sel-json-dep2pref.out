@@ -1,0 +1,11 @@
+```kotlin
+import com.squareup.moshi.Moshi
+
+data class User(val id: Int, val name: String)
+
+fun toJson(u: User): String {
+    val moshi = Moshi.Builder().build()
+    val adapter = moshi.adapter(User::class.java)
+    return adapter.toJson(u)
+}
+```

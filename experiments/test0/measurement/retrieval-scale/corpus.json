@@ -1,0 +1,1762 @@
+[
+  {
+    "symbol": "org.corpus.Policy",
+    "capability": "apply a reusable retry-with-backoff policy around a call that may fail transiently",
+    "triggers": "retry, backoff, transient failure, flaky call",
+    "category": "resilience",
+    "notfor": "rate limiting",
+    "target": true
+  },
+  {
+    "symbol": "org.corpus.Governor",
+    "capability": "rate-limit calls to a fixed number per second, pacing successful calls",
+    "triggers": "rate limit, throttle, pace, quota",
+    "category": "resilience",
+    "notfor": "retrying failures",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Breaker",
+    "capability": "open a circuit after repeated failures so calls to a failing service fail fast",
+    "triggers": "circuit breaker, fail fast, trip, half-open",
+    "category": "resilience",
+    "notfor": "retrying",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Deadline",
+    "capability": "abort a call that exceeds a time budget",
+    "triggers": "timeout, deadline, cancel, budget",
+    "category": "resilience",
+    "notfor": "retrying",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Bulkhead",
+    "capability": "cap the number of concurrent calls so one dependency cannot exhaust the pool",
+    "triggers": "bulkhead, concurrency limit, isolate",
+    "category": "resilience",
+    "notfor": "retrying",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Hedge",
+    "capability": "send a second attempt when the first is slow and take whichever returns first",
+    "triggers": "hedge, tail latency, speculative",
+    "category": "resilience",
+    "notfor": "retrying failures",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.BoundedStore",
+    "capability": "an in-memory cache bounded to a maximum size, evicting the least-recently-used entry when full",
+    "triggers": "cache, LRU, bounded, eviction, memoize",
+    "category": "caching",
+    "notfor": "time-based expiry",
+    "target": true
+  },
+  {
+    "symbol": "org.corpus.Cellar",
+    "capability": "an in-memory cache whose entries expire a fixed time after they are written",
+    "triggers": "expiry, TTL, time-based, stale",
+    "category": "caching",
+    "notfor": "size-bounded eviction",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.WriteThrough",
+    "capability": "a cache that writes every update through to a backing store",
+    "triggers": "write-through, backing store, persist",
+    "category": "caching",
+    "notfor": "bounded eviction",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Memoizer",
+    "capability": "remember the result of a pure function keyed by its arguments",
+    "triggers": "memoize, pure function, recompute",
+    "category": "caching",
+    "notfor": "eviction policy",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Pool",
+    "capability": "reuse a fixed set of expensive objects across callers",
+    "triggers": "object pool, reuse, borrow, lease",
+    "category": "caching",
+    "notfor": "caching values",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Coalescer",
+    "capability": "coalesce rapid repeated calls, running only the most recent action after a quiet period",
+    "triggers": "debounce, coalesce, quiet period, latest-wins",
+    "category": "async",
+    "notfor": "running at a fixed rate",
+    "target": true
+  },
+  {
+    "symbol": "org.corpus.Metronome",
+    "capability": "run at most one action per fixed interval, dropping calls that arrive in between",
+    "triggers": "throttle, fixed interval, sample, rate",
+    "category": "async",
+    "notfor": "waiting for a quiet period",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Batcher",
+    "capability": "collect items and flush them together when a size or time threshold is reached",
+    "triggers": "batch, buffer, flush, accumulate",
+    "category": "async",
+    "notfor": "latest-wins",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Scheduler",
+    "capability": "run an action after a delay or on a repeating schedule",
+    "triggers": "schedule, delay, timer, cron",
+    "category": "async",
+    "notfor": "coalescing",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Latch",
+    "capability": "run an action exactly once and ignore later triggers",
+    "triggers": "once, idempotent, single-shot",
+    "category": "async",
+    "notfor": "repeated calls",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.RowReader",
+    "capability": "parse delimited text into rows of fields, respecting quoted fields that may contain the delimiter",
+    "triggers": "parse, delimited, CSV, TSV, quoted fields",
+    "category": "text",
+    "notfor": "naive splitting",
+    "target": true
+  },
+  {
+    "symbol": "org.corpus.Shredder",
+    "capability": "split delimited text into fields, treating every delimiter as a field separator",
+    "triggers": "split, tokenize, columns, separator",
+    "category": "text",
+    "notfor": "quoted fields",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Templater",
+    "capability": "substitute named placeholders in a template string with values",
+    "triggers": "template, interpolate, placeholder, mustache",
+    "category": "text",
+    "notfor": "parsing",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Slugger",
+    "capability": "turn a string into a URL-safe slug",
+    "triggers": "slug, url-safe, normalize, kebab",
+    "category": "text",
+    "notfor": "parsing",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Wrapper",
+    "capability": "wrap long text to a maximum line width",
+    "triggers": "word wrap, line width, fill",
+    "category": "text",
+    "notfor": "parsing",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.JsonCodec",
+    "capability": "serialize objects to and from JSON",
+    "triggers": "json, serialize, encode, decode",
+    "category": "serialization",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.YamlCodec",
+    "capability": "serialize objects to and from YAML",
+    "triggers": "yaml, config, encode",
+    "category": "serialization",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.TomlCodec",
+    "capability": "serialize objects to and from TOML",
+    "triggers": "toml, config",
+    "category": "serialization",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.ProtoCodec",
+    "capability": "serialize objects to and from protocol buffers",
+    "triggers": "protobuf, binary, schema",
+    "category": "serialization",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.HttpGetter",
+    "capability": "perform an HTTP GET request and return the response body",
+    "triggers": "http, get, fetch, request",
+    "category": "http",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.HttpPoster",
+    "capability": "perform an HTTP POST request with a body",
+    "triggers": "http, post, upload",
+    "category": "http",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.SocketLink",
+    "capability": "open a websocket connection for bidirectional messages",
+    "triggers": "websocket, realtime, duplex",
+    "category": "http",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Downloader",
+    "capability": "download a file to disk, reporting progress",
+    "triggers": "download, file, progress, stream",
+    "category": "http",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Journal",
+    "capability": "record structured application log events",
+    "triggers": "log, structured, event",
+    "category": "observability",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Tracer",
+    "capability": "record distributed tracing spans across services",
+    "triggers": "trace, span, distributed",
+    "category": "observability",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Meter",
+    "capability": "record counters and gauges as metrics",
+    "triggers": "metrics, counter, gauge",
+    "category": "observability",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Auditor",
+    "capability": "append immutable audit records of sensitive actions",
+    "triggers": "audit, immutable, compliance",
+    "category": "observability",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Validator",
+    "capability": "check a value against constraints, accumulating all errors",
+    "triggers": "validate, constraints, accumulate errors",
+    "category": "validation",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Sanitizer",
+    "capability": "strip unsafe or unwanted content from input",
+    "triggers": "sanitize, clean, escape",
+    "category": "validation",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Coercer",
+    "capability": "coerce a string into a typed value with a fallback",
+    "triggers": "coerce, parse, convert, default",
+    "category": "validation",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Grouper",
+    "capability": "group items in a sequence by a derived key",
+    "triggers": "group by, partition, index",
+    "category": "collections",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Windower",
+    "capability": "produce sliding windows over a sequence",
+    "triggers": "window, sliding, chunk",
+    "category": "collections",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Deduper",
+    "capability": "remove duplicate items while preserving order",
+    "triggers": "dedupe, distinct, unique",
+    "category": "collections",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Sorter",
+    "capability": "sort items by several keys with mixed directions",
+    "triggers": "sort, order, comparator",
+    "category": "collections",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Ticker",
+    "capability": "read the current instant in a given time zone",
+    "triggers": "clock, now, instant, timezone",
+    "category": "datetime",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Span",
+    "capability": "parse and format human-readable durations",
+    "triggers": "duration, elapsed, format",
+    "category": "datetime",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Almanac",
+    "capability": "compute business days and holidays between dates",
+    "triggers": "business day, holiday, calendar",
+    "category": "datetime",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Digester",
+    "capability": "compute a cryptographic hash of bytes",
+    "triggers": "hash, digest, sha, checksum",
+    "category": "crypto",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Notary",
+    "capability": "sign a message and verify signatures",
+    "triggers": "sign, verify, signature",
+    "category": "crypto",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Cipher",
+    "capability": "encrypt and decrypt with a symmetric key",
+    "triggers": "encrypt, decrypt, aes, symmetric",
+    "category": "crypto",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Sentinel",
+    "capability": "watch a directory for file changes",
+    "triggers": "watch, filesystem, notify",
+    "category": "io",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Scratch",
+    "capability": "create and clean up temporary files and directories",
+    "triggers": "temp file, scratch, cleanup",
+    "category": "io",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Piper",
+    "capability": "copy bytes between streams with buffering",
+    "triggers": "stream, copy, buffer",
+    "category": "io",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Guarded",
+    "capability": "guard a mutable value behind a mutex",
+    "triggers": "mutex, lock, guard",
+    "category": "concurrency",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Semaphored",
+    "capability": "limit the number of coroutines entering a section at once",
+    "triggers": "semaphore, concurrency limit, permit",
+    "category": "concurrency",
+    "notfor": "retrying",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Gathered",
+    "capability": "await several async results and collect them together",
+    "triggers": "await all, gather, join",
+    "category": "concurrency",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Stats",
+    "capability": "compute mean, variance and percentiles of numbers",
+    "triggers": "statistics, mean, percentile",
+    "category": "math",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Lerp",
+    "capability": "interpolate between values linearly or with splines",
+    "triggers": "interpolate, lerp, spline",
+    "category": "math",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Dice",
+    "capability": "generate seeded pseudo-random values",
+    "triggers": "random, seed, prng",
+    "category": "math",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Fuzzy",
+    "capability": "score how closely two strings match approximately",
+    "triggers": "fuzzy, similarity, levenshtein",
+    "category": "strings",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Differ",
+    "capability": "compute a line diff between two texts",
+    "triggers": "diff, compare, patch",
+    "category": "strings",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Caser",
+    "capability": "convert identifiers between camel, snake and kebab case",
+    "triggers": "case, camel, snake, kebab",
+    "category": "strings",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.CursorPager",
+    "capability": "walk through a large result set using opaque continuation tokens that stay stable as rows are inserted",
+    "triggers": "cursor, pagination, next page, keyset, continuation",
+    "category": "pagination",
+    "notfor": "numbered page offsets",
+    "target": true
+  },
+  {
+    "symbol": "org.corpus.OffsetPager",
+    "capability": "fetch a page of results by a numeric offset and page size",
+    "triggers": "offset, limit, page number, skip",
+    "category": "pagination",
+    "notfor": "stable cursors under inserts",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.KeysetPager",
+    "capability": "page forward by remembering the last visible row's sort key",
+    "triggers": "keyset, last seen, seek, sort key",
+    "category": "pagination",
+    "notfor": "opaque tokens",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.PageCounter",
+    "capability": "estimate the total number of pages a query would produce",
+    "triggers": "count, total pages, page count",
+    "category": "pagination",
+    "notfor": "fetching rows",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.RangeFetcher",
+    "capability": "request a contiguous byte range of a large resource",
+    "triggers": "byte range, partial, range request",
+    "category": "pagination",
+    "notfor": "row paging",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.RolloutGate",
+    "capability": "expose a capability to a stable proportion of users by hashing their identifier",
+    "triggers": "feature flag, rollout, percentage, gradual, canary",
+    "category": "feature-flags",
+    "notfor": "static on-off toggle",
+    "target": true
+  },
+  {
+    "symbol": "org.corpus.KillSwitch",
+    "capability": "turn a capability fully on or off for everyone at runtime",
+    "triggers": "toggle, kill switch, on off, disable",
+    "category": "feature-flags",
+    "notfor": "gradual proportion",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.ExperimentSplitter",
+    "capability": "assign users to experiment variants and record which one they saw",
+    "triggers": "experiment, variant, ab test, bucket",
+    "category": "feature-flags",
+    "notfor": "gradual proportion",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.ConfigReloader",
+    "capability": "reload configuration values at runtime without a restart",
+    "triggers": "config, hot reload, refresh, settings",
+    "category": "feature-flags",
+    "notfor": "targeting a subset of users",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.EntitlementCheck",
+    "capability": "check whether a user's plan grants access to a capability",
+    "triggers": "entitlement, plan, tier, permission gate",
+    "category": "feature-flags",
+    "notfor": "gradual proportion",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Injector",
+    "capability": "build objects by resolving their constructor parameters from a registry of providers",
+    "triggers": "dependency injection, container, wiring, resolve, autowire",
+    "category": "dependency-injection",
+    "notfor": "lookup by string key",
+    "target": true
+  },
+  {
+    "symbol": "org.corpus.ServiceLocator",
+    "capability": "look up a shared collaborator by a string key at call time",
+    "triggers": "service locator, registry, lookup, get service",
+    "category": "dependency-injection",
+    "notfor": "resolving constructors",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.SingletonHolder",
+    "capability": "hold a single shared instance created lazily on first use",
+    "triggers": "singleton, lazy, shared instance, global",
+    "category": "dependency-injection",
+    "notfor": "building dependency graphs",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.FactoryRegistry",
+    "capability": "create a fresh instance selected by a registered type name",
+    "triggers": "factory, create by name, registry, instantiate",
+    "category": "dependency-injection",
+    "notfor": "resolving constructors",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.ScopedProvider",
+    "capability": "supply a fresh instance bound to the lifetime of a request scope",
+    "triggers": "scope, per request, lifetime, bound",
+    "category": "dependency-injection",
+    "notfor": "whole graph construction",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.EventBus",
+    "capability": "deliver published events to every interested subscriber within the same process",
+    "triggers": "event bus, pubsub, subscribe, publish, in-process",
+    "category": "event-bus",
+    "notfor": "cross-process delivery",
+    "target": true
+  },
+  {
+    "symbol": "org.corpus.QueueClient",
+    "capability": "enqueue messages to an external broker for other processes to consume",
+    "triggers": "queue, broker, mq, enqueue",
+    "category": "event-bus",
+    "notfor": "in-process delivery",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Observer",
+    "capability": "notify listeners registered on one object when its value changes",
+    "triggers": "observer, listener, callback, notify",
+    "category": "event-bus",
+    "notfor": "many-to-many broadcast",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.EventStore",
+    "capability": "append domain events to a log and rebuild state by replaying them",
+    "triggers": "event sourcing, append log, replay, journal",
+    "category": "event-bus",
+    "notfor": "live in-process delivery",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.WebhookDispatcher",
+    "capability": "post events to external URLs registered by third parties",
+    "triggers": "webhook, callback url, http notify, subscribe",
+    "category": "event-bus",
+    "notfor": "in-process delivery",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.StateMachine",
+    "capability": "move an entity between named states only along explicitly declared transitions",
+    "triggers": "state machine, transition, states, guard, fsm",
+    "category": "state-machine",
+    "notfor": "a free-form status field",
+    "target": true
+  },
+  {
+    "symbol": "org.corpus.SagaRunner",
+    "capability": "drive a long-running multi-step process with compensation on failure",
+    "triggers": "saga, workflow, steps, compensate, orchestrate",
+    "category": "state-machine",
+    "notfor": "constraining single-entity states",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.RulesEngine",
+    "capability": "evaluate declarative condition-action rules to reach a decision",
+    "triggers": "rules, conditions, decision, inference",
+    "category": "state-machine",
+    "notfor": "constraining state changes",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.StatusField",
+    "capability": "store a status as one value drawn from a fixed set",
+    "triggers": "enum, status, category, label",
+    "category": "state-machine",
+    "notfor": "enforcing legal transitions",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.BehaviorTree",
+    "capability": "choose the next action by walking a tree of conditions and selectors",
+    "triggers": "behavior tree, ai, selector, node",
+    "category": "state-machine",
+    "notfor": "constraining entity states",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Geohasher",
+    "capability": "encode a coordinate into a short string whose shared prefix length indicates nearness",
+    "triggers": "geohash, lat lon, prefix, proximity, bucket",
+    "category": "geospatial",
+    "notfor": "exact distance",
+    "target": true
+  },
+  {
+    "symbol": "org.corpus.Haversine",
+    "capability": "compute the great-circle distance between two coordinates",
+    "triggers": "distance, haversine, great circle, kilometers",
+    "category": "geospatial",
+    "notfor": "grouping nearby points",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.BoundingBox",
+    "capability": "test whether a coordinate falls inside a rectangular region",
+    "triggers": "bounding box, contains, region, extent",
+    "category": "geospatial",
+    "notfor": "compact proximity codes",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.SpatialIndex",
+    "capability": "index shapes in a tree for fast overlap and nearest queries",
+    "triggers": "rtree, spatial index, overlap, nearest",
+    "category": "geospatial",
+    "notfor": "compact proximity codes",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.TileMapper",
+    "capability": "map a coordinate to a map tile at a chosen zoom level",
+    "triggers": "tile, zoom, slippy map, xyz",
+    "category": "geospatial",
+    "notfor": "proximity codes",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Thumbnailer",
+    "capability": "shrink an image to fit within bounds while keeping its proportions",
+    "triggers": "resize, thumbnail, aspect ratio, fit, scale",
+    "category": "imaging",
+    "notfor": "cropping to exact dimensions",
+    "target": true
+  },
+  {
+    "symbol": "org.corpus.CenterCropper",
+    "capability": "cut an image to exact dimensions from its center",
+    "triggers": "crop, exact size, center, trim",
+    "category": "imaging",
+    "notfor": "keeping the whole image visible",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.FormatTranscoder",
+    "capability": "convert an image between formats such as png, jpeg and webp",
+    "triggers": "convert, format, webp, encode image",
+    "category": "imaging",
+    "notfor": "changing dimensions",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Reorienter",
+    "capability": "rotate an image and honor its exif orientation flag",
+    "triggers": "rotate, exif, orient, flip",
+    "category": "imaging",
+    "notfor": "changing dimensions",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.ImageCompressor",
+    "capability": "reduce an image file's size by lowering its encoding quality",
+    "triggers": "compress, quality, optimize, shrink bytes",
+    "category": "imaging",
+    "notfor": "changing pixel dimensions",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.PdfRenderer",
+    "capability": "render a marked-up document into a paginated printable file",
+    "triggers": "pdf, html to pdf, render, print, paginate",
+    "category": "documents",
+    "notfor": "extracting existing text",
+    "target": true
+  },
+  {
+    "symbol": "org.corpus.PdfTextExtractor",
+    "capability": "pull the text content out of an existing pdf",
+    "triggers": "extract, parse pdf, read text, scrape",
+    "category": "documents",
+    "notfor": "creating a document",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.PdfMerger",
+    "capability": "combine several pdf files into a single one",
+    "triggers": "merge, combine, concatenate, join pdf",
+    "category": "documents",
+    "notfor": "rendering from markup",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.SheetWriter",
+    "capability": "write rows of data into a spreadsheet workbook",
+    "triggers": "excel, xlsx, spreadsheet, workbook",
+    "category": "documents",
+    "notfor": "printable page layout",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.BarcodeDrawer",
+    "capability": "draw a barcode or qr code as an image",
+    "triggers": "barcode, qr, draw, code128",
+    "category": "documents",
+    "notfor": "page layout",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.MessageCatalog",
+    "capability": "look up translated strings by key and choose the correct plural form for a count",
+    "triggers": "i18n, translation, plural, locale, catalog",
+    "category": "localization",
+    "notfor": "formatting numbers",
+    "target": true
+  },
+  {
+    "symbol": "org.corpus.LocaleFormatter",
+    "capability": "format numbers and dates by a locale's conventions",
+    "triggers": "locale, format number, date format, grouping",
+    "category": "localization",
+    "notfor": "looking up translated text",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.CharsetTranscoder",
+    "capability": "convert text between character encodings",
+    "triggers": "encoding, charset, utf, transcode",
+    "category": "localization",
+    "notfor": "translation",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.RtlHelper",
+    "capability": "mirror layout direction for right-to-left scripts",
+    "triggers": "rtl, direction, bidi, mirror",
+    "category": "localization",
+    "notfor": "translation lookup",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.ZoneConverter",
+    "capability": "convert a timestamp from one time zone to another",
+    "triggers": "timezone, convert, offset, region",
+    "category": "localization",
+    "notfor": "translation lookup",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Money",
+    "capability": "represent cash amounts and add or multiply them without rounding drift",
+    "triggers": "money, decimal, currency, precision, amount",
+    "category": "finance",
+    "notfor": "converting between currencies",
+    "target": true
+  },
+  {
+    "symbol": "org.corpus.FxConverter",
+    "capability": "convert an amount from one currency to another using a rate",
+    "triggers": "exchange rate, convert, fx, forex",
+    "category": "finance",
+    "notfor": "exact arithmetic",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.MoneyFormatter",
+    "capability": "format an amount with the right currency symbol and grouping",
+    "triggers": "format, symbol, currency display, locale",
+    "category": "finance",
+    "notfor": "arithmetic",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.TaxCalc",
+    "capability": "apply tax rules to a price",
+    "triggers": "tax, vat, rate, gross",
+    "category": "finance",
+    "notfor": "exact arithmetic",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Rounder",
+    "capability": "round a number using a chosen rounding mode",
+    "triggers": "round, half-even, mode, precision",
+    "category": "finance",
+    "notfor": "representing amounts",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.PathFinder",
+    "capability": "find the lowest-cost route between two nodes in a weighted graph",
+    "triggers": "shortest path, dijkstra, weighted, route, cost",
+    "category": "graph",
+    "notfor": "ordering by dependencies",
+    "target": true
+  },
+  {
+    "symbol": "org.corpus.TopoSort",
+    "capability": "order nodes so every edge points from earlier to later",
+    "triggers": "topological, dependency order, dag, sort",
+    "category": "graph",
+    "notfor": "lowest-cost routing",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.CycleDetector",
+    "capability": "detect whether a graph contains a cycle",
+    "triggers": "cycle, loop, detect, back edge",
+    "category": "graph",
+    "notfor": "routing",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.ComponentFinder",
+    "capability": "group nodes into connected clusters",
+    "triggers": "components, union find, clusters, partition",
+    "category": "graph",
+    "notfor": "routing",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Reacher",
+    "capability": "list every node reachable from a starting node",
+    "triggers": "reachable, breadth first, visit, traverse",
+    "category": "graph",
+    "notfor": "lowest-cost routing",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.BloomFilter",
+    "capability": "test set membership approximately in tiny space, never missing a member that was added",
+    "triggers": "bloom filter, probabilistic, membership, set, approximate",
+    "category": "probabilistic",
+    "notfor": "exact membership",
+    "target": true
+  },
+  {
+    "symbol": "org.corpus.CardinalityEstimator",
+    "capability": "estimate how many distinct items have been seen",
+    "triggers": "cardinality, distinct count, hyperloglog, unique",
+    "category": "probabilistic",
+    "notfor": "membership testing",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.ExactSet",
+    "capability": "store items for exact membership testing",
+    "triggers": "hash set, contains, exact, set",
+    "category": "probabilistic",
+    "notfor": "tiny-space approximation",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.FrequencySketch",
+    "capability": "estimate how often each item appears in small space",
+    "triggers": "frequency, sketch, count-min, heavy hitters",
+    "category": "probabilistic",
+    "notfor": "membership testing",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.SeenCache",
+    "capability": "remember recently seen keys exactly to skip repeats",
+    "triggers": "recently seen, dedupe, cache, skip",
+    "category": "probabilistic",
+    "notfor": "tiny-space approximation over huge sets",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.PriorityQueue",
+    "capability": "always remove the item with the most urgent priority first",
+    "triggers": "priority queue, heap, min, dequeue, urgent",
+    "category": "structures",
+    "notfor": "first-in-first-out order",
+    "target": true
+  },
+  {
+    "symbol": "org.corpus.FifoQueue",
+    "capability": "remove items in the order they were added",
+    "triggers": "queue, fifo, first in, order",
+    "category": "structures",
+    "notfor": "priority order",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Stack",
+    "capability": "remove the most recently added item first",
+    "triggers": "stack, lifo, push, pop",
+    "category": "structures",
+    "notfor": "priority order",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.DelayQueue",
+    "capability": "release each item only after its own delay has elapsed",
+    "triggers": "delay, scheduled, ready time, timed",
+    "category": "structures",
+    "notfor": "priority ordering",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.RingBuffer",
+    "capability": "a fixed-size buffer that overwrites the oldest item when full",
+    "triggers": "ring, circular, overwrite, fixed size",
+    "category": "structures",
+    "notfor": "priority ordering",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.ConnectionPool",
+    "capability": "lend out and reclaim a bounded set of open database connections across requests",
+    "triggers": "connection pool, database, reuse, bounded, borrow",
+    "category": "pooling",
+    "notfor": "caching values",
+    "target": true
+  },
+  {
+    "symbol": "org.corpus.ThreadPool",
+    "capability": "run submitted tasks on a reusable set of worker threads",
+    "triggers": "thread pool, workers, executor, tasks",
+    "category": "pooling",
+    "notfor": "database connections",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.KeepAliveClient",
+    "capability": "reuse tcp sockets across successive http requests",
+    "triggers": "keep-alive, http client, reuse socket, persistent",
+    "category": "pooling",
+    "notfor": "database connections",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.StatementCache",
+    "capability": "cache compiled sql statements for reuse",
+    "triggers": "prepared statement, sql cache, compile",
+    "category": "pooling",
+    "notfor": "pooling connections",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.LazyConnector",
+    "capability": "open a single connection on first use and reconnect after failure",
+    "triggers": "lazy connect, reconnect, single connection",
+    "category": "pooling",
+    "notfor": "a shared bounded set",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.BackpressureBuffer",
+    "capability": "make producers wait when a bounded buffer between them and consumers is full",
+    "triggers": "backpressure, bounded buffer, producer consumer, block, flow control",
+    "category": "flow-control",
+    "notfor": "dropping excess work",
+    "target": true
+  },
+  {
+    "symbol": "org.corpus.LoadShedder",
+    "capability": "drop excess requests when the system is overloaded",
+    "triggers": "shed, drop, overload, reject",
+    "category": "flow-control",
+    "notfor": "making producers wait",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.RequestLimiter",
+    "capability": "cap the incoming request rate to a ceiling",
+    "triggers": "rate limit, cap, ceiling, throttle",
+    "category": "flow-control",
+    "notfor": "buffering with waiting",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.StreamSampler",
+    "capability": "keep only a representative sample of a high-volume stream",
+    "triggers": "sample, downsample, subset",
+    "category": "flow-control",
+    "notfor": "lossless flow control",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.BufferedChannel",
+    "capability": "hand items between coroutines through a buffer of fixed capacity",
+    "triggers": "channel, buffer, handoff, capacity",
+    "category": "flow-control",
+    "notfor": "blocking producers on fullness",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.PathRouter",
+    "capability": "match an incoming request path against registered patterns and pull out the variable segments",
+    "triggers": "router, route, path pattern, dispatch, handler",
+    "category": "routing",
+    "notfor": "breaking apart a url",
+    "target": true
+  },
+  {
+    "symbol": "org.corpus.UrlParser",
+    "capability": "break a url into its scheme, host, path and query parts",
+    "triggers": "parse url, components, query string, host",
+    "category": "routing",
+    "notfor": "selecting a handler",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.QueryCodec",
+    "capability": "encode and decode url query parameters",
+    "triggers": "query params, encode, decode, querystring",
+    "category": "routing",
+    "notfor": "selecting a handler",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.GlobMatcher",
+    "capability": "match file paths against glob wildcard patterns",
+    "triggers": "glob, wildcard, match, star",
+    "category": "routing",
+    "notfor": "http request dispatch",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.TrieMatcher",
+    "capability": "find the longest registered prefix of a string",
+    "triggers": "prefix, trie, longest match, radix",
+    "category": "routing",
+    "notfor": "extracting path variables",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.PasswordHasher",
+    "capability": "turn a secret into a salted, deliberately slow one-way hash suitable for storage",
+    "triggers": "password, bcrypt, argon2, salt, kdf, slow",
+    "category": "auth-crypto",
+    "notfor": "fast content checksums",
+    "target": true
+  },
+  {
+    "symbol": "org.corpus.FastHasher",
+    "capability": "compute a fast non-cryptographic hash for integrity checks",
+    "triggers": "hash, checksum, fast, integrity",
+    "category": "auth-crypto",
+    "notfor": "storing secrets",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.HmacSigner",
+    "capability": "compute a keyed message authentication code",
+    "triggers": "hmac, keyed, verify, mac",
+    "category": "auth-crypto",
+    "notfor": "storing secrets",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.TokenMaker",
+    "capability": "generate a random cryptographically secure token",
+    "triggers": "token, random, secret, nonce",
+    "category": "auth-crypto",
+    "notfor": "hashing a chosen secret",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.OtpGenerator",
+    "capability": "generate time-based one-time codes",
+    "triggers": "otp, totp, 2fa, one-time",
+    "category": "auth-crypto",
+    "notfor": "hashing stored secrets",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.DistLock",
+    "capability": "acquire a mutually exclusive lease across machines that expires on its own if not renewed",
+    "triggers": "distributed lock, lease, mutex, expire, coordination",
+    "category": "coordination",
+    "notfor": "an in-process mutex",
+    "target": true
+  },
+  {
+    "symbol": "org.corpus.ReentrantLock",
+    "capability": "guard a section within one process, re-entrant by the holding thread",
+    "triggers": "reentrant, lock, thread, in-process",
+    "category": "coordination",
+    "notfor": "coordinating across machines",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.LeaderElector",
+    "capability": "elect a single leader among several instances",
+    "triggers": "leader, election, coordinator, quorum",
+    "category": "coordination",
+    "notfor": "locking one resource at a time",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.IdempotencyStore",
+    "capability": "record request keys so a repeated request runs its effect only once",
+    "triggers": "idempotency, dedupe request, once, key",
+    "category": "coordination",
+    "notfor": "exclusive access across machines",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.VersionGuard",
+    "capability": "detect concurrent writes by comparing a version number before saving",
+    "triggers": "optimistic, version, compare and set, conflict",
+    "category": "coordination",
+    "notfor": "holding an exclusive lease",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Zipper",
+    "capability": "compress a byte stream with gzip",
+    "triggers": "gzip, compress, deflate",
+    "category": "compression",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Unzipper",
+    "capability": "extract entries from a zip archive",
+    "triggers": "unzip, extract, archive",
+    "category": "compression",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Tarball",
+    "capability": "bundle files together into a tar archive",
+    "triggers": "tar, bundle, archive",
+    "category": "io",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Base64Codec",
+    "capability": "encode and decode bytes as base64 text",
+    "triggers": "base64, encode, decode",
+    "category": "encoding",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.HexCodec",
+    "capability": "encode and decode bytes as hexadecimal",
+    "triggers": "hex, encode, decode",
+    "category": "encoding",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.UuidGen",
+    "capability": "generate a random universally unique identifier",
+    "triggers": "uuid, guid, random id",
+    "category": "identifiers",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.UlidGen",
+    "capability": "generate a lexicographically sortable identifier",
+    "triggers": "ulid, sortable, id",
+    "category": "identifiers",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.SnowflakeId",
+    "capability": "generate a time-ordered numeric identifier",
+    "triggers": "snowflake, numeric id, time-ordered",
+    "category": "identifiers",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.NanoId",
+    "capability": "generate a short url-friendly identifier",
+    "triggers": "nanoid, short id, url-friendly",
+    "category": "identifiers",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Emailer",
+    "capability": "send an email through an smtp server",
+    "triggers": "email, smtp, send",
+    "category": "mail",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.TemplateMailer",
+    "capability": "fill an email template with values and send it",
+    "triggers": "email template, merge, send",
+    "category": "mail",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.DnsResolver",
+    "capability": "resolve a hostname to its ip addresses",
+    "triggers": "dns, resolve, lookup, hostname",
+    "category": "network",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.CidrMatcher",
+    "capability": "test whether an ip address falls within a cidr range",
+    "triggers": "cidr, subnet, ip range",
+    "category": "network",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.MacFormatter",
+    "capability": "format a hardware mac address",
+    "triggers": "mac address, format, hardware",
+    "category": "network",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.PortChecker",
+    "capability": "check whether a tcp port is open on a host",
+    "triggers": "port, tcp, open, probe",
+    "category": "network",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Pinger",
+    "capability": "measure the round-trip time to a host",
+    "triggers": "ping, latency, round trip",
+    "category": "network",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.WhoisLookup",
+    "capability": "look up domain registration details",
+    "triggers": "whois, domain, registration",
+    "category": "network",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.ColorConverter",
+    "capability": "convert colors between rgb and hsl",
+    "triggers": "color, rgb, hsl, convert",
+    "category": "color",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Palette",
+    "capability": "generate a color palette from a base color",
+    "triggers": "palette, scheme, colors",
+    "category": "color",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.ContrastChecker",
+    "capability": "check the contrast ratio between two colors for accessibility",
+    "triggers": "contrast, accessibility, wcag, ratio",
+    "category": "color",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.RegexMatcher",
+    "capability": "compile and match regular expressions",
+    "triggers": "regex, pattern, match",
+    "category": "text",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.BraceExpander",
+    "capability": "expand brace patterns into all their combinations",
+    "triggers": "brace, expand, combinations",
+    "category": "text",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.IniParser",
+    "capability": "parse ini configuration files into sections",
+    "triggers": "ini, config, sections",
+    "category": "serialization",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.XmlParser",
+    "capability": "parse xml into a document tree",
+    "triggers": "xml, parse, tree",
+    "category": "serialization",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.MarkdownRenderer",
+    "capability": "render markdown into html",
+    "triggers": "markdown, render, html",
+    "category": "text",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.HtmlStripper",
+    "capability": "strip html tags to leave plain text",
+    "triggers": "strip html, plain text, tags",
+    "category": "text",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.MimeGuesser",
+    "capability": "guess a mime type from a file extension",
+    "triggers": "mime, content type, extension",
+    "category": "io",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.FileSizeFormatter",
+    "capability": "format a byte count as a human-readable size",
+    "triggers": "file size, human readable, bytes",
+    "category": "text",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.PhoneFormatter",
+    "capability": "format a telephone number for a region",
+    "triggers": "phone, format, region",
+    "category": "text",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.LuhnChecker",
+    "capability": "validate a number using the luhn checksum",
+    "triggers": "luhn, checksum, card number",
+    "category": "validation",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.IbanValidator",
+    "capability": "validate an iban bank account number",
+    "triggers": "iban, bank, account, validate",
+    "category": "validation",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Soundex",
+    "capability": "compute a phonetic code for a name",
+    "triggers": "soundex, phonetic, name",
+    "category": "strings",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Stemmer",
+    "capability": "reduce words to their stems",
+    "triggers": "stem, root, normalize word",
+    "category": "nlp",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Stopwords",
+    "capability": "remove common stop words from text",
+    "triggers": "stopwords, filter, common words",
+    "category": "nlp",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.LanguageGuesser",
+    "capability": "guess which language a text is written in",
+    "triggers": "language detect, guess, identify",
+    "category": "nlp",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Tokenizer",
+    "capability": "split text into word tokens",
+    "triggers": "tokenize, words, split text",
+    "category": "nlp",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.SentimentScorer",
+    "capability": "score the sentiment of a piece of text",
+    "triggers": "sentiment, polarity, score",
+    "category": "nlp",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.ExifReader",
+    "capability": "read exif metadata from a photo",
+    "triggers": "exif, metadata, photo",
+    "category": "media",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Waveform",
+    "capability": "downsample audio into a waveform outline",
+    "triggers": "audio, waveform, downsample",
+    "category": "media",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.FrameGrabber",
+    "capability": "extract a still frame from a video",
+    "triggers": "video, frame, still",
+    "category": "media",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.SvgWriter",
+    "capability": "build an svg vector document",
+    "triggers": "svg, vector, draw",
+    "category": "media",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.QrDrawer",
+    "capability": "render a qr code as an image",
+    "triggers": "qr, code, render",
+    "category": "media",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Histogram",
+    "capability": "bin numbers into a histogram",
+    "triggers": "histogram, bins, distribution",
+    "category": "math",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.MatrixMul",
+    "capability": "multiply two matrices",
+    "triggers": "matrix, multiply, linear algebra",
+    "category": "math",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.LinearSolver",
+    "capability": "solve a system of linear equations",
+    "triggers": "solve, linear system, equations",
+    "category": "math",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Fft",
+    "capability": "compute a fast fourier transform",
+    "triggers": "fft, fourier, frequency",
+    "category": "math",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Bezier",
+    "capability": "evaluate a bezier curve at a parameter",
+    "triggers": "bezier, curve, evaluate",
+    "category": "math",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.PerlinNoise",
+    "capability": "generate coherent gradient noise",
+    "triggers": "perlin, noise, gradient",
+    "category": "math",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.MovingAverage",
+    "capability": "compute a rolling average over recent values",
+    "triggers": "moving average, rolling, smoothing",
+    "category": "math",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.OutlierFinder",
+    "capability": "flag outliers by their z-score",
+    "triggers": "outlier, z-score, anomaly",
+    "category": "math",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.PidController",
+    "capability": "compute a pid control signal from an error term",
+    "triggers": "pid, control, feedback",
+    "category": "control",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.CronParser",
+    "capability": "parse a cron expression into upcoming run times",
+    "triggers": "cron, expression, next run",
+    "category": "datetime",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.RRuleExpander",
+    "capability": "expand a recurrence rule into concrete dates",
+    "triggers": "rrule, recurrence, dates",
+    "category": "datetime",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.AgeCalc",
+    "capability": "compute age in whole years from a birth date",
+    "triggers": "age, years, birth date",
+    "category": "datetime",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Stopwatch",
+    "capability": "measure elapsed wall-clock time",
+    "triggers": "stopwatch, elapsed, timer",
+    "category": "datetime",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.Heartbeat",
+    "capability": "emit periodic liveness pings",
+    "triggers": "heartbeat, liveness, ping",
+    "category": "ops",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.HealthCheck",
+    "capability": "aggregate component checks into one health status",
+    "triggers": "health, readiness, status",
+    "category": "ops",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.GracefulStop",
+    "capability": "drain in-flight work before shutting down",
+    "triggers": "graceful, shutdown, drain",
+    "category": "ops",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.SignalHandler",
+    "capability": "run cleanup handlers on process signals",
+    "triggers": "signal, sigterm, cleanup",
+    "category": "ops",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.JwtDecoder",
+    "capability": "decode and verify a json web token",
+    "triggers": "jwt, token, verify",
+    "category": "auth",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.CookieJar",
+    "capability": "store and resend cookies across requests",
+    "triggers": "cookie, jar, session",
+    "category": "http",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.CsrfToken",
+    "capability": "issue and check csrf tokens",
+    "triggers": "csrf, token, form",
+    "category": "auth",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.SessionStore",
+    "capability": "store server-side sessions keyed by id",
+    "triggers": "session, store, server-side",
+    "category": "auth",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.EtagCache",
+    "capability": "validate cached responses with etags",
+    "triggers": "etag, conditional, cache",
+    "category": "http",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.ContentNegotiator",
+    "capability": "pick a response format from accept headers",
+    "triggers": "content negotiation, accept, format",
+    "category": "http",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.MultipartParser",
+    "capability": "parse multipart form uploads",
+    "triggers": "multipart, upload, form",
+    "category": "http",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.FormEncoder",
+    "capability": "encode fields as url-encoded form data",
+    "triggers": "form encode, urlencoded, fields",
+    "category": "http",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.SseStream",
+    "capability": "push server-sent events to a client",
+    "triggers": "sse, server-sent, stream",
+    "category": "http",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.GrpcClient",
+    "capability": "call a grpc service method",
+    "triggers": "grpc, rpc, call",
+    "category": "rpc",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.MsgPackCodec",
+    "capability": "serialize objects to and from messagepack",
+    "triggers": "messagepack, binary, encode",
+    "category": "serialization",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.CborCodec",
+    "capability": "serialize objects to and from cbor",
+    "triggers": "cbor, binary, encode",
+    "category": "serialization",
+    "notfor": "",
+    "target": false
+  },
+  {
+    "symbol": "org.corpus.AvroCodec",
+    "capability": "serialize objects with an avro schema",
+    "triggers": "avro, schema, encode",
+    "category": "serialization",
+    "notfor": "",
+    "target": false
+  }
+]

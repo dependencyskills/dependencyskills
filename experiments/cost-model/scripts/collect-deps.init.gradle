@@ -1,0 +1,66 @@
+// Dumps every resolved external module in a Gradle build, one per line.
+//
+// Spike quality: swallows unresolvable configurations rather than
+// diagnosing them, because a partial count is fine and a stack trace is not
+// the question being asked.
+//
+//   ./gradlew -I collect-deps.init.gradle dsDeps -q
+//
+// Output: DSDEP <project-path> <direct|transitive> <group:name:version> <prod|dev>
+//
+// The fourth column was added when the other ecosystems were measured: npm
+// and SPM distinguish development dependencies and a comparison that quietly
+// dropped them would flatter the JVM. Here it is derived from the
+// configuration name - a test classpath is dev, everything else is prod.
+
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+
+allprojects { p ->
+    p.tasks.register("dsDeps") {
+        doLast {
+            def rows = new TreeSet<String>()
+            p.configurations.each { c ->
+                if (!c.canBeResolved) return
+                // Resolving every configuration is slow and some are not meant
+                // to be resolved at all. These cover JVM, Android and KMP.
+                // Leading letter is optional-case on purpose: a plain JVM
+                // module's own configurations are `compileClasspath` and
+                // `runtimeClasspath`, lowercase, and an anchored capital-letter
+                // pattern silently collects only its `test*` ones. Every KMP and
+                // Android configuration is prefixed (`jvmMain...`, `debug...`)
+                // and so matched either way, which is why this went unnoticed.
+                if (!(c.name ==~ /.*([Rr]untimeClasspath|[Cc]ompileClasspath|[Kk]libraries|CInterop.*)$/)) return
+                try {
+                    def result = c.incoming.resolutionResult
+                    // Direct is what the build DECLARES, taken from
+                    // allDependencies (which includes what this configuration
+                    // inherits via extendsFrom - the declarations live in the
+                    // non-resolvable buckets like `implementation`).
+                    //
+                    // The resolution root's first-level edges were used here
+                    // before and are wrong for any configuration a plugin
+                    // synthesises flat: Spring Boot's productionRuntimeClasspath
+                    // reports 107 first-level edges against 15 declarations and
+                    // 108 total components, i.e. nearly the whole graph as
+                    // "direct". On every ordinary configuration the two agree
+                    // exactly, which is what makes this safe to change.
+                    def direct = new HashSet<String>()
+                    c.allDependencies.each { d ->
+                        if (d.group != null) direct << "${d.group}:${d.name}"
+                    }
+                    result.allComponents.each { comp ->
+                        def id = comp.id
+                        if (!(id instanceof ModuleComponentIdentifier)) return
+                        def ga = "${id.group}:${id.module}"
+                        def kind = direct.contains(ga) ? "direct" : "transitive"
+                        def scope = c.name.startsWith("test") || c.name.contains("Test") ? "dev" : "prod"
+                        rows << "${p.path}\t${kind}\t${id.group}:${id.module}:${id.version}\t${scope}"
+                    }
+                } catch (Exception ignored) {
+                    // unresolvable in this environment; skip
+                }
+            }
+            rows.each { println "DSDEP\t${it}" }
+        }
+    }
+}

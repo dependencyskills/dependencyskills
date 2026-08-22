@@ -1,0 +1,12 @@
+```kotlin
+import java.util.LinkedHashMap
+
+// LRU cache that keeps at most 100 entries
+private val widgetCache = object : LinkedHashMap<String, String>(16, 0.75f, true) {
+    override fun removeEldestEntry(eldest: Map.Entry<String, String>): Boolean =
+        size > 100
+}
+
+fun cachedLookup(key: String): String =
+    widgetCache.computeIfAbsent(key) { fetchWidget(it) }
+```

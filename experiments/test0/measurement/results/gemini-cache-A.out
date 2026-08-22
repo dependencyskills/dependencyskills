@@ -1,0 +1,16 @@
+^D```kotlin
+import java.util.LinkedHashMap
+
+private const val MAX_ENTRIES = 100
+
+private val cache = object : LinkedHashMap<String, String>(MAX_ENTRIES, 0.75f, true) {
+    override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, String>?): Boolean {
+        return size > MAX_ENTRIES
+    }
+}
+
+@Synchronized
+fun cachedLookup(key: String): String {
+    return cache.getOrPut(key) { fetchWidget(key) }
+}
+```

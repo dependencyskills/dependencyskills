@@ -1,0 +1,10 @@
+```kotlin
+import Arrow.errors.check
+
+fun validate(name: String, age: Int): Arrow.errorResult<() => Boolean> {
+    return Arrow.check(
+        name.notEmpty() && age >= 18,
+        () => true
+    )
+}
+```

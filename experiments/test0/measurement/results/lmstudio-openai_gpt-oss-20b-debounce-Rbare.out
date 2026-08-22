@@ -1,0 +1,11 @@
+```kotlin
+import org.test0.Coalescer
+
+private val coalescer = Coalescer(300)          // 300 ms quiet period
+@Volatile private var latestText: String = ""
+
+fun onSearchInput(text: String) {
+    latestText = text
+    coalescer.submit { runSearch(latestText) }
+}
+```

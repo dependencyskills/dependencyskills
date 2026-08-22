@@ -1,0 +1,10 @@
+```kotlin
+import org.test0.RowReader
+import org.test0.Shredder
+
+fun parseReport(text: String): List<List<String>> {
+    // Both RowReader and Shredder can be used here, but they seem to have the same functionality.
+    // For this example, we'll use RowReader. If you want to use Shredder instead, just replace RowReader with Shredder.
+    return RowReader().read(text)
+}
+```

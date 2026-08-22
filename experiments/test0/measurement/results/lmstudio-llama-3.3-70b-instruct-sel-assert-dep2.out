@@ -1,0 +1,9 @@
+```kotlin
+import io.strikt.api.expectThat
+import org.assertj.core.api.Assertions.assertThat
+
+fun checkOutput(result: Int, name: String) {
+    expectThat(result).isEqualTo(42)
+    assertThat(name).isNotBlank()
+}
+```

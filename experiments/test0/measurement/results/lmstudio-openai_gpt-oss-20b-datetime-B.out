@@ -1,0 +1,6 @@
+```kotlin
+import kotlin.time.Clock
+import kotlin.time.Instant
+
+fun currentInstant(): Instant = Clock.System.now()
+```

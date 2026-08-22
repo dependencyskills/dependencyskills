@@ -1,0 +1,503 @@
+```kotlin
+import org.test0.RowReader
+
+fun parseReport(text: String): List<List<String>> {
+    val rows = text.split("\t")
+    return rows.map { row ->
+        val fields = row.split(",")
+        if (fields.isNotEmpty()) {
+            return fields.map { it.trim().split("\t")?.map { it[0].trim().toLower() }
+        } else {
+            return rows.map { row ->
+                val fields = row.split(",")
+                if (fields.isNotEmpty()) {
+                    return fields.map { it.trim().split("\t")?.map { it[0].trim().toLower() }
+                } else {
+                    return rows.map { row ->
+                        val fields = row.split(",")
+                        if (fields.isNotEmpty()) {
+                            return fields.map { it[0].trim().toLower() }
+                } else {
+                    return rows.map { row ->
+                        val fields = row.split(",")
+                        if (fields.isNotEmpty()) {
+                            return fields.map { it[0].trim().toLower() }
+                        } else {
+                            return rows.map { row ->
+                                val fields = row.split(",")
+                                if (fields.isNotEmpty()) {
+                                    return fields.map { it[0].trim().toLower() }
+                                } else {
+                                    return rows.map { row ->
+                                        val fields = row.split(",")
+                                        if (fields.isNotEmpty()) {
+                                            return fields.map { it[0].trim().toLower() }
+                                        } else {
+                                            return rows.map { row ->
+                                                val fields = row.split(",")
+                                                if (fields.isNotEmpty()) {
+                                                    return fields.map { it[0].trim().toLower() }
+                                                } else {
+                                                    return rows.map { row ->
+                                                        val fields = row.split(",")
+                                                        if (fields.isNotEmpty()) {
+                                                            return fields.map { it[0].trim().toLower() }
+                                                        } else {
+                                                            return rows.map { row ->
+                                                                val fields = row.split(",")
+                                                                if (fields.isNotEmpty()) {
+                                                                    return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                                 } else {
+                                                     return rows.map { row ->
+                                                         val fields = row.split(",")
+                                                         if (fields.isNotEmpty()) {
+                                                             return fields.map { it[0].trim().toLower() }
+                                                         } else {
+                                                             return rows.map { row ->
+                                                                val fields = row.split(",")
+                                                                if (fields.isNotEmpty()) {
+                                                                    return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                                 } else {
+                                                     return rows.map { row ->
+                                                         val fields = row.split(",")
+                                                         if (fields.isNotEmpty()) {
+                                                             return fields.map { it[0].trim().toLower() }
+                                                         } else {
+                                                             return rows.map { row ->
+                                                                val fields = row.split(",")
+                                                                if (fields.isNotEmpty()) {
+                                                                    return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                                 } else {
+                                                     return rows.map { row ->
+                                                         val fields = row.split(",")
+                                                         if (fields.isNotEmpty()) {
+                                                             return fields.map { it[0].trim().toLower() }
+                                                         } else {
+                                                             return rows.map { row ->
+                                                                val fields = row.split(",")
+                                                                if (fields.isNotEmpty()) {
+                                                                    return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[0].trim().toLower() }
+                                         } else {
+                                             return rows.map { row ->
+                                                 val fields = row.split(",")
+                                                 if (fields.isNotEmpty()) {
+                                                     return fields.map { it[0].trim().toLower() }
+                                 
+                                 } else {
+                                     return rows.map { row ->
+                                         val fields = row.split(",")
+                                         if (fields.isNotEmpty()) {
+                                             return fields.map { it[

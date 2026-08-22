@@ -1,0 +1,10 @@
+```kotlin
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.request.*
+
+fun fetch(url: String): String {
+    val client = HttpClient()
+    return client.get(url).body<String>()
+}
+```

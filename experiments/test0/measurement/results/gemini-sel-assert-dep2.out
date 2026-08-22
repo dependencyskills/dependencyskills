@@ -1,0 +1,8 @@
+^D```kotlin
+import org.assertj.core.api.Assertions.assertThat
+
+fun checkOutput(result: Int, name: String) {
+    assertThat(result).isEqualTo(42)
+    assertThat(name).isNotBlank()
+}
+```

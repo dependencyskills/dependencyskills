@@ -1,0 +1,20 @@
+```kotlin
+import org.test0.Coalescer
+
+fun onSearchInput(text: String) {
+    val quietPeriod = 300L
+    val coalescedAction = Coalescer(quietPeriod)
+
+    // Call the function to initiate the coalescing process
+    coalescedAction.submit(text)
+}
+```
+
+**Explanation:**
+
+1.  **Import `org.test0.Coalescer`:** This line imports the necessary class from the library.
+2.  **Define `onSearchInput`:** This function is called when the `runSearch` method is invoked.
+3.  **Initialize `coalescedAction`:** We create a new instance of the `Coalescer` class, initialized with the specified `quietPeriod`. This represents the initial coalescing operation.
+4.  **Call `coalescedAction.submit(text)`:** This line calls the `submit` method of the `coalescedAction` object.  The `text` argument is passed as the action to be executed. This initiates the coalescing process, which will run only once after a 300 millisecond wait.
+
+This implementation directly leverages the `coalescer` method provided by the library, ensuring that the most recent action is executed after a specified quiet period.  It's concise and directly addresses the requirements of the problem description.

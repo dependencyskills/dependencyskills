@@ -1,0 +1,6 @@
+```kotlin
+fun parseReport(text: String): List<List<String>> {
+    val shredder = Shredder('\t')
+    return shredder.read(text)
+}
+```

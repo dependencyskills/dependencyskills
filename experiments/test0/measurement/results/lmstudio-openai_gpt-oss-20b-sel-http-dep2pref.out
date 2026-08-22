@@ -1,0 +1,14 @@
+```kotlin
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import kotlinx.coroutines.runBlocking
+
+fun fetch(url: String): String = runBlocking {
+    HttpClient(CIO).use { client ->
+        val response: HttpResponse = client.get(url)
+        response.bodyAsText()
+    }
+}
+```
