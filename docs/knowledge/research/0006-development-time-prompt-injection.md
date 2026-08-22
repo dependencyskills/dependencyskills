@@ -15,7 +15,10 @@ channel measured against the mitigation**, the **locally-served open-weight tier
 **dependency-graph corpus** rather than authored skills, and **structure grounding**, which
 only a library corpus makes possible. Filed in full as the third correction in
 [RAD-0008](0008-the-field-as-it-stands.md) v2. Corroboration is not a loss: independent
-large-N agreement says the method here is sound.
+large-N agreement says the method here is sound. Also records two arguments this record was
+missing: **manual review does not scale to a dependency graph** — the same population that
+defeats hand-curation defeats hand-review — and **a central corpus amplifies the problem**,
+being the one place a payload need be planted once to reach every consumer.
 
 **v5 (2026-08-22).** Two open questions in this record are now measured. **`experiments/test4`**
 closes the language gap: one payload in each of the five native doc conventions, harvested
@@ -244,6 +247,30 @@ format (ADR-0007). The finding is about the category's default architecture, not
   [RAD-0008](0008-the-field-as-it-stands.md) already had to correct one such overclaim, and
   this is the same failure mode in a new area. **Reading that literature is outstanding work
   and should precede any public claim about what is unmeasured.**
+
+### Why "just review the skills before you load them" does not answer this (added v6)
+
+The natural human answer to untrusted agent-facing content is review: approve what goes in,
+read it before loading it, do not run a skill you have not looked at. For a handful of
+deliberately-installed skills that is sound advice and this record does not argue against it.
+
+**It does not survive contact with a dependency graph.** The population here is 112–995
+libraries per project ([RAD-0001](0001-cost-of-a-skill-per-dependency.md)), 70–90% of it
+transitive, re-resolved on every version bump. Nobody reads that, and nobody re-reads it when
+a transitive moves underneath them. This is precisely the argument
+[RAD-0008](0008-the-field-as-it-stands.md) already makes against the field's answer to *scale* —
+*be selective, curate by hand* — arriving now for *security*: *the same population that defeats
+manual curation defeats manual review.* A control that assumes a human reads the corpus is not
+available at this scale, whatever its merits elsewhere.
+
+That is not an argument for ignoring the risk. It is an argument that the control has to be
+computable, which is what the rest of this section is about.
+
+**A central corpus amplifies rather than solves this.** Mitigation 5 below notes a capability
+server as the only place a corpus could be scanned once on behalf of every consumer. The
+inverse is equally true and worth stating plainly: it is also the only place a payload need be
+planted *once* to reach every consumer. Centralisation moves the review problem rather than
+removing it, and raises the value of the target while doing so.
 
 ### Constraining the channel: structure as a trusted spine (added v4)
 

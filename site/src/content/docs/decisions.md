@@ -42,7 +42,10 @@ otherwise protects. Since no property of the agent can be relied on, the
 control has to sit in the codex: library prose is placed where it cannot be
 followed, and the transitive tail — the bulk of the surface — is excluded
 unless asked for. This is a negative result about this project's own proposal,
-and it is published with the mitigation rather than after it.
+and it is published with the mitigation rather than after it. One honest gap in
+it: excluding the tail has been justified twice, for selection and for security,
+and on neither occasion was the *cost* measured. What that exclusion loses is
+[under investigation](/research/).
 
 **Publish security findings as observations, not verdicts.** Per-model results
 are reported as what was measured, on what date, at what sample size — never as

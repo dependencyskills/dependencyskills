@@ -139,17 +139,71 @@ one boundary outright — the moment content enters the index — so a third que
 is whether it should simply refuse content whose documentation does not match the
 code it ships with.
 
-**Findings.** The detection signal is measured; the gate is not, and it may well
-not be worth having. Checking prose against the declared surface of the library
-that shipped it runs at 1.3% false positives on endpoint references and under 6%
-on symbols, and catches the two payloads that did real harm. But its coverage is
-bounded by a property of the *attack* rather than the defence — it only sees
-payloads that name something foreign, and a pure instruction hijack names nothing
-— and a false positive here is worse than a noisy warning, because it removes a
-real capability from the index invisibly. The honest question is what it is worth
-rather than how to ship it, and the published attack corpora in the literature
-above are the way to answer it: scoring the signal against payloads this project
-wrote itself would be circular.
+**Findings.** Measured, and the answer is no. Checking prose against the declared
+surface of the library that shipped it is precise on real documentation — 1.3%
+false positives on endpoint references, under 6% on symbols — and it catches both
+payloads that did real harm in our own tests. But scoring a defence against
+payloads you wrote yourself is circular, so we ran it against an independent
+benchmark of 91 malicious and 50 benign agent skills published with the
+literature above. **It catches 36% of prose-borne attacks it did not author**, and
+the misses are structural rather than fixable: data leaving through the agent's
+own output instead of a network call, agent-config poisoning, resource abuse,
+encoded payloads, and payloads sitting in helper code where a prose check never
+looks.
+
+A control that misses two thirds of an independent benchmark cannot be an
+admission rule — refusing content on it would remove real capability while
+leaving those classes untouched. So the signal is kept as a **label and a
+warning**, where a false positive costs a glance, and the gate is not built. The
+day spent measuring prevented shipping something that looked principled and
+scored well against our own payloads. Every attack class it misses names nothing
+foreign, which is exactly what enforcing at the sink handles and detection
+cannot.
+
+## What the transitive tail is worth
+
+Weighting declared dependencies above transitive ones is settled here — it is a
+ranking rule, a security default, and roughly a tenfold cut to the surface an
+agent is asked to trust. But it was adopted twice on separate grounds and on
+both occasions the benefit was established while the cost was assumed.
+
+**Findings.** Not yet measured. Two things are worth testing rather than
+asserting. The strong form of the rule — that declared dependencies may be *all*
+a codex needs — would convert a ranking preference into an outright exclusion,
+and that is a much larger claim than anything currently recorded. And a third
+argument for the rule may exist that needs no attacker at all: a transitive
+capability can change on a version bump nobody in the consuming project made or
+reviewed, so an index built over the tail rots quietly, with nothing failing to
+compile to signal it. Against both sits a real tension — transitive dependencies
+are on the classpath regardless, so excluding them from the index removes the
+codex's *endorsement* of a capability rather than the agent's *access* to it.
+The retrieval rig above prices the question directly: build the index twice, once
+each way, and measure recall on the same needs.
+
+## Where the judgement should live
+
+A fork this project has been walking past. Everything built so far makes the
+model **better informed** — harvest what the code documents, index it, retrieve
+the right entry. It does not make the model **more constrained**. Two of our own
+measurements sit awkwardly beside that: selection is 0/18 unaided, resolved only
+by a preference a human wrote down, and every injection control routed through
+the model's judgement was defeated on some agent. Those are the same result in
+two domains — *where a decision is left to model judgement, it is unreliable* —
+and only the security half has had an architectural answer.
+
+**Findings.** Nothing measured; this is the earliest-stage question in the set.
+The alternative is a deterministic harness that carries the engineering
+judgement itself, with the model's non-determinism confined to specific call
+sites — possibly expressed as a language in which a dependency exposes a checked
+contract rather than prose, closing the free-text channel at the import boundary
+by construction. The strongest objection comes from this project's own prior
+work: structured author tags were already tried, and delivery was never the
+problem — agents are not trained to treat any channel as untrusted. So the test
+is not whether such a language would be pleasant but **what it would refuse that
+a notation cannot**. The two approaches most likely compose, with a codex as the
+fact source a deterministic harness consumes, and that is worth establishing
+before either is treated as the answer. The prior art here is unsurveyed, and
+that survey is the first task.
 
 ## Choosing between overlapping libraries
 

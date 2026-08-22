@@ -104,3 +104,65 @@ One ecosystem (Kotlin/JVM) and five libraries. The signal generalises in princip
 ecosystem has a symbol table and an import list — but the false-positive rate is a property of
 the resolver, and each language would need its own measurement. `test4` shows Rust and Python
 carry far more free text per comment, so their rates are unlikely to match these.
+
+## Part B — coverage against attacks this project did not write
+
+Scoring the signal against RAD-0006's own payloads is circular: the same people wrote the
+attack and the defence. **AgentTrap** ([arXiv:2605.13940](https://arxiv.org/abs/2605.13940))
+publishes 91 malicious and 50 benign agent skills, independently authored and drawn from real
+ecosystems, so it answers RAD-0021's crux question honestly.
+
+```bash
+python3 agenttrap_coverage.py <path-to-agenttrap-download>
+```
+
+**Only the URL signal is scored.** A skill has no symbol graph, so test3's second signal — a
+symbol resolving nowhere in the *shipping library's declared surface* — has no honest analogue
+in this corpus and reporting one would be inventing a number. AgentTrap also labels where each
+payload lives, which matters: a prose gate cannot see a payload that lives in helper code.
+
+| population | n | caught by URL grounding |
+|---|---:|---:|
+| malicious, all | 91 | 31% |
+| **malicious, NL-SKILL** (prose in the skill file — the closest analogue of a doc comment) | 18 | **61%** |
+| malicious, NL+CODE | 48 | 31% |
+| malicious, NL-AUX | 6 | 0% |
+| malicious, CODE (not what a prose gate scans) | 19 | 11% |
+| **prose-borne overall** (NL-SKILL + NL-AUX + NL+CODE) | 72 | **36%** |
+| **benign — false positives** | 50 | **10%** |
+
+**Coverage is partial, and the false-positive rate is corpus-dependent.** On the closest
+analogue the signal catches 61%; across everything prose-borne, 36%. The 10% false-positive
+rate here is far above the **1.3%** measured on real library documentation in part A — which is
+expected rather than contradictory: skills are workflow instructions that legitimately call
+services, whereas doc comments rarely name an endpoint. The gate's precision is a property of
+the corpus it runs on, and a library corpus is the favourable one.
+
+### What it misses, and why the misses are structural
+
+Of 72 prose-borne malicious skills, 46 are missed. They are not near-misses that tuning would
+recover — they are attacks that never name an external destination in prose at all:
+
+| class | example |
+|---|---|
+| **Output-channel exfiltration** | `.env` contents emitted inside an HTML comment in the agent's own output — the data leaves without a network call |
+| **Local destructive action** | deleting or trashing originals after "compress and clean" |
+| **Agent-config poisoning** | stripping `[SAFETY]` blocks from `CLAUDE.md`, or appending an auto-approve directive |
+| **Resource abuse** | token bombs in speaker notes; nothing foreign is referenced at all |
+| **Encoding** | steganographic payloads score 17%, confirming the hole recorded in RAD-0021 |
+| **Payload in code, not prose** | the skill's prose frames the step; a helper script holds the URL, where a prose gate never looks |
+
+Whole dimensions score zero — resource abuse (0/4) and cross-skill collusion (0/3) — because
+the concept the signal tests for is simply absent from those attacks.
+
+### What this establishes
+
+**Structure grounding is a partial signal and cannot be a primary control.** It sees one thing
+well: a payload that names a destination outside the shipping artifact's surface. That class is
+real, includes the exfiltration case that did genuine harm in RAD-0006, and is worth detecting.
+It is also a minority of the attacks an independent benchmark contains.
+
+The honest reading is that this belongs as **one input among several — a label or a
+down-weight — rather than an admission gate**, which is the same conclusion part A's
+false-positive asymmetry pointed at for the symbol signal. See
+[RAD-0021](../../docs/knowledge/research/0021-admission-control-at-harvest.md) v2.

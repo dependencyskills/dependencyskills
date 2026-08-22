@@ -1,6 +1,14 @@
 # Admission Control at Harvest
 
-RAD-0021 · 2026-08-22 · v1
+RAD-0021 · 2026-08-22 · v2
+
+**v2 (2026-08-22) — the crux question is answered, and the answer is no.** The coverage
+measurement this record called for has been run against AgentTrap's independently-authored
+corpus (`experiments/test3`, part B). **Structure grounding catches a minority of attacks it
+did not write: 36% of prose-borne malicious skills, 61% on the closest analogue, at a 10%
+false-positive rate on that corpus.** The misses are structural classes rather than tuning
+gaps. Per this record's own stated outcomes that lands on (b): **keep the signal as a label and
+a warning, and do not build the gate.** Findings below.
 
 **Design; the signal is measured, the gate is not.** Split out of
 [RAD-0020](0020-information-flow-control.md) v2, which had it as a subsection. It belongs on
@@ -102,6 +110,23 @@ Stated first, because it is strong and the record should not read as advocacy.
   outside it. Structure grounding cannot see it, and that is the boundary of the technique
   rather than a tuning problem. That class needs RAD-0020's enforcement, which is why the two
   records complement rather than compete.
+- **Encoding defeats it, and that is a real hole.** A payload that is base64-encoded, or
+  encoded in any scheme the model can decode and a matcher cannot, presents no visible URL and
+  no visible symbol — so both grounding signals miss it entirely. RAD-0006's own P6 payload
+  demonstrated the mechanism (obeyed in the instruction and system arms), and published cases
+  exist of encoded payloads passing content filters that would have caught the plaintext. Any
+  gate is one encoding away from being bypassed, which is the arms-race objection in its
+  concrete form.
+
+  **The partial answer is a different signal, and it is cheap.** An encoded blob sitting in a
+  doc comment is *itself* anomalous in a way it is not in a file written to instruct an agent.
+  KDoc, docstrings and `///` comments have decades of human readers and doc-tool processing
+  behind them, so high-entropy or non-prose spans stand out — which is RAD-0006's
+  discovered-versus-designed argument arriving as a detector. That is a shape check rather than
+  a grounding check, it is not what test3 measured, and whether it has a usable false-positive
+  rate on real corpora is unknown. It is worth measuring alongside the grounding signals rather
+  than assumed.
+
 - **It is a per-language problem.** test3 measured Kotlin/JVM. `experiments/test4` showed Rust
   and Python carry far more free text per comment, so their false-positive rates will differ
   and each ecosystem needs its own measurement before a gate is switched on for it.
@@ -116,10 +141,39 @@ entry recording the admission decision and its reason — a change to
 
 ## Findings
 
-**Measured (from `experiments/test3`, 2026-08-22).** The grounding signal runs at **1.3%
-false positives on URL references** and **≤5.9% on symbol references** over 1,009 real doc
-comments, and catches the two RAD-0006 payloads that produced real harm — one by each signal.
-It does not catch a payload that references nothing.
+**Measured — coverage against an independent corpus (2026-08-22; `experiments/test3` part B).**
+This is the measurement the record was written to obtain. Run against **AgentTrap**'s 91
+malicious and 50 benign agent skills — independently authored, drawn from real ecosystems —
+the URL grounding signal catches:
+
+| population | caught |
+|---|---|
+| closest analogue (prose in the skill file, n=18) | **61%** |
+| all prose-borne malicious (n=72) | **36%** |
+| all malicious including code-borne (n=91) | 31% |
+| **false positives on benign skills (n=50)** | **10%** |
+
+Only the URL signal transfers: a skill has no symbol graph, so the symbol signal has no honest
+analogue in this corpus and was not scored rather than invented.
+
+**The misses are structural, not tuning gaps.** Of 72 prose-borne malicious skills, 46 are
+missed, and they never name an external destination in prose at all: **output-channel
+exfiltration** (`.env` contents emitted inside the agent's own output — no network call),
+**local destructive action**, **agent-config poisoning** (stripping safety blocks from a
+`CLAUDE.md`, appending an auto-approve directive), **resource abuse** (token bombs — nothing
+foreign is referenced), **encoding** (steganographic payloads at 17%, confirming the hole
+above), and payloads whose URL sits in helper code where a prose check never looks. Whole
+dimensions score zero because the concept the signal tests for is simply absent from them.
+
+**False-positive rate is a property of the corpus.** 10% here against **1.3%** on real library
+documentation, which is expected rather than contradictory: skills are workflow instructions
+that legitimately call services; doc comments rarely name an endpoint. A library corpus is the
+favourable case for this signal, and the 1.3% figure is the one that applies to the codex.
+
+**Measured — false positives on library documentation (2026-08-22; `experiments/test3` part A).**
+The grounding signal runs at **1.3% on URL references** and **≤5.9% on symbol references** over
+1,009 real doc comments, and catches the two RAD-0006 payloads that produced real harm — one by
+each signal. It does not catch a payload that references nothing.
 
 **Measured (from `experiments/test4`, 2026-08-22).** The parse stage filters nothing in any of
 the five languages, so a gate placed there is an addition rather than a change to existing
@@ -153,29 +207,29 @@ production gate, and the first of which is the crux:
 
 ## Recommendation
 
-**Value it before deciding anything, and be willing to conclude it is not worth using.** No
-commitment is proposed here.
+**Do not build the gate. Keep the signal.** The coverage measurement was the condition this
+record set for itself, and it came back at 36% of prose-borne attacks it did not author. A
+control that misses roughly two thirds of an independent benchmark cannot be an admission rule:
+refusing content on it would remove real capability while leaving output-channel exfiltration,
+config poisoning, resource abuse and encoded payloads untouched. That is the worst combination
+available — a cost that is certain against a benefit that is partial.
 
-1. **Measure coverage against an independent attack corpus first.** Everything else is
-   contingent on it. If the grounding signal catches only a small fraction of AgentTrap's or
-   SkillJect's payloads, the gate is a narrow defence against attacks this project happened to
-   write, and the honest outcome is to record that and stop.
-2. **If coverage is substantial, measure the two costs** — capability lost, and retrieval
-   recall on the Layer 1 rig — before any design work.
-3. **Only then consider form**, and probably not as a binary gate: URL grounding is precise
-   enough to act on, symbol grounding is better as a down-weighting signal until a real
-   resolver lowers its rate.
-4. **Whatever the outcome, the signal has a floor use** that requires no adoption decision: as
-   a **contributor-facing and maintainer-facing check** on a harvested corpus, where a false
-   positive costs a glance rather than a capability.
-5. **Do not build audit machinery speculatively.** It is a hard requirement *if* a gate ships,
-   which makes it a cost to weigh, not a task to start.
+1. **Keep URL grounding as a label and a warning**, where its 1.3% rate on library
+   documentation is cheap and a false positive costs a glance rather than a capability. It
+   catches a real class, including the exfiltration that did genuine harm in RAD-0006.
+2. **Do not gate on the symbol signal either.** Part A's false-positive asymmetry already
+   argued for down-weighting over discarding, and nothing here changes that.
+3. **Do not build audit machinery.** It was a hard requirement only if a gate shipped.
+4. **The retrieval-cost experiments are moot** and should not be run — they priced a control
+   that is not being adopted. [RAD-0022](0022-the-value-of-transitive-capabilities.md) still
+   wants the Layer 1 rig for its own question.
+5. **Route the uncovered classes to [RAD-0020](0020-information-flow-control.md).** Every miss
+   catalogued above is an attack that names nothing foreign, which is precisely what enforcing
+   at the sink handles and detection cannot.
 
-**Plausible outcomes, all acceptable.** (a) Coverage is low → do not adopt; record why, and
-lean on [RAD-0020](0020-information-flow-control.md). (b) Coverage is decent but retrieval cost
-is real → keep it as a label and a warning, never a gate. (c) Coverage is high and cost is
-negligible → gate on the URL signal, down-weight on the symbol signal. **(a) is a perfectly
-good result and the record should not be written as though it would be a failure.**
+**This is outcome (b) from the version of this record written before the measurement, and it is
+a good result.** The record cost a day and prevented building a control that would have looked
+principled, measured well against our own payloads, and failed quietly against real ones.
 
 ## Connections
 
