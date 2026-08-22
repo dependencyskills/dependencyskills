@@ -1,6 +1,18 @@
 # Development-Time Prompt Injection
 
-RAD-0006 · 2026-08-14 · v4
+RAD-0006 · 2026-08-14 · v5
+
+**v5 (2026-08-22).** Two open questions in this record are now measured. **`experiments/test4`**
+closes the language gap: one payload in each of the five native doc conventions, harvested
+through the real extractors, is delivered **100% intact in all five** - instruction, symbol,
+URL and code block - so **the parse stage filters nothing today** and is available as the
+enforcement point. It also **corrects this record's v4 speculation**: TypeScript is the *least*
+exposed convention measured, not the most; Python carries the largest typical comment and Rust
+the heaviest tail and most embedded code. **`experiments/test3`** answers the false-positive
+question for mitigation 4: grounding prose against the shipping library's declared surface runs
+at **1.3% (URL)** and **≤5.9% (symbol)** over 1,009 real doc comments, and catches the two
+payloads that caused real harm - but cannot catch a pure instruction hijack that references
+nothing.
 
 **v4 (2026-08-21).** The matrix was hardened with **aggressive payloads** (delimiter-escape,
 meta-override, base64-obfuscation), a **system-channel arm (C)**, and a **tool-action** test
@@ -258,15 +270,30 @@ independently, which is why "just don't ingest prose" is not a free mitigation.
    provenance-labelled, constrained *at parse time* (length caps, URL stripping, directive
    stripping), and restricted to **declared** dependencies, which is already the ~10× filter
    from RAD-0004 §3.
-3. **Cross-validate the prose against the structure.** This is the new idea and it is
-   *computable*, because the codex already builds the graph. Both successful payloads named
-   things outside the library's own surface: `Analytics.track` is a symbol in neither the
-   library's API nor its dependency graph, and `https://datefmt-telemetry.io` is a network
-   endpoint a date formatter has no business introducing. Grounding prose in structure turns
-   mitigation 4 from a fuzzy "does this read like an instruction" NLP problem into a graph
-   query — *does this documentation reference symbols or endpoints outside the declared
-   surface of the library that shipped it?* **Untested; a cheap and high-value next
-   experiment.**
+3. **Cross-validate the prose against the structure — *now measured* (v5; `experiments/test3`).**
+   Both successful payloads named things outside the library's own surface: `Analytics.track`
+   is a symbol in neither the library's API nor its dependency graph, and
+   `https://datefmt-telemetry.io` is an endpoint a date formatter has no business introducing.
+   Grounding prose in structure turns mitigation 4 from a fuzzy "does this read like an
+   instruction" NLP problem into a graph query the codex can already answer.
+
+   Measured over **1,009 real doc comments across five published libraries**, the open question
+   about anomaly detection's false-positive rate now has numbers: **1.3% for URL grounding**
+   (precise enough to ship — the genuine hits are links to specifications, allowlistable by
+   host) and **≤5.9% for symbol grounding**. The symbol figure is an *upper bound* from a
+   deliberately naive resolver: the first run reported 16.4%, and the offenders turned out to
+   be Kotlin's auto-imported builtins and generic type parameters — a defect in the detector,
+   not suspicious documentation. The residual 5.9% is still mostly resolver incompleteness
+   (nested and companion declarations), which RAD-0009's resolve-in-index already fixes.
+
+   **It catches P1 and P2 — the two payloads that produced real harm — one by each signal.**
+   It does **not** catch P3, the pure instruction hijack, and cannot: that payload references
+   nothing outside the library because it asks for nothing outside it. That is the boundary of
+   the technique rather than a tuning problem, and it is precisely the class that needs the
+   stronger control in [RAD-0020](0020-information-flow-control.md) — an IFC policy refuses the
+   sink regardless of what persuaded the model. So this is **detection, not prevention**:
+   mitigation 4 made concrete and cheap, complementing the architectural control rather than
+   replacing it.
 
 Note also that **the parse stage is the natural enforcement point** for every constraint above,
 and it is currently a passthrough — whatever the doc comment contains reaches the entry intact.
@@ -379,24 +406,29 @@ See `injection/results-claude-tiers.md`.
   parts now are *scale* (larger N, more models — including agents we cannot host, which is why
   the harness is being made contributor-runnable) and the *subtler payload's* rate.
 
-- **Whether the harvest stage differs by language — untested, and a real gap (noted v4).** The
-  injection experiments hand-authored the codex entry: the payload never passed through a
-  parser. That makes the results **parser-independent** — they measure how an agent treats
-  harvested prose, and transfer across ecosystems for the *presentation* stage — but it means
-  nothing has been measured about whether **harvesting** is riskier in one language than
-  another. There is reason to expect it is, and the direction is not obvious:
-  **JSDoc/TSDoc** invites long comments with `@example` code and markup, so it carries the most
-  free text and the most legitimate-looking imperative prose; **Python docstrings** are ordinary
-  string literals, the least constrained container of all (no comment syntax to escape);
-  **Rust** doc comments are markdown whose code blocks are *compiled and executed* as doctests,
-  a qualitatively different exposure; **Swift DocC** is a curated catalogue of files whose whole
-  purpose is documentation prose — which, by this record's own mitigation-4 logic, is the case
-  with *no anomalous shape to detect*; **KDoc/Javadoc** block comments are the most constrained
-  of the five. Crucially the parser is a **filter**: what reaches the entry depends on whether
-  it keeps the summary sentence or the entire comment. The experiment that closes this is
-  end-to-end — plant the payload in *real source* in each of the five languages, harvest it
-  through `experiments/test1`'s existing polyglot extractor, and measure how much
-  attacker-controlled text each path actually delivers.
+- **Whether the harvest stage differs by language — *now measured* (v5; `experiments/test4`).**
+  The injection experiments hand-authored the codex entry, so the payload never passed through
+  a parser; the results were **parser-independent** and said nothing about whether *harvesting*
+  is riskier in one language than another. test4 closes that: one payload written in each of
+  the five native doc conventions, harvested through the real test1 extractors, plus a
+  surface-size survey over real published libraries with the domain held constant (a CLI
+  argument parser in every language).
+
+  **Delivery is perfect everywhere. 5/5 languages pass the payload through intact** — the
+  instruction, the symbol to call, the exfiltration URL and the example code block — with
+  62–68% of the harvested text attacker-controlled. **The parse stage filters nothing today,
+  in any language**, which confirms it is available as the enforcement point and is not yet
+  enforcing anything.
+
+  **The v4 speculation in this record was wrong, and is corrected here.** It guessed
+  JSDoc/TSDoc would carry the most free text. Measured on real libraries, **TypeScript is the
+  *least* exposed of the five** (median 89 chars). **Python carries the largest typical comment**
+  (median 288 — a docstring is an unconstrained string literal), and **Rust has the heaviest
+  tail and by far the most embedded code** (p90 1590; **42%** of doc comments contain a code
+  block, against 0–11% elsewhere) because doctest culture rewards putting runnable examples in
+  prose. Volume ranks Python > Rust > Swift > Kotlin > TypeScript; tail and embedded structure
+  rank Rust first, decisively. Volume is a proxy for room-to-hide, not for exploitability — a
+  two-line comment carried every payload in this record perfectly well.
 - Whether anomaly detection on instruction-shaped prose has a usable
   false-positive rate.
 - Whether a verified-publisher requirement measurably deters this, or only

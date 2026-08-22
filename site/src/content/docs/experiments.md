@@ -113,10 +113,19 @@ caller's own words — and the agent loop found it every time in a pilot, becaus
 translates a plain-language need into the vocabulary the entry actually uses. That is the
 single strongest argument for an index over a pile of documents.
 
-What remains is less about whether the idea works and more about building it honestly.
-Whether the *harvesting* stage is riskier in some languages than others is untested — the
-injection work planted text directly rather than parsing it out of real source, and doc
-conventions differ enormously in how much free text they invite. Whether documentation can
-be automatically checked against the structure of the library that shipped it — the most
-promising mitigation on the table — is a hypothesis, not a result. And the index itself
-still has to be built for real corpora rather than a synthetic one.
+Two questions that stood open here have since been answered. **Harvesting does not filter
+anything** — the same payload written in each of five languages' native doc conventions is
+delivered perfectly intact by every parser, so the parse stage is available as an enforcement
+point and is not currently enforcing. That measurement also overturned our own guess about
+which ecosystem was most exposed: TypeScript's convention turned out to be the *tersest* of
+the five, while Python carries the largest typical comment and Rust the heaviest tail and by
+far the most embedded code. And **documentation can be checked against the structure of the
+library that shipped it**: across a thousand real doc comments, flagging references to
+symbols or endpoints that exist nowhere in the shipping library's own surface runs at a 1.3%
+false-positive rate for endpoints and under 6% for symbols, and catches both of the payloads
+that caused real harm. It cannot catch a payload that references nothing at all, which is
+exactly the class that needs a stronger control than detection.
+
+What remains is building it honestly: the index still has to work against real corpora rather
+than a synthetic one, and the stronger control — enforcing on labelled content before a
+sensitive tool runs, rather than detecting after the fact — is specified but unmeasured.

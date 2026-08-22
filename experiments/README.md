@@ -28,6 +28,8 @@ which is working code.
 | [test0/measurement](test0/measurement/) | The behaviour A/Bs — content-value, disambiguation, selection, and retrieval-at-scale (Layer 1 recall + Layer 2 agent loop) (RAD-0016/0017/0018/0019) | Python harnesses (`uv run`) |
 | [test1](test1/) | The multi-language read/parse story on real `-sources.jar` — tree-sitter across five languages, Dokka arm, resolve-in-index (RAD-0015/0009) | Python (`uv run`) + `dokka-arm` Gradle |
 | [test2](test2/) | Structure from bytecode — the undocumented-tail signal, kept separate from the doc-parse (RAD-0012) | `extract_bytecode.py` (`uv run`) |
+| [test3](test3/) | Can documentation be checked against the structure of the library that shipped it? (RAD-0006 mitigation 4, RAD-0020) | `ground_prose.py` (`uv run`) |
+| [test4](test4/) | How much attacker-controlled text does each language's harvest path deliver? (RAD-0006) | `harvest_surface.py` (`uv run`) |
 
 A runnable experiment is added to the public site once its harness works — a
 scaffold-only test is not yet listed.
