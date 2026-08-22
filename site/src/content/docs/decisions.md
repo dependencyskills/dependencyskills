@@ -75,9 +75,12 @@ Current research directions, not commitments:
   it still depends on the agent declining to act, which is where the
   measurement found the weakness. A published alternative labels content and
   enforces policy before a sensitive tool runs, so persuasion cannot reach
-  anything that matters. A codex cannot enforce that, but it is the natural
-  place to compute the labels. Under investigation, with a falsifiable
-  experiment specified.
+  anything that matters. A codex cannot enforce at the agent, but it is the
+  natural place to compute the labels — and it can refuse content outright at
+  the one boundary it does own, the point where documentation enters the index.
+  Both are under investigation with falsifiable experiments specified, and
+  neither is committed to: the refusal idea in particular may turn out not to be
+  worth its cost, which would be a perfectly good answer.
 - **A capability server**, local first, as a query front-end over the corpus.
   What injection means for it is now settled above; what remains open is the
   server's own shape.

@@ -123,14 +123,33 @@ published model to adopt — information-flow control, where content carries
 integrity and confidentiality labels that propagate through tool calls and
 policy is enforced deterministically before a sensitive tool runs, so
 persuasion is assumed to succeed and simply cannot reach anything that matters.
-The seam is the interesting part: enforcement lives in an agent runtime, and a
-codex sits upstream of one, so the adoptable half is **labelling rather than
-enforcing** — the codex is the only component that knows whether an entry came
+The seam is the interesting part: enforcement at the sink lives in an agent
+runtime, and a codex sits upstream of one, so the half it can contribute is
+**labelling** — the codex is the only component that knows whether an entry came
 from first-party source, a declared dependency or the transitive tail. The
 experiment reuses the tool-action rig with the question changed from *did the
 model comply* to *did compliance reach a sink*, and is deliberately falsifiable:
 the flow-control arm is allowed to fail the compliance test provided the write
 is refused every time.
+
+## What a harvester could refuse to index
+
+Labelling asks a downstream runtime to honour something. But a harvester does own
+one boundary outright — the moment content enters the index — so a third question
+is whether it should simply refuse content whose documentation does not match the
+code it ships with.
+
+**Findings.** The detection signal is measured; the gate is not, and it may well
+not be worth having. Checking prose against the declared surface of the library
+that shipped it runs at 1.3% false positives on endpoint references and under 6%
+on symbols, and catches the two payloads that did real harm. But its coverage is
+bounded by a property of the *attack* rather than the defence — it only sees
+payloads that name something foreign, and a pure instruction hijack names nothing
+— and a false positive here is worse than a noisy warning, because it removes a
+real capability from the index invisibly. The honest question is what it is worth
+rather than how to ship it, and the published attack corpora in the literature
+above are the way to answer it: scoring the signal against payloads this project
+wrote itself would be circular.
 
 ## Choosing between overlapping libraries
 
