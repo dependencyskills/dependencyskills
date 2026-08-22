@@ -1,6 +1,14 @@
 # A Deterministic Harness, or Harvested Knowledge
 
-RAD-0023 · 2026-08-22 · v1
+RAD-0023 · 2026-08-22 · v2
+
+**v2 (2026-08-22) — the survey is done, and it closes half this record.** The language idea
+exists, is published, and covers nearly the whole candidate primitives list below.
+**LBAC** (*Language-Based Agent Control*, arXiv:2605.12863) is the same design executed by PL
+researchers; **SPL** (arXiv:2607.07727) is the deterministic/probabilistic composition idea as
+a language with its own grammar. **This project should not build either.** What survives is
+the *other* half of the question — whether a codex is the fact source such a harness consumes —
+and the survey sharpened rather than settled it. Findings below.
 
 **Design; not yet measured, and speculative.** This records an architectural fork the project
 has been walking past: whether the engineering judgement an agent needs should be **harvested
@@ -107,33 +115,66 @@ Most of these are restatements of controls this project already reached by other
 is either evidence the design is coherent or evidence it is unnecessary. Determining which is
 the point.
 
-### The prior art is unsurveyed, and that cuts both ways
+### The survey, and what it found (v2)
 
-[RAD-0008](0008-the-field-as-it-stands.md) has now had to withdraw three claims of novelty, so
-the reflex is to assume someone has done this already. That reflex is itself a claim about the
-field, and it needs checking rather than asserting — **stating that prior art exists without
-looking is the same error as claiming novelty without looking.**
+Run 2026-08-22. The result is unambiguous: **this is an active subfield, not an unexplored
+idea.**
 
-What can be said at each level of confidence, and no more:
+**LBAC — Language-Based Agent Control** (Zhou, D'Antoni, Polikarpova; arXiv:2605.12863, May
+2026) is the idea in this record, built by people who do programming languages for a living.
+It *"brings techniques from programming languages and language-based security to the problem of
+agent control"*, and its mechanism is stronger than anything sketched above: agents must
+**generate programs that are themselves well typed in the context of the surrounding
+scaffolding code**, and *"unsafe programs are rejected by the type-checker before execution"*,
+so policies *"apply uniformly across the entire application, including both agent-generated
+behavior and developer-written scaffolding."* Expressiveness is preserved — agents may do
+arbitrary side-effect-free computation and recursively invoke subagents, which keep tool access
+under the same or stricter policies. It builds on **LIO**, the established labelled-IO
+information-flow library, which is precisely the "rediscovery of the capability-safe
+literature" this record predicted.
 
-- **Capability-safe and effect-typed language design is decades of established prior art.**
-  The security half of the primitives list above is a rediscovery of that literature, and any
-  design work should start from it rather than reinvent it. This is not in doubt.
-- **Frameworks for programming language models declaratively exist**, and the primitives list
-  overlaps them. Their current state, and how close any comes to this shape, is **not
-  surveyed here**.
-- **Whether an existing framework already matches this specific shape is unknown.** Nobody
-  has looked.
+**SPL — Structured Prompt Language** (Gong; arXiv:2607.07727, July 2026) is the other half:
+*"a declarative language that composes deterministic and probabilistic computation modes in a
+single specification"*, with `GENERATE`/`EVALUATE` for probabilistic steps and `SOLVE`/`ASSERT`
+for deterministic ones, sharing syntax and bindings, in its own `.spl` grammar. That is
+"determinism strung through the non-deterministic calls" as a shipped language.
 
-**So the survey is the first task, and its result is genuinely open.** It may find the idea
-well covered, in which case this record closes and the finding is a pointer. It may find the
-general shape explored but not the specific application — a harness whose deterministic
-choices are driven by harvested facts about a real dependency graph. Either outcome is useful;
-guessing which in advance is not.
+**And there is more of it.** *Securing Agents With Tracked Capabilities* (ACM Conference on AI
+and Agentic Systems), *A Fast, Reliable, and Secure Programming Language for LLM Agents with
+Code Actions* (arXiv:2506.12202), *A Language for Describing Agentic LLM Contexts*
+(arXiv:2605.01920), and *SoK: Trust-Authorization Mismatch in LLM Agent Interactions*
+(arXiv:2512.06914). Adjacent again: DSPy compiles declarative LM calls and optimises prompts;
+LMQL constrains decoding at the query level.
+
+### The candidate primitives, scored against what exists
+
+| primitive sketched above | covered by |
+|---|---|
+| Capability / effect declaration | **LBAC** (LIO effect types) |
+| Provenance and trust labels as first-class values | **LBAC** (LIO confidentiality + integrity labels) |
+| Quarantine construct | **LBAC** (`toLabeled`; quarantined subagents that keep tool access under label discipline) |
+| Explicit non-deterministic call sites | **SPL** (`GENERATE`/`SOLVE` split); LBAC's scaffolding/agent-code split |
+| Contracts on agent output | **LBAC**, and more strongly — static type-checking rather than runtime assertion |
+| Budgets (context, tool calls, edits) | **not obviously covered** by either |
+
+Five of six, and the sixth is not interesting enough to justify a language. **The question
+"what primitives would such a harness need" is answered, by other people, better.**
 
 ## Findings
 
-**Nothing measured.** This is the earliest-stage record in the set and should be read as such.
+**Surveyed (2026-08-22).** The language half of this record is answered and closed: LBAC and
+SPL exist, LBAC covers five of the six candidate primitives with a stronger mechanism than the
+one sketched here, and the security primitives are an application of established IFC and
+capability-safe language work. **Building a language for agent requirements is not work this
+project should do.**
+
+**What the survey did not settle — and sharpened.** The record asked two questions, and only
+the second is closed. The first — *should engineering judgement live in a harness rather than
+the model?* — is now better posed, because a concrete counterpart exists to compose with rather
+than a hypothetical. **LBAC type-checks agent-generated programs against the surrounding
+scaffolding; type-checking requires facts about the code.** A codex produces facts about the
+code. That is the composition hypothesis this record raised, now with a real system on the
+other side of it instead of an imagined one.
 
 **Reasoned.**
 
@@ -145,18 +186,19 @@ guessing which in advance is not.
 - Harvest-and-inform and encode-and-constrain most likely compose, with the codex as the fact
   source a deterministic harness consumes.
 
-**What would have to be found out, roughly in order.**
+**What remains to be found out.**
 
-1. **Does the prior art already answer this?** A survey of declarative LM programming, agent
-   harness frameworks, and capability-safe language design. If the primitives list is a
-   restatement of existing work, that is the finding and the record can close.
-2. **What does a harness refuse that a prompt cannot?** Take one concrete failure this project
-   has measured — the 0/18 selection result is the obvious candidate — and ask whether a
-   deterministic rule would have prevented it. That is a cheap thought experiment before any
-   building.
-3. **Does the composition hold?** If a harness needs facts about the graph, the codex is its
-   input, and the two records stop competing. Testing that is more valuable than building
-   either.
+1. ~~Does the prior art already answer this?~~ **Answered: yes.** LBAC and SPL, plus an active
+   surrounding literature.
+2. **What does a harness refuse that a prompt cannot?** Still worth asking, and now answerable
+   against a real system rather than a sketch: would LBAC's type discipline have prevented the
+   0/18 selection failure in [RAD-0018](0018-the-selection-ab.md)? That is a cheap thought
+   experiment and it tests whether the fork matters for *this* project's problem, which is
+   selection rather than security.
+3. **Does the composition hold?** The live question. If LBAC-style systems need facts about the
+   code to type-check against, a codex is a supplier to them rather than a competitor — which
+   would make this record's fork a false one. Establishing that is worth more than anything
+   else here.
 
 ## Connections
 

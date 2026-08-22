@@ -34,7 +34,7 @@ case studies are historical; none is part of the versioned canon.
 | RAD-0005 — A Git-Hosted Codex | v1 |
 | RAD-0006 — Development-Time Prompt Injection | v6 |
 | RAD-0007 — Choosing Between Overlapping Libraries | v3 |
-| RAD-0008 — The Field as It Stands | v2 |
+| RAD-0008 — The Field as It Stands | v3 |
 | RAD-0009 — Parsing the Documentation, and What to Index | v6 |
 | RAD-0010 — How the Codex Is Stored and Served | v3 |
 | RAD-0011 — Existing Documentation Systems as Skill Content | v2 |
@@ -49,7 +49,7 @@ case studies are historical; none is part of the versioned canon.
 | RAD-0020 — Information-Flow Control as the Trust Model | v3 |
 | RAD-0021 — Admission Control at Harvest | v3 |
 | RAD-0022 — The Value of Transitive Capabilities | v1 |
-| RAD-0023 — A Deterministic Harness, or Harvested Knowledge | v1 |
+| RAD-0023 — A Deterministic Harness, or Harvested Knowledge | v2 |
 
 ## Changelog
 

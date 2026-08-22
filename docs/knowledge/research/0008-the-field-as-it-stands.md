@@ -1,6 +1,11 @@
 # The Field as It Stands, and What This Research Rejects
 
-RAD-0008 · 2026-08-16 · v2
+RAD-0008 · 2026-08-16 · v3
+
+**v3 (2026-08-22).** Adds **language and harness design for agents** as a further active area
+the v1 survey missed — LBAC, SPL and the literature around them — surveyed for RAD-0023. The
+pattern is the same as the injection literature: the idea exists, is published, and is further
+along than this project's sketch of it.
 
 **v2 (2026-08-22).** Adds the **academic literature on injection through agent-facing
 content**, which this record's v1 survey missed entirely and which RAD-0006 v4 flagged as
@@ -152,6 +157,35 @@ benchmarks four existing skill scanners at **61.5%** average detection accuracy.
 2026) formulates pre-load auditing as a robust three-way classification over 254–404
 packages, reporting 97.30% exact match and 98.33% malicious-risk recall on a held-out
 aggregate, while noting that transfer to harsher external sources remains open.
+
+### Language and harness design for agents — an active subfield (added v3)
+
+Surveyed 2026-08-22 for [RAD-0023](0023-deterministic-harness-or-harvested-knowledge.md), which
+asked whether engineering judgement should live in a deterministic harness rather than in the
+model. The answer to "does this exist" is yes, in force.
+
+**LBAC — Language-Based Agent Control** (arXiv:2605.12863, May 2026) requires agents to
+*generate programs that are well typed against the surrounding scaffolding*, rejecting unsafe
+programs at the type-checker before execution, so one policy covers agent-written and
+developer-written code alike. It builds on **LIO**, the established labelled-IO
+information-flow library, giving capability declarations, confidentiality and integrity labels,
+and a quarantine construct for subagents that keeps tool access under label discipline.
+
+**SPL — Structured Prompt Language** (arXiv:2607.07727, July 2026) is a declarative language
+composing deterministic and probabilistic steps in one specification — `GENERATE`/`EVALUATE`
+against `SOLVE`/`ASSERT` — with its own grammar.
+
+Around them: *Securing Agents With Tracked Capabilities*, *A Fast, Reliable, and Secure
+Programming Language for LLM Agents with Code Actions* (arXiv:2506.12202), *A Language for
+Describing Agentic LLM Contexts* (arXiv:2605.01920), *SoK: Trust-Authorization Mismatch in LLM
+Agent Interactions* (arXiv:2512.06914). Adjacent, at the prompt rather than the program level:
+DSPy compiles declarative LM calls; LMQL constrains decoding.
+
+**What this means for this project.** Building such a language is not work this project should
+take on — five of the six primitives RAD-0023 sketched are already covered, and LBAC's
+mechanism is stronger than the sketch. The useful question it leaves is compositional: a
+type-checker that validates agent-generated code against surrounding scaffolding needs *facts
+about the code*, which is what a codex produces.
 
 ### Query and serving — already operating, in adjacent form
 

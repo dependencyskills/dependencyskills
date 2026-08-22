@@ -202,19 +202,24 @@ the model's judgement was defeated on some agent. Those are the same result in
 two domains — *where a decision is left to model judgement, it is unreliable* —
 and only the security half has had an architectural answer.
 
-**Findings.** Nothing measured; this is the earliest-stage question in the set.
-The alternative is a deterministic harness that carries the engineering
-judgement itself, with the model's non-determinism confined to specific call
-sites — possibly expressed as a language in which a dependency exposes a checked
-contract rather than prose, closing the free-text channel at the import boundary
-by construction. The strongest objection comes from this project's own prior
-work: structured author tags were already tried, and delivery was never the
-problem — agents are not trained to treat any channel as untrusted. So the test
-is not whether such a language would be pleasant but **what it would refuse that
-a notation cannot**. The two approaches most likely compose, with a codex as the
-fact source a deterministic harness consumes, and that is worth establishing
-before either is treated as the answer. The prior art here is unsurveyed, and
-that survey is the first task.
+**Findings.** Half of this closed as soon as we looked. The alternative is a
+deterministic harness carrying the engineering judgement itself, with the model's
+non-determinism confined to specific call sites — possibly a language in which a
+dependency exposes a checked contract rather than prose. **That language already
+exists.** Published work requires agents to generate programs that are *well
+typed against the surrounding scaffolding*, rejecting unsafe ones at the
+type-checker before execution, built on established information-flow libraries
+that supply capability declarations, trust labels and a quarantine construct.
+Another composes deterministic and probabilistic steps in a single grammar. Five
+of the six primitives we sketched are covered, by a stronger mechanism than the
+sketch, and the surrounding literature is active. **Building this is not work
+for this project.**
+
+What survives is the more interesting half. A type-checker validating
+agent-generated code against its scaffolding needs *facts about the code* — which
+is exactly what a codex produces. So the fork this question posed may be a false
+one: not harvest-or-constrain, but a codex supplying the harness. Establishing
+that is worth more than either side of the original argument.
 
 ## Choosing between overlapping libraries
 
