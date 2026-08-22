@@ -79,11 +79,17 @@ Current research directions, not commitments:
   measurement found the weakness. A published alternative labels content and
   enforces policy before a sensitive tool runs, so persuasion cannot reach
   anything that matters. A codex cannot enforce at the agent, but it is the
-  natural place to compute the labels — and it can refuse content outright at
-  the one boundary it does own, the point where documentation enters the index.
-  Both are under investigation with falsifiable experiments specified, and
-  neither is committed to: the refusal idea in particular may turn out not to be
-  worth its cost, which would be a perfectly good answer.
+  natural place to compute the labels. Still under investigation, with a
+  falsifiable experiment specified and nothing committed to.
+
+  The related idea — that a harvester could *refuse* content outright at the one
+  boundary it owns, where documentation enters the index — **has been measured
+  and dropped.** Checking documentation against the code it ships with catches
+  only about a third of attacks from an independent benchmark, and the misses are
+  structural: data leaving through the agent's own output, config poisoning,
+  resource abuse, encoded payloads. A control that misses two thirds cannot
+  justify removing real capability, so the signal is kept as a warning and the
+  gate is not built.
 - **A capability server**, local first, as a query front-end over the corpus.
   What injection means for it is now settled above; what remains open is the
   server's own shape.

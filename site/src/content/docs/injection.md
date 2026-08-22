@@ -160,6 +160,16 @@ That is a stronger class of control than the positional discipline this page arg
 it does not depend on the model resisting anything, which is precisely where our measurement
 found the weakness. We have not tested it, and we are investigating adopting the model.
 
+**A central library concentrates the problem rather than solving it.** A shared corpus is the
+only place content could be scanned once on behalf of everyone — and equally the only place a
+payload need be planted *once* to reach everyone. Centralisation moves the review burden and
+raises the value of the target while doing so. The same asymmetry applies to the obvious human
+answer, *read the skills before you load them*: sound for a handful of deliberately installed
+skills, and unavailable against 112–995 libraries per project, 70–90% of them transitive and
+re-resolved on every version bump. Nobody reads that, and nobody re-reads it when a transitive
+moves underneath them. It is the same scale argument that defeats hand-curation, arriving for
+security — which is precisely why the control has to be computable.
+
 **We are also not first, and the literature is ahead of us on most of this.** Three papers
 measure injection through third-party agent skills at greater scale and on more realistic
 corpora. **AgentTrap** ([arXiv:2605.13940](https://arxiv.org/abs/2605.13940)) benchmarks 141

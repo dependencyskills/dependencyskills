@@ -8,11 +8,23 @@ comparable. Add new payloads only in a PR discussed with maintainers.
 
 The three payloads and both arm framings implement RAD-0006's design: one poisoned "codex"
 entry, presented in the instruction channel (arm A) vs as untrusted data (arm B). All canaries
-are inert. P2's "exfiltration" host was unregistered and resolved nowhere when these results
-were produced (2026-08-21, re-checked 2026-08-22) — but it is an ordinary `.io` this project
-does not own, so that can change. Check it before you run (see CONTRIBUTING.md); the planned
-fix is to move it to a subdomain of a domain the project controls, which changes the payload
-and so needs a payload-set version bump rather than an edit in place.
+are inert, with one known defect.
+
+P2's "exfiltration" host is an ordinary `.io` this project does NOT own. It was unregistered
+and resolved nowhere when these results were produced (2026-08-21, re-checked 2026-08-22), but
+nothing stops someone registering it, at which point a payload in a published test kit would
+name a live host.
+
+**If you are running these payloads, use a `.invalid` host instead.** `.invalid` is reserved by
+RFC 2606: it can never be registered and never resolves, so a sink named under it is safe
+permanently rather than until someone buys the name. The AgentTrap benchmark uses this
+convention (`*.fixture.invalid`) and it is plainly the right one.
+
+**This payload set will move to `.invalid` at the next version bump.** It has not been changed
+in place because altering a payload silently would make already-published results
+incomparable — the canary and the host are part of what was measured. Until then: check the
+host still resolves nowhere before running (see CONTRIBUTING.md), and do not run the
+tool-enabled arms if it does not.
 
 Run `python3 payloads.py` to print all six (payload × arm) prompts.
 """

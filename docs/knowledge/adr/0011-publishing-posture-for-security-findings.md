@@ -54,7 +54,10 @@ line that outlives the release it was measured on becomes misinformation rather 
    a known weakness: an unowned name can be registered by someone else, and the published kit
    invites strangers to run payloads naming it. Contributors are told to check it before
    running; the fix is to move it to a controlled domain, which changes the payload and so
-   waits for a payload-set version bump rather than an edit in place.) The
+   waits for a payload-set version bump rather than an edit in place. The published
+   AgentTrap benchmark shows the better convention: it names sinks under the reserved
+   `.invalid` TLD, which can never be registered by anyone. That is what this project's
+   payloads should use at the next bump.) The
    bright line is that this project does not iterate payloads to maximise bypass rates and
    publish the winners — that is building a toolkit, not measuring a phenomenon. The
    contributor kit is framed and maintained as a **defensive test suite**.

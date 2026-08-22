@@ -1,6 +1,6 @@
 # Development-Time Prompt Injection
 
-RAD-0006 · 2026-08-14 · v6
+RAD-0006 · 2026-08-14 · v7
 
 **v7 (2026-08-22).** The case this record named as *the scenario to fear most* — a
 **tool-enabled agent from the locally-served open-weight tier** — is measured

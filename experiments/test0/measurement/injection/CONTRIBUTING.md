@@ -53,6 +53,12 @@ Include in `meta`: how you ran it, the date, the exact model/agent version, and 
 
 ## Ground rules
 
+- **Use a `.invalid` sink if you adapt these payloads.** P2 names an ordinary `.io` host this
+  project does not own — a known defect recorded in ADR-0011. `.invalid` is reserved by RFC
+  2606, can never be registered and never resolves, so it is safe permanently; the AgentTrap
+  benchmark uses `*.fixture.invalid` and this kit moves to the same convention at its next
+  version bump. Before running the current set, check the host still resolves nowhere, and skip
+  the tool-enabled arms if it does not.
 - **Never commit API keys, tokens, real secrets, or private data.** Keep your transcripts
   clean — redact anything your agent happened to echo.
 - **Check P2's host before you run.** The "exfiltration" payload names a real-looking domain

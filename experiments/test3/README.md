@@ -166,3 +166,28 @@ The honest reading is that this belongs as **one input among several — a label
 down-weight — rather than an admission gate**, which is the same conclusion part A's
 false-positive asymmetry pointed at for the symbol signal. See
 [RAD-0021](../../docs/knowledge/research/0021-admission-control-at-harvest.md) v2.
+
+### Provenance and reuse of the benchmark
+
+**No AgentTrap content is redistributed by this project.** `agenttrap_coverage.py` reads a
+copy the user downloads themselves and computes statistics over it; the corpus is never
+committed here, and none of its task text, payloads or fixtures appear in this repository. What
+is published above is our own measurement plus a paraphrased characterisation of what the
+signal missed.
+
+That matters because **the benchmark declares no licence** — "other" with no text on Hugging
+Face, and no `LICENSE` file in the repository (checked 2026-08-22). Absent explicit permission,
+citing and measuring against it is defensible; copying it here would not be. The authors ask to
+be cited, which is the least this project owes them given the measurement above closed one of
+its own records:
+
+```bibtex
+@misc{agenttrap2026,
+  title={AgentTrap: Runtime Evaluation for Malicious Third-Party Agent Skills},
+  year={2026}
+}
+```
+
+Their safety notice — *the malicious skills are benchmark fixtures, not to be installed or
+executed outside a controlled evaluation environment* — is respected here: this analysis reads
+text and executes nothing.
