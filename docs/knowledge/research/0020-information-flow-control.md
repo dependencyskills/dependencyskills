@@ -1,6 +1,16 @@
 # Information-Flow Control as the Trust Model
 
-RAD-0020 · 2026-08-22 · v2
+RAD-0020 · 2026-08-22 · v3
+
+**v3 (2026-08-22) — the paper is read; the mechanism is confirmed and two things are
+corrected.** *Securing AI Agents with Information-Flow Control* (Costa, Köpf, Kolluri, Paverd,
+Russinovich, Salem, Tople, Wutschitz, Zanella-Béguelin; arXiv:2505.23643, May 2025) verifies
+the description below, and adds detail the vendor sources did not carry. **The guarantees are
+asymmetric, and the other way round from how the vendor framing reads**: strong for integrity,
+weak for confidentiality. **Enforcement happens only at tool calls**, so attacks that never
+reach one are out of scope. Evaluated on AgentDojo, the policy-enforcing planner reduces
+succeeding attacks from **163 to 1**. Full findings below; this record is no longer
+second-hand.
 
 **v2 (2026-08-22).** Corrects v1's central claim that the codex "can label but not enforce".
 It can enforce — at **harvest**, the one boundary it fully owns — by discarding content that
@@ -126,6 +136,47 @@ an addition.
 **The confidentiality axis is not idle either.** [RAD-0003](0003-central-capability-server.md)'s
 query service means an agent sends a description of what the user is building to a third
 party. That is a confidentiality flow, and it is currently unlabelled and unexamined.
+
+### What the paper actually says (added v3)
+
+Read 2026-08-22 against the artifact rather than the vendor summaries, which is what this
+record's first recommendation demanded.
+
+**The guarantees are asymmetric, and the asymmetry is the opposite of the intuitive reading.**
+The paper is explicit: *"by checking the tool label for integrity but not for confidentiality,
+we enforce a strong form of control flow integrity and a weaker form of confidentiality that
+does not prevent implicit flows."* Formally it *"guarantees non-interference for the integrity
+of tool calls and data, and explicit secrecy for the confidentiality of data."* So:
+
+| axis | guarantee | meaning |
+|---|---|---|
+| **Integrity** | **non-interference** | a consequential action cannot be *influenced* by attacker-controlled data — the strong property |
+| **Confidentiality** | **explicit secrecy** | explicit flows of secret data are caught; **implicit flows are not** |
+
+The vendor material presents the two labels as peers. They are not, and it matters here: the
+confidentiality axis is the one [RAD-0003](0003-central-capability-server.md)'s query service
+would lean on, and it is the weaker of the two.
+
+**Enforcement is at tool calls, and only there.** This is the load-bearing limitation for this
+project. In the authors' words: *"Since we only enforce policies upon tool calls, our planners
+do not stop these text-to-text attacks."* An injection that changes what the agent *says*
+rather than what it *does* passes. So does an action a policy legitimately permits — their
+example is a calendar event carrying an untrusted description, allowed because nothing is
+exfiltrated.
+
+**Measured on AgentDojo**, counting attacks that succeed: Basic planner **163**, Tool Filter 28,
+Variable Passing 12, FIDES 24 — and with policy checking enabled, **FIDES 1**. That is a
+near-total reduction against a benchmark the authors did not design the attacks for, and it is
+a far stronger result than heuristic defences report.
+
+**Assumptions and open problems**, stated by the authors: the execution environment is trusted;
+timing and side channels are out of scope; overtainting can block legitimate work; implicit
+flows remain an open problem in the agent setting. **RTBAS** is named as related work also using
+taint-tracking, and is worth reading alongside.
+
+**Date matters for the field record.** The paper is May 2025, which places it *before* the
+agent-skill injection papers surveyed in [RAD-0008](0008-the-field-as-it-stands.md) v2. The
+defence predates the attack literature this project found.
 
 ### What has to be checked before adopting
 

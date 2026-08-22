@@ -118,11 +118,22 @@ declining to act. Every failure measured was a failure of exactly that
 judgement. Is there a control that does not depend on it — and is it already
 specified well enough to adopt rather than invent?
 
-**Findings.** Not yet measured; this opens the investigation. There is a
-published model to adopt — information-flow control, where content carries
-integrity and confidentiality labels that propagate through tool calls and
-policy is enforced deterministically before a sensitive tool runs, so
-persuasion is assumed to succeed and simply cannot reach anything that matters.
+**Findings.** The published model has now been read rather than summarised, and
+it is stronger than expected with one limitation that matters. Content carries
+integrity and confidentiality labels that propagate through tool calls, and
+policy is enforced deterministically before a sensitive tool runs — so
+persuasion is assumed to succeed and simply cannot reach anything consequential.
+On a public benchmark, enabling policy enforcement cut succeeding attacks from
+163 to 1.
+
+Two details the vendor summaries did not carry. The guarantees are **asymmetric**
+and the opposite way round from the intuitive reading: strong for integrity — a
+consequential action cannot be *influenced* by attacker-controlled data — and
+weaker for confidentiality, which catches explicit leaks but not implicit ones.
+And enforcement happens **only at tool calls**, so an injection that changes what
+the agent *says* rather than what it *does* passes untouched. That matters here,
+because exfiltration through the agent's own output is exactly that shape, and it
+is a case neither this control nor detection covers.
 The seam is the interesting part: enforcement at the sink lives in an agent
 runtime, and a codex sits upstream of one, so the half it can contribute is
 **labelling** — the codex is the only component that knows whether an entry came

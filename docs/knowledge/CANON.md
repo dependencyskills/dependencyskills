@@ -46,8 +46,8 @@ case studies are historical; none is part of the versioned canon.
 | RAD-0017 — The Retrieval / Disambiguation A/B | v1 |
 | RAD-0018 — The Selection A/B | v1 |
 | RAD-0019 — Retrieval at Scale (Layer 1 recall + Layer 2 agent loop) | v2 |
-| RAD-0020 — Information-Flow Control as the Trust Model | v2 |
-| RAD-0021 — Admission Control at Harvest | v2 |
+| RAD-0020 — Information-Flow Control as the Trust Model | v3 |
+| RAD-0021 — Admission Control at Harvest | v3 |
 | RAD-0022 — The Value of Transitive Capabilities | v1 |
 | RAD-0023 — A Deterministic Harness, or Harvested Knowledge | v1 |
 

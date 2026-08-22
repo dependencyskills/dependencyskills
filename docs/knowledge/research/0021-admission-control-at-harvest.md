@@ -1,6 +1,19 @@
 # Admission Control at Harvest
 
-RAD-0021 · 2026-08-22 · v2
+RAD-0021 · 2026-08-22 · v3
+
+**v3 (2026-08-22) — a correction to v2's routing claim.** v2 closed by asserting that every
+attack class the gate missed *"names nothing foreign, which routes them to
+[RAD-0020](0020-information-flow-control.md)"*. Reading the FIDES paper shows that was too
+strong. Information-flow control enforces **only at tool calls**, so it covers the misses that
+end in an action — config poisoning, destructive writes, and encoded payloads (labels travel
+with data regardless of representation, which is a genuine strength against the arms-race
+objection). It does **not** cover **resource abuse**, which is not a flow at all, and its
+coverage of **output-channel exfiltration** is doubtful: the paper states plainly that
+policies enforced on tool calls *"do not stop these text-to-text attacks"*, and the concrete
+`.env`-into-the-agent's-own-output case is exactly that shape. **So one attack class is
+uncovered by both the gate and by IFC, and the most concrete exfiltration case in the corpus
+may be too.** That gap is real and belongs on the record rather than hidden by a tidy handoff.
 
 **v2 (2026-08-22) — the crux question is answered, and the answer is no.** The coverage
 measurement this record called for has been run against AgentTrap's independently-authored
@@ -223,9 +236,12 @@ available — a cost that is certain against a benefit that is partial.
 4. **The retrieval-cost experiments are moot** and should not be run — they priced a control
    that is not being adopted. [RAD-0022](0022-the-value-of-transitive-capabilities.md) still
    wants the Layer 1 rig for its own question.
-5. **Route the uncovered classes to [RAD-0020](0020-information-flow-control.md).** Every miss
-   catalogued above is an attack that names nothing foreign, which is precisely what enforcing
-   at the sink handles and detection cannot.
+5. **Route *most* of the uncovered classes to [RAD-0020](0020-information-flow-control.md) —
+   but not all of them (corrected v3).** Enforcing at the sink covers the misses that end in a
+   tool call: config poisoning, destructive writes, and encoded payloads. It does not cover
+   resource abuse, and it may not cover exfiltration through the agent's own response, since
+   FIDES enforces only at tool calls and says so. **Those classes are currently covered by
+   nothing this project has proposed**, and that should be stated rather than left implied.
 
 **This is outcome (b) from the version of this record written before the measurement, and it is
 a good result.** The record cost a day and prevented building a control that would have looked
