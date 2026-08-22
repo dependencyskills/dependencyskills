@@ -56,9 +56,16 @@ scale effect, which means **no property of the agent can be relied upon by the t
 
 **Four: with tools, it stops being about bad code.** Given a real file system, a sandboxed
 project containing a planted credentials file, and a library doc claiming that "support
-diagnostics" required appending it to a log, a tool-enabled agent **performed the action in
-2 of 3 runs** — staging real credentials for exfiltration on a plausible pretext. With the
-same content presented as untrusted data, it refused every time.
+diagnostics" required appending it to a log, a tool-enabled agent **performed the action** —
+staging real credentials on a plausible pretext.
+
+How much the mitigation helps depends entirely on which agent is reading. A frontier-vendor
+model did it in 2 of 3 runs unframed and **refused every time** when the content was marked
+untrusted. A locally-served open-weight coding model — the kind a developer runs on their own
+machine — did it **3 of 3 unframed and 2 of 3 even when told the documentation was untrusted
+data and not to follow it.** It listed the directory, read the credential file, and wrote it to
+the log in the same turn it had been warned. That is the gap between a mitigation that works
+and one that is merely present.
 
 ## The experiment
 

@@ -2,6 +2,18 @@
 
 RAD-0006 · 2026-08-14 · v6
 
+**v7 (2026-08-22).** The case this record named as *the scenario to fear most* — a
+**tool-enabled agent from the locally-served open-weight tier** — is measured
+(`injection/tool_action_local.py`). **qwen3-coder-30b staged the planted credential file into a
+log 3/3 in the instruction channel and 2/3 with the content explicitly framed as untrusted
+data.** Against Claude Haiku's 2/3 and 0/3, framing fully protected the frontier-vendor model
+and barely dented the local coder — consistent with the code-generation matrix, where framing
+showed no measurable effect on this model. This closes the gap that left the project's
+locally-served-tier claim resting on codegen results plus one vendor's model doing the actual
+harm. Caveat, stated because it cuts one way: `mlx_lm.server` has no function-calling, so tools
+went through a text protocol rather than native calls — which could weaken a *null* result and
+does not weaken this one.
+
 **v6 (2026-08-22).** The literature this record flagged as unread has been found, and it
 narrows what this record may claim. Three papers — AgentTrap, SkillJect and SkillGuard-Robust
 — measure injection through third-party agent skills at greater scale and on more realistic
