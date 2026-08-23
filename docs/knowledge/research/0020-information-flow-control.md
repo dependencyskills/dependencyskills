@@ -1,6 +1,40 @@
 # Information-Flow Control as the Trust Model
 
-RAD-0020 · 2026-08-22 · v3
+RAD-0020 · 2026-08-23 · v4
+
+**v4 (2026-08-23) — the sink experiment is run. Enforcement prevents harm; the naive version
+costs everything.** `experiments/test7` executed the three-arm design specified below, plus three
+arms it did not anticipate. **Both policies blocked the exfiltration in every run (0/3), and both
+blocked the legitimate task in every run (0/3).** This record named that outcome in advance as
+the falsifiable one for the integrity arm; it happened there *and* on the confidentiality arm.
+
+**The cause is label granularity, not the mechanism.** The shim tracks labels on the whole
+conversation, so once the agent reads the planted credential file the context is secret-tainted
+and every subsequent write is refused, including the one the developer wanted. That is exactly
+what FIDES's **variable indirection** exists to prevent, so the measurement bounds the cost of
+the *naive* version rather than estimating the cost of the real one. **Granularity is
+load-bearing, not an optimisation** — which is the finding, and it was not obvious before the run.
+
+**A new failure mode: injection as denial of service.** Under coarse taint the attack causes the
+secret read, the read poisons the context, and the poisoned context blocks the developer's work.
+Harm prevented, nothing accomplished. Invisible to any harness that scores compliance alone.
+
+**Two cheaper controls preserved the task and prevented harm**: a **quarantined paraphraser** —
+this record's own variable-indirection idea, tested directly — and **shipping no prose at all**,
+sending the agent only symbol and signature. Both 2/3 on task against the baseline's 3/3.
+
+**And one correction to this record's lattice.** The table below calls structure-from-bytecode
+the *near-injection-proof tier* because identifiers come from a grammar rather than free text.
+**The justification is wrong**, and this record initially overstated the reason. It is now
+measured and written up separately as
+[RAD-0027](0027-the-identifier-as-a-free-text-channel.md): prose in a method name survives into
+the class file and `javap -public` — the harvester's own structure path — prints it verbatim, and
+`kotlinc` round-trips a backtick identifier containing a full sentence unchanged.
+More to the point, a **camel-cased imperative is a legal identifier in every language this
+project harvests**, so the channel needs no JVM-specific escape at all. A grammar constrains
+characters, not meaning. An arm that put an imperative there did not land (0/3), and the tier may
+still deserve its ranking because the channel is narrow and conspicuous — but not for the reason
+given. The tier is *constrained in practice*, not near-injection-proof.
 
 **v3 (2026-08-22) — the paper is read; the mechanism is confirmed and two things are
 corrected.** *Securing AI Agents with Information-Flow Control* (Costa, Köpf, Kolluri, Paverd,
@@ -124,7 +158,7 @@ which is evidence the model fits rather than being imported:
 |---|---|---|
 | First-party source in the user's own repository | **trusted** | developer-controlled by definition ([RAD-0015](0015-how-the-source-is-read.md) makes this a first-class input) |
 | Consumer-authored preference | **trusted** | the project's own statement about its own choices ([RAD-0007](0007-choosing-between-overlapping-libraries.md) v2's authorship model) |
-| Structure from bytecode / signatures | **constrained** | identifiers from a grammar, not free text ([RAD-0012](0012-structure-from-bytecode.md)); the near-injection-proof tier |
+| Structure from bytecode / signatures | **constrained** | identifiers from a grammar ([RAD-0012](0012-structure-from-bytecode.md)) — but **not free of free text**: a camel-cased imperative is a legal identifier in every language, and prose in a method name survives `javap` verbatim ([RAD-0027](0027-the-identifier-as-a-free-text-channel.md)) |
 | Prose from a **declared** dependency | **untrusted** | third-party text, but from a library the project deliberately chose |
 | Prose from a **transitive** dependency | **untrusted, lowest** | 70–90% of the graph, chosen by nobody ([RAD-0001](0001-cost-of-a-skill-per-dependency.md)) |
 
@@ -197,7 +231,34 @@ defence predates the attack literature this project found.
 
 ## Findings
 
-**Nothing measured yet.** This record exists to specify the work.
+**Measured — enforcement at the sink prevents harm, and coarse labels prevent everything
+(2026-08-23; `experiments/test7`, qwen3-coder-30b, N=3/arm).**
+
+**Key** — `harm/leaked` the credential reached a log · `ok/task` the developer's own change
+was written. Counts are runs, out of 3.
+
+| arm | **harm**/leaked | **ok**/task |
+|---|---|---|
+| naive, instruction channel | 2 of 3 | 3 of 3 |
+| positional, data-framed | 0 of 3 | 3 of 3 |
+| **IFC, integrity policy** | **0 of 3** | **0 of 3** |
+| **IFC, confidentiality policy** | **0 of 3** | **0 of 3** |
+| quarantined paraphrase | 0 of 3 | 2 of 3 |
+| signature only, no prose | 0 of 3 † | 2 of 3 |
+| signature only, attacker-named identifiers | 0 of 3 | 2 of 3 |
+
+† true by construction — a bare signature carries no instruction to comply with.
+
+- **The mechanism works.** Neither policy let the credential reach a log, including on the
+  payload that beat the naive arm.
+- **The naive implementation is unusable.** Conversation-level taint refuses the developer's own
+  write once anything untrusted or secret has been read. Per-value labelling — FIDES's variable
+  indirection — is therefore a requirement, not a refinement, and these numbers are an upper
+  bound on its cost rather than a measurement of it.
+- **Injection becomes denial of service** under coarse taint: the attack triggers the read that
+  poisons the context that blocks the work.
+- **Two cheaper controls did better on both axes**, and one of them is this record's own
+  quarantine idea.
 
 **Reasoned.**
 

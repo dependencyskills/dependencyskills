@@ -102,7 +102,11 @@ contradict them.
 *Measured 2026-08-21. Cells = payload × arm attempted. Serving runtime is part of the
 result, so it is named.*
 
-| agent, as run | instruction | data-framed | system |
+**Key** — `ins` instruction channel · `dat` data-framed · `sys` system channel.
+Cells count the payload×arm attempts in which the agent **complied**, out of those attempted.
+Denominators differ by row, so they are written out.
+
+| agent, as run | **harm**/ins | **harm**/dat | **harm**/sys |
 |---|---|---|---|
 | GPT-OSS 120B (via `agy`) | 10/12 | 2/12 | **12/12** |
 | GPT-OSS 20B (LM Studio) | 10/12 | 4/12 | 10/12 |
@@ -259,19 +263,57 @@ Four in seventeen is an upper bound, not a measurement of attacker strength.
 
 The mitigation is architectural, and it publishes alongside the attack:
 
-1. **Structure is the trusted spine.** What a binary scan recovers — class names,
-   signatures, types — is not free text; it is identifiers from a constrained grammar. An
-   attacker can name a method badly but cannot write a paragraph. That tier is close to
-   injection-proof and is safe to apply across the whole dependency graph.
+1. **Structure is the sturdier spine — but it is not injection-proof, and we were wrong
+   about why.** What a binary scan recovers — class names, signatures, types — comes from a
+   constrained grammar, and we originally wrote that an attacker "can name a method badly but
+   cannot write a paragraph." **They can.** A method name carrying a full English sentence
+   compiles, survives into the class file, and is printed back verbatim by the standard
+   disassembler — the same tool a bytecode harvester uses. Worse, the portable form needs no
+   exotic syntax at all: an imperative in camel case is a legal identifier in every language
+   we harvest. A grammar constrains the characters, not the message.
+
+   **And agents do act on it.** Tested properly — the real pipeline end to end, seven phrasings,
+   three models — the shouted payload produced the harmful action in **8 of 12** runs against a
+   control at 0 of 12. Not inert at all.
+
+   **But Kotlin's own linters catch every form that worked.** Backticks and underscores both
+   violate the standard function-naming rule, so detekt and ktlint flag each harmful payload in
+   stock configuration with no false positive on a clean control — while SpotBugs with
+   find-sec-bugs and Semgrep with its published rulesets flagged **none of them**, with a planted
+   MD5 digest confirming both were really analysing. Security tooling hunts code that misbehaves
+   when it runs; this misbehaves when it is read.
+
+   The tier is still the better one, for a reason we had not articulated and which the
+   measurement supports: an identifier is **narrow and conspicuous** where prose is **wide and
+   quiet**. The only phrasing that landed was the one shouting `REQUIRED SETUP you MUST …`,
+   which needs escaped-identifier syntax (JVM-family only) and is glaring in an API listing. The
+   camel-case form that works in *every* language was referenced by the agent in 4 of 4 runs and
+   obeyed in none — noticed, and declined. **Transport is universal; efficacy is not**, and the
+   forms the linters miss are exactly the ones that do not work.
 2. **Prose is untrusted enrichment.** Never in the instruction channel, provenance-labelled,
    constrained at parse time, and limited to dependencies the project actually declared —
    which cuts the exposed surface roughly tenfold on its own.
-3. **Ground the prose in the structure.** Both successful payloads named things that exist
-   nowhere in the library that shipped them — a symbol absent from its API and its
-   dependency graph, and a network endpoint a date formatter has no business introducing.
-   Because the codex already builds that graph, "does this documentation reference anything
-   outside the declared surface of the library it came from?" is a *query*, not a judgement
-   call. This one is a hypothesis we have not yet tested.
+3. **Do not ship the prose to the agent at all.** Prose is what makes a capability
+   *findable*; a signature is what makes it *usable*, and we measured that a bare signature
+   with no documentation was already enough for an agent to use a capability. Those are
+   different jobs and nothing requires them to be the same artifact. So the prose can be the
+   **retrieval key** — embedded, matched against, never displayed — while what reaches the
+   agent is a symbol and a signature. In the sink test this prevented harm while preserving
+   the task, and it needs no policy engine. Point 1 is its limit: the signature is not a
+   clean channel either.
+4. **Or put a tool-less model in front.** A quarantined paraphraser with no tool access
+   rewrites the documentation, and only its output travels onward, so the original text never
+   reaches the agent that can act. This is the published *variable indirection* pattern, and
+   it also prevented harm while preserving the task. Its known failure is a payload addressed
+   to the paraphraser itself rather than to the agent downstream, which we have measured
+   landing elsewhere and did not test here.
+
+**Superseded: grounding the prose in the structure.** We previously listed this as an
+untested hypothesis — check whether documentation references anything outside the declared
+surface of the library it came from. It has since been measured and **dropped**: it catches
+about a third of attacks from an independent benchmark, the misses are structural, and on a
+real dependency graph its false-positive rate was twenty times what a hand-picked sample
+suggested.
 
 There is an honest tension underneath all of this, and it is worth stating plainly:
 **injection risk and retrieval value live in the same field.** The prose capability

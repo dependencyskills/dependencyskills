@@ -13,7 +13,10 @@ developer can *call*. An `api` dependency exposes its own dependencies to
 consumers: the IDE autocompletes them, they compile, and nothing in the build
 file mentions them. That **importable set** is most of the graph.
 
-| Project | Ecosystem | Declared | Importable | Resolved |
+**Key** — `declared` named in the build file · `importable` anything a developer can `import`
+and compile against · `resolved` the full graph the build pulls down. Counts are libraries.
+
+| project | ecosystem | declared | importable | resolved |
 |---|---|---|---|---|
 | Ktor sample | JVM | 8 | 63 | 65 |
 | Spring PetClinic | JVM | 16 | 112 | 113 |

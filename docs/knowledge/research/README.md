@@ -39,6 +39,8 @@ graduates to an ADR, cross-linked both ways.
 | [0024](0024-does-the-pipeline-filter-injection.md) | Does the Pipeline Itself Filter Injection? | Chunking, summarising and retrieval each disturb a coherent instruction — how much of the defence is already free, and does summarising help or add a new hazard |
 | [0025](0025-the-summariser-as-attack-surface.md) | The Summariser as an Attack Surface | An LLM that reads attacker-controlled docs and writes durable corpus content — pass-through, mis-description, trigger poisoning, hijack |
 | [0026](0026-meaning-without-command.md) | Can a Representation Carry Meaning Without Carrying a Command? | Representations in which an imperative cannot be expressed — and whether the retrieval key and the displayed entry need to be the same artifact |
+| [0027](0027-the-identifier-as-a-free-text-channel.md) | The Identifier as a Free-Text Channel | Whether the structure tier really is free of attacker text — measured: prose rides a method name through `javap` verbatim, and a camel-cased imperative needs no escape in any language |
+| [0028](0028-sast-tooling-as-a-detection-layer.md) | SAST Tooling as a Detection Layer | Whether the JVM's security analysers detect prose that persuades a reader — licensing checked, and the category mismatch that makes Semgrep the only candidate |
 
 Numbering is sequential and does not imply order of reading. 0001 and 0002
 carry the measurements the rest lean on.

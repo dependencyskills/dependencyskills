@@ -79,8 +79,15 @@ Current research directions, not commitments:
   measurement found the weakness. A published alternative labels content and
   enforces policy before a sensitive tool runs, so persuasion cannot reach
   anything that matters. A codex cannot enforce at the agent, but it is the
-  natural place to compute the labels. Still under investigation, with a
-  falsifiable experiment specified and nothing committed to.
+  natural place to compute the labels. **The falsifiable experiment has now been
+  run.** Enforcement does prevent the harm — under both policies the planted
+  credential never reached a log. But the crude implementation, tracking labels
+  across the whole conversation, also blocked the developer's own work every
+  time, because the attack causes the read that taints the context that refuses
+  the write. Harm prevented, nothing done. So label granularity is a requirement
+  rather than a refinement, and nothing is committed to yet. Two cheaper controls
+  beat it on both axes in the same test: a tool-less paraphraser in front of the
+  agent, and shipping the agent no prose at all — just the symbol and signature.
 
   The related idea — that a harvester could *refuse* content outright at the one
   boundary it owns, where documentation enters the index — **has been measured

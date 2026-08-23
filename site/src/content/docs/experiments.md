@@ -155,6 +155,28 @@ and applying the same mapping to both the index and the query — the obvious re
 codes included — makes matters worse rather than better, because dense retrieval matches meaning
 rather than token identity.
 
+**And the stronger control has now been run.** Enforcing policy on labelled content before a
+sensitive tool fires does prevent the harm — the planted credential never reached a log under
+either policy we tried. But the naive implementation, which tracks labels across the whole
+conversation, also blocked the developer's own work every single time: the attack causes the
+agent to read the credential file, that read taints the context, and the tainted context
+refuses the legitimate write. Harm prevented, nothing accomplished. **Label granularity is
+therefore a requirement rather than a refinement**, and our numbers bound the cost of the crude
+version rather than estimating the real one.
+
+Two much cheaper controls did better on both axes in the same test: a **tool-less model that
+paraphrases the documentation first**, so the original text never reaches the agent that can
+act, and **shipping no prose to the agent at all** — only the symbol and its signature, which
+earlier work showed was already enough to use a capability.
+
+That last one has a limit we found by trying to break it. We had called structure recovered
+from compiled code the near-injection-proof tier, because identifiers come from a grammar
+rather than free text. **A method name carrying a full English sentence compiles, survives
+into the class file, and is printed back verbatim by the standard disassembler** — and the
+portable version of the trick needs no exotic syntax, because an imperative in camel case is a
+legal identifier in every language we harvest. An agent given such a signature ignored it and
+did its work, but that was one phrasing against one model.
+
 What remains is building it honestly: the index still has to work against real corpora rather
-than a synthetic one, and the stronger control — enforcing on labelled content before a
-sensitive tool runs, rather than detecting after the fact — is specified but unmeasured.
+than a synthetic one, per-value labelling is the version worth measuring, and whether an
+identifier-borne instruction is genuinely inert needs a much harder try than we have given it.

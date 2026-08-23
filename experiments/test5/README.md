@@ -132,6 +132,9 @@ leaves **5,440** entries. *Dedup is a required harvest step, not an optimisation
 
 Deduped, targets always retained, only the number of distractors varying:
 
+***ok** — queries whose correct answer appeared in the top k. Denominators differ by row: the
+harvested rows use 17 queries, the synthetic baseline 26, so they are written out in full.*
+
 | corpus | r@1 | r@3 | r@5 | r@10 |
 |---|---|---|---|---|
 | 220 entries | **5/17 (29%)** | 8/17 | 10/17 | 13/17 |
@@ -197,6 +200,8 @@ recall left to lose, so an ablation scored there measures nothing. 220 is the si
 baseline has signal, and it matches the sweep above.
 
 ## Result (2026-08-23, BGE-M3, 220 entries, 17 queries)
+
+***ok** — queries, out of 17, whose correct answer appeared in the top k.*
 
 | condition | r@1 | r@3 | r@5 | r@10 |
 |---|---|---|---|---|

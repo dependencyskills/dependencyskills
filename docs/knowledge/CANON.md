@@ -46,13 +46,15 @@ case studies are historical; none is part of the versioned canon.
 | RAD-0017 — The Retrieval / Disambiguation A/B | v1 |
 | RAD-0018 — The Selection A/B | v1 |
 | RAD-0019 — Retrieval at Scale (Layer 1 recall + Layer 2 agent loop) | v3 |
-| RAD-0020 — Information-Flow Control as the Trust Model | v3 |
+| RAD-0020 — Information-Flow Control as the Trust Model | v4 |
 | RAD-0021 — Admission Control at Harvest | v4 |
 | RAD-0022 — The Value of Transitive Capabilities | v2 |
 | RAD-0023 — A Deterministic Harness, or Harvested Knowledge | v2 |
 | RAD-0024 — Does the Pipeline Itself Filter Injection? | v2 |
 | RAD-0025 — The Summariser as an Attack Surface | v3 |
 | RAD-0026 — Can a Representation Carry Meaning Without Carrying a Command? | v2 |
+| RAD-0027 — The Identifier as a Free-Text Channel | v2 |
+| RAD-0028 — SAST Tooling as a Detection Layer | v2 |
 
 ## Changelog
 
