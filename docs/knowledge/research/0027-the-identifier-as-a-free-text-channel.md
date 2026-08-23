@@ -1,6 +1,6 @@
 # The Identifier as a Free-Text Channel
 
-RAD-0027 · 2026-08-23 · v2
+RAD-0027 · 2026-08-23 · v3
 
 **Opened because this project asserted something and then wrote it into another record as a
 correction without measuring it.** [RAD-0020](0020-information-flow-control.md) v4 states that
@@ -160,6 +160,11 @@ justification given for it is wrong.
    rig.
 3. **Do the other four languages carry it?** Cheap, and it decides whether this is a JVM note or
    a general one.
+4. **Does an agent's own laundered prose get harvested back?** GPT-OSS 120B wrote the injected
+   instruction into a doc comment it authored. First-party source is the **highest-integrity**
+   tier in [RAD-0020](0020-information-flow-control.md)'s lattice, so a payload that reaches it
+   has been promoted from untrusted to trusted by the agent itself. This is the most serious
+   thing found here and it is untested.
 4. ~~Does `kotlinc` round-trip a backtick identifier?~~ **Answered: yes, verbatim.**
 5. **Is there any cheap normalisation worth having?** Rejecting identifiers with spaces or
    punctuation is trivial and syntactic — unlike the semantic grounding

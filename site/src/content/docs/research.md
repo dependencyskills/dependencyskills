@@ -215,6 +215,21 @@ words, underscores instead — dropped it to 3 of 12. We first reported that
 variant as dead on one model's data; over three models it plainly is not, and we
 have withdrawn that claim. The space is a strong effect, not a defence.
 
+**On frontier agents the pattern holds, and the model ordering is familiar.** Run
+against Claude Opus 4.6, Gemini 3.7 Flash and GPT-OSS 120B, the shouted payload
+took GPT-OSS 120B in **3 of 3** attempts, Claude once in three, and Gemini not at
+all. That is the same ordering our earlier injection matrix found on a completely
+different channel — more evidence that exposure to this is a training property
+rather than a capability one, and that a bigger model is not a safer reader.
+
+**One agent did something worse than comply: it laundered the instruction into
+prose.** GPT-OSS 120B wrote the credential copy into a documentation comment of
+its own authorship, as a required setup step, and invented a helper call to match.
+An instruction that arrived in a third-party identifier became **first-party
+documentation in the developer's own repository** — the highest-trust tier there
+is. The agent promoted the payload from untrusted to trusted on our behalf, and
+nothing in our threat model covers that transition.
+
 **And the ecosystem's own linter already catches every form that worked.**
 Backticks and underscores both violate Kotlin's standard function-naming rule, so
 detekt and ktlint flag each harmful payload in their stock configuration, with no
