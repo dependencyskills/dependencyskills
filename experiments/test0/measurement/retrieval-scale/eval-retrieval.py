@@ -14,6 +14,7 @@ Runtime is embedded (a library in this process), the production-shaped choice. R
 math is pure Python.
 
 Run:  uv run --with mlx-embeddings eval-retrieval.py
+     (corpus-vecs.json is derived and gitignored; embed-corpus.py rebuilds it)
 Env:  EMB_MODEL (default all-MiniLM-L6-v2-4bit), DOC_PREFIX, QUERY_PREFIX, KS
 """
 import json, os, math, re

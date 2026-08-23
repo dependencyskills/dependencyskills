@@ -40,16 +40,17 @@ case studies are historical; none is part of the versioned canon.
 | RAD-0011 — Existing Documentation Systems as Skill Content | v2 |
 | RAD-0012 — Structure from Bytecode | v2 |
 | RAD-0013 — The Codex Entry | v3 |
-| RAD-0014 — Build vs Reuse: the Codex Pipeline | v2 |
+| RAD-0014 — Build vs Reuse: the Codex Pipeline | v3 |
 | RAD-0015 — How the Source Is Read | v1 |
 | RAD-0016 — The Content-Value A/B | v2 |
 | RAD-0017 — The Retrieval / Disambiguation A/B | v1 |
 | RAD-0018 — The Selection A/B | v1 |
-| RAD-0019 — Retrieval at Scale (Layer 1 recall + Layer 2 agent loop) | v2 |
+| RAD-0019 — Retrieval at Scale (Layer 1 recall + Layer 2 agent loop) | v3 |
 | RAD-0020 — Information-Flow Control as the Trust Model | v3 |
-| RAD-0021 — Admission Control at Harvest | v3 |
-| RAD-0022 — The Value of Transitive Capabilities | v1 |
+| RAD-0021 — Admission Control at Harvest | v4 |
+| RAD-0022 — The Value of Transitive Capabilities | v2 |
 | RAD-0023 — A Deterministic Harness, or Harvested Knowledge | v2 |
+| RAD-0024 — Does the Pipeline Itself Filter Injection? | v1 |
 
 ## Changelog
 

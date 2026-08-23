@@ -1,6 +1,6 @@
 # Build vs Reuse: the Codex Pipeline
 
-RAD-0014 · 2026-08-19 · v2
+RAD-0014 · 2026-08-19 · v3
 
 **Reasoned, not measured.** This record decides, per pipeline layer, whether to
 reuse an existing tool or build. The tool capabilities and licenses come from
@@ -10,6 +10,14 @@ artifact before it is load-bearing.** No new measurement.
 
 **v2 note.** Adds the **read** layer, named after this record was first written
 (RAD-0015) — another reuse (Commons VFS / the Kotlin core VFS).
+
+**v3 (2026-08-22) — summarise is measured as load-bearing.** This record named **summarise**
+and **curate** as the two layers to build rather than reuse, on reasoning.
+`experiments/test5` now measures the first: at matched corpus size, entries built from **raw
+harvested doc text retrieve at 29% r@1 against 77% for entries written in a caller's words**
+(same encoder, same queries, 220 entries either way). Without the summarise step retrieval is
+roughly a third as good, which puts it on the product's critical path rather than in its
+backlog.
 
 ## Question
 

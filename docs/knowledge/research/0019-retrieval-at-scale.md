@@ -1,6 +1,15 @@
 # Retrieval at Scale
 
-RAD-0019 · 2026-08-20 · v2
+RAD-0019 · 2026-08-20 · v3
+
+**v3 (2026-08-22) — the scale in the title is not the scale that was measured.** The headline
+77% r@1 rests on a **220-entry** synthetic corpus. `experiments/test5` harvested one small real
+project — 99 dependencies — and got **5,440 deduped entries**, an order of magnitude more. On
+that corpus, holding everything else constant and varying only the number of distractors,
+raw-text recall falls **29% → 6% → 0%** across 220 → 1,000 → 3,000 entries. Whether
+caller's-words entries degrade as steeply is untested and must not be assumed. But the corpus
+this record measured is far smaller than the one the pipeline produces, and the recommendation
+below should be read with that in mind.
 
 **Design; measured.** Specifies and reports both layers of retrieval-at-scale — Layer 1
 (pure index recall, no agent) and Layer 2 (the agent authoring a query against the index

@@ -113,18 +113,26 @@ caller's own words — and the agent loop found it every time in a pilot, becaus
 translates a plain-language need into the vocabulary the entry actually uses. That is the
 single strongest argument for an index over a pile of documents.
 
+**With one caveat we put there ourselves.** That 77% was measured over 220 entries. Harvesting
+a single real project — 99 dependencies — yields more than five thousand once duplicates are
+removed, and recall falls steeply as the corpus grows. "At scale" was not measured at the scale
+a real graph produces.
+
 Two questions that stood open here have since been answered. **Harvesting does not filter
 anything** — the same payload written in each of five languages' native doc conventions is
 delivered perfectly intact by every parser, so the parse stage is available as an enforcement
 point and is not currently enforcing. That measurement also overturned our own guess about
 which ecosystem was most exposed: TypeScript's convention turned out to be the *tersest* of
 the five, while Python carries the largest typical comment and Rust the heaviest tail and by
-far the most embedded code. And **documentation can be checked against the structure of the
-library that shipped it**: across a thousand real doc comments, flagging references to
-symbols or endpoints that exist nowhere in the shipping library's own surface runs at a 1.3%
-false-positive rate for endpoints and under 6% for symbols, and catches both of the payloads
-that caused real harm. It cannot catch a payload that references nothing at all, which is
-exactly the class that needs a stronger control than detection.
+far the most embedded code. And **checking documentation against the code it ships with does not work well enough to
+use** — it catches about a third of attacks from an independent benchmark, misses whole
+classes structurally, and on a real dependency graph its false-positive rate is twenty times
+what five hand-picked libraries suggested. It was withdrawn.
+
+**And the largest finding came from building it.** Harvesting a real graph and indexing raw
+documentation retrieves at roughly a third the quality of entries written in a caller's own
+words. Rewriting harvested prose into the words a developer would actually search with is not
+an optimisation — it is the part that makes the index work, and it is now on the critical path.
 
 What remains is building it honestly: the index still has to work against real corpora rather
 than a synthetic one, and the stronger control — enforcing on labelled content before a

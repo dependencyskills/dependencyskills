@@ -1,0 +1,52 @@
+[
+ {"query": "I want to send a large file back to the caller without first loading all of it into memory - write it out to them progressively as it becomes available",
+  "target": "io.ktor.server.response.respondOutputStream", "where": "direct"},
+
+ {"query": "the page has moved somewhere else permanently and I need to point whoever asked at the new address",
+  "target": "io.ktor.server.response.respondRedirect", "where": "direct"},
+
+ {"query": "someone is uploading a form that has both text fields and an attached file in the same submission, and I need to get at the parts",
+  "target": "io.ktor.server.request.receiveMultipart", "where": "direct"},
+
+ {"query": "I have a folder of assets on disk and want everything in it reachable over the web without writing a handler for each one",
+  "target": "io.ktor.server.http.content.staticFiles", "where": "direct"},
+
+ {"query": "I need to check whether some text matches a pattern and pull the interesting pieces out of it",
+  "target": "kotlin.text.Regex", "where": "direct"},
+
+ {"query": "tell the browser how long it is allowed to keep its own copy of this response before it has to ask me again",
+  "target": "io.ktor.http.content.CachingOptions", "where": "transitive"},
+
+ {"query": "the service I call fails intermittently for no lasting reason; look at what came back and decide whether it is worth trying again",
+  "target": "io.ktor.client.plugins.HttpRequestRetryConfig.retryIf", "where": "transitive"},
+
+ {"query": "two coroutines keep touching the same piece of shared state at the same time and corrupting it - let only one of them in at once",
+  "target": "kotlinx.coroutines.sync.Mutex", "where": "transitive"},
+
+ {"query": "if the far end never answers, stop waiting after a while instead of hanging forever",
+  "target": "io.ktor.client.plugins.HttpTimeoutConfig", "where": "transitive"},
+
+ {"query": "add a piece of behaviour to my client and configure it while I am setting the client up",
+  "target": "io.ktor.client.HttpClientConfig.install", "where": "transitive"},
+
+ {"query": "I only want a fixed number of these running against the remote service at any moment, and the rest should wait their turn",
+  "target": "kotlinx.coroutines.sync.Semaphore", "where": "transitive"},
+
+ {"query": "the input box fires on every keystroke; only react once the person pauses for a moment, using just what they last typed",
+  "target": "kotlinx.coroutines.flow.debounce", "where": "transitive"},
+
+ {"query": "one part of my program produces items and another consumes them, and I need to hand them over safely without blocking a thread",
+  "target": "kotlinx.coroutines.channels.Channel", "where": "transitive"},
+
+ {"query": "start a second piece of work at the same time as this one and collect its answer later",
+  "target": "kotlinx.coroutines.async", "where": "transitive"},
+
+ {"query": "when collecting this stream blows up, start it over a few times before giving up entirely",
+  "target": "kotlinx.coroutines.flow.retry", "where": "transitive"},
+
+ {"query": "I want the same set of headers attached to every response my server sends, without repeating myself",
+  "target": "io.ktor.server.plugins.defaultheaders.DefaultHeadersConfig", "where": "transitive"},
+
+ {"query": "record what requests came in and how they were answered, so I can look at it afterwards",
+  "target": "io.ktor.server.plugins.calllogging.CallLoggingConfig", "where": "transitive"}
+]

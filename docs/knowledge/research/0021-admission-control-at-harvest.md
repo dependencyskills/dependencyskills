@@ -1,6 +1,20 @@
 # Admission Control at Harvest
 
-RAD-0021 · 2026-08-22 · v3
+RAD-0021 · 2026-08-22 · v4
+
+**v4 (2026-08-22) — the surviving recommendation does not survive either.** v2 and v3 kept URL
+grounding as a *label*, on test3's measured 1.3% false-positive rate over five libraries. The
+first harvest of a **real resolved graph** (`experiments/test5`, ktor-filelisting, 14,899
+entries from 59 libraries) puts that rate at **26.9%**. The cause is a single library family's
+documentation convention: Ktor appends a *"Report a problem"* link to nearly every declaration,
+so the signal fires on **91–97% of every Ktor library** while sitting at 2.1–2.8% for
+kotlin-stdlib and coroutines. **4,076 of 4,011 flagged entries point at one host.**
+
+A signal whose false-positive rate is set by whether a library's authors happen to link their
+issue tracker is not measuring what it claims to measure. **URL grounding is withdrawn — as a
+gate in v2, and now as a label too.** test3's 1.3% was an artifact of five hand-picked
+libraries; this is why the corpus had to be real. What remains of this record is the negative
+result and the reasons for it.
 
 **v3 (2026-08-22) — a correction to v2's routing claim.** v2 closed by asserting that every
 attack class the gate missed *"names nothing foreign, which routes them to
@@ -227,9 +241,10 @@ refusing content on it would remove real capability while leaving output-channel
 config poisoning, resource abuse and encoded payloads untouched. That is the worst combination
 available — a cost that is certain against a benefit that is partial.
 
-1. **Keep URL grounding as a label and a warning**, where its 1.3% rate on library
-   documentation is cheap and a false positive costs a glance rather than a capability. It
-   catches a real class, including the exfiltration that did genuine harm in RAD-0006.
+1. ~~Keep URL grounding as a label and a warning.~~ **Withdrawn (v4).** On a real resolved
+   graph the rate is 26.9%, not 1.3%, and it is driven by one library family's habit of linking
+   its issue tracker from every doc comment. The signal measures documentation convention, not
+   suspicion.
 2. **Do not gate on the symbol signal either.** Part A's false-positive asymmetry already
    argued for down-weighting over discarding, and nothing here changes that.
 3. **Do not build audit machinery.** It was a hard requirement only if a gate shipped.

@@ -23,3 +23,9 @@ docs/stories/
 # Python bytecode caches (experiments import shared modules)
 __pycache__/
 *.pyc
+
+# Derived experiment artifacts — regenerable, and large.
+# Embedding caches: rebuild with the experiment's embed step (test5 is ~325MB, ~20 min).
+**/corpus-vecs.json
+# Harvested corpora: rebuild with the experiment's harvest step from the committed graph.
+experiments/test5/corpus.json

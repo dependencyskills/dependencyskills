@@ -36,6 +36,7 @@ graduates to an ADR, cross-linked both ways.
 | [0021](0021-admission-control-at-harvest.md) | Admission Control at Harvest | Refusing to index documentation that does not match the code it ships with — the one enforcement point the harvester owns, and what gating costs retrieval |
 | [0022](0022-the-value-of-transitive-capabilities.md) | The Value of Transitive Capabilities | The exclusion rule is settled; its price was never measured — what recall costs, whether declared is *all* a codex needs, and a third argument for the rule that needs no adversary |
 | [0023](0023-deterministic-harness-or-harvested-knowledge.md) | A Deterministic Harness, or Harvested Knowledge | The fork this project walked past: judgement harvested and handed to the model, or encoded in a harness that constrains it — and what primitives that would need |
+| [0024](0024-does-the-pipeline-filter-injection.md) | Does the Pipeline Itself Filter Injection? | Chunking, summarising and retrieval each disturb a coherent instruction — how much of the defence is already free, and does summarising help or add a new hazard |
 
 Numbering is sequential and does not imply order of reading. 0001 and 0002
 carry the measurements the rest lean on.

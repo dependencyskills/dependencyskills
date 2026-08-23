@@ -1,6 +1,18 @@
 # The Value of Transitive Capabilities
 
-RAD-0022 · 2026-08-22 · v1
+RAD-0022 · 2026-08-22 · v2
+
+**v2 (2026-08-22) — first measurement, and the strong form fails.** `experiments/test5`
+harvested this project's subject graph and found the declared/transitive ratio **inverts
+between libraries and capabilities**: 10 direct against 89 transitive *libraries*, but 7,913
+against 6,986 *entries*, because kotlin-stdlib is a direct dependency contributing 49% of the
+corpus. So *"70–90% of the graph is transitive"* is a claim about libraries and does not carry
+to capabilities. More decisively, the capabilities a developer actually reaches for in that
+project — coroutine primitives, the HTTP client, timeouts, caching — are **all transitive**,
+while the declared set is `ktor-server-core` plus the standard library. **The strong form of
+the rule, that declared dependencies are all a codex needs, does not survive contact with a
+real graph.** A caveat on the arithmetic is recorded in test5: the query targets were chosen to
+span both tiers, so the hit rate is not a representative proportion.
 
 **Design; not yet measured.** **Excluding transitive dependencies is settled in this project
 and is not re-argued here.** It is a first-class ranking rule

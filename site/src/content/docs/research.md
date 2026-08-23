@@ -164,12 +164,18 @@ looks.
 
 A control that misses two thirds of an independent benchmark cannot be an
 admission rule — refusing content on it would remove real capability while
-leaving those classes untouched. So the signal is kept as a **label and a
-warning**, where a false positive costs a glance, and the gate is not built. The
-day spent measuring prevented shipping something that looked principled and
-scored well against our own payloads. Every attack class it misses names nothing
-foreign, which is exactly what enforcing at the sink handles and detection
-cannot.
+leaving those classes untouched. So the gate was not built, and the signal was
+kept as a label instead.
+
+**Then we harvested a real dependency graph, and the signal did not survive that
+either.** The 1.3% above came from five hand-picked libraries. Across a real
+resolved graph it is **26.9%** — because one library family appends a "report a
+problem" link to nearly every declaration, so the check fires on 91–97% of
+everything it publishes while sitting near 2% elsewhere. A signal whose
+false-positive rate is set by whether a library links its issue tracker is
+measuring house style, not suspicion. **It is withdrawn entirely.** The lesson is
+about method as much as security: five convenient libraries produced a number
+wrong by a factor of twenty, and only a real corpus exposed it.
 
 ## What the transitive tail is worth
 
@@ -178,8 +184,17 @@ ranking rule, a security default, and roughly a tenfold cut to the surface an
 agent is asked to trust. But it was adopted twice on separate grounds and on
 both occasions the benefit was established while the cost was assumed.
 
-**Findings.** Not yet measured. Two things are worth testing rather than
-asserting. The strong form of the rule — that declared dependencies may be *all*
+**Findings.** First measurement in. Harvesting a real graph shows the ratio
+**inverts between libraries and capabilities**: 10 declared against 89 transitive
+*libraries*, but roughly even at the *entry* level, because the standard library
+is a declared dependency and supplies half the corpus on its own. So "most of the
+graph is transitive" is a claim about libraries that does not carry to
+capabilities. And the capabilities a developer actually reaches for in that
+project — coroutine primitives, the HTTP client, timeouts, caching — are **all
+transitive**, while the declared set is one server library plus the standard
+library. The strong form of the rule, that declared dependencies are all a codex
+needs, does not survive contact with a real graph. Two things remain worth testing
+rather than asserting. The strong form of the rule — that declared dependencies may be *all*
 a codex needs — would convert a ranking preference into an outright exclusion,
 and that is a much larger claim than anything currently recorded. And a third
 argument for the rule may exist that needs no attacker at all: a transitive

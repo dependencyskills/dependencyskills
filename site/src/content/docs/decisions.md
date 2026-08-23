@@ -88,8 +88,11 @@ Current research directions, not commitments:
   only about a third of attacks from an independent benchmark, and the misses are
   structural: data leaving through the agent's own output, config poisoning,
   resource abuse, encoded payloads. A control that misses two thirds cannot
-  justify removing real capability, so the signal is kept as a warning and the
-  gate is not built.
+  justify removing real capability, so the gate was not built. The signal was
+  briefly kept as a warning, then withdrawn as well: on a real dependency graph
+  its false-positive rate is twenty times what five hand-picked libraries
+  suggested, because one library family links its issue tracker from nearly every
+  doc comment.
 - **A capability server**, local first, as a query front-end over the corpus.
   What injection means for it is now settled above; what remains open is the
   server's own shape.
