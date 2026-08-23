@@ -1,8 +1,19 @@
 # Does the Pipeline Itself Filter Injection?
 
-RAD-0024 · 2026-08-22 · v1
+RAD-0024 · 2026-08-22 · v2
 
-**Design; nothing measured.** Sketched from an idea raised in conversation and recorded before
+**v2 (2026-08-22) — first measurement: summarisation filters, narrowly.** `experiments/test6`
+ran RAD-0006's payloads through a real summarise step over real harvested doc comments.
+**P1-authority and P2-subtle were filtered completely (0/6 each)** — the entry came out clean
+and factually correct with the payload simply absent. So this record's central hope holds for
+the payloads that did real harm in RAD-0006, and it holds for a step the product must build
+anyway. **But the filtering is class-specific**, not general: it works because those payloads
+instruct a *downstream* consumer, and the summariser is not that consumer. A payload aimed at
+the summariser's own task is not filtered — see
+[RAD-0025](0025-the-summariser-as-attack-surface.md) v2, which is the other half of the same
+measurement and the more consequential one.
+
+**Sketched from an idea raised in conversation and recorded before
 it is lost. Every control this project has considered was **added** to the pipeline — a gate
 ([RAD-0021](0021-admission-control-at-harvest.md), rejected), labels
 ([RAD-0020](0020-information-flow-control.md)), positional discipline
@@ -76,7 +87,16 @@ high-retrieval capability — rather than what it costs one who is not trying.
 
 ## Findings
 
-**Nothing measured.**
+**Measured — summarisation filters, for one class (2026-08-22; `experiments/test6`).** Over
+real harvested doc comments, RAD-0006's two realistic payloads were filtered **completely**
+(0/6 each): the generated entry was clean and factually correct with the payload absent. The
+mechanism is that both instruct a *downstream* consumer — call this, POST that — and the
+summariser is writing a description, not code, so the instruction is irrelevant to its task. A
+payload aimed at the summariser's own task is **not** filtered (4/6), which is
+[RAD-0025](0025-the-summariser-as-attack-surface.md)'s half of the result.
+
+So the free defence is real but **class-specific**, and it should be described that way rather
+than as "summarising filters injection".
 
 **Reasoned.**
 
@@ -90,11 +110,8 @@ high-retrieval capability — rather than what it costs one who is not trying.
 
 **What to find out, in order.**
 
-1. **Does an injected instruction survive summarisation?** The cheapest and most informative
-   test, and everything is already built: run RAD-0006's payloads through a summarise step and
-   check whether the canary reaches the entry. Three outcomes, all useful — filtered
-   (a free defence), carried through (no defence), or *the summariser itself redirected*
-   (a new hazard this project has not considered).
+1. ~~Does an injected instruction survive summarisation?~~ **Answered (test6):** filtered for
+   downstream-aimed payloads, not filtered for summariser-aimed ones.
 2. **What is the per-interaction surface?** Over test5's real corpus, for a set of realistic
    needs, count how many distinct libraries appear in the top-k. That converts RAD-0006's
    112–995 into a number that reflects what an agent actually sees.

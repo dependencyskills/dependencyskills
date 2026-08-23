@@ -37,6 +37,8 @@ graduates to an ADR, cross-linked both ways.
 | [0022](0022-the-value-of-transitive-capabilities.md) | The Value of Transitive Capabilities | The exclusion rule is settled; its price was never measured — what recall costs, whether declared is *all* a codex needs, and a third argument for the rule that needs no adversary |
 | [0023](0023-deterministic-harness-or-harvested-knowledge.md) | A Deterministic Harness, or Harvested Knowledge | The fork this project walked past: judgement harvested and handed to the model, or encoded in a harness that constrains it — and what primitives that would need |
 | [0024](0024-does-the-pipeline-filter-injection.md) | Does the Pipeline Itself Filter Injection? | Chunking, summarising and retrieval each disturb a coherent instruction — how much of the defence is already free, and does summarising help or add a new hazard |
+| [0025](0025-the-summariser-as-attack-surface.md) | The Summariser as an Attack Surface | An LLM that reads attacker-controlled docs and writes durable corpus content — pass-through, mis-description, trigger poisoning, hijack |
+| [0026](0026-meaning-without-command.md) | Can a Representation Carry Meaning Without Carrying a Command? | Representations in which an imperative cannot be expressed — and whether the retrieval key and the displayed entry need to be the same artifact |
 
 Numbering is sequential and does not imply order of reading. 0001 and 0002
 carry the measurements the rest lean on.

@@ -134,6 +134,27 @@ documentation retrieves at roughly a third the quality of entries written in a c
 words. Rewriting harvested prose into the words a developer would actually search with is not
 an optimisation — it is the part that makes the index work, and it is now on the critical path.
 
+**Two more have since been answered, and both cut against ideas we liked.**
+
+**Poisoning the index works, but only for a library the attacker publishes.** Appending a false
+claim to somebody's honest documentation moved retrieval not at all — the rewriting step anchors
+on the document's own true opening sentence. Writing the whole document, for a symbol you also
+named, put a **library that does not exist** ahead of the ecosystem's canonical answer for one in
+four of our test needs, with every check we have reading clean. The failure is not in the
+rewriting step, which behaved correctly throughout; it is the assumption that documentation
+describes the code it ships with, which no amount of reading the text can establish.
+
+**Suppressing verbs to make instructions unrepresentable does not work.** The idea was that an
+imperative is a syntactic object, so an index entry with no grammar could carry topic without
+carrying command. English disagrees: it marks command in *modals*, which are not verbs, so
+*"MUST also call X"* survives verb removal as *"MUST also X"* — still an order. The retrieval
+half was more interesting than the security half: deleting verbs costs **nothing** at the top
+rank and a great deal in the tail, which suits an entry whose job is to be found rather than
+browsed. Two negative results are worth having: mangling verbs is *worse* than deleting them,
+and applying the same mapping to both the index and the query — the obvious repair, phonetic
+codes included — makes matters worse rather than better, because dense retrieval matches meaning
+rather than token identity.
+
 What remains is building it honestly: the index still has to work against real corpora rather
 than a synthetic one, and the stronger control — enforcing on labelled content before a
 sensitive tool runs, rather than detecting after the fact — is specified but unmeasured.
