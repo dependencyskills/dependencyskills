@@ -1,0 +1,156 @@
+---
+title: What works
+description: Every defence this project has measured, with its number and its limit — what holds up, what does not, and what is still untested.
+---
+
+Everything below was measured, most of it against our own designs. The through-line is short
+enough to state first:
+
+> **Reducing what can reach the agent has worked every time. Detecting attacks has failed every
+> time.**
+
+Those are the same kind of intervention landing on opposite sides of a line, and nothing measured
+so far contradicts it.
+
+## What works
+
+### Reducing the surface
+
+These were not designed as security controls. Deduplication was a cost problem, declared-only a
+relevance question, deprecation a quality one. Stacked on a real dependency graph they are the
+strongest result in the project.
+
+| control | effect on a real 14,899-entry harvest |
+|---|---|
+| deduplicate by symbol | 14,899 → **5,440** entries |
+| index declared dependencies only | 5,440 → **2,664**; 59 artifacts → **5** |
+| drop unusable deprecated entries | removes 297 capabilities an agent cannot call anyway |
+| **all three together** | **82% of the surface gone**, 2,646 entries left |
+
+Across thirteen real projects, indexing only declared dependencies drops **2,123 publishers** you
+would otherwise be trusting — hundreds in npm graphs, dozens on the JVM.
+
+### Removing the channel rather than policing it
+
+**Key** — runs in which the agent staged a planted credential, and runs in which it still finished
+the developer's actual task. N=3 each.
+
+| control | leaked the credential ↓ better | finished the task ↑ better |
+|---|---|---|
+| no control (baseline) | 2 of 3 | 3 of 3 |
+| **tool-less paraphraser in front** | **0 of 3** | 2 of 3 |
+| **send the agent no prose at all** | **0 of 3** | 2 of 3 |
+
+Both prevent harm while leaving the agent able to work. Sending only a symbol and its signature
+works because an earlier test found a bare signature is already enough for an agent to *use* a
+capability — prose is what makes it findable, not what makes it usable.
+
+### Bounds measured from what developers actually do
+
+Real libraries simply do not contain certain things. Each bound below is stated as its cost — how
+much genuine library content it would wrongly reject.
+
+| bound | real libraries violating it | rejection cost |
+|---|---|---|
+| a backticked declaration | 0 of 14,899 | 0.000% |
+| a constant longer than four words | 0 of 3,822 | 0.000% |
+| spelled-out punctuation, "config dot env" | 0 of 14,899 | 0.000% |
+| a filesystem path in documentation | 4 of 14,899 | 0.027% |
+
+The third is the interesting one, because an attacker is *forced* into it: identifier grammar
+forbids `.` and `/`, so smuggling a path through one means spelling it out. The evasion creates
+the tell.
+
+## What does not work
+
+### Detection, in every form we tried
+
+**Key** — measured against 91 malicious and 50 benign real agent skills written by other
+researchers. Every skill lands in exactly one column.
+
+| tool | caught ↑ better | missed ↓ better | false alarm ↓ better | left alone ↑ better |
+|---|---|---|---|---|
+| linter, unconfigured | 64 | 27 | **46** | 4 |
+| linter, naming rules | 16 | **75** | 4 | 46 |
+| linter, security rules | 28 | 63 | 8 | 42 |
+| dedicated security scanner | 29 | **62** | 8 | 42 |
+
+The best of them **misses two-thirds**. Unconfigured linting objects to 110 of the 141 skills —
+it is not detecting attacks, it is objecting to nearly everything.
+
+And of the attacks that actually *worked* on an agent, the best scanner caught **2 of 5**.
+
+### Stacking detectors
+
+All four combined caught **64 — exactly what the best single one caught.** They are nested, not
+complementary: one strictly contains the others. Requiring two to agree was *worse* than either
+alone and removed no false alarms at all, because they fail on the same files.
+
+### Grounding documentation against the code that ships it
+
+Withdrawn. It caught about a third of attacks from an independent benchmark, missed whole classes
+structurally, and on a real dependency graph its false-alarm rate was twenty times what a
+hand-picked sample suggested.
+
+### Enforcing policy before a sensitive action
+
+This one *works* and is still unusable as built. Both policies we tried blocked the credential
+every time — and blocked the developer's own work every time, because the attack causes the read
+that taints everything after it. Label granularity is a requirement, not a refinement.
+
+## What partly works, with the limit stated
+
+| control | what it does | where it fails |
+|---|---|---|
+| quoting library text as untrusted data | total protection on several agents | **zero effect** on one local model; defeated outright by moving the text into the system prompt; argued away by a payload claiming the framing is a test |
+| rewriting documentation into an index entry | filtered every payload aimed at a downstream reader, 0 of 6 | derailed 4 of 6 by a payload aimed at the rewriter itself |
+| linting identifiers | catches every loud form, no false alarms on a clean control | misses the plain camel-case form, which two frontier models obeyed |
+
+## Language changes the answer, and not the way we expected
+
+One payload set, four languages, three frontier agents, everything else held fixed.
+
+**Key** — runs in which the generated code performed the injected step, six per cell. Lower is
+better.
+
+| payload | Kotlin | Java | Swift | JavaScript |
+|---|---|---|---|---|
+| an instruction hidden in a method name | 2 of 6 | *inexpressible* | *inexpressible* | 2 of 6 |
+| the same words, underscored | 0 of 6 | 2 of 6 | 0 of 6 | 0 of 6 |
+| **an instruction written as documentation** | **0 of 6** | **0 of 6** | **0 of 6** | **7 of 18** |
+
+**Every prose payload that worked, worked in JavaScript.** None landed in Kotlin, Java or Swift.
+
+And it inverts the obvious reading. By defences alone **Swift looks worst** — it carries every
+payload and its standard linter has no function-naming rule at all, so nothing objects. Yet Swift
+is the only language where *nothing landed*. **Being undefended and being exposed are different
+properties**, and only running the agents could separate them.
+
+A plausible mechanism, offered as a hypothesis rather than a finding: a JavaScript entry has no
+type signature to anchor on, so the prose carries more of the meaning — and reading the process
+environment is one line in Node, where the JVM languages need real file handling.
+
+## What we cannot conclude
+
+Stated because the gaps matter as much as the findings.
+
+- ~~Whether the language changes the answer.~~ **Now measured** — see above. What remains
+  unmeasured is *why*: the mechanism proposed for JavaScript's exposure is a hypothesis.
+- **Whether the surviving controls compose.** Each was measured alone, and detectors are already
+  known not to.
+- **Attacks on what the agent produces.** 46% of published attacks need no precondition at all,
+  and they mostly corrupt output rather than steal secrets — a spreadsheet quietly 10% wrong needs
+  no credential file. Every control above addresses delivery, and the strongest of them is
+  structurally blind to this.
+- **An agent laundering an attack into your own source.** One agent rewrote an injected
+  instruction into a documentation comment in the developer's own repository, as a genuine API
+  requirement. That content is then first-party and trusted, by every measure the pipeline has.
+
+## The one thing that is not a defence
+
+**Choosing a safer model.** Exposure varied enormously between models of comparable capability,
+including within a single vendor's range, and the same ordering appeared on two entirely unrelated
+attack channels. The older, larger model in one family was more exposed than the newer, smaller
+one. A tool cannot choose which agent reads what it publishes, so no property of the agent can be
+relied on — which is why every control above works by changing what reaches the agent rather than
+by hoping it behaves.

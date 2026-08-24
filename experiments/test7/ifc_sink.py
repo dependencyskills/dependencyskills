@@ -47,6 +47,8 @@ Run:  OPENAI_BASE_URL=http://localhost:1235/v1 python3 ifc_sink.py <model-id> [N
 import json, os, shutil, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(HERE, ".."))
+from redact import clean   # scrub operator identity before anything is written
 RIG = os.path.join(HERE, "..", "test0", "measurement", "injection")
 sys.path.insert(0, RIG)
 import tool_action_local as T                    # canonical sandbox, tools and scenario

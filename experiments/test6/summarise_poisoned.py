@@ -21,6 +21,8 @@ Run:  OPENAI_BASE_URL=http://localhost:1235/v1 python3 summarise_poisoned.py <mo
 import json, os, random, re, sys, urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(HERE, ".."))
+from redact import clean   # scrub operator identity before anything is written
 sys.path.insert(0, os.path.join(HERE, "..", "test0", "measurement", "injection"))
 from payloads import PAYLOADS                      # canonical RAD-0006 payloads
 

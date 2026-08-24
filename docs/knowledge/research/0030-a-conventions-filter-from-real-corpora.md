@@ -1,6 +1,6 @@
 # A Conventions Filter Derived from Real Corpora
 
-RAD-0030 · 2026-08-24 · v1
+RAD-0030 · 2026-08-24 · v2
 
 **Recorded from a working conversation before it is lost.** The idea: measure what identifiers
 in real libraries actually look like — per language, across many libraries — and use those
@@ -46,6 +46,57 @@ backticked prose names lives in the test tree, which is never harvested.
 Both bounds are far stricter than detekt's defaults. `FunctionMaxLength` caps at 30 characters
 because someone chose 30; the corpus says the real p99 is six words. **A limit derived from the
 population it will be applied to is a different object from a limit shipped as a default.**
+
+### Four bounds now measured against the real corpus
+
+Each is *"developers do not do this"*, measured over the 14,899-entry harvest, with the cost
+stated as a false-**rejection** rate on real library content rather than a detection rate.
+
+| bound | real libraries violating it | as a rejection cost |
+|---|---|---|
+| backticked declaration | **0 of 14,899** | 0.000% |
+| `ALL_CAPS` constant longer than 4 words | **0 of 3,822** distinct | 0.000% |
+| spelled-out punctuation — `dot` + a file extension | **0 of 14,899** | 0.000% |
+| a filesystem path in documentation | **4 of 14,899** | 0.027% |
+| *(rejected)* the word "slash" as a separator | 16 of 14,899 | noisy, and 0 attacks used it |
+
+**The spelled-out-punctuation bound is the interesting one, because it is constraint-induced.**
+An attacker writes `config dot env` inside an identifier *precisely because* the JVM forbids `.`
+and `/` in a method name. The evasion creates the tell. Both of `test7`'s effective payloads
+contain it.
+
+**And it is the first pair of controls in this project that composes rather than nests.**
+`test8` measured detectors as strictly nested — union added nothing, consensus subtracted. These
+two close each other's escape hatch:
+
+- name a path directly → the path bound catches it;
+- spell it out to slip past the identifier grammar → the punctuation bound catches it.
+
+**Both bounds apply to any harvested text, identifier or prose** — the 0 of 14,899 was measured
+over documentation and signatures together, so a doc comment reading *"copy config dot env"* is
+just as anomalous as an identifier that does. What is limited is **coverage**, not applicability:
+**0 of 91** AgentTrap malicious skills spell punctuation out, because their payloads sit in prose
+where `.env` can simply be written, and 20.9% name a path outright. An attack that never needs the
+evasion is never caught by the tell the evasion creates.
+
+**The pair also hands off across the laundering step**, which is the first thing measured that
+touches [RAD-0029](0029-the-agent-as-a-trust-launderer.md) at all. When GPT-OSS 120B restated an
+identifier-borne payload as a genuine API precondition in its own KDoc, it **normalised**
+`config dot env` back to `.env` — 2 of 2 runs. So:
+
+- the attacker spells it out to slip past identifier grammar → the punctuation bound catches it
+  at harvest;
+- the agent launders it into prose and normalises it → the path bound catches it on re-harvest.
+
+Neither covers that chain alone. **Small and conditional**: n=2 on one model, and it holds only
+because that model normalised rather than paraphrased. A looser restatement — *"the environment
+configuration file"* — carries neither form, and one Gemini run produced exactly that.
+
+The same measurement makes the detector framing untenable and the bound framing sound. As a
+*detector on skills*, path-mention separates malicious from benign by **5 points** — 20.9% against
+16.0% — which is the same useless band as everything else in `test8`. As a *bound on harvested
+library documentation* the identical rule costs 0.027%. **Same regex, opposite verdicts, because
+the population is different**, and that is the distinction this record exists to hold.
 
 ### Why this is bounded, and by how much
 
@@ -100,8 +151,18 @@ well-formed documentation by construction.
 
 ## Findings
 
-**Nothing measured for this record yet.** It rests on `test7`'s identifier statistics (3,822
-declarations from one dependency graph) and `test7`'s payload results.
+**Measured (2026-08-24).** Four candidate bounds against the 14,899-entry harvest: backticked
+declarations 0, over-long constants 0, spelled-out punctuation 0, filesystem paths 4 (0.027%). A
+fifth — the word "slash" — was tested and **rejected**: 16 legitimate uses and no attack used it.
+
+**Measured — the same rule is a bound or a detector depending on the population.** Path-mention
+separates AgentTrap's malicious skills from its benign ones by 5 points, which is unusable. On
+harvested library documentation the identical rule rejects 0.027%. Skills and libraries are
+different populations and results do not transfer between them.
+
+**Measured — two of these bounds compose.** Naming a path and spelling one out are each other's
+evasion, so within the identifier channel the pair has no gap. This is the first composing pair
+found; `test8` measured detectors as strictly nested.
 
 **Reasoned.**
 

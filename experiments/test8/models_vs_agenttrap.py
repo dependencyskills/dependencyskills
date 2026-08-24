@@ -36,6 +36,8 @@ Run:  python3 models_vs_agenttrap.py <agenttrap-dir> <agy-model> [n-cases]
 import json, os, re, subprocess, sys, tempfile, collections
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(HERE, ".."))
+from redact import clean   # scrub operator identity before anything is written
 WRAP = os.path.join(HERE, "..", "test0", "measurement", "run-gemini.sh")
 ROOT = sys.argv[1] if len(sys.argv) > 1 else ""
 MODEL = sys.argv[2] if len(sys.argv) > 2 else "gemini-3.7-flash-high"
@@ -167,7 +169,7 @@ def main():
 
     safe = MODEL.replace("/", "_")
     p = os.path.join(HERE, f"results-agenttrap-models-{safe}.json")
-    json.dump({"model": MODEL, "n": n, "complied": comp, "flagged": ref, "rows": rows},
+    json.dump(clean({"model": MODEL, "n": n, "complied": comp, "flagged": ref, "rows": rows}),
               open(p, "w"), indent=1, ensure_ascii=False)
     print(f"\n# wrote {os.path.basename(p)}")
 

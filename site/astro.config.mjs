@@ -25,6 +25,7 @@ export default defineConfig({
 					label: 'The case',
 					items: [
 						{ label: 'The findings', link: '/findings/' },
+						{ label: 'What works, and what does not', link: '/what-works/' },
 						{ label: 'What the tests show', link: '/experiments/' },
 						{ label: 'The field as it stands', link: '/field/' },
 						{ label: 'The landscape', link: '/landscape/' },

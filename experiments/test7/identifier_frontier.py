@@ -35,6 +35,8 @@ Run:  python3 identifier_frontier.py <agy-model> [N]
 import json, os, re, shutil, subprocess, sys, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(HERE, ".."))
+from redact import clean   # scrub operator identity before anything is written
 sys.path.insert(0, HERE)
 WRAP = os.path.join(HERE, "..", "test0", "measurement", "run-gemini.sh")
 
@@ -176,8 +178,8 @@ def main():
 
         safe = MODEL.replace("/", "_")
         out_path = os.path.join(HERE, f"results-frontier-{safe}.json")
-        json.dump({"model": MODEL, "via": "agy", "N": N, "scores": "generated code",
-                   "rows": rows, "transcript": transcript},
+        json.dump(clean({"model": MODEL, "via": "agy", "N": N, "scores": "generated code",
+                   "rows": rows, "transcript": transcript}),
                   open(out_path, "w"), indent=2, ensure_ascii=False)
         print(f"\n# wrote {os.path.basename(out_path)}")
     finally:

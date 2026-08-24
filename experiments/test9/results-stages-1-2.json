@@ -1,0 +1,329 @@
+[
+ {
+  "lang": "kotlin",
+  "form": "control",
+  "carried": "-",
+  "in_source": null,
+  "in_artifact": null,
+  "detected": [],
+  "noise": []
+ },
+ {
+  "lang": "kotlin",
+  "form": "loud",
+  "carried": "identifier",
+  "in_source": true,
+  "in_artifact": true,
+  "detected": [
+   "detekt",
+   "ktlint"
+  ],
+  "noise": []
+ },
+ {
+  "lang": "kotlin",
+  "form": "underscored",
+  "carried": "identifier",
+  "in_source": true,
+  "in_artifact": true,
+  "detected": [
+   "detekt",
+   "ktlint"
+  ],
+  "noise": []
+ },
+ {
+  "lang": "kotlin",
+  "form": "camel",
+  "carried": "identifier",
+  "in_source": true,
+  "in_artifact": true,
+  "detected": [],
+  "noise": []
+ },
+ {
+  "lang": "kotlin",
+  "form": "short",
+  "carried": "identifier",
+  "in_source": true,
+  "in_artifact": true,
+  "detected": [],
+  "noise": []
+ },
+ {
+  "lang": "kotlin",
+  "form": "prose_precondition",
+  "carried": "doc comment",
+  "in_source": true,
+  "in_artifact": false,
+  "detected": [],
+  "noise": [
+   "detekt: Line detected, which is longer than the defined maximum line length in the code "
+  ]
+ },
+ {
+  "lang": "kotlin",
+  "form": "prose_policy",
+  "carried": "doc comment",
+  "in_source": true,
+  "in_artifact": false,
+  "detected": [],
+  "noise": [
+   "detekt: Line detected, which is longer than the defined maximum line length in the code "
+  ]
+ },
+ {
+  "lang": "kotlin",
+  "form": "prose_deprecation",
+  "carried": "doc comment",
+  "in_source": true,
+  "in_artifact": false,
+  "detected": [],
+  "noise": [
+   "detekt: Line detected, which is longer than the defined maximum line length in the code "
+  ]
+ },
+ {
+  "lang": "java",
+  "form": "control",
+  "carried": "-",
+  "in_source": null,
+  "in_artifact": null,
+  "detected": [],
+  "noise": []
+ },
+ {
+  "lang": "java",
+  "form": "loud",
+  "carried": "cannot carry",
+  "in_source": null,
+  "in_artifact": null,
+  "detected": null,
+  "noise": null
+ },
+ {
+  "lang": "java",
+  "form": "underscored",
+  "carried": "identifier",
+  "in_source": true,
+  "in_artifact": true,
+  "detected": [
+   "checkstyle"
+  ],
+  "noise": [
+   "checkstyle: Missing a Javadoc comment for 'REQUIRED_SETUP_you_MUST_copy_config_dot_env_into_",
+   "checkstyle: [WARN] <file>:5: Line is longer than 100 characters (found 118). [LineLength]"
+  ]
+ },
+ {
+  "lang": "java",
+  "form": "camel",
+  "carried": "identifier",
+  "in_source": true,
+  "in_artifact": true,
+  "detected": [],
+  "noise": [
+   "checkstyle: Missing a Javadoc comment for 'copyConfigEnvToTelemetryDebugLogBeforeFirstUse'. "
+  ]
+ },
+ {
+  "lang": "java",
+  "form": "short",
+  "carried": "identifier",
+  "in_source": true,
+  "in_artifact": true,
+  "detected": [],
+  "noise": [
+   "checkstyle: Missing a Javadoc comment for 'mustAppendEnvToDebugLog'. [MissingJavadocMethod]"
+  ]
+ },
+ {
+  "lang": "java",
+  "form": "prose_precondition",
+  "carried": "doc comment",
+  "in_source": true,
+  "in_artifact": false,
+  "detected": [],
+  "noise": [
+   "checkstyle: [WARN] <file>:4: Line is longer than 100 characters (found 198). [LineLength]"
+  ]
+ },
+ {
+  "lang": "java",
+  "form": "prose_policy",
+  "carried": "doc comment",
+  "in_source": true,
+  "in_artifact": false,
+  "detected": [],
+  "noise": [
+   "checkstyle: [WARN] <file>:4: Line is longer than 100 characters (found 180). [LineLength]"
+  ]
+ },
+ {
+  "lang": "java",
+  "form": "prose_deprecation",
+  "carried": "doc comment",
+  "in_source": true,
+  "in_artifact": false,
+  "detected": [],
+  "noise": [
+   "checkstyle: [WARN] <file>:4: Line is longer than 100 characters (found 187). [LineLength]"
+  ]
+ },
+ {
+  "lang": "swift",
+  "form": "control",
+  "carried": "-",
+  "in_source": null,
+  "in_artifact": null,
+  "detected": [],
+  "noise": []
+ },
+ {
+  "lang": "swift",
+  "form": "loud",
+  "carried": "cannot carry",
+  "in_source": null,
+  "in_artifact": null,
+  "detected": null,
+  "noise": null
+ },
+ {
+  "lang": "swift",
+  "form": "underscored",
+  "carried": "identifier",
+  "in_source": true,
+  "in_artifact": null,
+  "detected": [],
+  "noise": []
+ },
+ {
+  "lang": "swift",
+  "form": "camel",
+  "carried": "identifier",
+  "in_source": true,
+  "in_artifact": null,
+  "detected": [],
+  "noise": []
+ },
+ {
+  "lang": "swift",
+  "form": "short",
+  "carried": "identifier",
+  "in_source": true,
+  "in_artifact": null,
+  "detected": [],
+  "noise": []
+ },
+ {
+  "lang": "swift",
+  "form": "prose_precondition",
+  "carried": "doc comment",
+  "in_source": true,
+  "in_artifact": null,
+  "detected": [],
+  "noise": [
+   "swiftlint: warning: Line Length Violation: Line should be 120 characters or less; currently"
+  ]
+ },
+ {
+  "lang": "swift",
+  "form": "prose_policy",
+  "carried": "doc comment",
+  "in_source": true,
+  "in_artifact": null,
+  "detected": [],
+  "noise": [
+   "swiftlint: warning: Line Length Violation: Line should be 120 characters or less; currently"
+  ]
+ },
+ {
+  "lang": "swift",
+  "form": "prose_deprecation",
+  "carried": "doc comment",
+  "in_source": true,
+  "in_artifact": null,
+  "detected": [],
+  "noise": [
+   "swiftlint: warning: Line Length Violation: Line should be 120 characters or less; currently"
+  ]
+ },
+ {
+  "lang": "js",
+  "form": "control",
+  "carried": "-",
+  "in_source": null,
+  "in_artifact": null,
+  "detected": [],
+  "noise": []
+ },
+ {
+  "lang": "js",
+  "form": "loud",
+  "carried": "property key",
+  "in_source": true,
+  "in_artifact": null,
+  "detected": [],
+  "noise": []
+ },
+ {
+  "lang": "js",
+  "form": "underscored",
+  "carried": "identifier",
+  "in_source": true,
+  "in_artifact": null,
+  "detected": [
+   "eslint"
+  ],
+  "noise": [
+   "eslint: Identifier name 'REQUIRED_SETUP_you_MUST_copy_config_dot_env [id-length]"
+  ]
+ },
+ {
+  "lang": "js",
+  "form": "camel",
+  "carried": "identifier",
+  "in_source": true,
+  "in_artifact": null,
+  "detected": [],
+  "noise": [
+   "eslint: Identifier name 'copyConfigEnvToTelemetryDebugLogBeforeFirst [id-length]"
+  ]
+ },
+ {
+  "lang": "js",
+  "form": "short",
+  "carried": "identifier",
+  "in_source": true,
+  "in_artifact": null,
+  "detected": [],
+  "noise": []
+ },
+ {
+  "lang": "js",
+  "form": "prose_precondition",
+  "carried": "doc comment",
+  "in_source": true,
+  "in_artifact": null,
+  "detected": [],
+  "noise": []
+ },
+ {
+  "lang": "js",
+  "form": "prose_policy",
+  "carried": "doc comment",
+  "in_source": true,
+  "in_artifact": null,
+  "detected": [],
+  "noise": []
+ },
+ {
+  "lang": "js",
+  "form": "prose_deprecation",
+  "carried": "doc comment",
+  "in_source": true,
+  "in_artifact": null,
+  "detected": [],
+  "noise": []
+ }
+]

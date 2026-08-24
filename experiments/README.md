@@ -61,7 +61,7 @@ Every row here is a **surface reduction**, and this is the category with an unbr
 | [test4](test4/) | does the harvest path filter anything? | **no** — 5 of 5 languages deliver payloads intact |
 | [test6](test6/) | can the summariser be attacked? | yes — and a fabricated library beats the true answer 4 of 17 |
 | [test7](test7/) | is the *identifier* a free-text channel? | **yes** — and agents act on it, 8 of 12 on the loud form |
-| [test9](test9/) | does the answer differ by language? | **in progress** — stage 0 done |
+| [test9](test9/) | does the answer differ by language? | **yes** — every prose payload that landed, landed in JavaScript; Swift is undefended but unexposed |
 
 ### 6 · What actually defends it?
 
@@ -84,9 +84,9 @@ paraphrase, signature-only display — and not the ones that try to recognise an
 
 ## What is not settled
 
-- **Whether language changes the answer.** Everything before `test9` varied language *and*
-  corpus *and* payload set together, so no cross-language claim is supported. This is the gap
-  `test9` exists to close.
+- ~~Whether language changes the answer.~~ **Answered by `test9`:** JavaScript is the exposed
+  language and prose is how it is reached. Swift carries every identifier payload with no linter
+  objecting, and yet nothing landed there — *undefended* and *exposed* are different properties.
 - **Whether the surviving controls compose.** Each was measured alone. Sequential filtering and
   parallel agreement are untested, and the detector result above says composition cannot be
   assumed.

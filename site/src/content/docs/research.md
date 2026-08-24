@@ -3,6 +3,21 @@ title: The research
 description: The investigations behind the findings — question, trail, and recommendation.
 ---
 
+:::caution[Some of these experiments carry genuinely destructive test data]
+Several harnesses here read third-party attack corpora that contain **live, runnable attack
+code** — workflows that archive a directory and then delete the originals, credential-harvesting
+scripts, and code that posts collected data to a remote host. Our own harnesses read and lint
+that material statically and never execute it, and every sink we author resolves nowhere by
+construction (`.invalid`, RFC 2606). The corpus does not share those guarantees.
+
+**Run these only in a disposable, network-isolated environment.** Do not point a tool-enabled
+agent at the attack corpora inside a working tree you care about. We declined to do so ourselves:
+the newest Claude models are absent from one experiment specifically because the only route to
+them ran agents with real filesystem access, and telling an agent not to use its tools is not a
+control when whether agents follow instructions is the thing being measured.
+:::
+
+
 Each investigation states a question, the trail of options weighed, the findings
 (with measured kept separate from assumed), and a recommendation. A
 recommendation that hardens into a commitment graduates to a

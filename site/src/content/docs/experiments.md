@@ -3,6 +3,21 @@ title: What the tests show
 description: What the experiments measured — where an index of library capabilities changes what a coding agent does, and where it does not.
 ---
 
+:::caution[Some of these experiments carry genuinely destructive test data]
+Several harnesses here read third-party attack corpora that contain **live, runnable attack
+code** — workflows that archive a directory and then delete the originals, credential-harvesting
+scripts, and code that posts collected data to a remote host. Our own harnesses read and lint
+that material statically and never execute it, and every sink we author resolves nowhere by
+construction (`.invalid`, RFC 2606). The corpus does not share those guarantees.
+
+**Run these only in a disposable, network-isolated environment.** Do not point a tool-enabled
+agent at the attack corpora inside a working tree you care about. We declined to do so ourselves:
+the newest Claude models are absent from one experiment specifically because the only route to
+them ran agents with real filesystem access, and telling an agent not to use its tools is not a
+control when whether agents follow instructions is the thing being measured.
+:::
+
+
 The project's central claim is testable: does giving a coding agent an index of a
 library's capabilities actually change what it writes? We ran it — real coding tasks,
 through real developer agents from **two different vendors** — Claude Code and

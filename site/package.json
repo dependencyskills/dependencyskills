@@ -1,7 +1,8 @@
 {
-  "name": "private-tmp-claude-501--users-bpappin-workspace-dependencyskills-3c8d4856-ce78-4a04-b490-5ed3d27ccc20-scratchpad-site-samples-starlight-sample",
-  "type": "module",
+  "name": "dependencyskills-site",
+  "private": true,
   "version": "0.0.1",
+  "type": "module",
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",

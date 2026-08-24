@@ -1,6 +1,6 @@
 # The Agent as a Trust Launderer
 
-RAD-0029 · 2026-08-23 · v1
+RAD-0029 · 2026-08-24 · v2
 
 **Split out of [RAD-0027](0027-the-identifier-as-a-free-text-channel.md) v3, where it turned up
 as a side effect and is plainly the more serious finding.** Measuring whether agents obey an
@@ -119,6 +119,13 @@ poisoned member 2 of 3 but did not author prose about it, which is acceptance wi
   content in the same repository have completely different provenance, and this project's model
   currently cannot tell them apart.
 - The effect is self-sustaining: one success becomes durable, trusted, re-harvested content.
+
+**One control now touches this, weakly (2026-08-24).** When GPT-OSS 120B laundered an
+identifier-borne payload into its own KDoc it **normalised** the spelled-out `config dot env`
+back to `.env` (2 of 2 runs), which [RAD-0030](0030-a-conventions-filter-from-real-corpora.md)'s
+path bound would reject on re-harvest at a measured 0.027% false-rejection cost. That is the first
+measured contact with this record's threat — and it is narrow: it depends on the agent normalising
+rather than paraphrasing, and a looser restatement carries no path at all.
 
 **What to find out, in order.**
 

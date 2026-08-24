@@ -43,6 +43,10 @@ graduates to an ADR, cross-linked both ways.
 | [0028](0028-sast-tooling-as-a-detection-layer.md) | SAST Tooling as a Detection Layer | Whether the JVM's security analysers detect prose that persuades a reader — licensing checked, and the category mismatch that makes Semgrep the only candidate |
 | [0029](0029-the-agent-as-a-trust-launderer.md) | The Agent as a Trust Launderer | An agent wrote an injected instruction into its own doc comment, promoting a third-party payload to first-party trusted source — the lattice running backwards |
 | [0030](0030-a-conventions-filter-from-real-corpora.md) | A Conventions Filter Derived from Real Corpora | Measuring what identifiers actually look like per language, and using those limits as a surface reduction rather than a detector |
+| [0031](0031-which-vectors-reach-a-real-project.md) | Which Attack Vectors Actually Reach a Real Project? | Most published attacks carry a precondition; 46% need none, and those are integrity corruption rather than exfiltration |
+| [0032](0032-can-standing-instructions-override-injection.md) | Can Standing Instructions Override Injection That Gets Through? | Whether a consumer's own rules file beats an injected instruction, and whether it helps most where models are weakest |
+| [0033](0033-do-form-constraints-compose.md) | Do Form Constraints Compose Where Detectors Do Not? | Detectors nest and add nothing when stacked; two form constraints closed each other's escape — is that structural or coincidence? |
+| [0034](0034-better-linters-or-better-configuration.md) | Better Linters, or Better Configuration? | Swift's gap is a default-config gap — all four ecosystems enforce the measured bounds by configuration, and the configured rule catches the payload stock linters miss |
 
 Numbering is sequential and does not imply order of reading. 0001 and 0002
 carry the measurements the rest lean on.
