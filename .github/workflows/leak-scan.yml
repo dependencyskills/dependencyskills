@@ -36,16 +36,17 @@ jobs:
       - name: Scan tracked files
         run: |
           set -euo pipefail
-          # Text-bearing files only; binaries and lockfile noise would drown the signal.
-          git ls-files -z \
-            '*.md' '*.py' '*.json' '*.yml' '*.yaml' '*.sh' '*.kt' '*.java' '*.swift' '*.js' '*.txt' \
-            > files.z
+          # EVERY tracked file. This was once an extension allowlist, which is the wrong shape for
+          # a gate: the list omitted `.out`, `.mjs`, `.mdx`, `.tsv` and `Dockerfile`, and the `.out`
+          # files are raw model output - the exact place the first leak landed. Deciding what to
+          # skip belongs in the checker, which skips binaries by inspecting them.
+          git ls-files -z > files.z
           COUNT=$(tr -cd '\0' < files.z | wc -c)
           echo "scanning $COUNT tracked files"
           # A gate that passes because it scanned nothing is worse than no gate. This exact
           # failure happened while developing it: an unavailable shell builtin produced an empty
           # list and the step reported success.
-          if [ "$COUNT" -lt 100 ]; then
+          if [ "$COUNT" -lt 500 ]; then
             echo "::error::only $COUNT files matched - the scan is not working"; exit 1
           fi
           xargs -0 python3 experiments/redact.py < files.z

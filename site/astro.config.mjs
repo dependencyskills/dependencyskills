@@ -31,9 +31,12 @@ export default defineConfig({
 						{ label: 'The landscape', link: '/landscape/' },
 					],
 				},
+				// Safety leads the group: the experiments read live attack code, and the page
+				// telling you how to run that safely is worth less after the pages inviting you to.
 				{
 					label: 'Security',
 					items: [
+						{ label: 'Running attacks safely', link: '/safety/' },
 						{ label: 'Prompt Injection', link: '/injection/' },
 					],
 				},

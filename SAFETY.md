@@ -119,6 +119,51 @@ having.
 Everything in the "host only" rows keeps the weaker protections described above: throwaway
 workspaces, `.invalid` sinks, no network tool offered to the agent, and static-only compilation.
 
+## Watching what a payload tries to send
+
+`--network=none` costs us a measurement. A payload that would POST a credential to a remote host
+and one that does nothing at all are indistinguishable from inside a container that has no network.
+The second reading is the comfortable one, and there is no evidence for it.
+
+`--observe` gives the container a network that goes to exactly one place:
+
+```
+./experiments/run-sandboxed.sh --observe test8 <agenttrap-dir>
+```
+
+A sinkhole container answers every DNS query with its own address, an iptables `REDIRECT` sends
+every port to one listener, TLS is terminated with a CA generated at startup, and each request is
+written to `egress.jsonl` before a plausible `200` is returned. Returning success matters: a
+payload that gets a connection error may retry, fall back, or give up before showing what it meant
+to do.
+
+**This is the weaker guarantee, and it is not the default.** `--network=none` is a proof — nothing
+left because nothing could. `--observe` is a strong belief, resting on the sinkhole network being
+created `--internal`, which makes Docker attach no gateway to it. We check that rather than assume
+it: on that network a container's routing table holds only its own subnet and no default route,
+where the same probe on an ordinary bridge network finds one. So a bug in the sinkhole still leaves
+the packets with nowhere to go. But it is a belief about Docker's behaviour, where the default mode
+is a statement about a network stack that does not exist.
+
+The privilege is deliberately inverted. The sinkhole runs as root and holds `NET_ADMIN`, because it
+runs code we wrote. The arm reading somebody else's malware keeps `--cap-drop=ALL` and a read-only
+root, and nothing in its configuration hints that it is being watched.
+
+`run-sandboxed.sh selftest` is the positive control, and exists because a recorder that quietly
+records nothing looks exactly like a payload that did nothing. It sends a canary by four routes —
+plain HTTP, verified HTTPS, a DNS lookup carrying the payload in the name, and a raw socket on a
+non-web port. Under `--observe` all four are recorded; under the default mode none of them resolve.
+An empty log from that arm means the sinkhole is broken, not that nothing happened.
+
+What it still does not see, stated so nobody assumes more:
+
+| gap | what you get instead |
+|---|---|
+| a hardcoded IP rather than a hostname | still arrives — it is the only route — but no DNS record of intent |
+| a payload that pins a certificate | logged as `tls-refused`: destination and SNI, no body |
+| a Java client | the JVM wants a keystore, not a PEM, so it lands in `tls-refused` too |
+| UDP other than DNS | not captured |
+
 ## Hardening the network, if your gateway can
 
 The container closes the static arms completely. The model arms cannot be contained the same way —
@@ -157,8 +202,13 @@ certificate **inside the container only**. Then outbound request bodies can be m
 canary string, home-directory patterns and account names, and blocked on match. The host and the
 rest of the network are untouched because the certificate never leaves the container.
 
-That is the only arrangement measured here that would catch a leak *before* it left, rather than
-after it landed in a file. It is a build rather than a setting, and it has not been built.
+That is the only arrangement described here that would catch a leak *before* it left, rather than
+after it landed in a file. **Most of it now exists** — the `--observe` sinkhole generates a CA,
+terminates TLS, captures bodies and matches them through the same redaction module. Two things
+separate it from the proxy described above, and neither is cosmetic: the sinkhole *is* the
+destination rather than forwarding upstream, and it records rather than blocks. Turning it into a
+guard means forwarding what passes and refusing what matches, which is a smaller build than it was
+but is still a build.
 
 **Ordering, by value against effort:** segment the machine, then default-deny egress, then — only
 if there is evidence that content is leaving inside legitimate requests — the inspecting proxy.

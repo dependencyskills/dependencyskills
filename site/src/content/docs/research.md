@@ -15,6 +15,10 @@ agent at the attack corpora inside a working tree you care about. We declined to
 the newest Claude models are absent from one experiment specifically because the only route to
 them ran agents with real filesystem access, and telling an agent not to use its tools is not a
 control when whether agents follow instructions is the thing being measured.
+
+The rig we use for this — a no-network container, and a sinkhole mode that records what a payload
+*tries* to send — is described in [running attacks safely](/safety/), along with what each mode
+does and does not guarantee.
 :::
 
 

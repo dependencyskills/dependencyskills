@@ -80,8 +80,26 @@ _SANCTIONED = re.compile(
     rf'{re.escape(_USER)}@users\.noreply\.github\.com', re.I)
 
 
+def is_binary(path):
+    """A NUL byte in the first block means this is not text. Images and jars are not leaks."""
+    try:
+        with open(path, "rb") as fh:
+            return b"\0" in fh.read(8192)
+    except OSError:
+        return True
+
+
 def check(path):
-    """True if a file is free of operator identity, ignoring the sanctioned handle uses."""
+    """True if a file is free of operator identity, ignoring the sanctioned handle uses.
+
+    Binary files are skipped here rather than by the caller. An earlier version left the choice of
+    *what* to scan to a list of extensions in the CI workflow, and that list silently omitted the
+    highest-risk files in the repository — the raw model-output `.out` files, which is precisely
+    where the first leak landed. A checker that depends on being invoked with the right file list
+    will eventually be invoked with the wrong one.
+    """
+    if is_binary(path):
+        return True
     try:
         text = open(path, errors="replace").read()
     except OSError:
