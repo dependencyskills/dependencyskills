@@ -378,11 +378,11 @@ subagents.
 
 | model | arm A | arm B | data-framing |
 |---|---|---|---|
-| gpt-oss-20b | **9/9** | 2/9 | strong (realistic payloads → 0) |
-| nemotron-3-nano-30b | **9/9** | 6/9 | weak |
-| qwen3-coder-30b | 6/9 | **8/9** | **fails — no protection** |
-| gemma-4-12b | 4/9 | 0/9 | full |
-| Claude Haiku | 2/3 cells | 0/3 cells | full |
+| gpt-oss-20b | **9 of 9** | 2 of 9 | strong (realistic payloads → 0) |
+| nemotron-3-nano-30b | **9 of 9** | 6 of 9 | weak |
+| qwen3-coder-30b | 6 of 9 | **8 of 9** | **fails — no protection** |
+| gemma-4-12b | 4 of 9 | 0 of 9 | full |
+| Claude Haiku | 2 of 3 cells | 0 of 3 cells | full |
 | Claude Opus 4.8 | 0 (P1, N=5) | 0 (P1, N=5) | robust in both arms |
 | gemma-3-270m / 3-1b | 0 | 0 | below capability floor (incapacity, not safety) |
 

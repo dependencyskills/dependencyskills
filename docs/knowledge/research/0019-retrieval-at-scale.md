@@ -81,10 +81,10 @@ audit contributed by a second model cross-check — NV-Embed ruled out on CC-BY-
 
 | method | r@1 | r@3 | r@5 | r@10 |
 |---|---|---|---|---|
-| vector | **20/26 (77%)** | 21/26 | 22/26 | 23/26 (88%) |
-| lexical | 10/26 (38%) | 14/26 | 15/26 | 15/26 (58%) |
-| hybrid (equal RRF) | 13/26 | 14/26 | 15/26 | 18/26 |
-| hybrid + vector-weighted (2:1) | 14/26 | 16/26 | 20/26 | 22/26 |
+| vector | **20 of 26 (77%)** | 21 of 26 | 22 of 26 | 23 of 26 (88%) |
+| lexical | 10 of 26 (38%) | 14 of 26 | 15 of 26 | 15 of 26 (58%) |
+| hybrid (equal RRF) | 13 of 26 | 14 of 26 | 15 of 26 | 18 of 26 |
+| hybrid + vector-weighted (2:1) | 14 of 26 | 16 of 26 | 20 of 26 | 22 of 26 |
 
 - **The semantic face is the retrieval mechanism for caller's-words queries.** Vector 77%
   r@1 vs lexical 38%; lexical plateaus at 58% by r@10. Keyword search cannot find a

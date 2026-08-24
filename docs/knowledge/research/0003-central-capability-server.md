@@ -93,7 +93,7 @@ from existing docs. RAD-0002 measured whether that seed exists.
 | `-sources.jar` published, Maven Central | **95.3%** (n=170) |
 | `-sources.jar` published, Google Maven | **93.3%** (n=45); **98%** of AARs |
 | `-sources.jar` on KMP root modules | yes, on every library checked |
-| sources jars that are genuinely populated | **82%** (68/83) |
+| sources jars that are genuinely populated | **82%** (68 of 83) |
 | `<scm>` in POM naming a fetchable git host | 90% Central, 82% Google Maven |
 
 The note asked for the populated-jar number specifically. Of 83 downloaded,

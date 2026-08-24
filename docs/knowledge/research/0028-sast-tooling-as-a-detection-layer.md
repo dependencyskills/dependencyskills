@@ -99,10 +99,11 @@ since January 2024; no maintained detekt security extension exists.
 SpotBugs + find-sec-bugs and Semgrep with `p/security-audit`, `p/secrets` and `p/kotlin`, scored
 differentially against a clean control:
 
-**Key** — `harm/flagged` payloads the tool reported, out of 11. A positive control was included
-because a null result from a tool that is silently not analysing is not a null result.
+**Key** — payloads the tool reported, out of 11; here the tool is what is being judged, so
+higher would be better. A positive control was included because a null result from a tool that is
+silently not analysing is not a null result.
 
-| tool | **harm**/flagged | positive control |
+| tool | payloads it caught ↑ better | positive control |
 |---|---|---|
 | SpotBugs + find-sec-bugs | 0 of 11 | `SECMD5` fired |
 | Semgrep, published rulesets | 0 of 11 | `use-of-md5` fired |

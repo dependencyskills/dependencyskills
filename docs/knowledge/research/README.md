@@ -30,8 +30,8 @@ graduates to an ADR, cross-linked both ways.
 | [0015](0015-how-the-source-is-read.md) | How the Source Is Read | The read stage between get and parse — extract-all vs read-in-place vs selective, the IntelliJ lazy-VFS precedent, a read layer over archived and loose source, first-party source as a first-class input |
 | [0016](0016-the-content-value-ab.md) | The Content-Value A/B | The thesis test — does the codex change what an agent does; synthetic subject, content-value-first, first-party-vs-dependency scenarios, a cross-model matrix run through developer tools |
 | [0017](0017-the-retrieval-disambiguation-ab.md) | The Retrieval / Disambiguation A/B | Disambiguation *within a presented catalogue* — the syntactic face for differing signatures, the semantic face required when signatures collide |
-| [0018](0018-the-selection-ab.md) | The Selection A/B | The measurement of RAD-0007 — unaided 0/18, the declared dependency tree redirects a single-choice classpath, only an authored preference resolves genuine ambiguity |
-| [0019](0019-retrieval-at-scale.md) | Retrieval at Scale | Layer 1 index recall (vector-primary vs equal-RRF, BGE-M3) and Layer 2 the agent loop — authoring a query beats verbatim recall (10/10 pilot) |
+| [0018](0018-the-selection-ab.md) | The Selection A/B | The measurement of RAD-0007 — unaided 0 of 18, the declared dependency tree redirects a single-choice classpath, only an authored preference resolves genuine ambiguity |
+| [0019](0019-retrieval-at-scale.md) | Retrieval at Scale | Layer 1 index recall (vector-primary vs equal-RRF, BGE-M3) and Layer 2 the agent loop — authoring a query beats verbatim recall (10 of 10 pilot) |
 | [0020](0020-information-flow-control.md) | Information-Flow Control as the Trust Model | Adopting IFC (integrity/confidentiality labels enforced before a sink) instead of positional discipline — the codex as label *source*, and the sink experiment that would settle it |
 | [0021](0021-admission-control-at-harvest.md) | Admission Control at Harvest | Refusing to index documentation that does not match the code it ships with — the one enforcement point the harvester owns, and what gating costs retrieval |
 | [0022](0022-the-value-of-transitive-capabilities.md) | The Value of Transitive Capabilities | The exclusion rule is settled; its price was never measured — what recall costs, whether declared is *all* a codex needs, and a third argument for the rule that needs no adversary |
@@ -41,6 +41,8 @@ graduates to an ADR, cross-linked both ways.
 | [0026](0026-meaning-without-command.md) | Can a Representation Carry Meaning Without Carrying a Command? | Representations in which an imperative cannot be expressed — and whether the retrieval key and the displayed entry need to be the same artifact |
 | [0027](0027-the-identifier-as-a-free-text-channel.md) | The Identifier as a Free-Text Channel | Whether the structure tier really is free of attacker text — measured: prose rides a method name through `javap` verbatim, and a camel-cased imperative needs no escape in any language |
 | [0028](0028-sast-tooling-as-a-detection-layer.md) | SAST Tooling as a Detection Layer | Whether the JVM's security analysers detect prose that persuades a reader — licensing checked, and the category mismatch that makes Semgrep the only candidate |
+| [0029](0029-the-agent-as-a-trust-launderer.md) | The Agent as a Trust Launderer | An agent wrote an injected instruction into its own doc comment, promoting a third-party payload to first-party trusted source — the lattice running backwards |
+| [0030](0030-a-conventions-filter-from-real-corpora.md) | A Conventions Filter Derived from Real Corpora | Measuring what identifiers actually look like per language, and using those limits as a surface reduction rather than a detector |
 
 Numbering is sequential and does not imply order of reading. 0001 and 0002
 carry the measurements the rest lean on.

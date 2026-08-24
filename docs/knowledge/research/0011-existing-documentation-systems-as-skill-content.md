@@ -179,8 +179,8 @@ Across the full 463-module `cli/cli` build list, resolved into the module cache
 
 | | |
 |---|---|
-| readable source on disk | **463/463 — 100%** |
-| doc comments on declarations | **462/463 — 100%** |
+| readable source on disk | **463 of 463 — 100%** |
+| doc comments on declarations | **462 of 463 — 100%** |
 | ship a `doc.go` | 44% |
 | ship `Example` functions (compiled, run by `go test`) | 42% |
 | carry `// Deprecated:` | 40% |

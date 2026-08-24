@@ -15,21 +15,86 @@ than a source.
 
 Each one gets a directory and a README opening with the question it exists
 to answer. When the question is answered, the finding is written up in
-`docs/` and the code can go. An experiment may carry a runnable harness (test0
-does) — the tests are the experiment; it does not belong in `implementations/`,
-which is working code.
+`docs/` and the code can go.
 
-## What's here
+## The series
 
-| Experiment | Question | Runnable |
+These are ordered by **the decision each one informs**, not by when it ran. A test that does not
+change a decision about the tool is not worth running; several below are listed with what they
+failed to settle, which is the same information.
+
+### 1 · Does the tool need to exist?
+
+| | question | decision it produced |
 |---|---|---|
-| [cost-model](cost-model/) | What one skill per dependency costs across real graphs (RAD-0001) | collectors + raw graphs |
-| [test0](test0/) | Does a codex from graded docs change agent behaviour, and tree-sitter vs Dokka? (RAD-0009/0011) | `test0/harness` — `./gradlew test` |
-| [test0/measurement](test0/measurement/) | The behaviour A/Bs — content-value, disambiguation, selection, and retrieval-at-scale (Layer 1 recall + Layer 2 agent loop) (RAD-0016/0017/0018/0019) | Python harnesses (`uv run`) |
-| [test1](test1/) | The multi-language read/parse story on real `-sources.jar` — tree-sitter across five languages, Dokka arm, resolve-in-index (RAD-0015/0009) | Python (`uv run`) + `dokka-arm` Gradle |
-| [test2](test2/) | Structure from bytecode — the undocumented-tail signal, kept separate from the doc-parse (RAD-0012) | `extract_bytecode.py` (`uv run`) |
-| [test3](test3/) | Can documentation be checked against the structure of the library that shipped it? (RAD-0006 mitigation 4, RAD-0020) | `ground_prose.py` (`uv run`) |
-| [test4](test4/) | How much attacker-controlled text does each language's harvest path deliver? (RAD-0006) | `harvest_surface.py` (`uv run`) |
+| [cost-model](cost-model/) | what does one skill per dependency cost across real graphs? | **yes** — 20k–139k tokens resident, no cheap floor. An index is required, not optional |
 
-A runnable experiment is added to the public site once its harness works — a
-scaffold-only test is not yet listed.
+### 2 · Where does the content come from?
+
+| | question | decision it produced |
+|---|---|---|
+| [test1](test1/) | can five languages be read from real `-sources.jar`? | **tree-sitter per ecosystem**; the enrichment lever is the graph, not the parser |
+| [test2](test2/) | can bytecode carry the undocumented tail? | **yes, degraded** — kept as a fallback for source-less libraries |
+| [test5](test5/) | does a codex built from a *real* harvest retrieve? | **summarise is load-bearing** — raw doc text is 0/17 at real scale |
+
+### 3 · What goes into the index, and what is left out?
+
+Every row here is a **surface reduction**, and this is the category with an unbroken record.
+
+| | question | decision it produced |
+|---|---|---|
+| [test5](test5/) | how much of a real harvest is duplicate? | **63%** — dedup is a required harvest step |
+| [test5](test5/) | what does the transitive tail cost and buy? | declared-only drops **2,123 publishers** across 13 real projects |
+| [test5](test5/) | how much of a real corpus is unusable? | **297 entries** deprecated to `HIDDEN`/`ERROR` — exclude them |
+
+### 4 · Does any of it change what an agent does?
+
+| | question | decision it produced |
+|---|---|---|
+| [test0](test0/) | does a codex from graded docs change behaviour? | yes — and a bare signature is enough to *use* a capability (7 of 8) |
+| [test0/measurement](test0/measurement/) | content value, disambiguation, selection, retrieval at scale | agents pick the right library **0 of 18** unaided; winning retrieval ≈ winning the decision |
+
+### 5 · Can it be attacked, and through what?
+
+| | question | decision it produced |
+|---|---|---|
+| [test4](test4/) | does the harvest path filter anything? | **no** — 5 of 5 languages deliver payloads intact |
+| [test6](test6/) | can the summariser be attacked? | yes — and a fabricated library beats the true answer 4 of 17 |
+| [test7](test7/) | is the *identifier* a free-text channel? | **yes** — and agents act on it, 8 of 12 on the loud form |
+| [test9](test9/) | does the answer differ by language? | **in progress** — stage 0 done |
+
+### 6 · What actually defends it?
+
+| | question | decision it produced |
+|---|---|---|
+| [test3](test3/) | can docs be grounded against the shipping library? | **no** — withdrawn, RAD-0021 |
+| [test7](test7/) | does enforcing at the sink work? | harm 0 of 3, **task also 0 of 3** — granularity is a requirement |
+| [test7](test7/) | do cheaper controls work? | **quarantined paraphrase** and **signature-only** each prevented harm and kept the task |
+| [test8](test8/) | does linting work on attacks we did not write? | **no** — 16 points of separation, misses 62 of 91 |
+| [test8](test8/) | do detectors compose? | **no** — union adds 0, consensus is *worse*; they are nested, not independent |
+
+## The through-line
+
+**Surface reduction has worked every time it was measured. Detection has failed every time.**
+
+Sections 3 and 6 are the same shape of intervention and land on opposite sides of that line, and
+nothing measured so far contradicts it. The controls carried forward into the tool are therefore
+the ones that remove a channel — declared-only, dedup, deprecation exclusion, quarantined
+paraphrase, signature-only display — and not the ones that try to recognise an attack.
+
+## What is not settled
+
+- **Whether language changes the answer.** Everything before `test9` varied language *and*
+  corpus *and* payload set together, so no cross-language claim is supported. This is the gap
+  `test9` exists to close.
+- **Whether the surviving controls compose.** Each was measured alone. Sequential filtering and
+  parallel agreement are untested, and the detector result above says composition cannot be
+  assumed.
+- **Agent-laundered first-party content** (RAD-0029) — measured once, untested since, and inside
+  the boundary declared-only indexing draws.
+
+## Standards note
+
+An experiment may carry a runnable harness — the tests *are* the experiment; they do not belong
+in `implementations/`, which is working code. A runnable experiment is added to the public site
+once its harness works; a scaffold-only test is not listed there.

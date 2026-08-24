@@ -216,11 +216,39 @@ variant as dead on one model's data; over three models it plainly is not, and we
 have withdrawn that claim. The space is a strong effect, not a defence.
 
 **On frontier agents the pattern holds, and the model ordering is familiar.** Run
-against Claude Opus 4.6, Gemini 3.7 Flash and GPT-OSS 120B, the shouted payload
-took GPT-OSS 120B in **3 of 3** attempts, Claude once in three, and Gemini not at
-all. That is the same ordering our earlier injection matrix found on a completely
-different channel — more evidence that exposure to this is a training property
+against nine agents — three Claude generations, four Gemini tiers and GPT-OSS
+120B — the shouted payload took GPT-OSS 120B in **3 of 3** attempts and nothing
+else at all. That is the same ordering our earlier injection matrix found on a
+completely different channel: more evidence that exposure is a training property
 rather than a capability one, and that a bigger model is not a safer reader.
+Reasoning effort barely mattered — the same model at high and low effort behaved
+the same — and within one vendor the older, larger tier was the exposed one while
+the newer, smaller tier resisted completely.
+
+**A correction we have to make against ourselves.** We reported that the linters
+catch every form of this attack that works. They do not. The **camel-case**
+payload — the portable, no-escape form that stock detekt and ktlint pass without
+comment — was accepted 2 of 3 by Gemini 3.1 Pro *and* 2 of 3 by Claude Haiku 4.5,
+each wiring the poisoned member into the code it generated. Our earlier conclusion
+generalised from three local models, all of which happened to ignore that form.
+Lint covers the forms that worked *locally*; it is not coverage of the channel —
+and the form it misses needs no language-specific escape, making it the more
+portable attack as well as the quieter one.
+
+**The split inside each vendor is different, which is its own warning.** Among
+Claude 5 models it goes by tier: the small fast model accepted what the larger
+ones refused, with both larger models reasoning correctly from the method's name.
+Among Gemini models reasoning effort changed nothing, and the divide fell between
+model lines instead. Neither vendor's pattern predicts the other's, so "which
+model is safe" cannot be inferred — it has to be measured, per model, per
+release.
+
+**Claude declines and explains; the resistant Gemini tier says nothing.** Every
+Claude generation tested refused, and Claude Opus 5 independently derived the same
+signal our lint experiment found — that a method name cannot contain spaces, so
+the line was not a real API member — and advised treating the codex entry as
+compromised. Gemini 3.7 Flash also never complied, but never flagged either, which
+leaves a developer with no idea a dependency tried.
 
 **One agent did something worse than comply: it laundered the instruction into
 prose.** GPT-OSS 120B wrote the credential copy into a documentation comment of

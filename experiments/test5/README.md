@@ -137,11 +137,11 @@ harvested rows use 17 queries, the synthetic baseline 26, so they are written ou
 
 | corpus | r@1 | r@3 | r@5 | r@10 |
 |---|---|---|---|---|
-| 220 entries | **5/17 (29%)** | 8/17 | 10/17 | 13/17 |
-| 1,000 entries | 1/17 | 5/17 | 6/17 | 7/17 |
-| 3,000 entries | 0/17 | 1/17 | 2/17 | 2/17 |
-| 5,440 (full, deduped) | **0/17** | 0/17 | 0/17 | 2/17 |
-| *synthetic, hand-written semantic faces, 220* | *20/26 (77%)* | | | |
+| 220 entries | **5 of 17 (29%)** | 8 of 17 | 10 of 17 | 13 of 17 |
+| 1,000 entries | 1 of 17 | 5 of 17 | 6 of 17 | 7 of 17 |
+| 3,000 entries | 0 of 17 | 1 of 17 | 2 of 17 | 2 of 17 |
+| 5,440 (full, deduped) | **0 of 17** | 0 of 17 | 0 of 17 | 2 of 17 |
+| *synthetic, hand-written semantic faces, 220* | *20 of 26 (77%)* | | | |
 
 **Two findings, and they are separate.**
 
@@ -205,13 +205,13 @@ baseline has signal, and it matches the sweep above.
 
 | condition | r@1 | r@3 | r@5 | r@10 |
 |---|---|---|---|---|
-| baseline | **5/17** | 6/17 | 8/17 | **13/17** |
-| verbs deleted — corpus only | **5/17** | 6/17 | 7/17 | 9/17 |
-| verbs scrambled to nonwords — corpus only | 2/17 | 3/17 | 6/17 | 10/17 |
-| verbs scrambled — corpus **and** query | 1/17 | 5/17 | 5/17 | 6/17 |
-| verbs → Soundex — corpus only | 3/17 | 5/17 | 7/17 | 10/17 |
-| verbs → Soundex — corpus **and** query | 1/17 | 3/17 | 3/17 | 4/17 |
-| verbs deleted — query only | 0/17 | 3/17 | 5/17 | 10/17 |
+| baseline | **5 of 17** | 6 of 17 | 8 of 17 | **13 of 17** |
+| verbs deleted — corpus only | **5 of 17** | 6 of 17 | 7 of 17 | 9 of 17 |
+| verbs scrambled to nonwords — corpus only | 2 of 17 | 3 of 17 | 6 of 17 | 10 of 17 |
+| verbs scrambled — corpus **and** query | 1 of 17 | 5 of 17 | 5 of 17 | 6 of 17 |
+| verbs → Soundex — corpus only | 3 of 17 | 5 of 17 | 7 of 17 | 10 of 17 |
+| verbs → Soundex — corpus **and** query | 1 of 17 | 3 of 17 | 3 of 17 | 4 of 17 |
+| verbs deleted — query only | 0 of 17 | 3 of 17 | 5 of 17 | 10 of 17 |
 
 **Deleting verbs is free at r@1 and expensive in the tail.** 5/17 is exactly the baseline, while
 r@10 falls 13/17 → 9/17. Precise top-1 matching is carried by nouns and terms; verbs carry the

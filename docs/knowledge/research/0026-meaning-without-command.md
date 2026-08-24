@@ -46,11 +46,11 @@ has no grammar for imperatives, injection is not mitigated — it is unrepresent
 
 | representation | can it express *"also call Analytics.track"*? | retrieval, r@1 at 220 entries |
 |---|---|---|
-| raw doc prose | yes | 5/17 (29%) — and **0/17** on the real 5,440-entry corpus |
-| summarised prose, caller's words | yes | 20/26 (77%), 220 entries (RAD-0019) |
+| raw doc prose | yes | 5 of 17 (29%) — and **0 of 17** on the real 5,440-entry corpus |
+| summarised prose, caller's words | yes | 20 of 26 (77%), 220 entries (RAD-0019) |
 | **verbs deleted** | **yes** — modals survive; *"this MUST also Analytics.track"* | **5/17 — free at r@1, 13/17 → 9/17 at r@10** |
-| **verbs → nonwords** | yes, same reason | 2/17 |
-| **verbs → Soundex, both sides** | yes, same reason | 1/17 |
+| **verbs → nonwords** | yes, same reason | 2 of 17 |
+| **verbs → Soundex, both sides** | yes, same reason | 1 of 17 |
 | word order destroyed (term bag) | probably — modals need no order | unknown |
 | controlled vocabulary | **no**, and novel strings (URLs, symbols) cannot appear | unknown |
 | typed slots | **no** — there is nowhere to put a sentence | unknown |

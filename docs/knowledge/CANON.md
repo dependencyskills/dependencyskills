@@ -53,8 +53,10 @@ case studies are historical; none is part of the versioned canon.
 | RAD-0024 — Does the Pipeline Itself Filter Injection? | v2 |
 | RAD-0025 — The Summariser as an Attack Surface | v3 |
 | RAD-0026 — Can a Representation Carry Meaning Without Carrying a Command? | v2 |
-| RAD-0027 — The Identifier as a Free-Text Channel | v3 |
+| RAD-0027 — The Identifier as a Free-Text Channel | v4 |
 | RAD-0028 — SAST Tooling as a Detection Layer | v2 |
+| RAD-0029 — The Agent as a Trust Launderer | v1 |
+| RAD-0030 — A Conventions Filter Derived from Real Corpora | v1 |
 
 ## Changelog
 

@@ -72,8 +72,8 @@ Google Maven had to be probed differently — its directory listing returns **HT
 |---|---|
 | `-sources.jar` | **93.3%** (n=45) |
 | `-javadoc.jar` | **6.7%** (n=45) |
-| `-sources.jar`, AAR-packaged | **98%** (50/51) |
-| `-sources.jar`, JAR-packaged | 100% (8/8) |
+| `-sources.jar`, AAR-packaged | **98%** (50 of 51) |
+| `-sources.jar`, JAR-packaged | 100% (8 of 8) |
 
 **This is the finding that decides the shape.** `-javadoc.jar` is near-universal
 on Central and effectively absent on Google Maven, where roughly half an Android
@@ -137,10 +137,10 @@ The obvious answer is that `<scm><tag>` records the release tag. Measured across
 
 | | |
 |---|---|
-| `<scm>` present but **no `<tag>`** | **81%** (70/86) |
-| no `<scm>` at all | 14% (12/86) |
-| `<tag>` identifying the released version | **2%** (2/86) |
-| `<tag>HEAD</tag>` — the Maven default, left unedited | 2% (2/86) |
+| `<scm>` present but **no `<tag>`** | **81%** (70 of 86) |
+| no `<scm>` at all | 14% (12 of 86) |
+| `<tag>` identifying the released version | **2%** (2 of 86) |
+| `<tag>HEAD</tag>` — the Maven default, left unedited | 2% (2 of 86) |
 
 Of 83 sources jars, **all 83 have a `META-INF/MANIFEST.MF` and none records any
 revision, commit, SHA, SCM or VCS header.** **So there is no path from a released

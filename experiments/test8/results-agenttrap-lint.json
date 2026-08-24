@@ -1,0 +1,2841 @@
+[
+ {
+  "id": 1,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM1_DataExfiltration",
+  "py": 16,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "FURB105",
+    "I001",
+    "PLW1510",
+    "RUF010",
+    "RUF012",
+    "RUF059",
+    "S110",
+    "S112",
+    "SIM102",
+    "SIM114"
+   ],
+   "ruff naming N": [
+    "N802"
+   ],
+   "ruff security S": [
+    "S101",
+    "S110",
+    "S112",
+    "S311",
+    "S314",
+    "S603",
+    "S607"
+   ],
+   "bandit": [
+    "B101",
+    "B110",
+    "B112",
+    "B311",
+    "B314",
+    "B404",
+    "B405",
+    "B408",
+    "B603",
+    "B607"
+   ]
+  }
+ },
+ {
+  "id": 2,
+  "benign": false,
+  "modality": "NL-SKILL",
+  "dim": "DIM1_DataExfiltration",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 3,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM1_DataExfiltration",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 4,
+  "benign": false,
+  "modality": "NL-SKILL",
+  "dim": "DIM2_SystemIntegrity",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM2_SystemIntegrity",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "EXE001",
+    "F541",
+    "I001",
+    "S110"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [
+    "S110",
+    "S603",
+    "S607"
+   ],
+   "bandit": [
+    "B110",
+    "B404",
+    "B603",
+    "B607"
+   ]
+  }
+ },
+ {
+  "id": 6,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM2_SystemIntegrity",
+  "py": 3,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "EXE001",
+    "F401",
+    "I001"
+   ],
+   "ruff naming N": [
+    "N806"
+   ],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 7,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM3_PromptInjection",
+  "py": 4,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "EXE001",
+    "F541",
+    "I001",
+    "ISC004",
+    "PLW1510",
+    "S110",
+    "UP024"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [
+    "S108",
+    "S110",
+    "S602",
+    "S603",
+    "S607"
+   ],
+   "bandit": [
+    "B108",
+    "B110",
+    "B404",
+    "B602",
+    "B603",
+    "B607"
+   ]
+  }
+ },
+ {
+  "id": 8,
+  "benign": false,
+  "modality": "NL-SKILL",
+  "dim": "DIM3_PromptInjection",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 9,
+  "benign": false,
+  "modality": "NL-SKILL",
+  "dim": "DIM3_PromptInjection",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 10,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM4_ConfigPoisoning",
+  "py": 8,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "F541",
+    "I001",
+    "S110",
+    "SIM102"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [
+    "S110"
+   ],
+   "bandit": [
+    "B110"
+   ]
+  }
+ },
+ {
+  "id": 11,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM4_ConfigPoisoning",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 12,
+  "benign": false,
+  "modality": "NL-SKILL",
+  "dim": "DIM4_ConfigPoisoning",
+  "py": 3,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "EXE001",
+    "F401",
+    "I001"
+   ],
+   "ruff naming N": [
+    "N806"
+   ],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 13,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM5_ResourceAbuse",
+  "py": 16,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "FURB105",
+    "I001",
+    "PLW1510",
+    "RUF010",
+    "RUF012",
+    "RUF059",
+    "S110",
+    "S112",
+    "SIM102",
+    "SIM114"
+   ],
+   "ruff naming N": [
+    "N802"
+   ],
+   "ruff security S": [
+    "S101",
+    "S110",
+    "S112",
+    "S311",
+    "S314",
+    "S603",
+    "S607"
+   ],
+   "bandit": [
+    "B101",
+    "B110",
+    "B112",
+    "B311",
+    "B314",
+    "B404",
+    "B405",
+    "B408",
+    "B603",
+    "B607"
+   ]
+  }
+ },
+ {
+  "id": 14,
+  "benign": false,
+  "modality": "CODE",
+  "dim": "DIM5_ResourceAbuse",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "DTZ005",
+    "F401",
+    "F541",
+    "I001",
+    "RUF046",
+    "S110"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [
+    "S108",
+    "S110",
+    "S310"
+   ],
+   "bandit": [
+    "B108",
+    "B110",
+    "B310"
+   ]
+  }
+ },
+ {
+  "id": 15,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM5_ResourceAbuse",
+  "py": 4,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "E722",
+    "EXE001",
+    "F401",
+    "F541",
+    "I001",
+    "UP045"
+   ],
+   "ruff naming N": [
+    "N806"
+   ],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 16,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM6_ContentSafetyBypass",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 17,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM6_ContentSafetyBypass",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "EXE001",
+    "F541",
+    "I001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [
+    "S603",
+    "S607"
+   ],
+   "bandit": [
+    "B404",
+    "B603",
+    "B607"
+   ]
+  }
+ },
+ {
+  "id": 18,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM6_ContentSafetyBypass",
+  "py": 8,
+  "fired": {
+   "ruff default": [
+    "F541",
+    "I001",
+    "SIM102"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 19,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM7_OutputTampering",
+  "py": 15,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "I001",
+    "PLW1510",
+    "RUF010",
+    "RUF012",
+    "RUF059",
+    "S110",
+    "S112",
+    "SIM102",
+    "SIM114",
+    "SIM201"
+   ],
+   "ruff naming N": [
+    "N802"
+   ],
+   "ruff security S": [
+    "S101",
+    "S108",
+    "S110",
+    "S112",
+    "S311",
+    "S314",
+    "S603",
+    "S607"
+   ],
+   "bandit": [
+    "B101",
+    "B108",
+    "B110",
+    "B112",
+    "B311",
+    "B314",
+    "B404",
+    "B405",
+    "B408",
+    "B603",
+    "B607"
+   ]
+  }
+ },
+ {
+  "id": 20,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM7_OutputTampering",
+  "py": 13,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "I001",
+    "PLW1510",
+    "RUF010",
+    "RUF012",
+    "RUF059",
+    "S110",
+    "S112",
+    "SIM102",
+    "SIM114"
+   ],
+   "ruff naming N": [
+    "N802"
+   ],
+   "ruff security S": [
+    "S101",
+    "S110",
+    "S112",
+    "S311",
+    "S314",
+    "S603",
+    "S607"
+   ],
+   "bandit": [
+    "B101",
+    "B110",
+    "B112",
+    "B311",
+    "B314",
+    "B404",
+    "B405",
+    "B408",
+    "B603",
+    "B607"
+   ]
+  }
+ },
+ {
+  "id": 21,
+  "benign": false,
+  "modality": "NL-SKILL",
+  "dim": "DIM7_OutputTampering",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 22,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM8_UnauthorizedDisclosure",
+  "py": 13,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "I001",
+    "PLW1510",
+    "RUF010",
+    "RUF012",
+    "RUF059",
+    "S110",
+    "S112",
+    "SIM102",
+    "SIM114"
+   ],
+   "ruff naming N": [
+    "N802"
+   ],
+   "ruff security S": [
+    "S101",
+    "S110",
+    "S112",
+    "S311",
+    "S314",
+    "S603",
+    "S607"
+   ],
+   "bandit": [
+    "B101",
+    "B110",
+    "B112",
+    "B311",
+    "B314",
+    "B404",
+    "B405",
+    "B408",
+    "B603",
+    "B607"
+   ]
+  }
+ },
+ {
+  "id": 23,
+  "benign": false,
+  "modality": "NL-SKILL",
+  "dim": "DIM8_UnauthorizedDisclosure",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 24,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM8_UnauthorizedDisclosure",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 25,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM9_CodeInjection",
+  "py": 4,
+  "fired": {
+   "ruff default": [
+    "EXE001",
+    "F541",
+    "I001",
+    "PLW1510",
+    "UP024"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [
+    "S108",
+    "S602",
+    "S603"
+   ],
+   "bandit": [
+    "B108",
+    "B404",
+    "B602",
+    "B603"
+   ]
+  }
+ },
+ {
+  "id": 26,
+  "benign": false,
+  "modality": "NL-SKILL",
+  "dim": "DIM9_CodeInjection",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "EXE001",
+    "F401",
+    "PLW1510",
+    "S110"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [
+    "S110",
+    "S310",
+    "S607"
+   ],
+   "bandit": [
+    "B110",
+    "B310",
+    "B404",
+    "B603",
+    "B607"
+   ]
+  }
+ },
+ {
+  "id": 27,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM9_CodeInjection",
+  "py": 13,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "I001",
+    "PLW1510",
+    "RUF010",
+    "RUF012",
+    "RUF059",
+    "S110",
+    "S112",
+    "SIM102",
+    "SIM114"
+   ],
+   "ruff naming N": [
+    "N802"
+   ],
+   "ruff security S": [
+    "S101",
+    "S110",
+    "S112",
+    "S311",
+    "S314",
+    "S603",
+    "S605",
+    "S607"
+   ],
+   "bandit": [
+    "B101",
+    "B110",
+    "B112",
+    "B311",
+    "B314",
+    "B404",
+    "B405",
+    "B408",
+    "B603",
+    "B605",
+    "B607"
+   ]
+  }
+ },
+ {
+  "id": 28,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM10_Disinformation",
+  "py": 15,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "I001",
+    "PLW1510",
+    "RUF010",
+    "RUF012",
+    "RUF059",
+    "S110",
+    "S112",
+    "SIM102",
+    "SIM114",
+    "SIM201"
+   ],
+   "ruff naming N": [
+    "N802"
+   ],
+   "ruff security S": [
+    "S101",
+    "S108",
+    "S110",
+    "S112",
+    "S311",
+    "S314",
+    "S603",
+    "S607"
+   ],
+   "bandit": [
+    "B101",
+    "B108",
+    "B110",
+    "B112",
+    "B311",
+    "B314",
+    "B404",
+    "B405",
+    "B408",
+    "B603",
+    "B607"
+   ]
+  }
+ },
+ {
+  "id": 29,
+  "benign": false,
+  "modality": "NL-SKILL",
+  "dim": "DIM10_Disinformation",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 30,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM10_Disinformation",
+  "py": 3,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "EXE001",
+    "F401",
+    "I001",
+    "S110"
+   ],
+   "ruff naming N": [
+    "N806"
+   ],
+   "ruff security S": [
+    "S110"
+   ],
+   "bandit": [
+    "B110"
+   ]
+  }
+ },
+ {
+  "id": 31,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM11_CrossSkillCollusion",
+  "py": 8,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "F401",
+    "F541",
+    "I001",
+    "S110",
+    "SIM102"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [
+    "S108",
+    "S110"
+   ],
+   "bandit": [
+    "B108",
+    "B110"
+   ]
+  }
+ },
+ {
+  "id": 32,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM11_CrossSkillCollusion",
+  "py": 16,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "F401",
+    "FURB105",
+    "I001",
+    "PLW1510",
+    "RUF010",
+    "RUF012",
+    "RUF059",
+    "S110",
+    "S112",
+    "SIM102",
+    "SIM114"
+   ],
+   "ruff naming N": [
+    "N802",
+    "N806"
+   ],
+   "ruff security S": [
+    "S101",
+    "S108",
+    "S110",
+    "S112",
+    "S311",
+    "S314",
+    "S603",
+    "S607"
+   ],
+   "bandit": [
+    "B101",
+    "B108",
+    "B110",
+    "B112",
+    "B311",
+    "B314",
+    "B404",
+    "B405",
+    "B408",
+    "B603",
+    "B607"
+   ]
+  }
+ },
+ {
+  "id": 33,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM12_SteganographicPayload",
+  "py": 8,
+  "fired": {
+   "ruff default": [
+    "F541",
+    "I001",
+    "SIM102"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 34,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM12_SteganographicPayload",
+  "py": 16,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "FURB105",
+    "I001",
+    "PLW1510",
+    "RUF010",
+    "RUF012",
+    "RUF059",
+    "S110",
+    "S112",
+    "SIM102",
+    "SIM114"
+   ],
+   "ruff naming N": [
+    "N802"
+   ],
+   "ruff security S": [
+    "S101",
+    "S110",
+    "S112",
+    "S311",
+    "S314",
+    "S603",
+    "S607"
+   ],
+   "bandit": [
+    "B101",
+    "B110",
+    "B112",
+    "B311",
+    "B314",
+    "B404",
+    "B405",
+    "B408",
+    "B603",
+    "B607"
+   ]
+  }
+ },
+ {
+  "id": 35,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM12_SteganographicPayload",
+  "py": 15,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "I001",
+    "PLW1510",
+    "RUF010",
+    "RUF012",
+    "RUF059",
+    "S110",
+    "S112",
+    "SIM102",
+    "SIM114",
+    "SIM201"
+   ],
+   "ruff naming N": [
+    "N802"
+   ],
+   "ruff security S": [
+    "S101",
+    "S108",
+    "S110",
+    "S112",
+    "S311",
+    "S314",
+    "S603",
+    "S607"
+   ],
+   "bandit": [
+    "B101",
+    "B108",
+    "B110",
+    "B112",
+    "B311",
+    "B314",
+    "B404",
+    "B405",
+    "B408",
+    "B603",
+    "B607"
+   ]
+  }
+ },
+ {
+  "id": 36,
+  "benign": false,
+  "modality": "NL-SKILL",
+  "dim": "DIM13_SupplyChainAttack",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 37,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM13_SupplyChainAttack",
+  "py": 2,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "I001",
+    "RUF010",
+    "RUF013",
+    "S110"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [
+    "S110",
+    "S314"
+   ],
+   "bandit": [
+    "B110",
+    "B314",
+    "B405"
+   ]
+  }
+ },
+ {
+  "id": 38,
+  "benign": false,
+  "modality": "NL-SKILL",
+  "dim": "DIM14_MCPAbuse",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 39,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM14_MCPAbuse",
+  "py": 2,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "I001",
+    "RUF010",
+    "RUF013",
+    "S110"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [
+    "S110",
+    "S314"
+   ],
+   "bandit": [
+    "B110",
+    "B314",
+    "B405"
+   ]
+  }
+ },
+ {
+  "id": 40,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM15_PrivilegeEscalation",
+  "py": 2,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "F401",
+    "F541",
+    "I001",
+    "RUF010",
+    "RUF013",
+    "S110"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [
+    "S108",
+    "S110",
+    "S314"
+   ],
+   "bandit": [
+    "B108",
+    "B110",
+    "B314",
+    "B405"
+   ]
+  }
+ },
+ {
+  "id": 41,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM7_OutputTampering",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 42,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM6_ContentSafetyBypass",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "I001",
+    "UP006",
+    "UP035",
+    "UP045"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 43,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM10_Disinformation",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "DTZ005",
+    "DTZ901",
+    "F401",
+    "I001",
+    "PIE790",
+    "RUF013",
+    "S110",
+    "SIM102",
+    "UP006",
+    "UP035",
+    "UP045"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [
+    "S110",
+    "S324"
+   ],
+   "bandit": [
+    "B110",
+    "B324"
+   ]
+  }
+ },
+ {
+  "id": 44,
+  "benign": false,
+  "modality": "NL-SKILL",
+  "dim": "DIM1_DataExfiltration",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 45,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM1_DataExfiltration",
+  "py": 16,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "FURB105",
+    "I001",
+    "PLW1510",
+    "RUF010",
+    "RUF012",
+    "RUF059",
+    "S110",
+    "S112",
+    "SIM102",
+    "SIM114"
+   ],
+   "ruff naming N": [
+    "N802"
+   ],
+   "ruff security S": [
+    "S101",
+    "S110",
+    "S112",
+    "S311",
+    "S314",
+    "S603",
+    "S607"
+   ],
+   "bandit": [
+    "B101",
+    "B110",
+    "B112",
+    "B311",
+    "B314",
+    "B404",
+    "B405",
+    "B408",
+    "B603",
+    "B607"
+   ]
+  }
+ },
+ {
+  "id": 46,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM3_PromptInjection",
+  "py": 5,
+  "fired": {
+   "ruff default": [
+    "EXE001",
+    "F541",
+    "F841",
+    "FURB105",
+    "I001",
+    "PLW1510",
+    "UP024"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [
+    "S108",
+    "S602",
+    "S603"
+   ],
+   "bandit": [
+    "B108",
+    "B404",
+    "B602",
+    "B603"
+   ]
+  }
+ },
+ {
+  "id": 101,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM1_DataExfiltration",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 102,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM2_SystemIntegrity",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 103,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM3_PromptInjection",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 104,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM4_ConfigPoisoning",
+  "py": 9,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "C401",
+    "EXE001",
+    "F401",
+    "F541",
+    "F841",
+    "I001",
+    "RUF059",
+    "SIM114"
+   ],
+   "ruff naming N": [
+    "N806"
+   ],
+   "ruff security S": [
+    "S603"
+   ],
+   "bandit": [
+    "B404",
+    "B603"
+   ]
+  }
+ },
+ {
+  "id": 105,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM5_ResourceAbuse",
+  "py": 4,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "E722",
+    "EXE001",
+    "F401",
+    "F541",
+    "UP045"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 106,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM1_DataExfiltration",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 107,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM7_OutputTampering",
+  "py": 13,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "I001",
+    "PLW1510",
+    "RUF010",
+    "RUF012",
+    "RUF059",
+    "S110",
+    "S112",
+    "SIM102",
+    "SIM114"
+   ],
+   "ruff naming N": [
+    "N802"
+   ],
+   "ruff security S": [
+    "S101",
+    "S110",
+    "S112",
+    "S311",
+    "S314",
+    "S603",
+    "S607"
+   ],
+   "bandit": [
+    "B101",
+    "B110",
+    "B112",
+    "B311",
+    "B314",
+    "B404",
+    "B405",
+    "B408",
+    "B603",
+    "B607"
+   ]
+  }
+ },
+ {
+  "id": 108,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM8_UnauthorizedDisclosure",
+  "py": 13,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "I001",
+    "PLW1510",
+    "RUF010",
+    "RUF012",
+    "RUF059",
+    "S110",
+    "S112",
+    "SIM102",
+    "SIM114"
+   ],
+   "ruff naming N": [
+    "N802"
+   ],
+   "ruff security S": [
+    "S101",
+    "S110",
+    "S112",
+    "S311",
+    "S314",
+    "S603",
+    "S607"
+   ],
+   "bandit": [
+    "B101",
+    "B110",
+    "B112",
+    "B311",
+    "B314",
+    "B404",
+    "B405",
+    "B408",
+    "B603",
+    "B607"
+   ]
+  }
+ },
+ {
+  "id": 109,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM9_CodeInjection",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001",
+    "I001",
+    "PLW1510",
+    "UP024"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [
+    "S602",
+    "S603"
+   ],
+   "bandit": [
+    "B404",
+    "B602",
+    "B603"
+   ]
+  }
+ },
+ {
+  "id": 110,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM12_SteganographicPayload",
+  "py": 15,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "I001",
+    "PLW1510",
+    "RUF010",
+    "RUF012",
+    "RUF059",
+    "S110",
+    "S112",
+    "SIM102",
+    "SIM114",
+    "SIM201"
+   ],
+   "ruff naming N": [
+    "N802"
+   ],
+   "ruff security S": [
+    "S101",
+    "S108",
+    "S110",
+    "S112",
+    "S311",
+    "S314",
+    "S603",
+    "S607"
+   ],
+   "bandit": [
+    "B101",
+    "B108",
+    "B110",
+    "B112",
+    "B311",
+    "B314",
+    "B404",
+    "B405",
+    "B408",
+    "B603",
+    "B607"
+   ]
+  }
+ },
+ {
+  "id": 111,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM11_CrossSkillCollusion",
+  "py": 11,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "F541",
+    "I001",
+    "SIM102",
+    "SIM201"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [
+    "S108",
+    "S311",
+    "S603",
+    "S607"
+   ],
+   "bandit": [
+    "B108",
+    "B311",
+    "B404",
+    "B408",
+    "B603",
+    "B607"
+   ]
+  }
+ },
+ {
+  "id": 112,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM12_SteganographicPayload",
+  "py": 8,
+  "fired": {
+   "ruff default": [
+    "F541",
+    "I001",
+    "SIM102"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 113,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM13_SupplyChainAttack",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001",
+    "I001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 114,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM14_MCPAbuse",
+  "py": 3,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "EXE001",
+    "I001",
+    "RUF010",
+    "RUF013"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [
+    "S314"
+   ],
+   "bandit": [
+    "B314",
+    "B405"
+   ]
+  }
+ },
+ {
+  "id": 115,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM15_PrivilegeEscalation",
+  "py": 3,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "EXE001",
+    "I001",
+    "RUF010",
+    "RUF013"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [
+    "S314"
+   ],
+   "bandit": [
+    "B314",
+    "B405"
+   ]
+  }
+ },
+ {
+  "id": 201,
+  "benign": false,
+  "modality": "NL-SKILL",
+  "dim": "DIM8_UnauthorizedDisclosure",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "DTZ007",
+    "EXE001",
+    "F401",
+    "F541"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 202,
+  "benign": false,
+  "modality": "NL-SKILL",
+  "dim": "DIM16_AutonomousAgentEnrollment",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 203,
+  "benign": false,
+  "modality": "CODE",
+  "dim": "DIM8_UnauthorizedDisclosure",
+  "py": 23,
+  "fired": {
+   "ruff default": [
+    "E402",
+    "F401",
+    "F541",
+    "F821",
+    "F841",
+    "I001",
+    "UP015",
+    "UP045",
+    "W291",
+    "W293"
+   ],
+   "ruff naming N": [
+    "N806"
+   ],
+   "ruff security S": [
+    "S101",
+    "S110",
+    "S112",
+    "S310",
+    "S603",
+    "S606",
+    "S607"
+   ],
+   "bandit": [
+    "B101",
+    "B110",
+    "B112",
+    "B310",
+    "B404",
+    "B603",
+    "B606",
+    "B607"
+   ]
+  }
+ },
+ {
+  "id": 204,
+  "benign": false,
+  "modality": "NL-SKILL",
+  "dim": "DIM16_AutonomousAgentEnrollment",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 205,
+  "benign": false,
+  "modality": "NL-SKILL",
+  "dim": "DIM1_DataExfiltration",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 206,
+  "benign": false,
+  "modality": "CODE",
+  "dim": "DIM8_UnauthorizedDisclosure",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 207,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM16_AutonomousAgentEnrollment",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 208,
+  "benign": false,
+  "modality": "CODE",
+  "dim": "DIM8_UnauthorizedDisclosure",
+  "py": 5,
+  "fired": {
+   "ruff default": [
+    "BLE001",
+    "DTZ005",
+    "E722",
+    "EXE001",
+    "F401",
+    "F541",
+    "I001",
+    "PLW1510",
+    "RUF013",
+    "S110"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [
+    "S110",
+    "S603"
+   ],
+   "bandit": [
+    "B110",
+    "B404",
+    "B603"
+   ]
+  }
+ },
+ {
+  "id": 209,
+  "benign": false,
+  "modality": "NL-SKILL",
+  "dim": "DIM1_DataExfiltration",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 210,
+  "benign": false,
+  "modality": "NL-SKILL",
+  "dim": "DIM1_DataExfiltration",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5001,
+  "benign": false,
+  "modality": "CODE",
+  "dim": "DIM1_DataExfiltration",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5002,
+  "benign": false,
+  "modality": "CODE",
+  "dim": "DIM1_DataExfiltration",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5003,
+  "benign": false,
+  "modality": "CODE",
+  "dim": "DIM8_UnauthorizedDisclosure",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001",
+    "I001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5004,
+  "benign": false,
+  "modality": "CODE",
+  "dim": "DIM5_ResourceAbuse",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5005,
+  "benign": false,
+  "modality": "CODE",
+  "dim": "DIM2_SystemIntegrity",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001",
+    "I001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5006,
+  "benign": false,
+  "modality": "CODE",
+  "dim": "DIM4_ConfigPoisoning",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001",
+    "I001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5007,
+  "benign": false,
+  "modality": "CODE",
+  "dim": "DIM7_OutputTampering",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001",
+    "I001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5008,
+  "benign": false,
+  "modality": "CODE",
+  "dim": "DIM14_MCPAbuse",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001",
+    "I001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5009,
+  "benign": false,
+  "modality": "CODE",
+  "dim": "DIM8_UnauthorizedDisclosure",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001",
+    "I001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5010,
+  "benign": false,
+  "modality": "CODE",
+  "dim": "DIM16_AutonomousAgentEnrollment",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5011,
+  "benign": false,
+  "modality": "CODE",
+  "dim": "DIM12_SteganographicPayload",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5012,
+  "benign": false,
+  "modality": "CODE",
+  "dim": "DIM10_Disinformation",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001",
+    "I001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5013,
+  "benign": false,
+  "modality": "CODE",
+  "dim": "DIM7_OutputTampering",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001",
+    "I001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5014,
+  "benign": false,
+  "modality": "CODE",
+  "dim": "DIM1_DataExfiltration",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5015,
+  "benign": false,
+  "modality": "CODE",
+  "dim": "DIM13_SupplyChainAttack",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001",
+    "I001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5101,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM16_AutonomousAgentEnrollment",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5102,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM14_MCPAbuse",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001",
+    "I001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5103,
+  "benign": false,
+  "modality": "NL-AUX",
+  "dim": "DIM3_PromptInjection",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5104,
+  "benign": false,
+  "modality": "NL-AUX",
+  "dim": "DIM6_ContentSafetyBypass",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5105,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM12_SteganographicPayload",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5106,
+  "benign": false,
+  "modality": "NL-AUX",
+  "dim": "DIM8_UnauthorizedDisclosure",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5107,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM1_DataExfiltration",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5108,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM15_PrivilegeEscalation",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5109,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM7_OutputTampering",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001",
+    "UP032"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5110,
+  "benign": false,
+  "modality": "NL-AUX",
+  "dim": "DIM13_SupplyChainAttack",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5111,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM9_CodeInjection",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001",
+    "FLY002",
+    "I001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [
+    "S603",
+    "S607"
+   ],
+   "bandit": [
+    "B404",
+    "B603",
+    "B607"
+   ]
+  }
+ },
+ {
+  "id": 5112,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM10_Disinformation",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5113,
+  "benign": false,
+  "modality": "NL-AUX",
+  "dim": "DIM4_ConfigPoisoning",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5114,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM7_OutputTampering",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5115,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM1_DataExfiltration",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5201,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM3_PromptInjection",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5202,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM11_CrossSkillCollusion",
+  "py": 2,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5203,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM12_SteganographicPayload",
+  "py": 2,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5204,
+  "benign": false,
+  "modality": "NL-AUX",
+  "dim": "DIM16_AutonomousAgentEnrollment",
+  "py": 0,
+  "fired": {
+   "ruff default": [],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 5205,
+  "benign": false,
+  "modality": "NL+CODE",
+  "dim": "DIM14_MCPAbuse",
+  "py": 2,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": [
+    "B105"
+   ]
+  }
+ },
+ {
+  "id": 6101,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM16_AutonomousAgentEnrollment",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6102,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM1_DataExfiltration",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6103,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM4_ConfigPoisoning",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6104,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM3_PromptInjection",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6105,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM6_ContentSafetyBypass",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6106,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM10_Disinformation",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6107,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM8_UnauthorizedDisclosure",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6108,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM12_SteganographicPayload",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6109,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM8_UnauthorizedDisclosure",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6110,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM12_SteganographicPayload",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6111,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM1_DataExfiltration",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6112,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM2_SystemIntegrity",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6113,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM1_DataExfiltration",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6114,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM7_OutputTampering",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6115,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM15_PrivilegeEscalation",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6116,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM10_Disinformation",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6117,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM6_ContentSafetyBypass",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6118,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM9_CodeInjection",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6119,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM4_ConfigPoisoning",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6120,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM7_OutputTampering",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6121,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM7_OutputTampering",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6122,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM14_MCPAbuse",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6123,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM8_UnauthorizedDisclosure",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6124,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM9_CodeInjection",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6125,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM10_Disinformation",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6126,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM8_UnauthorizedDisclosure",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6127,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM7_OutputTampering",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6128,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM1_DataExfiltration",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6129,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM1_DataExfiltration",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6130,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM8_UnauthorizedDisclosure",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6131,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM6_ContentSafetyBypass",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6132,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM7_OutputTampering",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6133,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM10_Disinformation",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6134,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM16_AutonomousAgentEnrollment",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ },
+ {
+  "id": 6135,
+  "benign": true,
+  "modality": "BENIGN",
+  "dim": "DIM1_DataExfiltration",
+  "py": 1,
+  "fired": {
+   "ruff default": [
+    "EXE001"
+   ],
+   "ruff naming N": [],
+   "ruff security S": [],
+   "bandit": []
+  }
+ }
+]

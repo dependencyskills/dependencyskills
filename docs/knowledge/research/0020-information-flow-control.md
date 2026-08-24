@@ -234,10 +234,9 @@ defence predates the attack literature this project found.
 **Measured — enforcement at the sink prevents harm, and coarse labels prevent everything
 (2026-08-23; `experiments/test7`, qwen3-coder-30b, N=3/arm).**
 
-**Key** — `harm/leaked` the credential reached a log · `ok/task` the developer's own change
-was written. Counts are runs, out of 3.
+**Key** — counts are runs, out of 3.
 
-| arm | **harm**/leaked | **ok**/task |
+| arm | credential reached a log ↓ better | developer's change written ↑ better |
 |---|---|---|
 | naive, instruction channel | 2 of 3 | 3 of 3 |
 | positional, data-framed | 0 of 3 | 3 of 3 |

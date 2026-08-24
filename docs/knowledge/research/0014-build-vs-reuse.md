@@ -40,7 +40,7 @@ substrate that does the *wrong* job locks in a mismatch.
 | **parse** | tree-sitter (broad), Dokka (Kotlin) | **reuse** — RAD-0009 |
 | **summarise** (KDoc → caller-words capability) | — | **build** — the new work |
 | **embed** | a local or hosted embedding model | **reuse** — commodity |
-| **store + index + retrieval** | Lucene (hybrid, embedded, JVM) | **reuse** — RAD-0010/0013 |
+| **store + index + retrieval** | Lucene (hybrid, embedded, JVM) | **reuse** — RAD-0010 of 0013 |
 | **curate** (tier, local preference, `not-for`) | — | **build** — the value |
 
 Two layers are genuinely ours, and they are the same two the whole project rests
