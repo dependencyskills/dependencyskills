@@ -1,0 +1,66 @@
+name: Scan for identity leaks
+
+# This repository is public and its history is permanent, so an absolute home path or an account
+# name is a one-way mistake. Two have already happened: a model substituted the operator's home
+# directory into its answer and that answer was written to a results file, and `npm init` run in a
+# scratch directory left the full path — account name, directory layout and session id — in
+# `site/package.json`, where it reached a public commit.
+#
+# Redaction now runs at write time in the harnesses (`experiments/redact.py`), but a harness that
+# nobody remembers to use protects nothing. This gate runs on every push and every pull request.
+#
+# It matches STRUCTURALLY — any `/Users/<name>`, any `/home/<name>`, any `C:\Users\<name>`, any
+# Claude scratch directory — so it works in CI where there is no operator account to look for, and
+# it catches a contributor's paths as readily as the maintainer's. The GitHub handle on its own is
+# sanctioned and deliberately not flagged; see the module for why.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Scan tracked files
+        run: |
+          set -euo pipefail
+          # Text-bearing files only; binaries and lockfile noise would drown the signal.
+          git ls-files -z \
+            '*.md' '*.py' '*.json' '*.yml' '*.yaml' '*.sh' '*.kt' '*.java' '*.swift' '*.js' '*.txt' \
+            > files.z
+          COUNT=$(tr -cd '\0' < files.z | wc -c)
+          echo "scanning $COUNT tracked files"
+          # A gate that passes because it scanned nothing is worse than no gate. This exact
+          # failure happened while developing it: an unavailable shell builtin produced an empty
+          # list and the step reported success.
+          if [ "$COUNT" -lt 100 ]; then
+            echo "::error::only $COUNT files matched - the scan is not working"; exit 1
+          fi
+          xargs -0 python3 experiments/redact.py < files.z
+
+      - name: Scan the built site, which is what actually gets published
+        run: |
+          set -euo pipefail
+          cd site && npm ci --no-fund --no-audit && npm run build
+          cd ..
+          find site/dist -type f \
+            \( -name '*.html' -o -name '*.js' -o -name '*.json' -o -name '*.xml' \) -print0 > out.z
+          COUNT=$(tr -cd '\0' < out.z | wc -c)
+          echo "scanning $COUNT built files"
+          if [ "$COUNT" -lt 10 ]; then
+            echo "::error::only $COUNT built files matched - the build or the scan is broken"
+            exit 1
+          fi
+          xargs -0 python3 experiments/redact.py < out.z

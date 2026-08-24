@@ -28,8 +28,16 @@ _USER = os.path.basename(_HOME)
 
 # Home directories on either platform, plus the bare account name. `/home/dev` is the placeholder
 # rather than an empty string so paths stay readable as paths.
-_PATTERNS = [
-    (re.compile(re.escape(_HOME)), "/home/dev"),
+# `dev` and `runner` are this project's own placeholder and container accounts. When the harness
+# itself runs as one of them - which is what CI does - the literal-home pattern would match the
+# container's own paths and fail every run. A gate that always fails gets disabled, which is the
+# same outcome as no gate.
+_GENERIC = ("dev", "root", "runner")
+
+_PATTERNS = []
+if _USER not in _GENERIC:
+    _PATTERNS.append((re.compile(re.escape(_HOME)), "/home/dev"))
+_PATTERNS += [
     (re.compile(r'/Users/[A-Za-z0-9._-]+'), "/home/dev"),
     # `runner` is this project's own container user, not an operator account.
     (re.compile(r'/home/(?!dev\b|runner\b)[A-Za-z0-9._-]+'), "/home/dev"),
@@ -37,8 +45,15 @@ _PATTERNS = [
     # Session scratch directories carry a UUID and the account name together.
     (re.compile(r'/private/tmp/[A-Za-z0-9._-]*claude[^\s"\']*'), "/tmp/scratch"),
 ]
-if _USER and _USER not in ("dev", "root"):
-    _PATTERNS.append((re.compile(rf'\b{re.escape(_USER)}\b'), "dev"))
+# The bare account name is redacted on the way out, because model output can put it anywhere.
+# It is NOT used by `check()`: a name inside a path is a leak, a name in a sentence is not, and
+# CI runs as an account called `runner` - which flagged the word "runner" in eleven files of
+# ordinary prose the first time this gate ran. Structural path patterns catch the real thing.
+_BARE_NAME = []
+if _USER and _USER not in _GENERIC:
+    _BARE_NAME.append((re.compile(rf'\b{re.escape(_USER)}\b'), "dev"))
+_PATTERNS += _BARE_NAME
+_STRUCTURAL = [p for p in _PATTERNS if p not in _BARE_NAME]
 
 
 def clean(obj):
@@ -74,7 +89,10 @@ def check(path):
     for line in text.splitlines():
         if _SANCTIONED.search(line):
             continue
-        if clean(line) != line:
+        redacted = line
+        for rx, repl in _STRUCTURAL:
+            redacted = rx.sub(repl, redacted)
+        if redacted != line:
             return False
     return True
 

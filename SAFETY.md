@@ -119,6 +119,50 @@ having.
 Everything in the "host only" rows keeps the weaker protections described above: throwaway
 workspaces, `.invalid` sinks, no network tool offered to the agent, and static-only compilation.
 
+## Hardening the network, if your gateway can
+
+The container closes the static arms completely. The model arms cannot be contained the same way —
+they need to reach a vendor API — so their only remaining boundary is the network. If the gateway
+you already have supports the following, they are worth turning on. None of this is exotic; most
+prosumer and business gateways do the first two.
+
+**Put the test machine on its own network segment.** A separate VLAN or guest network, isolated
+from everything else you own. This is the single highest-value step, and it is the one that limits
+damage from the case nobody plans for: a payload that reaches something on your LAN rather than
+the internet.
+
+**Default-deny outbound from that segment, with a narrow allowlist.** Permit DNS and the specific
+model endpoints you actually call, and nothing else. This matters because it moves a guarantee
+from the *payload* to the *network*. Right now nothing can be reached because our sinks are
+`.invalid` and cannot resolve — a property of what the payload says. A default-deny rule holds
+regardless of what the payload says, which also covers third-party corpora we have read but not
+audited.
+
+Two caveats worth knowing before relying on it:
+
+- Vendor endpoints sit behind CDNs with rotating addresses, so domain-based rules are DNS-driven
+  and can fail *open* when resolution shifts. Re-check the rule still holds after a few runs.
+- Some gateways apply firewall rules only to routed traffic, not to traffic between devices on the
+  same segment. Isolation and egress control are separate settings; turning on one does not give
+  you the other.
+
+**What no gateway can do: see inside the traffic.** Model API calls are TLS. A gateway sees
+`api.example.com:443` and nothing more, so it can stop traffic reaching the *wrong destination* but
+not sensitive content leaving inside a *legitimate* request. Deep packet inspection features
+classify traffic; they do not read encrypted bodies. Do not assume otherwise.
+
+**If you want content inspection, it belongs in a proxy you control, not the network.** Run the
+model arms in a container, point `HTTPS_PROXY` at an intercepting proxy, and trust that proxy's
+certificate **inside the container only**. Then outbound request bodies can be matched against the
+canary string, home-directory patterns and account names, and blocked on match. The host and the
+rest of the network are untouched because the certificate never leaves the container.
+
+That is the only arrangement measured here that would catch a leak *before* it left, rather than
+after it landed in a file. It is a build rather than a setting, and it has not been built.
+
+**Ordering, by value against effort:** segment the machine, then default-deny egress, then — only
+if there is evidence that content is leaving inside legitimate requests — the inspecting proxy.
+
 ## Residual risk, stated plainly
 
 - The legacy `.io` payload host is unregistered today and may not always be. Check before running
