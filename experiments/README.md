@@ -72,6 +72,7 @@ Every row here is a **surface reduction**, and this is the category with an unbr
 | [test7](test7/) | do cheaper controls work? | **quarantined paraphrase** and **signature-only** each prevented harm and kept the task |
 | [test8](test8/) | does linting work on attacks we did not write? | **no** — 16 points of separation, misses 62 of 91 |
 | [test8](test8/) | do detectors compose? | **no** — union adds 0, consensus is *worse*; they are nested, not independent |
+| [test10](test10/) | does *configuring* the linters close what their defaults miss? | **on identifiers yes** — the whole catalogue costs 0.221% of a real corpus; on prose, nothing |
 
 ## The through-line
 
@@ -90,6 +91,10 @@ paraphrase, signature-only display — and not the ones that try to recognise an
 - **Whether the surviving controls compose.** Each was measured alone. Sequential filtering and
   parallel agreement are untested, and the detector result above says composition cannot be
   assumed.
+- ~~Whether the linters' *defaults* were the problem.~~ **Answered by `test10`:** custom rules
+  close the identifier channel for about a fifth of a percent of real content, and leave prose
+  untouched. The remaining identifier gap is a policy dial with a published cost curve, not a
+  missing technique.
 - **Agent-laundered first-party content** (RAD-0029) — measured once, untested since, and inside
   the boundary declared-only indexing draws.
 

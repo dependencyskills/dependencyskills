@@ -56,10 +56,22 @@ much genuine library content it would wrongly reject.
 | a constant longer than four words | 0 of 3,822 | 0.000% |
 | spelled-out punctuation, "config dot env" | 0 of 14,899 | 0.000% |
 | a filesystem path in documentation | 4 of 14,899 | 0.027% |
+| a type-shaped name the surface never declares | 13 of 14,899 | 0.087% |
+| a declaration name longer than six words | 16 of 14,899 | 0.107% |
+| **all of them enforced together** | **33 of 14,899** | **0.221%** |
 
 The third is the interesting one, because an attacker is *forced* into it: identifier grammar
 forbids `.` and `/`, so smuggling a path through one means spelling it out. The evasion creates
 the tell.
+
+The last two work by **resolving** rather than matching. A plain casing pattern costs 6.3% of a
+real corpus, because `public fun HttpClient(` is a legitimate factory function; asking instead
+whether the name resolves to something the library actually declares drops that to 0.087%. The
+same move makes spelled-out punctuation free — `kotlin dot text dot Regex` resolves, `config dot
+env` does not.
+
+Every one of these is expressible in the linter each ecosystem already runs, so this is
+configuration rather than new tooling.
 
 ## What does not work
 
@@ -104,7 +116,8 @@ that taints everything after it. Label granularity is a requirement, not a refin
 |---|---|---|
 | quoting library text as untrusted data | total protection on several agents | **zero effect** on one local model; defeated outright by moving the text into the system prompt; argued away by a payload claiming the framing is a test |
 | rewriting documentation into an index entry | filtered every payload aimed at a downstream reader, 0 of 6 | derailed 4 of 6 by a payload aimed at the rewriter itself |
-| linting identifiers | catches every loud form, no false alarms on a clean control | misses the plain camel-case form, which two frontier models obeyed |
+| linting identifiers, **stock configuration** | catches every loud form, no false alarms on a clean control | misses the plain camel-case form, which two frontier models obeyed |
+| linting identifiers, **configured** | closes the identifier channel — loud, underscored and camel-case forms, all four languages, for 0.221% | does not touch prose at all, and no further configuration will |
 
 ## Language changes the answer, and not the way we expected
 
