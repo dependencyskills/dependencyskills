@@ -36,6 +36,9 @@ export default defineConfig({
 				{
 					label: 'Security',
 					items: [
+						// First in the group on purpose: the refusals are the part a reader
+						// most needs before they run anything.
+						{ label: 'What we are not running, and why', link: '/not-doing/' },
 						{ label: 'Running attacks safely', link: '/safety/' },
 						{ label: 'Prompt Injection', link: '/injection/' },
 					],

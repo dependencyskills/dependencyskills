@@ -83,6 +83,26 @@ the record on purpose — which local models are fast enough, and large enough, 
 a property of the machine, and the ceiling of the ladder (where it stops being tractable)
 is a fact about *that* box, not about the models in the abstract.
 
+## Disclosure: the tooling and the subject overlap
+
+This project **measures AI coding agents**, and it was **built with them** — the harnesses, the
+research records and this site were written with agent assistance, alongside their use as
+measurement instruments described above.
+
+That is stated because it is a methodological fact rather than a courtesy. When the instrument and
+the subject are the same class of thing, a reader should be able to weigh it, and the risk is not
+hypothetical: more than one harness here has been found scoring the payload rather than the
+phenomenon — in one case counting an articulate refusal as compliance, in another counting a
+payload's own identifier as a false positive. Both were caught and corrected, and both are the kind
+of error this overlap makes more likely.
+
+The mitigations are the ordinary ones: every measured claim carries what it was measured against,
+the harnesses are published so a finding is a re-runnable assertion rather than a report, and
+several results here are corrections to this project's own earlier claims.
+
+Tools are disclosed, not credited. An AI tool cannot be an author — authorship means accountability
+for the final work — so nothing here is attributed to one.
+
 ## The workflow, in one line
 
 Measure on a synthetic fixture → write it up as research → let it harden into a

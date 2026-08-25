@@ -237,8 +237,9 @@ codebase, and the two are shared on different terms:
   specifications under `spec/`, and the website prose under `site/` — under
   [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
   Use it, quote it, build on it — commercially or not — as long as you credit
-  *The Dependency Skills Authors* and link back. It is the ordinary scientist's
-  bargain: the method and findings are free to use; the source is expected to be
-  cited.
+  **Brill Pappin** and link back. It is the ordinary scientist's bargain: the
+  method and findings are free to use; the source is expected to be cited.
 
-Copyright © 2026 The Dependency Skills Authors.
+Maintained by [Brill Pappin](https://github.com/bpappin).
+
+Copyright © 2026 Brill Pappin.

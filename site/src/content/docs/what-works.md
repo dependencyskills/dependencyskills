@@ -98,6 +98,25 @@ All four combined caught **64 — exactly what the best single one caught.** The
 complementary: one strictly contains the others. Requiring two to agree was *worse* than either
 alone and removed no false alarms at all, because they fail on the same files.
 
+**With one correction we found later, which matters.** That is a result about *boolean* stacking.
+Letting a simple model **weight** the same signals instead of OR-ing them separates far better —
+71 caught against 20 missed, where the best single detector catches 29.
+
+And then the interesting part. Restricting the model to **formatting features alone** — import
+ordering, f-string style, whether a file carries a shebang — reproduces almost the entire result.
+The strongest single signal is unsorted imports.
+
+So it was not learning to recognise attacks. The benchmark's malicious and benign samples were
+**built by different processes**, and the model found that seam. Three properties that involve no
+security tooling at all agree: a raw file count separates the classes as well as the best security
+linter does, the corpus's own modality tag never mixes across the label, and the malicious side
+covers a systematically enumerated 16-dimension matrix where the benign side has no such structure.
+
+The transferable lesson is about method rather than about this benchmark. **We only saw it because
+the model was simple enough to read the weights off.** A stronger model would have reported the
+same score and offered no way to ask what produced it — and the score would have been believed.
+Before trusting any number from any corpus, fit something inspectable and look at what it keyed on.
+
 ### Grounding documentation against the code that ships it
 
 Withdrawn. It caught about a third of attacks from an independent benchmark, missed whole classes

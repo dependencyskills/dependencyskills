@@ -3,6 +3,33 @@ title: Running attacks safely
 description: The rig this project uses to run other people's attack code — a no-network container, a sinkhole that records what a payload tries to send, and an honest account of what each one does and does not guarantee.
 ---
 
+:::danger[Do not point a tool-enabled agent at this material]
+The single most dangerous thing you can do with this research is aim an **agentic coding tool** —
+one with real filesystem access, running in a real working tree — at a third-party attack corpus.
+That configuration hands live, destructive code to something that reads files, writes files and
+runs commands on your behalf. One case in the corpus we measured archives a directory and then
+deletes the originals.
+
+**We specifically did not do this, and the gap is visible in our own results.** The current Claude
+models are absent from one experiment entirely, because the only route to them here ran
+tool-enabled subagents in the real working tree. Subagents run **in-process**, so the container
+described on this page cannot wrap them — the isolation that protects every other experiment does
+not reach that one.
+
+**We also rejected the obvious workaround.** Telling the agent not to use its tools is not a
+control, because *whether agents obey instructions placed in installed content is the thing being
+measured*. Using an instruction as the safety mechanism would mean measuring one hazard by assuming
+the other away.
+
+This is not a claim about any particular model or vendor — our own measurements found exposure
+varies between models of comparable capability and that **no property of the agent can be relied
+on**. The danger is the *configuration*: agent, plus tools, plus real filesystem, plus somebody
+else's malware. Closing that gap needs a sandboxed agent runner, which is a build and not a run.
+
+**[What we are not running, and why](/not-doing/)** lists every experiment we declined, the results
+that are missing because of it, and the one exception we disclosed rather than quietly fixed.
+:::
+
 Measuring prompt injection means running code written to do harm. Some of it is ours, and inert by
 construction. Some of it is not: the published corpora this project measures against contain live,
 runnable attack code — workflows that delete originals after archiving them, credential harvesters,

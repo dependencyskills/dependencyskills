@@ -10,15 +10,18 @@ scripts, and code that posts collected data to a remote host. Our own harnesses 
 that material statically and never execute it, and every sink we author resolves nowhere by
 construction (`.invalid`, RFC 2606). The corpus does not share those guarantees.
 
-**Run these only in a disposable, network-isolated environment.** Do not point a tool-enabled
-agent at the attack corpora inside a working tree you care about. We declined to do so ourselves:
-the newest Claude models are absent from one experiment specifically because the only route to
-them ran agents with real filesystem access, and telling an agent not to use its tools is not a
-control when whether agents follow instructions is the thing being measured.
+**Run these only in a disposable, network-isolated environment. Never point an agentic coding
+tool at the attack corpora** — an agent with real filesystem access, handed live destructive code,
+is the worst configuration available here, and no instruction given to that agent is a control —
+because *whether agents follow instructions* is the thing being measured.
+
+**We declined to do this ourselves, and it cost us a result.** The newest Claude models are absent
+from one experiment entirely, because the only route to them ran tool-enabled agents in a real
+working tree. That is a stated gap in coverage rather than a result obtained unsafely.
 
 The rig we use for this — a no-network container, and a sinkhole mode that records what a payload
-*tries* to send — is described in [running attacks safely](/safety/), along with what each mode
-does and does not guarantee.
+*tries* to send — is described in [running attacks safely](/safety/). **[What we are not running,
+and why](/not-doing/)** lists what we declined outright, and what it cost us.
 :::
 
 

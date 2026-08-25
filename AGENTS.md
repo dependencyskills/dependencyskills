@@ -55,10 +55,13 @@ paraphrase. The two are not a spectrum: the test is whether the person
 chose to be on the record. A private reviewer who later comments publicly
 is citable for the public comment and still not for the private one.
 
-The exceptions are deliberate and narrow: the copyright line in `LICENSE`,
-maintainer attribution where a human has put it, and credit for a public
-contribution alongside a link to where it was made. Do not add to that list
-without being asked, and do not strip what is on it.
+The exceptions are deliberate and narrow: the copyright line in `LICENSE` and
+`NOTICE.md`, the maintainer's name and GitHub handle in `README.md`, the site
+footer and the CC BY attribution string, maintainer attribution where a human
+has put it, and credit for a public contribution alongside a link to where it
+was made. Do not add to that list without being asked, and do not strip what is
+on it — the attribution is deliberate, because the written material is licensed
+CC BY and attribution is the licence's whole mechanism.
 
 **Document the pattern, not the person.** Where a decision came from
 someone's specific situation, the reusable content is the pattern: this is
