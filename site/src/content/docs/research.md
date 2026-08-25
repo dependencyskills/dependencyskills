@@ -54,6 +54,11 @@ Some harnesses read third-party corpora containing **live, destructive attack co
 in a disposable, network-isolated environment, and never point an agentic coding tool at them.
 [Running attacks safely](/safety/) has the rig; [what we are not running](/not-doing/) has what we
 declined and what it cost us.
+
+**The recorded transcripts are shipped compressed**, not loose — they quote the payloads repeatedly
+and would otherwise be read by anything indexing the repository. If you are reproducing this work,
+`experiments/transcripts.sh unpack` extracts them to a gitignored directory; if you are not, leave
+them packed, since no harness needs them to run.
 :::
 
 ## Cost of a skill per dependency

@@ -35,3 +35,9 @@ experiments/test5/corpus.json
 experiments/test12/prose-corpus.jsonl
 experiments/test12/private-groups.txt
 experiments/test14/resolution-results.json
+
+# Working notes generated for the agent to read, not part of the record.
+docs/gemini_*.md
+
+# Unpacked injection transcripts. Never committed — see experiments/transcripts.sh.
+experiments/.extracted/

@@ -49,6 +49,7 @@ graduates to an ADR, cross-linked both ways.
 | [0034](0034-better-linters-or-better-configuration.md) | Better Linters, or Better Configuration? | Swift's gap is a default-config gap — all four ecosystems enforce the measured bounds by configuration, and the configured rule catches the payload stock linters miss |
 | [0035](0035-a-small-local-model-for-the-prose-gap.md) | A Small Local Model for the Prose Gap | The volume objection is wrong and the register one is not — plus the JVM embedding runtime the Lucene port needs anyway |
 | [0036](0036-can-the-corpus-be-poisoned.md) | Can the Training Corpus Be Poisoned? | Central keeps everything, so the harvest is pinnable and driftable — but three publishers is too narrow a definition of normal |
+| [0037](0037-unresolved-tensions.md) | Unresolved Tensions in the Design | Where the project's own findings contradict each other — the summariser answers instructions but not fabrications, and the users who gain most are the most exposed |
 
 Numbering is sequential and does not imply order of reading. 0001 and 0002
 carry the measurements the rest lean on.

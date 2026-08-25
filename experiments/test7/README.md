@@ -351,3 +351,17 @@ Every remaining non-zero cell was then read by eye rather than trusted. Two surv
 - Generated code, not a filesystem action — see above.
 - `agy` reaches Gemini, Claude and GPT-OSS. There is no proprietary GPT here; GPT-OSS 120B is
   the only GPT-family model available through this path.
+
+## The recorded transcripts are archived
+
+The model transcripts for this experiment are packed into `transcripts.tar.gz` rather than left
+loose. They quote the payload repeatedly and add each model's reasoning about it, so as plain files
+they are attack prose that anything indexing this repository would read straight in.
+
+```
+../transcripts.sh unpack     # extracts to experiments/.extracted/ (gitignored)
+../transcripts.sh clean      # remove them again
+```
+
+Nothing here needs them to run — the harness regenerates its own output. See
+[experiments/README.md](../README.md) for why this is a speed bump rather than a control.

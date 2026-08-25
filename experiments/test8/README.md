@@ -188,3 +188,20 @@ python3 models_vs_agenttrap.py <agenttrap-dir> <agy-model> [n-cases]
 
 The corpus is not vendored here. Fetch `data/raw/cases.json` and `archives/agenttrap_skills.tar.xz`
 from the dataset and unpack so that `<agenttrap-dir>/skills/skills/{benign,malicious}/` exists.
+
+## The recorded transcripts are archived
+
+The model transcripts for this experiment are packed into `transcripts.tar.gz` rather than left
+loose. They quote the payload repeatedly and add each model's reasoning about it, so as plain files
+they are attack prose that anything indexing this repository would read straight in.
+
+```
+../transcripts.sh unpack     # extracts to experiments/.extracted/ (gitignored)
+../transcripts.sh clean      # remove them again
+```
+
+Nothing here needs them to run — the harness regenerates its own output. See
+[experiments/README.md](../README.md) for why this is a speed bump rather than a control.
+
+`results-agenttrap-lint.json` is deliberately **not** archived. It records which linter rules fired
+per case — identifiers, not prose — and `test11` reads it as input.

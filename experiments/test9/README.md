@@ -171,3 +171,17 @@ compilation and linting are static. No fixture is planted.
 ## Status
 
 **Complete.** Stages 0 through 3, four languages, three models.
+
+## The recorded transcripts are archived
+
+The model transcripts for this experiment are packed into `transcripts.tar.gz` rather than left
+loose. They quote the payload repeatedly and add each model's reasoning about it, so as plain files
+they are attack prose that anything indexing this repository would read straight in.
+
+```
+../transcripts.sh unpack     # extracts to experiments/.extracted/ (gitignored)
+../transcripts.sh clean      # remove them again
+```
+
+Nothing here needs them to run — the harness regenerates its own output. See
+[experiments/README.md](../README.md) for why this is a speed bump rather than a control.

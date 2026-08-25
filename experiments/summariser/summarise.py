@@ -41,6 +41,15 @@ Property 4 exists because of the posture this project has settled on: assume som
 through. Verification is not trusted to be right either - it is only trusted to be *conservative*,
 and its failure lands on a state already measured as safe.
 
+WHAT THIS DOES NOT DEFEND AGAINST, and it is half the channel. Everything above answers an injected
+**instruction**. It does nothing about a **fabricated capability** - honest-looking, non-imperative
+prose describing something the library does not actually do, competing for retrieval on merit.
+`test6` measured a fabricated library beating the true answer 4 of 17. A rewriter has no purchase
+here: nothing is malformed, so the summariser will faithfully rewrite a lie into a well-formed
+capability description. See RAD-0037 s1. The candidate answer is resolution - does the described
+capability exist on the declared surface - which `test14` priced for directives and which has never
+been tried on capability claims.
+
 Run:  python3 summarise.py --self-test          # verification checks, no model needed
       python3 summarise.py --sample 20          # summarise 20 real entries via a local model
 """

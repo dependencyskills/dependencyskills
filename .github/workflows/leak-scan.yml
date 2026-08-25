@@ -51,6 +51,25 @@ jobs:
           fi
           xargs -0 python3 experiments/redact.py < files.z
 
+      - name: Scan inside the transcript archives
+        run: |
+          set -euo pipefail
+          # The injection transcripts are packed so an indexing agent does not slurp them, and a
+          # tarball is opaque to the scanner. That matters more here than anywhere else: the leak
+          # this gate exists for was a model writing the operator's home directory into a RESULTS
+          # file, which is exactly what these archives contain. Packing them without this step
+          # would remove the control from the one place it has already caught something.
+          ./experiments/transcripts.sh unpack
+          find experiments/.extracted -type f -print0 > tx.z
+          COUNT=$(tr -cd '\0' < tx.z | wc -c)
+          echo "scanning $COUNT extracted transcript files"
+          if [ "$COUNT" -lt 20 ]; then
+            echo "::error::only $COUNT extracted - the archives or the unpack step are broken"
+            exit 1
+          fi
+          xargs -0 python3 experiments/redact.py < tx.z
+          ./experiments/transcripts.sh clean
+
       - name: Scan the built site, which is what actually gets published
         run: |
           set -euo pipefail
