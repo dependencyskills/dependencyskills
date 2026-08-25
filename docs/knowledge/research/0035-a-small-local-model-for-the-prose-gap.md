@@ -113,9 +113,13 @@ Python, 2026-08-24. Harness: [`experiments/test11`](../../../experiments/test11/
 - **And the result is mostly an artifact of the benchmark.** Restricting to style and formatting
   codes only — import ordering, f-string modernisation, shebang conventions — reproduces **46.9%**
   of the 48.0%. The security codes contribute about a point. The strongest single weight is
-  `I001`, unsorted imports. AgentTrap's malicious and benign samples appear to differ in
-  **authorship provenance**, and a classifier can score well by detecting that seam rather than
-  maliciousness.
+  `I001`, unsorted imports. AgentTrap's malicious and benign samples differ in **authorship
+  provenance**, and a classifier can score well by detecting that seam rather than maliciousness.
+  Corroborated by three properties that involve no linter at all: raw file count separates the
+  classes **15.0%** — matching the best single linter's 15.9% — the `modality` tag never mixes
+  across the label, and the malicious side covers a systematically enumerated 16-dimension matrix
+  where the benign side has no equivalent structure. The classes were assembled by different
+  processes.
 - **This is the register objection, measured rather than argued.** It was reached in minutes, on
   data already on disk, and *only because the model was simple enough to read the weights off*. An
   embedding probe would have reported 48% separation and given no way to see why. **Inspectability

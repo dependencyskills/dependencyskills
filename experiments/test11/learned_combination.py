@@ -135,6 +135,55 @@ def row(name, pred, note=""):
     print(f"{name:<40}{c:>8}{m:>8}{f:>13}{l:>12}{sep:>11.1%}  {note}{degenerate}")
 
 
+def provenance_check():
+    """Corroborate the seam WITHOUT using any linter signal.
+
+    The ablation shows style features carry the result; it does not show *why*. If the two classes
+    were built by different processes, that should be visible in properties no lint rule touches.
+    Three are available in the scored output, and none of them is evidence about malice.
+    """
+    import statistics as st
+    mal = [r for r in D if not r["benign"]]
+    ben = [r for r in D if r["benign"]]
+
+    print("\n# is the seam visible without any linter signal?\n")
+    print("  file count per case — a raw property, no rule involved")
+    for name, group in (("malicious", mal), ("benign", ben)):
+        v = sorted(r["py"] for r in group)
+        print(f"    {name:<10} n={len(v):<4} median={st.median(v):<6} mean={st.mean(v):<6.1f} max={v[-1]}")
+
+    best = (0.0, None)
+    rows = [(r["py"], 0 if r["benign"] else 1) for r in D]
+    for t in range(0, 200):
+        c = sum(1 for p, y in rows if y == 1 and p > t)
+        m = sum(1 for p, y in rows if y == 1 and p <= t)
+        f = sum(1 for p, y in rows if y == 0 and p > t)
+        l = sum(1 for p, y in rows if y == 0 and p <= t)
+        if (c + m) and (f + l) and c / (c + m) - f / (f + l) > best[0]:
+            best = (c / (c + m) - f / (f + l), (t, c, m, f, l))
+    t, c, m, f, l = best[1]
+    print(f"    best threshold `files > {t}`: caught {c}, missed {m}, false alarm {f}, "
+          f"left alone {l} -> {best[0]:.1%} separation")
+    print("    (for scale, the best single LINTER scores 15.9%)")
+
+    print("\n  modality tag vs label — set membership, not content")
+    seen = {}
+    for r in D:
+        seen.setdefault(r["modality"], set()).add(r["benign"])
+    for mod, labels in sorted(seen.items()):
+        pure = "all benign" if labels == {True} else ("all malicious" if labels == {False}
+                                                      else "MIXED")
+        print(f"    {mod:<10} {pure}")
+    print("    a tag that never mixes means the classes were assembled separately, not sampled"
+          " from one pool")
+
+    print("\n  attack dimensions present in the malicious class")
+    dims = sorted({r["dim"] for r in mal})
+    print(f"    {len(dims)} distinct, systematically enumerated: "
+          f"{', '.join(d.split('_')[0] for d in sorted(dims, key=lambda d: int(d.split('_')[0][3:])))}")
+    print("    a covered matrix is a constructed set; the benign side shows no such structure")
+
+
 def main():
     print(f"# {len(D)} cases ({sum(Y)} malicious / {len(Y)-sum(Y)} benign), "
           f"{len(FEATS)} (tool, rule) features\n")
@@ -169,6 +218,8 @@ def main():
     print("  toward BENIGN")
     for f, wt in ranked[-5:]:
         print(f"    {wt:+.3f}  {f}{'   [security]' if is_security(f) else '   [style]'}")
+
+    provenance_check()
 
 
 if __name__ == "__main__":

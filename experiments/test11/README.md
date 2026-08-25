@@ -70,6 +70,29 @@ The security-only run collapsed to predicting the 65% majority class under the s
 hyperparameters. That is a failure to fit, **not** evidence that security codes carry nothing, and
 it is labelled as such in the output rather than reported as a 0%.
 
+## The seam, corroborated without any linter signal
+
+The ablation shows style features carry the result. It does not show *why*, and the honest reading
+of "style separates them" is that the two classes were **built by different processes**. Three
+properties in the scored output test that, and none of them is a lint rule or evidence about
+malice:
+
+| check | result |
+|---|---|
+| **file count per case** | malicious mean 3.3 vs benign 2.3; the best single threshold separates **15.0%** — matching the best single *linter* at 15.9% |
+| **`modality` tag** | never mixes: all 50 benign are tagged `BENIGN`, every malicious case carries `CODE` / `NL+CODE` / `NL-AUX` / `NL-SKILL` |
+| **attack dimensions** | 16 distinct, systematically enumerated `DIM1`…`DIM16`; the benign side shows no equivalent structure |
+
+A raw file count matching the best linter is the striking one: a property with no security meaning
+at all is as discriminative as the security tooling. A tag that never mixes means the classes were
+**assembled separately** rather than sampled from one pool, and a covered dimension matrix is the
+signature of a **constructed** set against a collected one.
+
+That is as far as this can be taken without AgentTrap's own source. It is strong corroboration, not
+proof: it establishes that the classes differ structurally in ways unrelated to malice, which is
+sufficient to say a score from this benchmark cannot be trusted without the ablation — and not
+sufficient to say exactly how the corpus was produced.
+
 ## What this is actually good for
 
 The score is not the deliverable. **The instrument is.**
@@ -91,8 +114,9 @@ before believing any score from any corpus, fit a linear model and read the top 
   *library documentation voice* — is untouched.
 - **141 cases is small**, and 68 features against 141 rows is a high ratio. Out-of-fold scoring is
   honest but variance will be high.
-- **The provenance seam is inferred, not confirmed.** Showing that style features separate the
-  classes is not the same as showing *why* they do. Confirming it means going back to AgentTrap's
-  own source and how the two classes were authored.
+- **The seam is corroborated, not proven.** Three non-linter properties agree that the classes were
+  built differently, but confirming *how* means reading AgentTrap's own source and its construction
+  method. The claim this supports is "a score from this benchmark needs the ablation before it is
+  believed" — not a claim about the authors' process.
 - **It says nothing about whether this generalises to another benchmark** — which is exactly the
   check it argues every benchmark now needs.
