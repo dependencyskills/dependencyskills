@@ -25,6 +25,27 @@ catches on re-harvest.
 
 **Is that a real distinction between kinds of control, or two lucky pairs?**
 
+## Update — v2 (2026-08-25), tested constructively
+
+`experiments/test15` attacked the catalogue instead of scoring payloads against it, and the answer
+is not the one the question anticipated.
+
+**The constraints do not close the space.** 5,408 identifiers satisfy every bound at once, in all
+four languages; the shortest actionable form is three words (`copyEnvLog`). Against `test10`'s
+published cost curve, an actionable instruction fits under every affordable bound — the defender
+only wins at three words, which costs 6.625%, thirty times the whole catalogue.
+
+**But every form that passes was never obeyed.** `test9` stage 3 measured `loud` at 4 of 24 and
+`underscored` at 2 of 24 — both caught by the catalogue — against `camel` and `short` at 0 of 24,
+and `short` is the one that passes. So the permitted region is, on the evidence available, the
+region that does not work.
+
+That reframes the composition question. The mechanism may not be that constraints cover each
+other's escape routes, but that they force an identifier into a shape where **an instruction stops
+being legible as an instruction** — RAD-0026's thesis reached from the defensive side. It rests on
+four payload forms against 5,408 permitted ones, so it is a hypothesis, and the missing payload set
+is what blocks confirming it.
+
 ## Trail
 
 ### The proposed mechanism

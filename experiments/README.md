@@ -77,6 +77,7 @@ Every row here is a **surface reduction**, and this is the category with an unbr
 | [test11](test11/) | do detector signals compose when *weighted* rather than OR-ed? | **yes — 48% separation against the best single detector's 16%.** But style features alone reproduce it: the benchmark has a provenance seam |
 | [test13](test13/) | can a legitimate library directive be told from an injected one? | **one signal died, one survived** — "mentions something external" costs 29.8% of real docs; "names a declared API" separates 63% vs 0% and is unpriced |
 | [test14](test14/) | what does that surviving rule cost? | **1.73% of 232,781 real doc comments — 8× the identifier catalogue.** Both prose candidates are now priced and both fail |
+| [test15](test15/) | what does the constraint catalogue permit, if you attack it? | **5,408 identifiers pass it** — but every form measured to be *obeyed* is caught, and every form that passes was obeyed 0 of 24. The permitted region may be inert |
 
 ## The through-line
 
@@ -106,6 +107,10 @@ paraphrase, signature-only display — and not the ones that try to recognise an
   missing technique.
 - **Agent-laundered first-party content** (RAD-0029) — measured once, untested since, and inside
   the boundary declared-only indexing draws.
+- **Whether the permitted region is inert.** `test15` enumerated 5,408 identifiers that pass the
+  whole catalogue, and `test9` had already measured that the forms which pass were never obeyed
+  while every form that was obeyed is caught. That suggests constraints work by making an
+  instruction *illegible as one* rather than by blocking it — but it rests on four payload forms.
 - **Prose, now with both candidates priced.** `test13` and `test14` measured the two structural
   signals available — reference to something external (29.8%) and resolution against the declared
   surface (1.73%) — against `test10`'s 0.221% bar. Both fail. What blocks progress is no longer a
