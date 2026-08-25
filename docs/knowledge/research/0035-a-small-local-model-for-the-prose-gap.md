@@ -100,7 +100,32 @@ register, which is why the evaluation below is cross-register by construction.
 
 ## Findings
 
-**Reasoned, not yet measured. Nothing in this log has been run.**
+**Measured against:** AgentTrap's 141 cases (91 malicious / 50 benign) as scored by `test8`,
+logistic regression over 68 binary (tool, rule) features, stratified 5-fold out-of-fold, pure
+Python, 2026-08-24. Harness: [`experiments/test11`](../../../experiments/test11/).
+
+- **A learned combination composes where boolean stacking did not.** `test8` found stacking
+  detectors added nothing — union caught exactly what the best single one caught. Weighting the
+  same signals instead of OR-ing them separates far better: **71 caught / 20 missed / 15 false
+  alarms**, a separation of **48.0%** against the best single detector's 15.9% and the union's
+  **−21.7%**. "Detectors do not compose" is true of boolean composition and false of learned
+  composition.
+- **And the result is mostly an artifact of the benchmark.** Restricting to style and formatting
+  codes only — import ordering, f-string modernisation, shebang conventions — reproduces **46.9%**
+  of the 48.0%. The security codes contribute about a point. The strongest single weight is
+  `I001`, unsorted imports. AgentTrap's malicious and benign samples appear to differ in
+  **authorship provenance**, and a classifier can score well by detecting that seam rather than
+  maliciousness.
+- **This is the register objection, measured rather than argued.** It was reached in minutes, on
+  data already on disk, and *only because the model was simple enough to read the weights off*. An
+  embedding probe would have reported 48% separation and given no way to see why. **Inspectability
+  is the requirement, not a convenience** — for this question a linear model over named features
+  is methodologically superior to a stronger opaque one.
+- Two control runs (security codes alone, `I001` alone) collapsed to predicting the 65% majority
+  class under the same hyperparameters. They are uninformative rather than evidence that those
+  features carry nothing.
+
+**Reasoned, not measured.**
 
 - The volume objection to a small model is **wrong**: public positives are plentiful, and a linear
   probe over a pretrained encoder needs hundreds of labels rather than tens of thousands.
@@ -133,6 +158,11 @@ of the corpus (RAD-0031). `test10`'s catalogue costs 0.221% and catches no prose
    withdrawn on precisely this number at 26.9%, and a probe gets no exemption.
 5. **Compare against the incumbent.** It must beat `test10`'s 0.221% catalogue *at prose*, which
    the catalogue scores zero on. Anything it achieves on identifiers is already free.
+
+**Before any of it, audit the corpus for provenance seams.** The probe above shows a benchmark can
+be separable on authorship style alone. Any corpus used here must be checked the same way — train a
+linear model, read the top features, and confirm they are semantic rather than stylistic — *before*
+a score from it is believed. This is cheap and it is now the first step, not a caveat.
 
 **What would change the answer.** A finding that public corpora contain a substantial
 documentation-register subset would remove the central objection and make this a much better bet.

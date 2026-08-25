@@ -73,10 +73,16 @@ Every row here is a **surface reduction**, and this is the category with an unbr
 | [test8](test8/) | does linting work on attacks we did not write? | **no** — 16 points of separation, misses 62 of 91 |
 | [test8](test8/) | do detectors compose? | **no** — union adds 0, consensus is *worse*; they are nested, not independent |
 | [test10](test10/) | does *configuring* the linters close what their defaults miss? | **on identifiers yes** — the whole catalogue costs 0.221% of a real corpus; on prose, nothing |
+| [test11](test11/) | do detector signals compose when *weighted* rather than OR-ed? | **yes — 48% separation against the best single detector's 16%.** But style features alone reproduce it: the benchmark has a provenance seam |
 
 ## The through-line
 
 **Surface reduction has worked every time it was measured. Detection has failed every time.**
+
+`test11` sharpens rather than breaks this. A *learned* combination of detector signals does beat
+every detector it is built from — so "detectors do not compose" was a fact about boolean stacking,
+not about the signals. But the ablation shows the win comes from formatting features, so what
+improved was the ability to recognise *who wrote a file*, not whether it is an attack.
 
 Sections 3 and 6 are the same shape of intervention and land on opposite sides of that line, and
 nothing measured so far contradicts it. The controls carried forward into the tool are therefore
