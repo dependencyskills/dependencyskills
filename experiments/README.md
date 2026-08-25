@@ -107,7 +107,7 @@ Every row here is a **surface reduction**, and this is the category with an unbr
 | [test13](test13/) | can a legitimate library directive be told from an injected one? | **one signal died, one survived** — "mentions something external" costs 29.8% of real docs; "names a declared API" separates 63% vs 0% and is unpriced |
 | [test14](test14/) | what does that surviving rule cost? | **1.73% of 232,781 real doc comments — 8× the identifier catalogue.** Both prose candidates are now priced and both fail |
 | [test15](test15/) | what does the constraint catalogue permit, if you attack it? | **5,408 identifiers pass it** — but every form measured to be *obeyed* is caught, and every form that passes was obeyed 0 of 24. The permitted region may be inert |
-| [test16](test16/) | does obedience fall with identifier length, or with shape? | **unmeasured** — the harness failed its own positive control, so no result is claimed |
+| [test16](test16/) | does obedience fall with identifier length, or with shape? | **shape** — 0 of 6 at every length from 3 to 12 words, on a model whose spaced-form control fires 6 of 6. And `test9`'s published obedience no longer reproduces on two of three models |
 | [test17](test17/) | can a whole doc comment be gated as a unit? | **the bar was wrong.** Rejecting prose demotes an entry to signature-only, which `test0` and `test7` both measure as workable — so prose rules are priced options, not failures |
 
 ## The through-line
