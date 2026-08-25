@@ -76,6 +76,7 @@ Every row here is a **surface reduction**, and this is the category with an unbr
 | [test10](test10/) | does *configuring* the linters close what their defaults miss? | **on identifiers yes** — the whole catalogue costs 0.221% of a real corpus; on prose, nothing |
 | [test11](test11/) | do detector signals compose when *weighted* rather than OR-ed? | **yes — 48% separation against the best single detector's 16%.** But style features alone reproduce it: the benchmark has a provenance seam |
 | [test13](test13/) | can a legitimate library directive be told from an injected one? | **one signal died, one survived** — "mentions something external" costs 29.8% of real docs; "names a declared API" separates 63% vs 0% and is unpriced |
+| [test14](test14/) | what does that surviving rule cost? | **1.73% of 232,781 real doc comments — 8× the identifier catalogue.** Both prose candidates are now priced and both fail |
 
 ## The through-line
 
@@ -105,6 +106,11 @@ paraphrase, signature-only display — and not the ones that try to recognise an
   missing technique.
 - **Agent-laundered first-party content** (RAD-0029) — measured once, untested since, and inside
   the boundary declared-only indexing draws.
+- **Prose, now with both candidates priced.** `test13` and `test14` measured the two structural
+  signals available — reference to something external (29.8%) and resolution against the declared
+  surface (1.73%) — against `test10`'s 0.221% bar. Both fail. What blocks progress is no longer a
+  missing idea but a **missing payload set**: the cost of a prose rule can be measured against
+  232,781 real comments, and its catch rate against three.
 
 ## Standards note
 

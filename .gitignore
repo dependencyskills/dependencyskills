@@ -34,3 +34,4 @@ experiments/test5/corpus.json
 # Neither is ever committed. Only PROSE-MANIFEST.md is publishable, after review.
 experiments/test12/prose-corpus.jsonl
 experiments/test12/private-groups.txt
+experiments/test14/resolution-results.json

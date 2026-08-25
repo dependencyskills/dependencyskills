@@ -141,8 +141,14 @@ Python, 2026-08-24. Harness: [`experiments/test11`](../../../experiments/test11/
 - **A structural signal may exist where a stylistic one does not.** Legitimate directives name an
   API the library declares (**63%**); the injected ones name nothing declared (**0%**). That is
   `test10`'s resolution check applied to prose — surface reduction, not detection — and it is the
-  only candidate here not tuned to the payload. **Unpriced**, because pricing it needs documentation
-  bound to a declared surface, which `test12`'s corpus deliberately lacks.
+  only candidate here not tuned to the payload. **Now priced by `test14`, and it fails**: 1.73% of
+  232,781 distinct real doc comments, 8× `test10`'s whole catalogue. Cross-library resolution is
+  real but worth only ~3 points, so a Dokka-derived surface would not close a gap of that size.
+  **Both prose candidates are now measured and both are dead.**
+- **The binding constraint is a missing payload set, not a missing idea.** A prose rule's cost can
+  be measured against 232,781 real comments; its catch rate can only be measured against three
+  payloads, all variants of one attack. Any future prose rule meets the same wall, so widening the
+  *payloads* now outranks widening the corpus.
 - **The companion signal died on contact with a wide corpus.** "Mentions something external" cost
   4% on a narrow sample and **29.8%** on 274 publishers — 135× worse than `test10`'s entire
   catalogue at 0.221%.

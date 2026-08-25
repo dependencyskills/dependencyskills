@@ -60,6 +60,7 @@ much genuine library content it would wrongly reject.
 | a declaration name longer than six words | 16 of 14,899 | 0.107% |
 | **all of them enforced together** | **33 of 14,899** | **0.221%** |
 | ~~mentioning a file, credential, host or log~~ | 16,390 of 55,077 | **29.8% — rejected** |
+| ~~a directive naming nothing the library declares~~ | 4,031 of 232,781 | **1.73% — rejected** |
 
 The third is the interesting one, because an attacker is *forced* into it: identifier grammar
 forbids `.` and `/`, so smuggling a path through one means spelling it out. The evasion creates
@@ -148,6 +149,23 @@ lines in those published files carry a directive verb.
 So there is no *style* that distinguishes them — and, importantly, **more data makes this worse
 rather than better.** A wider corpus teaches a model that directives are normal, because they are.
 
+That left one idea worth testing: perhaps the difference is **structural** rather than stylistic. A
+legitimate directive tells the agent to call an API the library *declares*; an injected one tells it
+to act on something outside the library. On the published skill files that looked strong —
+legitimate directives named declared API 63% of the time, the injected ones 0%.
+
+**Priced against 232,781 real doc comments from 1,688 libraries, it costs 1.73%** — about one real
+comment in every 58, and eight times the entire identifier catalogue. It is not usable, and with
+that both structural candidates are measured and rejected.
+
+Two things surfaced while measuring it that were not visible before:
+
+- **73.8% of directive-bearing documentation names no code at all.** Even a perfect resolution rule
+  could only ever speak to a quarter of the directives it targets.
+- **Widening the pool of known symbols helps, but not enough.** Going from 150 libraries to 1,688
+  moved cross-library resolution from 1.7% to 5.1% — real, and worth about three points against a
+  gap of eight times.
+
 ### Grounding documentation against the code that ships it
 
 Withdrawn. It caught about a third of attacks from an independent benchmark, missed whole classes
@@ -168,7 +186,6 @@ that taints everything after it. Label granularity is a requirement, not a refin
 | rewriting documentation into an index entry | filtered every payload aimed at a downstream reader, 0 of 6 | derailed 4 of 6 by a payload aimed at the rewriter itself |
 | linting identifiers, **stock configuration** | catches every loud form, no false alarms on a clean control | misses the plain camel-case form, which two frontier models obeyed |
 | linting identifiers, **configured** | closes the identifier channel — loud, underscored and camel-case forms, all four languages, for 0.221% | does not touch prose at all, and no further configuration will |
-| asking whether a directive **names an API the library declares** | the one candidate that survived: legitimate directives name declared API 63% of the time, injected ones 0% | **not yet priced.** Costing it needs documentation bound to a declared symbol surface, and a legitimate directive naming an *inherited* symbol would score as an injection |
 
 ## Language changes the answer, and not the way we expected
 
@@ -205,9 +222,14 @@ Stated because the gaps matter as much as the findings.
   which is a correction to our own earlier reading.
 - **Whether anything reaches prose at all.** The identifier channel is closed for about a fifth of
   a percent. Prose is not, and the reason is now understood rather than merely observed: the
-  legitimate artifact format is itself a set of instructions to an agent. One structural candidate
-  survives — resolving what a directive *points at* against the library's declared surface — and it
-  is unpriced.
+  legitimate artifact format is itself a set of instructions to an agent. Both structural candidates
+  have since been measured, and both cost too much to use.
+- **How well any prose rule actually *works*, as opposed to what it costs.** This is the sharper
+  problem, and it is ours rather than the field's. We can price a prose rule against **232,781 real
+  doc comments** and know its false-alarm rate to three decimal places. We can only measure what it
+  *catches* against **three payloads**, all variants of one attack. Every prose rule will meet that
+  same wall, so the useful next step is not another rule — it is a set of attacks with the breadth
+  the corpus now has.
 - **Attacks on what the agent produces.** 46% of published attacks need no precondition at all,
   and they mostly corrupt output rather than steal secrets — a spreadsheet quietly 10% wrong needs
   no credential file. Every control above addresses delivery, and the strongest of them is
@@ -232,7 +254,15 @@ equivalent of.
 
 **A promising rule** cost 4% on fifteen documents and 29.8% on 274 publishers.
 
-Both were caught the same way: by an **inspectable** model priced against a **wide** population.
+**A second rule** first measured at 6.1%, which turned out to be the measuring tool rather than the
+rule: bare capitalised words were being read as code references, and English capitalises the first
+word of every sentence, so *"Cancel the subscription…"* was offering `Cancel` as a symbol. Fixing
+that and two similar errors took it to 1.73%. Worth noting plainly: **three consecutive corrections
+that each lower the number is where tuning starts**, so that figure is a floor obtained with the
+tool tuned in the rule's favour. It failed anyway.
+
+All three were caught the same way: by an **inspectable** method priced against a **wide**
+population, with its intermediate output printed rather than only its score.
 Neither would have been caught by better analysis of the narrow one, and a stronger, opaque model
 would have reported the same score with no way to ask what produced it.
 
