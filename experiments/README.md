@@ -78,10 +78,26 @@ Every row here is a **surface reduction**, and this is the category with an unbr
 | [test13](test13/) | can a legitimate library directive be told from an injected one? | **one signal died, one survived** — "mentions something external" costs 29.8% of real docs; "names a declared API" separates 63% vs 0% and is unpriced |
 | [test14](test14/) | what does that surviving rule cost? | **1.73% of 232,781 real doc comments — 8× the identifier catalogue.** Both prose candidates are now priced and both fail |
 | [test15](test15/) | what does the constraint catalogue permit, if you attack it? | **5,408 identifiers pass it** — but every form measured to be *obeyed* is caught, and every form that passes was obeyed 0 of 24. The permitted region may be inert |
+| [test16](test16/) | does obedience fall with identifier length, or with shape? | **unmeasured** — the harness failed its own positive control, so no result is claimed |
+| [test17](test17/) | can a whole doc comment be gated as a unit? | **the bar was wrong.** Rejecting prose demotes an entry to signature-only, which `test0` and `test7` both measure as workable — so prose rules are priced options, not failures |
 
 ## The through-line
 
 **Surface reduction has worked every time it was measured. Detection has failed every time.**
+
+`test17` corrects how the failures were scored. Prose rules were held to `test10`'s 0.221%, a bar
+set by rules that reject *identifiers*, where a false rejection loses an API. A prose rule rejects a
+*doc comment* and the entry survives as symbol plus signature — a state `test0` measured as
+sufficient to use a capability and `test7` measured as a working control. Rejecting prose costs
+**discoverability, not usability**, so the question is how much retrieval to trade for closing a
+channel, not whether a rule clears a threshold.
+
+And the comparison is not against a perfect index. Unaided, agents pick the right library **0 of
+18** (`test0/measurement`). **The baseline is zero**, so a filter that rejects a third of prose
+still delivers two thirds of a corpus that does not otherwise exist. What matters is whether the
+losses are *spread* or *concentrated*: rejections spread across libraries cost coverage evenly,
+while rejections concentrated on particular publishers remove whole libraries. That makes the
+generalisation gap on unseen publishers a more important number than the rejection rate itself.
 
 `test11` sharpens rather than breaks this. A *learned* combination of detector signals does beat
 every detector it is built from — so "detectors do not compose" was a fact about boolean stacking,

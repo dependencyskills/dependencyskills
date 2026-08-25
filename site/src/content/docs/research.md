@@ -1,7 +1,53 @@
 ---
-title: The research
-description: The investigations behind the findings — question, trail, and recommendation.
+title: Why any of this is measured
+description: What the project is trying to build, why each claim behind it is tested rather than argued, and how one question about prompt injection came to occupy so much of the record.
 ---
+
+## The goal, so the rest has something to be for
+
+A coding agent working in your project does not know two things, and no amount of model progress
+fixes either.
+
+It does not know **the libraries you actually depend on** — not the popular ones it learned during
+training, but the exact versions on your classpath, the internal modules, the one your team picked
+over three alternatives that all fit. And it does not know **your own code**: that a function
+doing this job already exists, thirteen times, in a codebase nobody can hold in their head.
+
+The result is reinvention. Agents in our tests picked the right library **0 times out of 18**
+without help, and wrote a fourteenth version of a function that already existed. The proposal is an
+**index of capabilities** — what your dependencies and your own code can do, described in the words
+a developer would use when searching for it — so the agent finds what is there instead of building
+it again.
+
+That is the whole of it. Everything below exists to test whether that works, and to find out what
+it costs.
+
+## Why measured rather than argued
+
+Claims about what an agent does are easy to make and cheap to be wrong about. So each one here is
+run: real coding tasks, through real developer agents from more than one vendor, scored on whether
+the agent used an existing capability or reinvented it. **Findings that failed are published beside
+the ones that worked**, including several that contradicted this project's own earlier claims,
+because a record that only reports successes cannot be used to judge the successes.
+
+Each investigation states a question, the trail of options weighed, the findings (with measured
+kept separate from assumed), and a recommendation. A recommendation that hardens into a commitment
+graduates to a [decision](/decisions/). The full records live in the repository under
+`docs/knowledge/research/`; 0001 and 0002 carry the measurements the rest lean on.
+
+## And why so much of this is about security
+
+An index is only useful if it carries text from your dependencies to your agent. Someone asked the
+obvious question — *what if that text contains instructions?* — and the answer turned out to be
+yes, for many agents, including the strongest ones.
+
+That is a hazard **this project's own proposal creates**, which is why it is documented here rather
+than quietly designed around, and why the [security](/injection/) work grew from one question into
+a large part of the record. It is not the goal. It is the cost of the goal, measured honestly.
+
+The through-line that came out of it is short: **removing a channel has worked every time;
+recognising an attack has failed every time.** That is why the design carries controls that reduce
+what reaches the agent at all, and does not carry a detector.
 
 :::caution[Some of these experiments carry genuinely destructive test data]
 Several harnesses here read third-party attack corpora that contain **live, runnable attack
@@ -23,14 +69,6 @@ The rig we use for this — a no-network container, and a sinkhole mode that rec
 *tries* to send — is described in [running attacks safely](/safety/). **[What we are not running,
 and why](/not-doing/)** lists what we declined outright, and what it cost us.
 :::
-
-
-Each investigation states a question, the trail of options weighed, the findings
-(with measured kept separate from assumed), and a recommendation. A
-recommendation that hardens into a commitment graduates to a
-[decision](/decisions/). The full records live in the repository under
-`docs/knowledge/research/`; 0001 and 0002 carry the measurements the rest lean
-on.
 
 ## Cost of a skill per dependency
 

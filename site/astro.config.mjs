@@ -19,28 +19,16 @@ export default defineConfig({
 				{ icon: 'github', label: 'GitHub', href: 'https://github.com/dependencyskills/dependencyskills' },
 			],
 			sidebar: [
+				// The goal first, then the evidence for it. Everything investigative — including the
+				// security work, which grew out of a single question and became most of the recent
+				// effort — sits under Research, so it supports the case rather than replacing it.
 				{ label: 'Overview', link: '/' },
 				{ label: 'Adopted Standards', link: '/standards/' },
 				{
-					label: 'The case',
+					label: 'What it is for',
 					items: [
 						{ label: 'The findings', link: '/findings/' },
 						{ label: 'What works, and what does not', link: '/what-works/' },
-						{ label: 'What the tests show', link: '/experiments/' },
-						{ label: 'The field as it stands', link: '/field/' },
-						{ label: 'The landscape', link: '/landscape/' },
-					],
-				},
-				// Safety leads the group: the experiments read live attack code, and the page
-				// telling you how to run that safely is worth less after the pages inviting you to.
-				{
-					label: 'Security',
-					items: [
-						// First in the group on purpose: the refusals are the part a reader
-						// most needs before they run anything.
-						{ label: 'What we are not running, and why', link: '/not-doing/' },
-						{ label: 'Running attacks safely', link: '/safety/' },
-						{ label: 'Prompt Injection', link: '/injection/' },
 					],
 				},
 				{
@@ -53,10 +41,26 @@ export default defineConfig({
 					],
 				},
 				{
+					label: 'Research',
+					items: [
+						{ label: 'Why any of this is measured', link: '/research/' },
+						{ label: 'What the tests show', link: '/experiments/' },
+						{ label: 'The field as it stands', link: '/field/' },
+						{ label: 'The landscape', link: '/landscape/' },
+						{
+							label: 'Security',
+							items: [
+								{ label: 'Prompt Injection', link: '/injection/' },
+								{ label: 'Running attacks safely', link: '/safety/' },
+								{ label: 'What we are not running, and why', link: '/not-doing/' },
+							],
+						},
+					],
+				},
+				{
 					label: 'Where it stands',
 					items: [
 						{ label: 'Decisions', link: '/decisions/' },
-						{ label: 'The research', link: '/research/' },
 					],
 				},
 				{
