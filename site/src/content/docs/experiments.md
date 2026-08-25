@@ -3,28 +3,6 @@ title: What the tests show
 description: What the experiments measured — where an index of library capabilities changes what a coding agent does, and where it does not.
 ---
 
-:::caution[Some of these experiments carry genuinely destructive test data]
-Several harnesses here read third-party attack corpora that contain **live, runnable attack
-code** — workflows that archive a directory and then delete the originals, credential-harvesting
-scripts, and code that posts collected data to a remote host. Our own harnesses read and lint
-that material statically and never execute it, and every sink we author resolves nowhere by
-construction (`.invalid`, RFC 2606). The corpus does not share those guarantees.
-
-**Run these only in a disposable, network-isolated environment. Never point an agentic coding
-tool at the attack corpora** — an agent with real filesystem access, handed live destructive code,
-is the worst configuration available here, and no instruction given to that agent is a control —
-because *whether agents follow instructions* is the thing being measured.
-
-**We declined to do this ourselves, and it cost us a result.** The newest Claude models are absent
-from one experiment entirely, because the only route to them ran tool-enabled agents in a real
-working tree. That is a stated gap in coverage rather than a result obtained unsafely.
-
-The rig we use for this — a no-network container, and a sinkhole mode that records what a payload
-*tries* to send — is described in [running attacks safely](/safety/). **[What we are not running,
-and why](/not-doing/)** lists what we declined outright, and what it cost us.
-:::
-
-
 The project's central claim is testable: does giving a coding agent an index of a
 library's capabilities actually change what it writes? We ran it — real coding tasks,
 through real developer agents from **two different vendors** — Claude Code and
@@ -97,6 +75,11 @@ the clean, current, version-matched material that would make good **training dat
 closing the gap at its source rather than only patching it at run time.
 
 ## The same channel can be used against you
+
+:::caution[This section describes live attack material]
+The corpora behind these results contain working attack code. Reproducing them safely is covered in
+[why any of this is measured](/research/).
+:::
 
 If an index can change what an agent writes, then so can an instruction hidden in the
 material the index is built from — and the library authors supplying that material are not

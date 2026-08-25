@@ -49,25 +49,11 @@ The through-line that came out of it is short: **removing a channel has worked e
 recognising an attack has failed every time.** That is why the design carries controls that reduce
 what reaches the agent at all, and does not carry a detector.
 
-:::caution[Some of these experiments carry genuinely destructive test data]
-Several harnesses here read third-party attack corpora that contain **live, runnable attack
-code** — workflows that archive a directory and then delete the originals, credential-harvesting
-scripts, and code that posts collected data to a remote host. Our own harnesses read and lint
-that material statically and never execute it, and every sink we author resolves nowhere by
-construction (`.invalid`, RFC 2606). The corpus does not share those guarantees.
-
-**Run these only in a disposable, network-isolated environment. Never point an agentic coding
-tool at the attack corpora** — an agent with real filesystem access, handed live destructive code,
-is the worst configuration available here, and no instruction given to that agent is a control —
-because *whether agents follow instructions* is the thing being measured.
-
-**We declined to do this ourselves, and it cost us a result.** The newest Claude models are absent
-from one experiment entirely, because the only route to them ran tool-enabled agents in a real
-working tree. That is a stated gap in coverage rather than a result obtained unsafely.
-
-The rig we use for this — a no-network container, and a sinkhole mode that records what a payload
-*tries* to send — is described in [running attacks safely](/safety/). **[What we are not running,
-and why](/not-doing/)** lists what we declined outright, and what it cost us.
+:::caution[Reproducing this is not risk-free]
+Some harnesses read third-party corpora containing **live, destructive attack code**. Run them only
+in a disposable, network-isolated environment, and never point an agentic coding tool at them.
+[Running attacks safely](/safety/) has the rig; [what we are not running](/not-doing/) has what we
+declined and what it cost us.
 :::
 
 ## Cost of a skill per dependency

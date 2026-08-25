@@ -8,6 +8,9 @@ This project does not invent a skill format. It **adopts** the
 a `SKILL.md` with `name` and `description`, optionally alongside `scripts/`,
 `references/` and `assets/`.
 
+The standards we looked at and did **not** take are listed separately, with the
+measured reason for each: [what we do not adopt](/not-adopted/).
+
 Adopting the format is deliberate — inventing an alternative beside a working
 one buys nothing and costs a migration, and it was this project's own first
 mistake. The format has since been adopted unchanged by a major vendor

@@ -24,6 +24,7 @@ export default defineConfig({
 				// effort — sits under Research, so it supports the case rather than replacing it.
 				{ label: 'Overview', link: '/' },
 				{ label: 'Adopted Standards', link: '/standards/' },
+				{ label: 'What we do not adopt', link: '/not-adopted/' },
 				{
 					label: 'What it is for',
 					items: [
