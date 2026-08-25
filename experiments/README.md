@@ -36,6 +36,7 @@ failed to settle, which is the same information.
 | [test1](test1/) | can five languages be read from real `-sources.jar`? | **tree-sitter per ecosystem**; the enrichment lever is the graph, not the parser |
 | [test2](test2/) | can bytecode carry the undocumented tail? | **yes, degraded** — kept as a fallback for source-less libraries |
 | [test5](test5/) | does a codex built from a *real* harvest retrieve? | **summarise is load-bearing** — raw doc text is 0/17 at real scale |
+| [test12](test12/) | can a corpus wide enough to define "normal" be built with no network? | **yes — 274 publishers, 883 libraries, 235k doc comments** from the local Gradle cache. It supplies no JS or Swift, which is where prose lands |
 
 ### 3 · What goes into the index, and what is left out?
 
@@ -74,6 +75,7 @@ Every row here is a **surface reduction**, and this is the category with an unbr
 | [test8](test8/) | do detectors compose? | **no** — union adds 0, consensus is *worse*; they are nested, not independent |
 | [test10](test10/) | does *configuring* the linters close what their defaults miss? | **on identifiers yes** — the whole catalogue costs 0.221% of a real corpus; on prose, nothing |
 | [test11](test11/) | do detector signals compose when *weighted* rather than OR-ed? | **yes — 48% separation against the best single detector's 16%.** But style features alone reproduce it: the benchmark has a provenance seam |
+| [test13](test13/) | can a legitimate library directive be told from an injected one? | **one signal died, one survived** — "mentions something external" costs 29.8% of real docs; "names a declared API" separates 63% vs 0% and is unpriced |
 
 ## The through-line
 

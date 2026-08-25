@@ -84,6 +84,18 @@ forward, and every day without it is a day the comparison cannot reach back to.
   with a sha256 of the harvest. `corpus.json` itself stays gitignored — derived and 9.7 MB — so the
   manifest is what makes the snapshot verifiable.
 
+**Measured (2026-08-24, `experiments/test12`, `experiments/test13`).**
+
+- **The breadth argument is no longer hypothetical.** A rule measured at **4%** cost on a narrow
+  sample cost **29.8%** on 274 publishers. The rule did not change; the sample did. A narrow corpus
+  does not merely weaken a result, it can invert one — the same shape as `test11`'s provenance seam.
+- **The corpus width problem is solved for the JVM and open elsewhere.** A local Gradle cache
+  yielded **274 publishers, 883 libraries, 235,627 doc comments** with no network. It supplies no
+  JavaScript and no Swift: KMP publishes per-target artifacts, but their sources jars contain
+  Kotlin source sets, so 1,892 jars held **17 `.js` files and zero `.swift`**.
+- Harvesting independently reproduced `test5`'s duplicate finding — **61%** of doc comments were
+  duplicates, against 63% measured on an unrelated corpus.
+
 **Reasoned, not measured.**
 
 - **Retroactive poisoning of this harvest is not available** to an attacker, because published

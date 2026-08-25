@@ -129,6 +129,24 @@ Python, 2026-08-24. Harness: [`experiments/test11`](../../../experiments/test11/
   class under the same hyperparameters. They are uninformative rather than evidence that those
   features carry nothing.
 
+**Measured (2026-08-24, `experiments/test13` and `experiments/test12`).**
+
+- **Legitimate agent-facing library prose is imperative by design, and that is the real blocker.**
+  Real skill artifacts published to Maven Central carry `Preference` and `Contract` sections whose
+  purpose is to instruct the agent — *"Use `formatReadable()` instead of `toString()`"*. **18%** of
+  their prose lines contain a directive verb. That is the same speech act as an injected
+  precondition, so no register-based signal separates them, and widening the corpus makes it worse
+  by teaching a model that directives are normal. This is stronger than the chat-vs-documentation
+  register objection above, which corpus breadth could have fixed.
+- **A structural signal may exist where a stylistic one does not.** Legitimate directives name an
+  API the library declares (**63%**); the injected ones name nothing declared (**0%**). That is
+  `test10`'s resolution check applied to prose — surface reduction, not detection — and it is the
+  only candidate here not tuned to the payload. **Unpriced**, because pricing it needs documentation
+  bound to a declared surface, which `test12`'s corpus deliberately lacks.
+- **The companion signal died on contact with a wide corpus.** "Mentions something external" cost
+  4% on a narrow sample and **29.8%** on 274 publishers — 135× worse than `test10`'s entire
+  catalogue at 0.221%.
+
 **Reasoned, not measured.**
 
 - The volume objection to a small model is **wrong**: public positives are plentiful, and a linear

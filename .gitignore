@@ -29,3 +29,8 @@ __pycache__/
 **/corpus-vecs.json
 # Harvested corpora: rebuild with the experiment's harvest step from the committed graph.
 experiments/test5/corpus.json
+
+# test12 — the prose corpus is derived and large; the exclusion list names private publishers.
+# Neither is ever committed. Only PROSE-MANIFEST.md is publishable, after review.
+experiments/test12/prose-corpus.jsonl
+experiments/test12/private-groups.txt
