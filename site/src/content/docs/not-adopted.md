@@ -28,7 +28,7 @@ the design gets to choose.
 
 ## What each one does
 
-Every entry links to the project so you can read it yourself rather than take our summary for it.
+Every entry links to the project so you can read it yourself rather than take our word for it.
 
 ### [Agent Skills](https://agentskills.io) — the `SKILL.md` format
 
@@ -57,31 +57,107 @@ not address how much stays resident once you have looked.
 ### [Microsoft Agent Framework](https://learn.microsoft.com/en-us/agent-framework/agents/skills) — advertise, then load
 
 Ships `advertise` / `load_skill` / `read_skill_resource` / `run_skill_script`, with a filter
-predicate for choosing which skills are offered.
+predicate over an allowlist for choosing which skills are offered.
 
-**What it gets right:** the two-layer split — a small resident advertisement, the body fetched on
-demand — is the same design this project arrived at from a different starting point, and having a
-major vendor ship it is corroboration we could not have manufactured. It also publishes a real
-number for the resident cost, which most of the field does not.
+**What it gets right — and on security it is ahead of us.** The two-layer split (a small resident
+advertisement, the body fetched on demand) is the design this project reached independently, and a
+major vendor shipping it is corroboration we could not manufacture. It also publishes a real number
+for the resident cost, which almost nothing else in the field does.
 
-**Why we do not use it as-is:** the filter predicate is manual curation, and the resident budget is
-left to the operator. At ~100 tokens per advertisement, the arithmetic on a real dependency graph
-is the problem this project exists to solve.
+More importantly, its **FIDES** middleware applies *information-flow control*: content carries
+integrity and confidentiality labels, the labels propagate through tool calls, and policy is
+enforced before a sensitive tool runs. Its skills documentation treats MCP-sourced skills as
+untrusted by design, does not execute scripts fetched from remote sources, and gates skill-loading
+behind approval.
+
+**That is stronger than what this project recommends** — closer to a type system for trust than to a
+placement rule — and our own research record names it as *prior art to learn from rather than
+reinvent*. If you are choosing a framework today and injection is your concern, this is the one that
+has thought hardest about it.
+
+We have **not** tested it, and say so rather than implying otherwise.
+
+**Why we do not use it as-is: the curation step.** The filter predicate is the answer to too many
+skills, and it is manual selectivity — a human deciding, per project, which dependencies are worth a
+skill. The arithmetic is what defeats it. At Microsoft's own ~100 tokens per advertisement:
+
+| a real project | importable packages | resident cost if advertised |
+|---|---|---|
+| p90 Next.js example | 995 | **99k tokens** |
+| default `create-next-app` | 423 | **42k tokens** |
+| a JVM project after resolution | 311 | **31k tokens** |
+
+Before any work begins. So something must be filtered out — and the only mechanism offered is a
+person choosing, then re-choosing at every dependency bump. **That puts a curation step in front of
+the discovery mechanism**, which is the same objection pnpm's RFC #13422 raised against directory
+conventions, and the same failure this project's own v1 died of. Nobody hand-curates 311 candidates,
+and the ones most worth having are the ones you have not heard of.
+
+An index has no such step: everything is harvested, nothing is resident, and retrieval decides at
+query time rather than a human deciding in advance.
+
+**One honest caveat on the FIDES side**, from our own measurements rather than theirs. We built a
+coarse information-flow control and measured it: it blocked the credential **0 of 3 times harmful**
+and blocked the developer's legitimate task **0 of 3 times successful** — a total denial of service,
+because the attack causes the read that taints everything downstream. Label granularity is a
+requirement, not a refinement. We do not know how fine FIDES' labels are, and that question decides
+whether the approach is usable or merely correct.
 
 ### [SkillsJars](https://www.skillsjars.com/docs) — skills inside the jar
 
 Publishes agent skills to Maven Central at `META-INF/skills/<org>/<repo>/<skill>/SKILL.md` inside
 the artifact, with Maven and Gradle plugins that package on build and extract on consume.
 
-**What it gets right:** it is the only project to have seriously attacked the JVM gap, and it is
-shipping today. Putting the content in the artifact means it is version-exact by construction and
-travels through every mirror and proxy without new infrastructure. That is genuinely the right
-instinct.
+**What it gets right:** it is the only project to have seriously attacked the JVM gap, and it ships
+today. Putting content inside the artifact makes it version-exact by construction and carries it
+through every mirror, proxy and air-gapped repository with no new infrastructure. That instinct is
+correct, and it is correct for the same reasons we found it convincing.
 
-**Why we do not use it:** this project **built and measured the same mechanism**, and it breaks on
-Android and Kotlin Multiplatform, where the artifact a consumer resolves is not the one carrying
-the file. We are not criticising a road we did not walk — this is our own v2, and the failure is
-why there is a v3.
+**Why we do not use it: we designed the same thing independently, shipped two versions of it, and
+measured it failing.** The records are public, so you can check the reasoning rather than take our
+word for it:
+
+- **v1 — the file inside the artifact**, authored at
+  `src/commonMain/resources/META-INF/ai-skills/` and packaged as an ordinary resource. This is
+  effectively the SkillsJars mechanism.
+  [The postmortem](https://github.com/dependencyskills/dependencyskills/blob/master/docs/knowledge/postmortems/v1-bundled-flat-files.md) records what went wrong and why.
+- **v2 — a classified sidecar**, `<artifact>-<version>-skills.zip` published beside the main
+  artifact, to sidestep what v1 hit.
+  [ADR-0003](https://github.com/dependencyskills/dependencyskills/blob/master/docs/knowledge/adr/0003-library-skills-via-repository-artifacts.md) decided it and marks where it
+  was superseded.
+- **v3 — harvest what already ships**, [ADR-0009](https://github.com/dependencyskills/dependencyskills/blob/master/docs/knowledge/adr/0009-transport-is-sources-jar.md).
+
+**We shipped it. It is on Maven Central right now.** Nine libraries under `io.github.aughtone`
+publish an `ai-skill.md` at `META-INF/ai-skills/` inside the jar — 1.4 KB to 7.9 KB each, across
+several versions. Anyone can download one and unzip it; the files are exactly where they should be.
+
+**And nothing found them.** That is the first failure and it has nothing to do with packaging: a
+file inside an artifact has no discovery mechanism. The consumer has to already know the convention,
+already know to unpack the jar, and already be looking. Publishing worked perfectly and changed
+nothing, because discovery was the actual problem and the artifact does not solve it.
+
+**The second failure is that it does not survive the rest of the ecosystem**, established by
+building real libraries and unzipping the output rather than by reading documentation. Three
+separate mechanisms, on the platforms that matter most:
+
+| | |
+|---|---|
+| a KMP library's `commonMain/resources` are **silently dropped from the AAR** | [KT-46493](https://youtrack.jetbrains.com/issue/KT-46493), open since 2021 |
+| AGP strips `META-INF/MANIFEST.MF` from an AAR's nested `classes.jar` | so there is nowhere left to *declare* a location either |
+| Kotlin/Native does not package those resources at all | the file never exists on native targets |
+
+The word doing the work is **silently**. The build succeeds, the artifact publishes, and the skill
+is absent — so a consumer written entirely correctly receives nothing and has no way to know. That
+is a worse failure than an error.
+
+It is also why the transport is now the `-sources.jar` that 93–98% of artifacts already publish: a
+carrier that already survives every one of those pipelines, because the ecosystem has been shipping
+it for years — and one a consumer resolves by coordinate rather than by knowing a convention.
+
+**We walked this road.** It is our own v1 and v2, published under our own name, still sitting in
+Maven Central where anyone can check. Their failure is why there is a v3, and it is the reason this
+entry is longer than the others — not because SkillsJars is worse than the alternatives, but because
+we can say exactly what happens next, having done it.
 
 ### [skilld](https://github.com/skilld-dev/skilld) — be selective
 
@@ -97,14 +173,49 @@ scale smaller than the one we are trying to reach.
 
 ### npm directory conventions — [library-skills.io](https://library-skills.io), [skills-npm](https://github.com/antfu/skills-npm), [Vercel's skills CLI](https://github.com/vercel-labs/skills), [mise](https://github.com/jdx/mise/discussions/9479)
 
-Variations on `skills/<name>/SKILL.md` or `.agents/skills/<name>/SKILL.md` at package root.
+Variations on `skills/<name>/SKILL.md` or `.agents/skills/<name>/SKILL.md` at package root,
+discovered by scanning the unpacked `node_modules` tree.
 
-**What they get right:** they work now, with no coordination required. A convention that a
-publisher can adopt unilaterally is how ecosystems actually change, and these are the reason npm is
-the furthest along.
+**What they get right:** they work today, with no coordination required. A convention a publisher
+can adopt unilaterally is how ecosystems actually change, and this is why npm is the furthest along
+of any ecosystem. The unpacked tree also makes the content trivially readable — no archive to open,
+no build step, no plugin.
 
-**Why we do not pick one:** several are in circulation. Choosing a favourite would be the
-reinvention we are trying to avoid, so we read whichever an ecosystem uses.
+**Why we do not use it.** Not because there are several to choose from. Because a directory scan is
+the wrong shape for this problem in the ecosystem where the problem is largest.
+
+**The scan cannot load less than what is on disk.** That is the whole difficulty in one sentence. A
+JVM project can at least distinguish declared from transitive; `node_modules` is **flat**, so every
+package is importable and there is no smaller set to fall back to.
+
+| a real npm project | packages on disk | resident cost at ~100 tokens each |
+|---|---|---|
+| p90 Next.js example | **995** | **99k tokens** |
+| default `create-next-app` | **423** | **42k tokens** |
+
+Halving that with a better filter does not help: **halving O(n) is still O(n)**, and the number grows
+every time someone adds a dependency. The mechanism has a boundary of roughly tens of skills, and
+none of these proposals publishes a number, so none of them states where its own boundary is.
+
+**And the security position is worse in JavaScript than anywhere else**, which matters because this
+is the ecosystem the convention is strongest in. Two measured reasons:
+
+- **Every prose payload that worked in our cross-language test worked in JavaScript.** None landed
+  in Kotlin, Java or Swift. A JS entry has no type signature to anchor on, so the prose carries more
+  of the meaning — and reading the process environment is one line in Node where the JVM languages
+  need real file handling.
+- **JavaScript has an escape hatch the others do not.** A quoted property key accepts arbitrary
+  text where an identifier grammar would refuse it, so the form constraints that close the
+  identifier channel elsewhere have a hole here by language design.
+
+Put together: the ecosystem with **100% of packages importable**, the **flattest trust graph**, the
+**highest measured prose exposure**, and a **grammar that permits arbitrary text in a code position**
+is the one being handed a convention that loads everything on disk into the context window.
+
+That is not a criticism of the people building these — the convention is genuinely the right way to
+get adoption, and it is why npm leads. It is that adoption was the easy half. **We index instead:
+harvest everything, keep nothing resident, and let retrieval decide at query time** — which is the
+same answer regardless of how flat the graph is or how many packages arrive with it.
 
 ### [llms.txt](https://llmstxt.org) — index separate from full text
 
