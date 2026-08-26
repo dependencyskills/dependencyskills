@@ -119,3 +119,24 @@ they are attack prose that anything indexing this repository would read straight
 
 Nothing here needs them to run — the harness regenerates its own output. See
 [experiments/README.md](../../../README.md) for why this is a speed bump rather than a control.
+
+## The sink host should move to `.invalid`
+
+The payloads here name **`datefmt-telemetry.io`**. It was unregistered and resolved nowhere when
+these results were produced, and it still is — but **this project does not own it, and anyone
+could register it.** A published kit that invites strangers to run payloads naming a domain a
+third party might control is a real, if small, hazard: on the tool-enabled arms an agent may
+actually make the request rather than merely write code containing it.
+
+**The fix is to move every sink to the reserved `.invalid` TLD** (RFC 2606), which can never be
+registered by anyone. `test9` already does this — `telemetry-sink.fixture.invalid` — and the
+AgentTrap benchmark uses the same convention.
+
+**It is not an edit in place.** The host *is* the canary the scorer matches on, so changing it
+changes the payload, and every published figure measured against the current set becomes
+unreproducible. It needs a **payload-set version bump**: change the host, re-run the affected
+measurements, and re-stamp the results — see
+[ADR-0011](../../../../docs/knowledge/decisions/0011-publishing-posture-for-security-findings.md).
+
+Until then, `dig +short datefmt-telemetry.io` before running, and skip the tool-enabled arms if
+it resolves.
