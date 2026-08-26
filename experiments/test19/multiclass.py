@@ -103,16 +103,42 @@ def main():
     for l, row in zip(labels, cm):
         print(f"  {l:<15}" + "".join(f"{v:>8}" for v in row))
 
-    # THE BINARY QUESTION, recovered. Anything not predicted `clean` is a flag, so this is directly
-    # comparable to report.py — and it must not look better by being asked an easier question.
+    # THE BINARY QUESTION, recovered TWO WAYS, because they are different operating points and
+    # conflating them would misreport a class as undetected.
+    #
+    #   argmax     a comment is flagged only if some payload class OUTSCORES `clean`. That is
+    #              roughly a 50% threshold, and it is what the report above shows.
+    #   threshold  flag when P(not clean) crosses the point that costs test10's 0.221% on clean
+    #              comments — the same operating point `report.py` uses.
+    #
+    # A class showing 0.000 precision under argmax has not necessarily been missed; it may simply
+    # never be the top class. The threshold row is what says whether it was actually detected.
     yb = np.array([v != "clean" for v in yte])
     pb = np.array([v != "clean" for v in pred])
     fp = int((pb & ~yb).sum())
-    print(f"\n## as a yes/no answer")
+    print(f"\n## as a yes/no answer — argmax")
     print(f"  good prose wrongly flagged   {fp} of {int((~yb).sum())} "
           f"({fp / max(1, int((~yb).sum())):.2%})")
     print(f"  poisoned comments flagged    {int((pb & yb).sum())} of {int(yb.sum())} "
           f"({(pb & yb).sum() / max(1, yb.sum()):.1%})")
+
+    classes = list(clf.classes_)
+    ci = classes.index("clean")
+    proba = clf.predict_proba(vec.transform(Xte))
+    notclean = 1.0 - proba[:, ci]
+    cut = np.quantile(notclean[~yb], 1 - P.BAR)
+    flagged = notclean > cut
+    print(f"\n## as a yes/no answer — thresholded at test10's {P.BAR:.3%} cost")
+    print(f"  good prose wrongly flagged   {int((flagged & ~yb).sum())} of {int((~yb).sum())} "
+          f"({(flagged & ~yb).sum() / max(1, (~yb).sum()):.2%})")
+    print(f"  poisoned comments flagged    {int((flagged & yb).sum())} of {int(yb.sum())} "
+          f"({(flagged & yb).sum() / max(1, yb.sum()):.1%})")
+    print("\n  per register, at that threshold:")
+    yte_arr = np.array(yte)
+    for lab in sorted(set(yte) - {"clean"}):
+        m = yte_arr == lab
+        print(f"    {lab:<14} {int((flagged & m).sum()):>6} of {int(m.sum())} "
+              f"({(flagged & m).sum() / max(1, m.sum()):5.1%})")
 
     # THE CHECK. test9's payloads carry framings assigned by whoever wrote them, not by this
     # generator. Where does the model put them?

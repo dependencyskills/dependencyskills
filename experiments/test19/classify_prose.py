@@ -41,7 +41,7 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, "..", "test18"))
 sys.path.insert(0, os.path.join(HERE, "..", "test15"))
 import prose_grammar as G
-from tokenizers import words as split_words
+from identifier_tokens import words as split_words
 
 DB = os.path.join(HERE, "..", "corpus", "corpus.db")
 BAR = 0.00221

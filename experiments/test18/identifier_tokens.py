@@ -2,6 +2,10 @@
 """
 Ways of turning an identifier into tokens. One file so a classifier can sweep them.
 
+NAMED `identifier_tokens` RATHER THAN `tokenizers` because the latter is a HuggingFace package,
+and a local module with that name silently shadows it for anything downstream that loads a
+transformer — which is exactly what happened the first time an embedding arm was added.
+
 WHY A SWEEP AND NOT A CHOICE. Every rule this project has shipped for the identifier channel
 operates on **words** — `test10`'s catalogue counts them, `test15`'s grammar composes them. That
 makes word-splitting the obvious tokenisation and also an untested assumption: nobody has checked

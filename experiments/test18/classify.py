@@ -50,7 +50,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, "..", "test15"))
-from tokenizers import TOKENIZERS
+from identifier_tokens import TOKENIZERS
 
 DB = os.path.join(HERE, "..", "corpus", "corpus.db")
 BAR = 0.00221                      # test10's whole catalogue, as a false-positive rate

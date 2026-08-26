@@ -52,6 +52,7 @@ experiments/summariser/summaries.json
 # re-fetching it is the point: a stale sample is no longer packages we have never seen.
 experiments/test18/fresh-identifiers.json
 experiments/test18/.tarball.tgz
+experiments/test19/paraphrases.json
 
 # BEGIN story-tools (generated - do not edit between markers)
 docs/stories/
