@@ -23,6 +23,7 @@
 # Usage:
 #   ./run-sandboxed.sh build
 #   ./run-sandboxed.sh test10                       # rule catalogue, needs the harvested corpus
+#   ./run-sandboxed.sh test22                       # white-box evasion search, no network
 #   ./run-sandboxed.sh test8  <agenttrap-dir>       # linters vs the malicious corpus
 #   ./run-sandboxed.sh test9  <lang...>             # compile + lint per language
 #   ./run-sandboxed.sh shell  [agenttrap-dir]       # poke around, still with no network
@@ -78,6 +79,7 @@ case "$CMD" in
   test8)  RUN="cd /work/experiments/test8 && python3 linter_vs_agenttrap.py ${CORPUS_ARG}" ;;
   test9)  RUN="cd /work/experiments/test9 && python3 stages_1_2.py ${*:-kotlin java js}" ;;
   test10) RUN="cd /work/experiments/test10 && python3 evaluate.py" ;;
+  test22) RUN="cd /work/experiments/test22 && python3 evade.py ${*:-}" ;;
   shell)  RUN="bash" ;;
   # A positive control for `--observe`. A recorder that quietly records nothing is indistinguishable
   # from a payload that did nothing, and the second reading is the one everybody wants to believe.

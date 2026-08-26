@@ -56,6 +56,10 @@ experiments/test19/paraphrases.json
 experiments/test19/dial.json
 experiments/test21/bytecode-identifiers.json
 
+# test22 — evasions found by search are working (if inert) injection prose. Never committed,
+# the same rule as the corpus DB and the packed transcripts.
+experiments/test22/evasions.json
+
 # BEGIN story-tools (generated - do not edit between markers)
 docs/stories/
 .agents/config/dimensions.md
