@@ -118,10 +118,25 @@ caller's own words — and the agent loop found it every time in a pilot, becaus
 translates a plain-language need into the vocabulary the entry actually uses. That is the
 single strongest argument for an index over a pile of documents.
 
-**With one caveat we put there ourselves.** That 77% was measured over 220 entries. Harvesting
-a single real project — 99 dependencies — yields more than five thousand once duplicates are
-removed, and recall falls steeply as the corpus grows. "At scale" was not measured at the scale
-a real graph produces.
+**With two caveats we put there ourselves, and the second is the bigger one.**
+
+That 77% was measured over 220 entries. Harvesting a single real project — 99 dependencies —
+yields more than five thousand once duplicates are removed, and recall falls steeply as the
+corpus grows. "At scale" was not measured at the scale a real graph produces.
+
+And **every entry behind the 77% was written by hand.** We had been treating the gap between
+that number and the 29% raw harvested documentation scores as evidence that the rewriting step
+is what makes an index work. It is not. We built the rewriter, ran it over the same 220 entries
+with the same questions and the same encoder, and it puts the right answer first **5 times in 17
+— exactly what the raw documentation does**, while trailing it further down the list.
+**The lift belonged to who wrote the summary, not to summarising.**
+
+So 77% is a target: what an index could reach if its entries were as good as hand-written ones.
+It is not what the pipeline that builds them achieves. The rewriter keeps its place for the
+other reason we built it — it is the quarantine that stops library text reaching the agent
+verbatim, and that result is unaffected. We are leaving the number on this page rather than
+quietly restating it, because it was the strongest thing we had said and it turned out to be
+measuring something else.
 
 Two questions that stood open here have since been answered. **Harvesting does not filter
 anything** — the same payload written in each of five languages' native doc conventions is

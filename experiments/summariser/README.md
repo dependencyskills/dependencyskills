@@ -92,48 +92,48 @@ local model produces entries that retrieve like the hand-written ones had never 
 ***top 1 … top 10** — how many of the 17 queries got the correct answer back inside that many
 hits. **Top 1** is the strict one: the right entry came back first. Higher is better everywhere.*
 
+***top 1 … top 10** — how many of the 17 questions got the correct answer back inside that many
+hits. **Top 1** is the strict one: the right entry came back first. Higher is better everywhere.*
+
 | index over the same 220 entries | top 1 | top 3 | top 5 | top 10 |
 |---|---|---|---|---|
 | raw harvested doc text | **5 of 17 (29%)** | 6 of 17 | 8 of 17 | 13 of 17 |
-| summarised by this component | **4 of 17 (24%)** | 6 of 17 | 7 of 17 | 10 of 17 |
-| *hand-written, 26 queries, synthetic corpus — a reference, not a row* | *20 of 26 (77%)* | | | |
-
-**It does not reproduce.** A local model rewriting real documentation retrieves no better than the
-raw documentation, and slightly worse overall. The 2.6× lift the project has been quoting is not a
-property of *summarising*; it was a property of *who wrote the summary*.
+| summarised by this component | **5 of 17 (29%)** | 7 of 17 | 8 of 17 | 10 of 17 |
+| *hand-written, 26 questions, synthetic corpus — a reference, not a row* | *20 of 26 (77%)* | | | |
 
 Read the first row as: *of 17 developer questions, the raw index put the right answer first 5 times
 and somewhere in the first ten 13 times.*
 
-## Where the loss actually is
+**It does not reproduce.** A local model rewriting real documentation retrieves **the same** as the
+raw documentation at the head and worse in the tail. The 2.6× lift the project has been quoting is
+not a property of *summarising*; it was a property of *who wrote the summary*.
 
-16 of 220 entries (7%) failed verification and degraded to signature-only. But **5 of the 17 query
-targets degraded — 29%, four times the corpus rate.** Splitting on that separates two mechanisms
-that were being averaged together:
+## It took two runs, and the first one was measuring the verifier
 
-*Diagnostic, not a headline — the subset is chosen by an outcome of the run.*
+The first run scored **4 of 17** first-hit against raw's 5, with **16 of 220 entries degraded** to
+signature-only and — the number that mattered — **5 of the 17 question targets** among them, four
+times the corpus rate. Splitting on that separated two mechanisms that were being averaged: on the
+12 surviving targets the two indexes tied exactly, so the rewriter was neutral and the whole visible
+loss was the fallback.
 
-| the 12 queries whose target was **not** degraded | top 1 | top 3 | top 5 | top 10 |
-|---|---|---|---|---|
-| raw harvested doc text | 4 of 12 (33%) | 5 of 12 | 6 of 12 | 9 of 12 |
-| summarised | 4 of 12 (33%) | 6 of 12 | 7 of 12 | 9 of 12 |
+**11 of those 16 degradations came from one over-broad rule.** *Contains code or markup* matched the
+bare words `fun` and `class`, so *"Returns the class of the serializer"* was thrown away as markup.
+Narrowing it to match a **declaration** rather than a word — `fun name(` and `class Name` — halved
+the degradation rate and moved the headline back to a tie:
 
-**The rewriter is neutral. The fallback is what costs.** Every one of the five degraded targets got
-worse, three of them catastrophically — `CallLoggingConfig` fell from rank 8 to rank 139,
-`DefaultHeadersConfig` from 8 to 52, `HttpTimeoutConfig` from 93 to 213. All three top-10 hits lost
-between the two tables are degraded targets.
+| | degraded | question targets degraded | top 1 |
+|---|---|---|---|
+| before narrowing | 16 of 220 (7%) | **5 of 17** | 4 of 17 |
+| after | 6 of 220 (3%) | **1 of 17** | 5 of 17 |
 
-**So the safe state is safe to *use* and not safe to *find*.** `test0` measured signature-only as
-sufficient for an agent to use a capability — **7 of 8** — but that measurement started with the
-capability already in hand. Nobody asked whether it could be retrieved. It cannot: a signature has
-no prose, and the query is prose. That is a real hole in property 4's reasoning and this is the
-first measurement to expose it.
+Every rejection is a retrieval loss, so an over-broad verifier is not a free safety margin. The
+model output is now stored with each entry so `--reverify` can re-judge it against a changed
+verifier without paying for 220 model calls again; that is why the second run cost nothing.
 
-## What the rewriter does do
+## What is left after the fix, and it is not the fallback
 
-Neutral on average hides a wide spread. Among non-degraded targets, five improved and six worsened,
-and the improvements are large and in a specific place — exactly the near-neighbour crowding
-`test5` diagnosed, where Kotlin API prose is all written in one register:
+Top 10 is still **10 against 13**, with only one target degraded. That residual is the rewriter
+itself, and it is not evenly spread. Among the questions, five improved and seven worsened:
 
 *Rank of the correct answer — **lower is better**, 1 means it came back first.*
 
@@ -142,23 +142,39 @@ and the improvements are large and in a specific place — exactly the near-neig
 | `Channel` | 86 | **1** |
 | `Semaphore` | 69 | **3** |
 | `respondOutputStream` | 8 | **2** |
-| `debounce` | 100 | 91 |
-| `staticFiles` | 1 | 6 |
+| `retry` | 2 | **1** |
+| `debounce` | 100 | 89 |
 | `Mutex` | 1 | 5 |
-| `CachingOptions` | 6 | 14 |
+| `CachingOptions` | 6 | 13 |
+| `CallLoggingConfig` | 8 | 46 |
+| `DefaultHeadersConfig` | 8 | 77 |
 
-Rewriting rescues entries buried by register collision and disturbs entries that were already
-found. That is a coherent mechanism rather than noise, and it suggests the useful comparison is not
-raw-versus-summarised but **both**, which nothing here has measured.
+The gains land exactly where `test5` diagnosed **near-neighbour crowding** — Kotlin API prose is
+written in one register, so everything resembles everything, and rewriting breaks the tie.
+
+The losses are stranger, and worth stating rather than explaining away. `CallLoggingConfig`'s raw
+documentation reads, in full, *"A configuration for the CallLogging plugin"* plus a *Report a
+problem* link. The summary reads *"a Ktor DSL configuration class that sets up logging for incoming
+HTTP calls in a Ktor server application."* Against the question *"record what requests came in and
+how they were answered"* the **less informative text retrieves better** — rank 8 against 46.
+
+*Unverified hypothesis:* the raw key carries the plugin's own vocabulary several times over,
+including inside the feedback URL's fully-qualified name, and repetition sharpens the embedding.
+The summary says it once, in a longer sentence with more competing content. If that is right, some
+of what raw text retrieves on is **boilerplate**, not documentation — which would be worth knowing
+and is not established by two examples.
 
 ## What this does not say
 
 - **It does not say the summariser is not worth having.** Its measured job is *quarantine*, and
   `test7` measured that directly — 0 of 3 harm, 2 of 3 task. This measures the *other* claim made
   for it, and only that one.
-- **17 queries is small.** The headline difference, 5 against 4, is **one query**. The top-10
-  difference is three, and the diagnostic split explains those three mechanically, which is the
-  only reason this is reported as a finding rather than as noise.
+- **17 questions is small.** After the verifier fix the head is an exact tie, so the finding rests
+  on the **top-10 gap of three** and on the per-question pattern behind it, not on a headline
+  difference. The first run's 5-against-4 was one question and would not have been reportable on
+  its own.
+- **It does not say raw text is better.** It says the two are the same at the head and raw wins the
+  tail, on one corpus, with a residual whose mechanism is a hypothesis.
 - **The raw baseline reproduces `test5` at top 1 (5 of 17) and top 10 (13 of 17)** and differs by
   two at top 3 and top 5 (6 against 8, 8 against 10). Most likely subset composition. Stated
   rather than smoothed.
@@ -167,9 +183,20 @@ raw-versus-summarised but **both**, which nothing here has measured.
 
 ## What it points at
 
-**Verification is over-rejecting, and now at a known price.** 11 of the 16 degradations were
-*"contains code or markup"* — the pattern matches backticks, braces, angle brackets, and the bare
-words `fun` and `class`. A capability sentence reading *"Returns the class of the serializer"* is
-rejected for containing the word `class`. Every rejection is a retrieval loss, so the cheapest
-available improvement is not a better generator but a **less blunt verifier** — and one whose
-fallback keeps prose instead of discarding it.
+**Index both faces, and score it.** Neither index wins. They fail on different questions and the
+failure modes look complementary by construction — raw prose loses to register collision, rewritten
+prose loses whatever the raw text was repeating. [RAD-0013](../../docs/knowledge/decisions/) already
+describes an entry as having a semantic face and a syntactic one; nothing has ever scored an index
+carrying both. That is the obvious next measurement and it is cheap, because both key sets already
+exist in this directory.
+
+**Find out what raw text is actually retrieving on.** If the `CallLoggingConfig` result generalises
+— less informative text outranking more informative text because it repeats the symbol's own
+vocabulary — then part of the raw baseline is boilerplate rather than documentation, and both the
+29% and everything compared against it mean something narrower than they appear to. Two examples is
+not a finding. It is a cheap thing to check.
+
+**The fallback still discards prose.** Narrowing the verifier cut degradation from 7% to 3%, but a
+rejected entry still falls back to a signature, which cannot be retrieved at all. Degrading to
+*stripped* prose rather than *discarded* prose would remove the failure mode instead of shrinking
+it — and that is a design change with a security argument attached, not a tuning change.

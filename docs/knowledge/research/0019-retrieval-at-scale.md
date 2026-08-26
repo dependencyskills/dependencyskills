@@ -1,6 +1,18 @@
 # Retrieval at Scale
 
-RAD-0019 · 2026-08-20 · v3
+RAD-0019 · 2026-08-20 · v4
+
+**v4 (2026-08-25) — the 77% is an upper bound on a target, not a measurement of the pipeline.**
+Every entry scored in this record was **written by hand**. [RAD-0040](0040-does-summarising-improve-retrieval.md)
+ran the built summariser over `test5`'s 220 harvested entries with its 17 queries and this
+encoder: raw documentation and machine-summarised entries **both** retrieve the correct answer
+first **5 of 17**, with summarised trailing in the tail. So 77%
+records what an index *could* reach if its entries were as good as hand-written ones — a
+target worth having — and not what the pipeline that builds them achieves. Where this record
+is cited as evidence that the semantic face is the retrieval mechanism, that inference no
+longer follows from it. The Layer 2 result (the agent authoring its own query, 10/10) is
+untouched: it was measured on the same hand-written index, and what it demonstrates is query
+authoring rather than entry quality.
 
 **v3 (2026-08-22) — the scale in the title is not the scale that was measured.** The headline
 77% r@1 rests on a **220-entry** synthetic corpus. `experiments/test5` harvested one small real

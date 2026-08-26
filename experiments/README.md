@@ -174,13 +174,16 @@ paraphrase, signature-only display — and not the ones that try to recognise an
   can no longer run the control at all.
 - **The summarise step's retrieval claim does not reproduce.** [`summariser/`](summariser/) ran the
   real component over `test5`'s own 220-entry slice, queries and encoder. Counting how often the
-  correct answer came back **first**: raw doc text **5 of 17**, summarised **4 of 17**. The 29% → 77% gap the project has quoted was measured against
-  **hand-written** entries, and a local model does not produce it. Splitting on the fallback shows
-  why — on the 12 targets that were not degraded the two indexes tie exactly (4 of 12 either way),
-  so the rewriter is neutral and the whole loss is signature-only degradation. **`test0` measured
+  correct answer came back **first**: raw doc text **5 of 17**, summarised **5 of 17** — a tie, and
+  summarised trails in the tail (10 of 17 within ten against 13). The 29% → 77% gap the project has
+  quoted was measured against **hand-written** entries, and a local model does not reproduce it.
+  Two things came out of getting there. **An over-broad verifier rule cost a first-hit**: *contains
+  code or markup* matched the bare words `fun` and `class`, degrading 5 of 17 query targets to
+  signature-only; narrowing it to match a declaration took that to 1 of 17. And **`test0` measured
   signature-only as sufficient to *use* a capability (7 of 8) with the capability already in hand;
-  nothing measured whether it could be *found*.** It cannot — a signature has no prose and the
-  query is prose. The quarantine result (`test7`, 0 of 3 harm) is untouched by this.
+  nothing measured whether it could be *found*.** It cannot — a signature has no prose and the query
+  is prose, so the safe state is safe against harm and unreachable by search. The quarantine result
+  (`test7`, 0 of 3 harm) is untouched. See [RAD-0040](../docs/knowledge/research/0040-does-summarising-improve-retrieval.md).
 - **Prose, now with both candidates priced.** `test13` and `test14` measured the two structural
   signals available — reference to something external (29.8%) and resolution against the declared
   surface (1.73%) — against `test10`'s 0.221% bar. Both fail. What blocks progress is no longer a

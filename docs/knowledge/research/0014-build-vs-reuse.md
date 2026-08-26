@@ -1,6 +1,6 @@
 # Build vs Reuse: the Codex Pipeline
 
-RAD-0014 · 2026-08-19 · v3
+RAD-0014 · 2026-08-19 · v4
 
 **Reasoned, not measured.** This record decides, per pipeline layer, whether to
 reuse an existing tool or build. The tool capabilities and licenses come from
@@ -18,6 +18,19 @@ harvested doc text retrieve at 29% r@1 against 77% for entries written in a call
 (same encoder, same queries, 220 entries either way). Without the summarise step retrieval is
 roughly a third as good, which puts it on the product's critical path rather than in its
 backlog.
+
+**v4 (2026-08-25) — the retrieval half of v3 is withdrawn.** The 77% was measured on entries
+**written by hand**. [RAD-0040](0040-does-summarising-improve-retrieval.md) ran the built
+summariser over the same 220 entries, the same 17 queries and the same encoder: raw and
+summarised **both** retrieve the correct answer first **5 of 17**, and summarised trails in the
+tail. The rewriter is retrieval-neutral at the head, and the 2.6× lift this note attributed to
+*summarising* belonged to *who wrote the summary*.
+
+Summarise stays on the critical path, on a different and still-measured basis: it is the
+**quarantine** (`test7` — 0 of 3 harm, 2 of 3 task), and quarantine was always the stronger
+claim. What is withdrawn is the argument that it is also the retrieval mechanism. Nothing in
+the build-vs-reuse verdict changes — this layer is still built rather than reused — but the
+reason recorded here was half wrong and the half that failed is the one most often quoted.
 
 ## Question
 

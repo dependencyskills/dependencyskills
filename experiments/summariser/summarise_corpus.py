@@ -16,8 +16,14 @@ compared against was measured on these exact entries.
 RESUMABLE, because it is ~220 local model calls. Re-running skips whatever `summaries.json`
 already holds, so an interrupted run costs only what it had not finished.
 
+RE-VERIFY WITHOUT RE-GENERATING. `--reverify` replays `verify()` over the model output already
+stored, calling nothing. A change to the verifier is then free to score, which matters because
+RAD-0040 found the verifier — not the generator — to be where the measured retrieval loss came
+from, and an improvement that costs 220 model calls to evaluate does not get evaluated.
+
 Run:  uv run python summarise_corpus.py
       ... --limit 20      # a short run, to see it working
+      ... --reverify      # re-judge stored output against the current verify(); no model
 Out:  summaries.json (gitignored — derived, and rebuilt by re-running)
 """
 import json
@@ -43,9 +49,50 @@ def load_slice():
     return corpus, queries, idx
 
 
+def reverify(corpus, queries, idx):
+    """Re-judge stored model output against the current verifier. No model calls."""
+    if not os.path.exists(OUT):
+        sys.exit("nothing to re-verify — run without --reverify first.")
+    done = {r["symbol"]: r for r in json.load(open(OUT))}
+    targets = {q["target"] for q in queries}
+    stale = [corpus[i]["symbol"] for i in idx
+             if done.get(corpus[i]["symbol"], {}).get("raw") is None
+             and not done.get(corpus[i]["symbol"], {}).get("degraded", True) is False]
+    missing = [corpus[i]["symbol"] for i in idx if corpus[i]["symbol"] not in done]
+    if missing:
+        sys.exit(f"{len(missing)} entries have no stored output. Re-verification cannot invent it; "
+                 "run without --reverify to fill them in.")
+    if stale:
+        sys.exit(f"{len(stale)} stored records predate raw-output capture, so their rejected text "
+                 "is gone. Delete summaries.json and re-run — a partial re-verification would "
+                 "read as a verifier improvement rather than as missing data.")
+    changed = 0
+    for i in idx:
+        e = corpus[i]
+        old = done[e["symbol"]]
+        new, reason = S.adjudicate(e, old.get("raw") or "")
+        new["reason"] = reason
+        new["is_target"] = e["symbol"] in targets
+        if new["degraded"] != old["degraded"]:
+            changed += 1
+            verb = "now DEGRADED" if new["degraded"] else "now accepted"
+            print(f"  {verb:<14} {e['symbol'][-46:]:<46} {reason[:50]}")
+        done[e["symbol"]] = new
+    json.dump(list(done.values()), open(OUT, "w"), indent=1)
+    rows = [done[corpus[i]["symbol"]] for i in idx]
+    deg = sum(1 for r in rows if r["degraded"])
+    tgt = sum(1 for r in rows if r["is_target"] and r["degraded"])
+    print(f"\n  {changed} verdicts changed")
+    print(f"  {len(rows)-deg} summarised, {deg} degraded ({deg/len(rows):.0%})")
+    print(f"  query targets degraded: {tgt} of {sum(1 for r in rows if r['is_target'])}")
+    return 0
+
+
 def main():
     limit = int(sys.argv[sys.argv.index("--limit") + 1]) if "--limit" in sys.argv else None
     corpus, queries, idx = load_slice()
+    if "--reverify" in sys.argv:
+        return reverify(corpus, queries, idx)
     if limit:
         idx = idx[:limit]
     targets = {q["target"] for q in queries}

@@ -40,12 +40,12 @@ case studies are historical; none is part of the versioned canon.
 | RAD-0011 — Existing Documentation Systems as Skill Content | v2 |
 | RAD-0012 — Structure from Bytecode | v2 |
 | RAD-0013 — The Codex Entry | v3 |
-| RAD-0014 — Build vs Reuse: the Codex Pipeline | v3 |
+| RAD-0014 — Build vs Reuse: the Codex Pipeline | v4 |
 | RAD-0015 — How the Source Is Read | v1 |
 | RAD-0016 — The Content-Value A/B | v2 |
 | RAD-0017 — The Retrieval / Disambiguation A/B | v1 |
 | RAD-0018 — The Selection A/B | v1 |
-| RAD-0019 — Retrieval at Scale (Layer 1 recall + Layer 2 agent loop) | v3 |
+| RAD-0019 — Retrieval at Scale (Layer 1 recall + Layer 2 agent loop) | v4 |
 | RAD-0020 — Information-Flow Control as the Trust Model | v4 |
 | RAD-0021 — Admission Control at Harvest | v4 |
 | RAD-0022 — The Value of Transitive Capabilities | v2 |
@@ -61,6 +61,28 @@ case studies are historical; none is part of the versioned canon.
 | RAD-0032 — Can Standing Instructions Override Injection That Gets Through? | v1 |
 | RAD-0033 — Do Form Constraints Compose Where Detectors Do Not? | v1 |
 | RAD-0034 — Better Linters, or Better Configuration? | v1 |
+
+### Corrections to the record below
+
+The changelog is history and is not rewritten. Where later work overturned an inference drawn at
+the time, it is listed here instead, so a reader of the narrative knows which conclusions no longer
+follow from it.
+
+**The 77% recall figure does not support the claim that summarising improves retrieval.**
+Under **0.0.2** the vector arm is reported at *"recall@1 77% vs lexical 38%"*, and RAD-0014 v3 and
+RAD-0019 v3 built on it the argument that the **summarise** layer is load-bearing *for retrieval* —
+raw harvested documentation retrieving at 29% against 77% for caller's-words entries.
+
+Both numbers stand. The inference does not. Every entry behind the 77% was **written by hand**.
+[RAD-0040](research/0040-does-summarising-improve-retrieval.md) ran the built summariser over the
+same 220 entries, the same 17 queries and the same encoder: raw and machine-summarised **both**
+retrieve the correct answer first **5 of 17**, and summarised trails in the tail (10 of 17 within
+ten against 13). The lift belonged to *who wrote the summary*, not to *summarising*.
+
+So 77% records what an index could reach if its entries were as good as hand-written ones — a
+target — and not what the pipeline that builds them achieves. The **summarise** layer keeps its
+place on the critical path on its other and still-measured basis: it is the **quarantine**
+(`test7` — 0 of 3 harm, 2 of 3 task). RAD-0014 → v4, RAD-0019 → v4.
 
 ## Changelog
 

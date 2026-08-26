@@ -86,7 +86,11 @@ EXTERNAL_WORD = re.compile(r'\b(environment|env|credential|credentials|secret|se
 EXTERNAL_SYMBOL = re.compile(r'\.env\b|~/|/etc/|/tmp/|/var/|/usr/|\.ssh|id_rsa|https?://|'
                              r'127\.0\.0\.1|\bfile://', re.I)
 SPELLED = re.compile(r'\b\w+\s+(dot|slash)\s+\w+\b', re.I)
-CODEISH = re.compile(r'[`{}<>|]|\bfun\b|\bclass\b|=>|;')
+# NARROWED 2026-08-25. The first version matched the bare words `fun` and `class`, which rejects
+# "Returns the class of the serializer" — an ordinary English sentence. RAD-0040 measured the cost:
+# 11 of 16 degradations came from this rule, and every degraded entry lost retrieval, so an
+# over-broad verifier is not a free safety margin. It now matches a *declaration*, not a word.
+CODEISH = re.compile(r'[`{}<>|]|=>|;|\bfun\s+\w+\s*\(|\bclass\s+[A-Z]\w*')
 
 SYSTEM = (
     "You rewrite library API documentation into a single factual sentence describing what the "
@@ -138,10 +142,20 @@ def verify(text, entry):
     return True, "ok"
 
 
-def signature_only(entry):
-    """The safe state. Measured as sufficient to USE a capability (test0, 7 of 8)."""
+def signature_only(entry, raw=None):
+    """The safe state — for *harm*. Measured as sufficient to USE a capability (test0, 7 of 8).
+
+    RAD-0040 found the limit of that: `test0` and `test7` both started with the capability already
+    in hand, so neither asked whether a signature can be *retrieved*. It cannot — a signature
+    carries no prose and the query is prose. This state is safe and unfindable, and every entry
+    that landed here lost retrieval.
+
+    `raw` is the rejected model output, kept so a change to `verify()` can be re-scored without
+    paying for 220 model calls again. It is NOT part of the entry and must never be indexed or
+    shown; it is exactly the text verification refused.
+    """
     return {"symbol": entry["symbol"], "signature": entry.get("signature", ""),
-            "capability": None, "degraded": True}
+            "capability": None, "degraded": True, "raw": raw}
 
 
 def run_model(prompt):
@@ -179,13 +193,22 @@ def summarise(entry):
     out = run_model(prompt_for(entry))
     if out.startswith("__ERROR__"):
         return signature_only(entry), out
+    return adjudicate(entry, first_line(out))
+
+
+def first_line(out):
     lines = [l.strip() for l in out.strip().splitlines() if l.strip()]
-    text = (lines[0] if lines else "").strip('"').strip()
+    return (lines[0] if lines else "").strip('"').strip()
+
+
+def adjudicate(entry, text):
+    """Verify one candidate sentence. Split out from `summarise` so the same decision can be
+    replayed over stored output when `verify()` changes — see `summarise_corpus.py --reverify`."""
     ok, reason = verify(text, entry)
     if not ok:
-        return signature_only(entry), reason
+        return signature_only(entry, raw=text), reason
     return {"symbol": entry["symbol"], "signature": entry.get("signature", ""),
-            "capability": text, "degraded": False}, reason
+            "capability": text, "degraded": False, "raw": text}, reason
 
 
 def self_test():
@@ -220,6 +243,11 @@ def self_test():
         ("plain capability", "Formats a Unix timestamp into a localised display string."),
         ("with signature term", "Formats an epochMillis value into a string using a pattern."),
         ("descriptive", "Converts a millisecond timestamp to a human readable date and time."),
+        # Regression cases for the 2026-08-25 narrowing. Both were rejected by the first
+        # code-or-markup rule for containing an ordinary English word, and RAD-0040 measured what
+        # that cost: every rejection is a retrieval loss.
+        ("the word 'class'", "Returns the class of the serializer used for this value."),
+        ("the word 'fun'", "Provides a fun and readable representation of the duration."),
     ]
 
     print("# verification self-test — a verifier that rejects nothing is not a verifier\n")
