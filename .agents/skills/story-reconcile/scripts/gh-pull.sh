@@ -149,6 +149,24 @@ query($owner: String!, $num: Int!, $after: String) {
             cursor = block['pageInfo']['endCursor']
 
 # ---- write snapshot --------------------------------------------------------
+def write_if_changed(path, text):
+    """Only touch the file when the bytes differ - see yt-pull.sh for why.
+
+    Identical rewrites are invisible to git but not free: they throw away
+    git's stat cache (so the next `git status` re-hashes everything),
+    destroy mtimes, and wake every file watcher for nothing.
+    """
+    try:
+        with open(path, encoding='utf-8') as fh:
+            if fh.read() == text:
+                return False
+    except (OSError, UnicodeDecodeError):
+        pass
+    with open(path, 'w', encoding='utf-8') as fh:
+        fh.write(text)
+    return True
+
+written = 0
 index = []
 for it in [] if DIMONLY else issues:
     num = it['number']
@@ -165,8 +183,7 @@ for it in [] if DIMONLY else issues:
         if (stale.startswith(f"{iid}_") or stale.startswith(f"{num:04d}_")
                 or stale.startswith(f"{NAME}-{num}_") or stale == f"{NAME}-{num}.md"):
             os.remove(os.path.join(OUT, stale))
-    with open(os.path.join(OUT, fname), 'w', encoding='utf-8') as f:
-        f.write(f"""---
+    text = (f"""---
 id: "#{num}"
 summary: "{(it.get('title') or '').replace('"', "'")}"
 state: "{state}"
@@ -182,15 +199,17 @@ url: {it['html_url']}
 
 {body}
 """)
+    if write_if_changed(os.path.join(OUT, fname), text):
+        written += 1
     index.append((num, fname, it.get('title',''), state, labels, it['state'] == 'closed'))
 
 if not DIMONLY:
-  with open(os.path.join(OUT, 'INDEX.md'), 'w', encoding='utf-8') as f:
-    f.write(f"# GitHub snapshot: {REPO} ({datetime.date.today()})\n\n")
-    f.write("GENERATED - do not edit. Re-run scripts/gh-pull.sh to refresh.\n\n")
-    f.write("| # | Summary | State | Labels | Closed |\n|---|---|---|---|---|\n")
-    for num, fn, s, st, lb, closed in index:
-      f.write(f"| [#{num}]({fn}) | {s} | {st} | {lb} | {'yes' if closed else ''} |\n")
+  idx = [f"# GitHub snapshot: {REPO} ({datetime.date.today()})", "",
+         "GENERATED - do not edit. Re-run scripts/gh-pull.sh to refresh.", "",
+         "| # | Summary | State | Labels | Closed |", "|---|---|---|---|---|"]
+  for num, fn, t, st, lb, closed in index:
+    idx.append(f"| [#{num}]({fn}) | {t} | {st} | {lb} | {'yes' if closed else ''} |")
+  write_if_changed(os.path.join(OUT, 'INDEX.md'), "\n".join(idx) + "\n")
 
 # ---- dimensions.md ---------------------------------------------------------
 lines = [f'# Project dimensions: {REPO} ({datetime.date.today()})', '',
@@ -249,11 +268,11 @@ if openm or closed:
                       + ', '.join(closed[-12:])
                       + ('' if len(closed) <= 12 else f' (+{len(closed) - 12} older)')]
     lines += ['']
-open(os.path.join(DIM_DIR, 'dimensions.md'), 'w', encoding='utf-8').write('\n'.join(lines))
+write_if_changed(os.path.join(DIM_DIR, 'dimensions.md'), '\n'.join(lines))
 
 mode = f'Projects mode (project {PROJ})' if PROJ else 'issues-only mode'
 if DIMONLY:
     print(f'Wrote dimensions.md at {DIM_DIR}/ ({mode})')
 else:
-    print(f'Wrote {len(issues)} issues + INDEX.md to {OUT}; dimensions.md at {DIM_DIR}/ ({mode})')
+    print(f'{len(issues)} issues; {written} file(s) changed + INDEX.md in {OUT}; dimensions.md at {DIM_DIR}/ ({mode})')
 EOF

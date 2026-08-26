@@ -15,10 +15,6 @@ node_modules/
 .idea/
 *.iml
 .DS_Store
-# BEGIN story-tools (generated - do not edit between markers)
-docs/stories/
-.agents/config/dimensions.md
-# END story-tools
 
 # Python bytecode caches (experiments import shared modules)
 __pycache__/
@@ -47,3 +43,12 @@ experiments/.extracted/
 experiments/corpus/corpus.db
 experiments/corpus/private-npm-scopes.txt
 experiments/corpus/private-swift-repos.txt
+
+# The summariser's cached model output. Derived — rebuilt by re-running summarise_corpus.py —
+# and large enough that committing it would put 220 machine-written sentences in the history.
+experiments/summariser/summaries.json
+
+# BEGIN story-tools (generated - do not edit between markers)
+docs/stories/
+.agents/config/dimensions.md
+# END story-tools

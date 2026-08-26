@@ -39,22 +39,54 @@ alongside the other knowledge. Anything with a picture in it belongs in
 ## Suggested starting sections
 
 Sections are just top-level articles; create the ones the project needs
-and let the owners rearrange freely. Names are spelled out for humans -
-"Architecture Decision Records", never "adr"; "Quality Assurance",
-never "QA"; accessibility (AX) belongs with Design.
+and let the owners rearrange freely.
 
-| Section | What belongs there |
-|---|---|
-| Architecture Decision Records | One hard-to-reverse choice each; append-only history |
-| Product Requirements | PRD narratives + Stories tables of tracker IDs (never AC) |
-| Specifications | How a thing IS - architecture, component specs; update in place |
-| Design & Accessibility | Design *direction* and accessibility standards - text-only. Records with mockups live in `docs/design/`, not here (see below) |
-| Research | Investigations - question, trail, findings |
-| Reference | External facts: vendors, prospects, regulations, domain material - and the **Domain Glossary** (the project's canonical terms; `AGENTS.md` at the repo root points at it so agents find it without a path) |
-| Developer Guides | How-to - onboarding, environment, CI |
-| Quality Assurance | Durable test plans and protocols (QA *runs* are issues) |
-| Mandates & Compliance | Legal/regulatory rules the work must satisfy |
-| Support | Support knowledge, runbooks, customer-facing material |
+**Titles are spelled out; directories are not.** A section has two names.
+Its *title* - "Architecture Decision Records", "Quality Assurance" - is the
+H1 of the section's `README.md`, and that is what the KB shows and what the
+sync reads. Its *directory* is a plain lowercase word someone can type and
+recognise without knowing the jargon. Accessibility (AX) belongs with
+Design.
+
+**Never put spaces or title case in a path.** If no H1 is present the sync
+falls back to the directory stem, de-hyphenated and title-cased, so
+`cms-server/` still yields "CMS Server" - but write the H1 anyway.
+
+| Directory | Section title | What belongs there |
+|---|---|---|
+| `decisions/` | Architecture Decision Records | One hard-to-reverse choice each; append-only history |
+| `requirements/` | Product Requirements | PRD narratives + Stories tables of tracker IDs (never AC) |
+| `specifications/` | Specifications | How a thing IS - architecture, component specs; update in place |
+| `research/` | Research | Investigations - question, trail, findings |
+| `reference/` | Reference | External facts: vendors, prospects, regulations, domain material - and the **Domain Glossary** (the project's canonical terms; `AGENTS.md` at the repo root points at it so agents find it without a path) |
+| `guides/` | Developer Guides | How-to - onboarding, environment, CI |
+| `testing/` | Quality Assurance | Durable test plans and protocols (QA *runs* are issues) |
+| `compliance/` | Mandates & Compliance | Legal/regulatory rules the work must satisfy |
+| `support/` | Support | Support knowledge, runbooks, customer-facing material |
+
+These are starting points, not a required tree. Match what a project
+already has rather than renaming its directories to fit this table.
+
+**There is no design section.** Design splits three ways, and none of them
+is knowledge:
+
+- `DESIGN.md` at the repo root - the design *system*: tokens (colour,
+  typography, spacing, components) plus the rationale and the do's and
+  don'ts, in the [DESIGN.md](https://github.com/google-labs-code/design.md)
+  format. It sits beside `AGENTS.md` because it is agent-facing wiring, and
+  root files are the ones reliably read.
+- `docs/design/` - design *records*: a decision about a particular screen
+  or flow, with the mockups attached. Git-native and never synced, because
+  the sync carries `.md` only and would publish the prose while dropping
+  every image.
+- Accessibility - the legal floor (WCAG level, AODA, EN 301 549) belongs in
+  `compliance/` with the other rules the work must satisfy; the practical
+  rules (contrast, focus order, target sizes) belong in DESIGN.md's do's
+  and don'ts, next to the tokens they constrain.
+
+A project running a real accessibility programme - audits, VPATs,
+conformance statements - has a body of documents and earns a section. It
+earns it by having them.
 
 Every section directory's `README.md` is the section article's body:
 one or two sentences on what lives there and who reads it, so both KB
@@ -62,9 +94,10 @@ readers and filing agents get the same guidance. Write one whenever you
 create a section.
 
 **Subsystems (monorepos):** split WITHIN a section by subsystem
-subdirectory, named exactly after the project's Subsystem field values
-("CMS Server" → a "CMS Server" child article), lazily - only where a
-system actually has documents. The KB then reads "Architecture Decision
+subdirectory, one per Subsystem field value, lazily - only where a system
+actually has documents. Same two-name rule: the directory is a lowercase
+slug, the field value is the child article's H1 ("CMS Server" →
+`cms-server/README.md`, titled "CMS Server"). The KB then reads "Architecture Decision
 Records → CMS Server" and the board field uses the same vocabulary.
 
 ## Organizing by audience instead

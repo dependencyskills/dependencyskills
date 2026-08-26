@@ -99,6 +99,28 @@ def slug(text, maxlen=60):
     t = re.sub(r'[^A-Za-z0-9]+', '-', text or '').strip('-').lower()
     return t[:maxlen].rstrip('-') or 'untitled'
 
+
+def write_if_changed(path, text):
+    """Only touch the file when the bytes differ.
+
+    Git compares content, so an identical rewrite is invisible in a diff -
+    but it is NOT free: git caches stat data to avoid hashing files it can
+    see are untouched, and rewriting everything throws that away, so the
+    next `git status` re-hashes the lot. It also destroys mtimes (you can
+    no longer see which stories actually moved) and wakes every file
+    watcher, indexer and folder-sync client for nothing.
+    """
+    try:
+        with open(path, encoding='utf-8') as fh:
+            if fh.read() == text:
+                return False
+    except (OSError, UnicodeDecodeError):
+        pass
+    with open(path, 'w', encoding='utf-8') as fh:
+        fh.write(text)
+    return True
+
+written = 0
 index = []
 for it in issues:
     iid = it['idReadable']
@@ -116,8 +138,7 @@ for it in issues:
     for stale in os.listdir(out):
         if (stale == iid + '.md' or stale.startswith(iid + '_')) and stale != fname:
             os.remove(os.path.join(out, stale))
-    with open(os.path.join(out, fname), 'w') as f:
-        f.write(f"""---
+    text = (f"""---
 id: {iid}
 summary: "{(it.get('summary') or '').replace('"', "'")}"
 state: "{state}"
@@ -133,16 +154,18 @@ url: {url}/issue/{iid}
 
 {body}
 """)
+    if write_if_changed(os.path.join(out, fname), text):
+        written += 1
     index.append((iid, fname, it.get('summary',''), state, subsystem, bool(it.get('resolved'))))
 
-with open(os.path.join(out, 'INDEX.md'), 'w') as f:
-    f.write(f"# YouTrack snapshot: project {project} ({datetime.date.today()})\n\n")
-    f.write("GENERATED - do not edit. Re-run scripts/yt-pull.sh to refresh.\n\n")
-    f.write("| ID | Summary | Subsystem | State | Resolved |\n|---|---|---|---|---|\n")
-    for iid, fn, s, st, sub, r in index:
-        f.write(f"| [{iid}]({fn}) | {s} | {sub} | {st} | {'yes' if r else ''} |\n")
+idx = [f"# YouTrack snapshot: project {project} ({datetime.date.today()})", "",
+       "GENERATED - do not edit. Re-run scripts/yt-pull.sh to refresh.", "",
+       "| ID | Summary | Subsystem | State | Resolved |", "|---|---|---|---|---|"]
+for iid, fn, s, st, sub, r in index:
+    idx.append(f"| [{iid}]({fn}) | {s} | {sub} | {st} | {'yes' if r else ''} |")
+write_if_changed(os.path.join(out, 'INDEX.md'), "\n".join(idx) + "\n")
 
-print(f"Wrote {len(issues)} issues + INDEX.md to {out}")
+print(f"{len(issues)} issues; {written} file(s) changed + INDEX.md in {out}")
 EOF
 
 fi
@@ -158,6 +181,18 @@ import json, os, datetime, urllib.request, urllib.parse
 
 URL = os.environ['URL'].rstrip('/'); TOKEN = os.environ['TOKEN']
 PROJECT = os.environ['PROJECT']; out = os.environ['DIM_DIR']
+
+def write_if_changed(path, text):
+    # Second python block - the snapshot block's copy is not in scope here.
+    try:
+        with open(path, encoding='utf-8') as fh:
+            if fh.read() == text:
+                return False
+    except (OSError, UnicodeDecodeError):
+        pass
+    with open(path, 'w', encoding='utf-8') as fh:
+        fh.write(text)
+    return True
 
 def api(path):
     req = urllib.request.Request(URL + path, headers={'Authorization': 'Bearer ' + TOKEN})
@@ -236,7 +271,7 @@ if topical:
     lines += [f'- {t}' for t in topical] + ['']
 else:
     lines += ['_(none yet)_', '']
-open(os.path.join(out, 'dimensions.md'), 'w').write('\n'.join(lines))
+write_if_changed(os.path.join(out, 'dimensions.md'), '\n'.join(lines))
 print(f'Wrote dimensions.md ({len(WORKFLOW) - len(missing)} workflow + '
       f'{len(topical)} topical tags)')
 EOF

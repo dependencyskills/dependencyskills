@@ -156,10 +156,13 @@ paraphrase, signature-only display — and not the ones that try to recognise an
   needs. Derived and disposable; the caches are the source of truth and `test12`'s manifest pins
   the maven half. What it still lacks is **dependency edges**, without which a resolution check
   cannot see a library's actual dependencies — see [RAD-0039](../docs/knowledge/research/0039-where-the-dependency-graph-comes-from.md).
-- ~~The corpus supplies no JavaScript.~~ **Closed by the npm harvest.** `test12` noted the Gradle
-  cache holds 17 `.js` files across 1,892 jars, which left the ecosystem every landed prose payload
-  came from with no corpus behind it. The npm cache supplies it from the same machine. **Swift is
-  still missing**, and its `///` line comments need a different extractor.
+- ~~The corpus supplies no JavaScript or Swift.~~ **Closed by the npm and SwiftPM harvests.**
+  `test12` noted the Gradle cache holds 17 `.js` files across 1,892 jars and no `.swift` at all,
+  which left the ecosystem every landed prose payload came from with no corpus behind it. Both now
+  come from the same machine — 1,959 npm packages and 23 SwiftPM repositories. The KMP libraries
+  that serve Apple platforms ship **Kotlin**, so SwiftPM is the only source of real Swift, and it
+  needed a different extractor: `///` line comments group into one doc block where a block-comment
+  extractor finds nothing and calls it an absence.
 - **Agent-laundered first-party content** (RAD-0029) — measured once, untested since, and inside
   the boundary declared-only indexing draws.
 - ~~Whether the permitted region is inert.~~ **Answered by `test16`.** `test15` enumerated 5,408
@@ -169,6 +172,15 @@ paraphrase, signature-only display — and not the ones that try to recognise an
   spaced-form control firing 6 of 6. The permitted region is camelCase, and camelCase is not
   followed. The remaining caveat is that this is one model, `N`=6, and the two other models tested
   can no longer run the control at all.
+- **The summarise step's retrieval claim does not reproduce.** [`summariser/`](summariser/) ran the
+  real component over `test5`'s own 220-entry slice, queries and encoder. Counting how often the
+  correct answer came back **first**: raw doc text **5 of 17**, summarised **4 of 17**. The 29% → 77% gap the project has quoted was measured against
+  **hand-written** entries, and a local model does not produce it. Splitting on the fallback shows
+  why — on the 12 targets that were not degraded the two indexes tie exactly (4 of 12 either way),
+  so the rewriter is neutral and the whole loss is signature-only degradation. **`test0` measured
+  signature-only as sufficient to *use* a capability (7 of 8) with the capability already in hand;
+  nothing measured whether it could be *found*.** It cannot — a signature has no prose and the
+  query is prose. The quarantine result (`test7`, 0 of 3 harm) is untouched by this.
 - **Prose, now with both candidates priced.** `test13` and `test14` measured the two structural
   signals available — reference to something external (29.8%) and resolution against the declared
   surface (1.73%) — against `test10`'s 0.221% bar. Both fail. What blocks progress is no longer a

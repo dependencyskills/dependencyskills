@@ -183,7 +183,8 @@ save_connection() {  # $1 name
 }
 
 resolve_server() {  # always youtrack-<nickname>: explicit per server, no cross-pollination
-  MCP_SERVER="youtrack-$PROFILE"
+  # connection names carry the tracker prefix now; do not double it
+  MCP_SERVER="youtrack-${PROFILE#youtrack-}"
 }
 
 ask() {  # ask "prompt" "current" -> echoes answer (Enter keeps current)
@@ -436,10 +437,22 @@ setup_connection() {  # $1 = optional preselected name; sets PROFILE + creds var
     exit 1
   fi
 
+  # One connection per project, not per server. YouTrack tokens are not
+  # project-scoped today (JT-97918 is the open RFE to split them), so this
+  # buys clarity and independent revocation now - and when scoping lands,
+  # each project already has its own file to drop a narrower token into,
+  # with nothing to migrate. Falls back to the host when no project is in
+  # play (a user-level setup).
   local newname suggested
-  suggested="${PROFILE:-$(name_from_url "$YOUTRACK_URL")}"
+  if [[ -n "${PROFILE:-}" ]]; then
+    suggested="$PROFILE"
+  elif [[ -n "${PROJECT_NAME:-}" ]]; then
+    suggested="youtrack-$(printf '%s' "$PROJECT_NAME" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9-\n' '-')"
+  else
+    suggested="youtrack-$(name_from_url "$YOUTRACK_URL")"
+  fi
   while :; do
-    newname="$(ask "Connection nickname (this server + your token; shared by every repo that uses it)" "$suggested")"
+    newname="$(ask "Connection nickname (this server + your token; one per project keeps them separately revocable)" "$suggested")"
     # never silently replace a DIFFERENT server's connection that happens to share the name
     if [[ "$newname" != "$PROFILE" && -f "$CONN_DIR/$newname.env" ]]; then
       local other_url; other_url="$(sed -n 's/^YOUTRACK_URL=//p' "$CONN_DIR/$newname.env")"
@@ -926,6 +939,159 @@ migrate_docs_layout() {  # $1 dir - offer to clear copies left at the old paths
   say "  These are tracked files - review the diff before committing."
 }
 
+# ---------- step: KB section directories -> plain lowercase names ----------
+# taxonomy.md used to say section names are "spelled out - Architecture
+# Decision Records, never adr" without separating the KB title from the
+# path, so tracker-less projects grew directories with spaces in them.
+# Titles are still spelled out; they live in each section's README H1,
+# which is what the sync reads. The directory is now a plain word.
+KB_RENAMES=""
+
+migrate_kb_dirs() {  # $1 dir - offer to rename KB section directories
+  local dir="$1"
+  local kb="$dir/docs/knowledge"
+  [[ -d "$kb" ]] || return 0
+
+  # The scan runs as its own statement, not inside $( ): bash 3.2 - which is
+  # what macOS ships as /bin/bash - cannot parse a here-document nested in a
+  # command substitution, and fails somewhere else entirely when it tries.
+  local plan tmp
+  tmp="${TMPDIR:-/tmp}/story-tools-kb.$$"
+  KB="$kb" python3 - > "$tmp" <<'MKPY'
+import os, re
+kb = os.environ["KB"]
+MAP = {
+    "architecture-decision-records": "decisions", "decision-records": "decisions",
+    "adr": "decisions", "adrs": "decisions",
+    "product-requirements": "requirements", "prd": "requirements",
+    "prds": "requirements",
+    "specifications": "specifications", "spec": "specifications",
+    "specs": "specifications",
+    "research": "research",
+    "reference": "reference", "references": "reference",
+    "developer-guides": "guides", "dev-guides": "guides", "guides": "guides",
+    "quality-assurance": "testing", "qa": "testing",
+    "tests": "testing", "testing": "testing",
+    "mandates-compliance": "compliance", "mandates-and-compliance": "compliance",
+    "mandates": "compliance", "compliance": "compliance",
+    "regulations": "compliance",
+    "support": "support",
+}
+# Design direction moved to DESIGN.md at the repo root and accessibility
+# split between DESIGN.md and compliance/. Nothing to rename to - a person
+# decides where each file goes.
+FLAG = {"design-accessibility", "design-and-accessibility", "design",
+        "accessibility", "a11y"}
+
+def norm(s):
+    s = s.lower().replace("&", " ").replace("_", " ").replace("-", " ")
+    return re.sub(r"\s+", "-", s.strip())
+
+for name in sorted(os.listdir(kb)):
+    p = os.path.join(kb, name)
+    if not os.path.isdir(p) or name.startswith("."):
+        continue
+    # ID-prefixed directories are the sync's own naming, not a misnamed
+    # section - nothing to report about them.
+    if re.match(r"^[A-Z][A-Z0-9]*-A-[0-9]+_", name):
+        continue
+    n = norm(name)
+    if n in FLAG:
+        print("FLAG\t%s\t" % name)
+    elif n in MAP and MAP[n] != name:
+        print("MOVE\t%s\t%s" % (name, MAP[n]))
+    elif n not in MAP and name != n:
+        print("ODD\t%s\t%s" % (name, n))
+MKPY
+  plan="$(cat "$tmp")"
+  rm -f "$tmp"
+  [[ -z "$plan" ]] && return 0
+
+  # Under a sync the directory name is derived, not chosen: structure flows
+  # DOWN only, and the sync moves anything it finds to <ID>_<title-slug>.
+  # So a local rename is futile before it is dangerous - the next sync undoes
+  # it. Say that rather than going quiet: doing nothing without a word is how
+  # someone concludes the installer did not look.
+  if [[ -d "$kb/.yt-sync" || -d "$kb/.gh-wiki-sync" ]] \
+     || ls "$kb" 2>/dev/null | grep -qE '^[A-Z][A-Z0-9]*-A-[0-9]+_'; then
+    blank
+    heads_up "  knowledge sections here are named by the sync, not by hand:"
+    say "  <ID>_<title-slug>, derived from the article. Renaming one locally does"
+    say "  nothing - structure flows down only, and the next sync moves it back."
+    say "  To change a section name, rename the ARTICLE in the tracker and the"
+    say "  tree follows."
+    return 0
+  fi
+
+  local kind old new moves=0 flags=0
+  blank
+  warn "knowledge sections use directory names this version no longer writes:"
+  while IFS=$'\t' read -r kind old new; do
+    [[ -n "$kind" ]] || continue
+    case "$kind" in
+      MOVE) say "    $old  ->  $new"; moves=$((moves+1));;
+      ODD)  say "    $old  ->  $new   (not a known section - best guess)"; moves=$((moves+1));;
+      FLAG) flags=$((flags+1));;
+    esac
+  done <<< "$plan"
+
+  if [[ $flags -gt 0 ]]; then
+    heads_up "  design/accessibility sections are NOT renamed - they were split:"
+    say "    design direction and tokens  ->  DESIGN.md at the repo root"
+    say "    accessibility standards      ->  DESIGN.md (rules) + compliance/ (the legal floor)"
+    say "    records with mockups         ->  docs/design/ (unchanged)"
+    say "  Move those files yourself; there is no single target to rename to."
+  fi
+  [[ $moves -eq 0 ]] && return 0
+
+  say "  Section TITLES do not change - they live in each README's H1."
+  if [[ ! -t 0 ]]; then
+    say "  Not interactive - left alone. Re-run the installer to be asked."
+    return 0
+  fi
+  local yn; read -rp "  Rename them? [y/N] " yn
+  [[ "$yn" =~ ^[Yy] ]] || { say "  left as-is."; return 0; }
+
+  local git_ok=0
+  git -C "$dir" rev-parse --git-dir >/dev/null 2>&1 && git_ok=1
+  KB_RENAMES=""
+  while IFS=$'\t' read -r kind old new; do
+    case "$kind" in MOVE|ODD) ;; *) continue;; esac
+    if [[ -e "$kb/$new" ]]; then
+      warn "  $new already exists - skipped $old (merge it by hand)"
+      continue
+    fi
+    if [[ $git_ok -eq 1 ]] && git -C "$dir" mv "docs/knowledge/$old" "docs/knowledge/$new" 2>/dev/null; then
+      ok "$old -> $new (git mv, history kept)"
+    elif mv "$kb/$old" "$kb/$new"; then
+      ok "$old -> $new"
+    else
+      warn "  could not rename $old - do it by hand"
+      continue
+    fi
+    KB_RENAMES="$KB_RENAMES $old"
+  done <<< "$plan"
+
+  # Links are the half that breaks quietly. Report them; never rewrite -
+  # a bad sweep across a docs tree is discovered months later.
+  local hits=""
+  for old in $KB_RENAMES; do
+    if grep -rlF "$old" "$dir/docs" --include='*.md' 2>/dev/null | head -1 | grep -q .; then
+      hits="$hits $old"
+    fi
+  done
+  if [[ -n "$hits" ]]; then
+    blank
+    heads_up "  markdown still referring to the old paths:"
+    for old in $hits; do
+      say "    $old"
+      grep -rlF "$old" "$dir/docs" --include='*.md' 2>/dev/null | sed "s|^$dir/|      |"
+    done
+    say "  Not rewritten on purpose - check each one."
+  fi
+  say "  Tracked files: review the diff before committing."
+}
+
 # ---------- step: is the tracker snapshot committed, or local? ----------
 # Committed is valuable when you cannot reach the tracker: a clone carries
 # the stories with it. It is also a shared file that every pull rewrites,
@@ -935,7 +1101,8 @@ GITIGNORE_BEGIN="# BEGIN story-tools (generated - do not edit between markers)"
 GITIGNORE_END="# END story-tools"
 
 set_gitignore_block() {  # $1 dir, $2 body ("" removes the block)
-  local dir="$1" body="$2" f="$dir/.gitignore"
+  local dir="$1" body="$2"
+  local f="$dir/.gitignore"
   BODY="$body" B="$GITIGNORE_BEGIN" E="$GITIGNORE_END" F="$f" python3 - <<'GIPY'
 import os, re
 f, body = os.environ["F"], os.environ["BODY"]
@@ -1054,7 +1221,8 @@ write_pages_config() {  # $1 dir - keep GitHub Pages off the internal docs tree
   # story snapshot. Nothing else claims docs/; this is one host's shortcut
   # landing on a directory that already means something here. Generated, so
   # it stays in step with what the suite actually writes.
-  local dir="$1" f="$dir/docs/_config.yml"
+  local dir="$1"
+  local f="$dir/docs/_config.yml"
   mkdir -p "$dir/docs"
   if [[ -f "$f" ]] && ! grep -q "GENERATED by the story-tools installer" "$f"; then
     warn "docs/_config.yml exists and is not ours - leaving it alone."
@@ -1245,7 +1413,7 @@ verify_bind() {  # $1 dir - post-condition: did the bind actually land?
 attach_project_github() {  # $1 dir, $2 owner/repo, $3 project number|"", $4 readonly, $5 mode
   local dir="$1" gh_repo="$2" gh_proj="$3" readonly_flag="$4" mode="${5:-link}"
   local conn="${GH_CONN:-github}" srv
-  srv="github-$conn"; [[ "$conn" == "github" ]] && srv="github"
+  srv="github-${conn#github-}"; [[ "$conn" == "github" ]] && srv="github"
   copy_skills "$dir" "$mode"
   warn_user_level_overlap
   rm -f "$dir/.agents/youtrack.json" "$dir/.agents/config/youtrack.json" "$dir/.agents/config/story-tools.json"
@@ -1263,6 +1431,7 @@ attach_project_github() {  # $1 dir, $2 owner/repo, $3 project number|"", $4 rea
   write_pages_config "$dir"
   set_snapshot_mode "$dir"
   migrate_docs_layout "$dir"
+  migrate_kb_dirs "$dir"
   ask_roles "$dir"
   write_updates_config "$dir"
   ship_setup "$dir"
@@ -1316,6 +1485,7 @@ attach_project() {  # $1 dir, $2 yt_project, $3 readonly(true|""), $4 mode
   write_pages_config "$dir"
   set_snapshot_mode "$dir"
   migrate_docs_layout "$dir"
+  migrate_kb_dirs "$dir"
   ask_roles "$dir"
   # refresh .agents/config/dimensions.md so agents see the current fields, versions
   # and the full tag list - the GitHub path already does this
@@ -1430,7 +1600,9 @@ github_wizard() {
   step "1/3 Project"
   pick_project
   local conn="github"
-  [[ -n "$PROJECT_DIR" ]] && conn="$(basename "$PROJECT_DIR" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9-\n' '-')"
+  # same shape as YouTrack: <tracker>-<project>, so a project that switches
+  # tracker gets the parallel name and the type is visible in the filename
+  [[ -n "$PROJECT_DIR" ]] && conn="github-$(basename "$PROJECT_DIR" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9-\n' '-')"
   step "2/3 GitHub credential"
   conn="$(ask "Connection name for this token" "$conn")"
   if [[ -f "$CONN_DIR/$conn.env" ]] && load_github "$conn"; then
@@ -1460,23 +1632,37 @@ github_wizard() {
   cmd "./install.sh --github"
 }
 
+# The tracker-less bind, shared by the wizard and by a plain refresh of an
+# already-bound project. A refresh reaches project_mode, which knows how to
+# resolve a YouTrack or GitHub connection and - before this existed - went
+# looking for one on a project that has neither.
+attach_project_none() {  # $1 dir, $2 mode (link|copy)
+  local dir="$1"
+  local mode="${2:-link}"
+  copy_skills "$dir" "$mode"
+  # legacy pointers from before story-tools.json existed. The pointer itself
+  # is merged, not replaced: it also carries snapshot, updates and roles, and
+  # a refresh must not throw those away.
+  rm -f "$dir/.agents/youtrack.json" "$dir/.agents/config/youtrack.json"
+  merge_json "$dir/.agents/config/story-tools.json" "tracker" '{"type":"none"}'
+  ok "pointer: tracker type 'none' - skills run tracker-less (offline mode)"
+  # the doc has always had a tracker-less variant; it was simply never called
+  write_workflow_doc "$dir" none ""
+  write_updates_config "$dir"
+  write_pages_config "$dir"
+  set_snapshot_mode "$dir"
+  migrate_docs_layout "$dir"
+  migrate_kb_dirs "$dir"
+  ship_setup "$dir"
+  verify_bind "$dir" || true
+}
+
 none_wizard() {
   step "1/1 Project (skills only - no tracker)"
   pick_project
   [[ -z "$PROJECT_DIR" ]] && { say "  no project chosen - nothing to do"; return; }
-  copy_skills "$PROJECT_DIR" "link"
-  rm -f "$PROJECT_DIR/.agents/youtrack.json" "$PROJECT_DIR/.agents/config/youtrack.json" "$PROJECT_DIR/.agents/config/story-tools.json"
-  merge_json "$PROJECT_DIR/.agents/config/story-tools.json" "tracker" '{"type":"none"}'
-  ok "pointer: tracker type 'none' - skills run tracker-less (offline mode); re-run this"
-  say "  wizard when the project adopts YouTrack or GitHub."
-  # the doc has always had a tracker-less variant; it was simply never called
-  write_workflow_doc "$PROJECT_DIR" none ""
-  write_updates_config "$PROJECT_DIR"
-  write_pages_config "$PROJECT_DIR"
-  set_snapshot_mode "$PROJECT_DIR"
-  migrate_docs_layout "$PROJECT_DIR"
-  ship_setup "$PROJECT_DIR"
-  verify_bind "$PROJECT_DIR" || true
+  attach_project_none "$PROJECT_DIR" "link"
+  say "  Re-run this wizard when the project adopts YouTrack or GitHub."
 }
 
 wizard() {
@@ -1530,7 +1716,7 @@ wizard() {
 
 check_github_drift() {  # $1 = connection; stale PAT in agent configs
   local conn="${1:-github}" srv
-  srv="github-$conn"; [[ "$conn" == "github" ]] && srv="github"
+  srv="github-${conn#github-}"; [[ "$conn" == "github" ]] && srv="github"
   [[ -n "${GITHUB_TOKEN:-}" ]] || return 0
   [[ -f "$CONN_DIR/$conn.env" || -f "$CONN_DIR/github.env" ]] || return 0
   local stale="" vsc=""
@@ -1820,8 +2006,17 @@ project_mode() {
     esac
   done
 
-  # GitHub-tracked project? (explicit flag, or the pointer says so)
   local ptype; ptype="$(read_pointer "$dir" type)"
+
+  # Tracker-less project: nothing to connect, so never go looking for a
+  # connection. Without this a refresh fell through to the YouTrack path and
+  # demanded --profile on a project that has no tracker at all.
+  if [[ -z "$gh_repo" && -z "$yt_project" && "$ptype" == "none" ]]; then
+    attach_project_none "$dir" "$mode"
+    return
+  fi
+
+  # GitHub-tracked project? (explicit flag, or the pointer says so)
   if [[ -n "$gh_repo" || "$ptype" == "github" ]]; then
     [[ -z "$gh_repo" ]] && gh_repo="$(read_pointer "$dir" repo)"
     [[ -z "$gh_proj" ]] && gh_proj="$(read_pointer "$dir" project)"
