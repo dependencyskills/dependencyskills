@@ -77,11 +77,75 @@ is.
 from 173 artifacts that had nothing at all.** That is worth having and it is not the 63% the
 unfiltered number suggested.
 
+## Are binary-only libraries the safest thing in the corpus?
+
+They have no prose, so `test19`'s channel does not exist for them. The identifier channel does — and
+`test16` measured camelCase identifier payloads obeyed **0 of 24** against a spaced form firing
+**6 of 6**. If the spaced form could not survive compilation, a binary-only library would carry no
+effective injection surface at all.
+
+**It survives.** A class file stores a member name as a CONSTANT_Utf8 and the format permits
+characters a source language refuses, so Kotlin's backticked identifiers compile straight through.
+Exactly **one** identifier in 869,436 carries a space:
+
+```
+_private useEnvironmentVariableDefaultInFetchLoginShellEnvVariables
+```
+
+Benign, and its existence settles the question. The form that gets obeyed is expressible in
+bytecode and does occur in the wild.
+
+### Rules priced on source do not transfer to bytecode
+
+`rule_cost.py` runs `test10`'s catalogue over the harvested identifiers. Every one is real and
+benign, so a hit is a **false positive** — the cost of running that rule over compiled classes.
+
+| rule | author-written | compiler-generated | `test10`'s published cost on source |
+|---|---|---|---|
+| space in the name | 1 of 739,889 (**0.0001%**) | 0 of 129,547 | — |
+| spelled punctuation | 0 | 0 | — |
+| filesystem path | 7 of 739,889 (0.0009%) | 0 | — |
+| all-caps run ≥ 5 | 18,898 (2.55%) | 337 (0.26%) | — |
+| word count ≥ 7 | 47,961 (**6.48%**) | 34,879 (**26.9%**) | **0.107%** |
+| word count ≥ 9 | 15,527 (2.10%) | 17,354 (13.4%) | 0.054% |
+
+**The cheap rule gets cheaper and the expensive rule gets far worse.** No-spaces costs one
+identifier in three quarters of a million — against `test10`'s whole catalogue at 0.221% on source,
+that is three orders of magnitude less — and it is the rule that closes the only form measured as
+obeyed. The word-count bound goes the other way: **0.107% on source becomes 6.48% on bytecode**, a
+sixtyfold increase, because inner-class chains and protobuf tables inflate word counts in a way
+source never does. `Aapt2DaemonImpl$WaitForTaskCompletion$Result$Failed` is nine words and nobody
+wrote it as one.
+
+11,212 author-written names reach seven words with no `$` or `_` at all —
+`AbnormalStreamWhenImageAnalysisBindWithTemplateRecordQuirk` is a real androidx class name. Long
+descriptive names are ordinary in compiled surfaces.
+
+### The path rule mis-fires, and the cause is nameable
+
+All seven `filesystem path` hits are crypto algorithm identifiers:
+
+```
+id_rsa_KEM   id_rsassa_pkcs1_v1_5_with_sha3_224   id_rsassa_pss_shake128   …
+```
+
+The rule looks for `id_rsa` to catch an SSH private key path. It finds Bouncy Castle's RSA-SSA
+algorithm names instead. Seven false positives in 739,889 is a rate nobody would notice, and the
+cause is worth recording anyway because it will recur wherever the rule meets cryptography.
+
+### So the answer is yes, for a different reason than expected
+
+Binary-only libraries are not safe because the channel is absent. It is present, and the form that
+works is expressible. They are safe because **the one rule that closes that form costs a single
+identifier in 739,889 there**, where on source it sits inside a catalogue costing 0.221%.
+
 ## What this does not establish
 
 - **No documentation comes with it.** `test2` established that and nothing here changes it, so the
   prose classifier (`test19`) has no input from a binary-only library. Bytecode extends the
   *identifier* channel only.
+- **One spaced identifier is one observation.** It proves the form is expressible and occurs; it
+  does not establish a rate, and a second cache might hold none or a hundred.
 - **No parameter names**, only types, unless a library was compiled with `-parameters`. A resolution
   check that wants argument names still cannot use this route.
 - **Payload catch is `test18`'s number**, measured against `test15`'s generated forms, and carries
