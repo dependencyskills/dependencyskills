@@ -9,6 +9,13 @@ and Python.
 > measurements behind it are published, but there is no release and no stable
 > spec. Do not publish anything against it yet.
 >
+> **The source tree is sparse on purpose, and the sparse part is the product.**
+> Twenty-three experiments and forty research records came first, because the
+> point was to find out whether this works before writing it. It does, with
+> limits we publish. So what exists today is the measurement, the decisions and
+> the site — the harvester, the index and the query layer are being written now.
+> If you came looking for something to install, there isn't one yet.
+>
 > How it is shaped and why:
 > [ADR-0012](docs/knowledge/decisions/0012-a-shared-machine-level-index-store.md).
 > What the measurements found, including the ones that killed our own ideas:
@@ -151,11 +158,17 @@ different in each ecosystem.
 |---|---|
 | `docs/knowledge/` | Research records, decisions, postmortems and reference material |
 | `experiments/` | The measurements — the cost model and twenty-three numbered tests, plus the shared corpus, the summariser and the classifiers. Each self-contained: data plus a runnable harness |
-| `spec/` | The convention. Normative, and currently ahead of what has been decided |
-| `implementations/` | Per build system. Publishing and harvesting, per channel |
-| `agent-skills/` | This project's own skills |
-| `conformance/` | Runs an implementation against the fixtures |
-| `fixtures/` | Sample skills, expected archives, malformed cases |
+| `site/` | The published site at [dependencyskills.org](https://dependencyskills.org) |
+| `spec/` | The convention. Normative, and currently ahead of what has been decided — `discovery.md`, the hard part, is unwritten |
+| `implementations/` | Per build system. A Maven-channel publisher exists; the harvester does not |
+| `agent-skills/` | This project's own skills — **empty** |
+| `conformance/` | Runs an implementation against the fixtures — **empty** |
+| `fixtures/` | Sample skills, expected archives, malformed cases — **empty** |
+
+The directories marked empty are scaffolding for work that has not started.
+They are kept because the layout is a decision
+([ADR-0005](docs/knowledge/decisions/0005-repository-structure.md)) and an empty
+directory with a README is a clearer statement of intent than a missing one.
 
 Implementations are organised by **build system**, not package ecosystem: a KMP
 library reaches npm consumers through Gradle, so the Gradle implementation owns
