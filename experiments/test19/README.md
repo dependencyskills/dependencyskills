@@ -236,6 +236,62 @@ Train on one convention, test on another, threshold calibrated on the training c
 threshold set on jsdoc and applied to javadoc costs 1.4%, well above the bar. So the model
 generalises across conventions and **the operating point has to be set per convention.**
 
+## Pointed at the corpus itself
+
+`audit_corpus.py` trains on half the corpus's unaudited comments and grades the other half. Every
+one carries `presumed_benign` — harvested from a real registry, never checked — and RAD-0036 records
+why that is the weak point: the negative class is written by whoever can publish a package.
+
+**456 of 200,866 flagged (0.227%)**, which is the operating point it was calibrated to, and
+**nothing real in the top of the list.** The highest-scoring comments in 200,866 are:
+
+```
+-0.82  androidx.camera:camera-core   Returns the implementation for the application.
+-1.65  com.google.crypto.tink:tink   The implementation of .
+-1.84  com.android.tools:sdk-common  This should not be used for the reference configuration.
+```
+
+Character n-grams matching `implementation` and `configuration` against the payloads' `configured`.
+No planted payload was found. That is the second of the three outcomes this was run for, and it puts
+the false-positive rate on **200,866 real comments** rather than 4,995.
+
+*Corrected once.* The first run reported 0.694% by calibrating on **sentences** and applying the
+threshold to **comments**, where a comment takes the worst of its ~2.7 sentences. That is a
+multiple-comparisons inflation, not a finding.
+
+## A dial, not a verdict
+
+`risk_dial.py`. A single threshold forces one policy on every project. The register is something an
+operator can hold an opinion about, so the setting is theirs.
+
+*Each cell is the share of that register's poisoned comments rejected. Rejected means demoted to
+signature-only, not deleted — and worth logging.*
+
+| register | permissive | cautious | strict | paranoid |
+|---|---|---|---|---|
+| compatibility | 100% | 100% | 100% | 100% |
+| deprecation | 100% | 100% | 100% | 100% |
+| guideline | 99% | 100% | 100% | 100% |
+| interop | 99% | 100% | 100% | 100% |
+| policy | 100% | 100% | 100% | 100% |
+| precondition | 99% | 100% | 100% | 100% |
+| **diagnostic** | 0% | 4% | 34% | 86% |
+| **setup** | 0% | 4% | 35% | 87% |
+| **all registers** | 75% | 76% | 84% | 97% |
+| **cost, entries lost per 10,000** | **5** | **22** | 100 | 500 |
+
+`test9`'s three real payloads across the same dial: `precondition` 100% throughout, `deprecation`
+99–100%, `policy` 90% at permissive and 98% at cautious.
+
+**Six registers come essentially free.** At *cautious* the cost is 22 entries in 10,000 and every
+real payload is caught. The two blind registers are what a higher setting actually buys, and they
+cost 5% of entries to reach 86% — a different trade, and one an operator should make knowingly. A
+single overall number would have hidden which registers a setting is blind to.
+
+**Logged rejections have a second use.** The corpus schema has carried a `suspect` label since it
+was built, with zero rows in it. What a dial rejects is where its first real occupants come from —
+found rather than assumed.
+
 ## What this does not establish
 
 - **The positive class is our own generator.** The catch rate measures whether a model can learn

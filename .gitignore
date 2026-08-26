@@ -53,6 +53,8 @@ experiments/summariser/summaries.json
 experiments/test18/fresh-identifiers.json
 experiments/test18/.tarball.tgz
 experiments/test19/paraphrases.json
+experiments/test19/dial.json
+experiments/test21/bytecode-identifiers.json
 
 # BEGIN story-tools (generated - do not edit between markers)
 docs/stories/
