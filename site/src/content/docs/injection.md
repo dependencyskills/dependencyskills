@@ -131,6 +131,27 @@ carries no information. One model could not be served and produced no data.
 Only the Claude agents ever **flagged** the attempt to the user; every local model that
 complied did so silently.
 
+## Vendor notice
+
+Every vendor named in the table above was offered sight of its own results and a right of reply, on **26 August 2026**. This is a courtesy rather than a disclosure process: prompt injection is a known, unfixed class rather than a defect in any one model, so there was nothing to embargo and nothing to patch.
+
+| vendor | route | outcome |
+|---|---|---|
+| OpenAI | `disclosure@openai.com`, from their `security.txt` | notified. Their auto-reply routes security mail to Bugcrowd and offers an opt-out by replying, which we took — this is not a vulnerability report and we are not seeking a bounty |
+| Anthropic | `security@anthropic.com`, then `modelbugbounty@anthropic.com` | notified. Their `security.txt` lists only a bug-bounty form, but an auto-reply named a model-safety address, which is the right category for this |
+| NVIDIA | `psirt@nvidia.com` | notified, unencrypted. They ask that emailed *vulnerability reports* be PGP encrypted and carry reproduction steps and proof-of-concept code; none of that applies here, and the letter says so plainly |
+| Google | `security@google.com`, then [`google-deepmind/gemma#784`](https://github.com/google-deepmind/gemma/issues/784) | **delivered but not received.** Their auto-reply states the inbox is not monitored by humans and that non-vulnerability mail gets no response, so the notice was posted publicly instead |
+| Mistral AI | Devstral model page on Hugging Face | posted publicly. `mistral.ai/.well-known/security.txt` returns the site's 404 page |
+| Qwen | [`QwenLM/Qwen3-Coder` issues](https://github.com/QwenLM/Qwen3-Coder/issues) | posted publicly. No `security.txt` on `qwen.ai`, `alibabacloud.com` or `alibabagroup.com` |
+
+**Corrections and statements are welcome at any time and will be published verbatim** — including a correction to the measurement itself, which is versioned and amendable. No vendor had replied on the substance as of 26 August 2026, and none is obliged to.
+
+### What this took, which is itself a finding
+
+**Half of the six could not receive a non-vulnerability notice through their published security channel.** Google's is unmonitored by their own account. Mistral and Qwen publish no `security.txt` at all. NVIDIA publishes a contact, but on a web page rather than anywhere a machine can find it. Anthropic recovered it only because an auto-reply happened to name a model-safety address.
+
+That is not a criticism of any of them. Every one of these channels was built for vulnerability reports, and **nobody has an intake for "your model is named in a published measurement"** — which is a gap the whole field will keep meeting as this kind of work becomes ordinary.
+
 ## How far this reaches
 
 The worst arm we measured — content sitting in the instruction or system channel — is

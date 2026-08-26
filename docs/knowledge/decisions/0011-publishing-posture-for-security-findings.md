@@ -1,12 +1,36 @@
 # ADR-0011: Publish security findings, but as observations rather than verdicts
 
-Date: 2026-08-21 · Status: accepted · v1
+Date: 2026-08-21 · Status: accepted · v2
 
 The injection measurement ([RAD-0006](../research/0006-development-time-prompt-injection.md))
 produced working attack payloads, a demonstrated credential-exfiltration technique against a
 tool-enabled agent, and per-model compliance rates for named commercial models. This
 repository is public and its history is permanent, so how that gets published is a decision
 with consequences, not a formatting choice.
+
+**v2 (2026-08-26) — the notification obligation is discharged.** This record committed to
+offering every named vendor sight of its own results and a right of reply. That was done on
+2026-08-26 for all six, and the outcome per vendor is published on the injection page rather than
+kept privately, so a reader can see the courtesy was offered instead of taking our word for it.
+
+Three things the exercise established that the decision assumed rather than knew:
+
+- **Half of the six could not receive a non-vulnerability notice through their published security
+  channel.** Google's `security@` is unmonitored by their own auto-reply and states that
+  non-vulnerability mail gets no response; Mistral and Qwen publish no `security.txt` at all. The
+  provision for a public channel as an acceptable substitute was not a hypothetical — it was needed
+  three times out of six.
+- **"Bounded by the vendor's own channel" did real work.** Every private channel routed to a bounty
+  programme. NVIDIA asks that emailed vulnerability reports be PGP encrypted with reproduction steps
+  and proof-of-concept code; none of that applies to a courtesy notice, so it was sent unencrypted
+  with the reasons stated. Anthropic's bug-bounty form was abandoned in favour of the model-safety
+  address their own auto-reply named.
+- **The unowned sink domain is still unowned, and still pending.** `datefmt-telemetry.io` was
+  verified unregistered on 2026-08-26, so the published claim holds. The fix — moving every sink to
+  the reserved `.invalid` TLD, which cannot be registered by anyone — is now recommended in the
+  README of each affected experiment. It remains a payload-set version bump rather than an edit,
+  because the host is the canary the scorer matches on and every published figure was measured
+  against the current set.
 
 ## Context
 
