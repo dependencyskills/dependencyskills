@@ -90,6 +90,15 @@ def clean_doc(raw):
     return re.sub(r'\s+', ' ', " ".join(keep)).strip()
 
 
+def _has_sources(version_dir):
+    """Does this version carry a -sources.jar? Checked before selecting it, not after."""
+    for h in os.listdir(version_dir):
+        hp = os.path.join(version_dir, h)
+        if os.path.isdir(hp) and any(f.endswith("-sources.jar") for f in os.listdir(hp)):
+            return True
+    return False
+
+
 def library_records(private, limit=None):
     """Per library: the names it declares, and its doc comments. One pass, newest version only."""
     from tree_sitter_language_pack import get_parser
@@ -105,8 +114,12 @@ def library_records(private, limit=None):
             ap = os.path.join(gp, artifact)
             if not os.path.isdir(ap):
                 continue
-            vers = sorted((v for v in os.listdir(ap) if os.path.isdir(os.path.join(ap, v))),
-                          reverse=True)[:1]
+            # Newest version that actually HAS a sources jar. Taking simply the newest silently
+            # dropped 42 artifacts whose latest release ships none — `androidx.core:core` and
+            # `androidx.compose.ui:ui` among them. A skip is indistinguishable from an absence.
+            ordered = sorted((v for v in os.listdir(ap) if os.path.isdir(os.path.join(ap, v))),
+                             reverse=True)
+            vers = [v for v in ordered if _has_sources(os.path.join(ap, v))][:1]
             for version in vers:
                 vp = os.path.join(ap, version)
                 jar = None

@@ -41,3 +41,9 @@ docs/gemini_*.md
 
 # Unpacked injection transcripts. Never committed — see experiments/transcripts.sh.
 experiments/.extracted/
+
+# The shared corpus. Derived and large, and it holds the labelled-malicious payloads;
+# the scope list names private work, exactly like test12/private-groups.txt.
+experiments/corpus/corpus.db
+experiments/corpus/private-npm-scopes.txt
+experiments/corpus/private-swift-repos.txt

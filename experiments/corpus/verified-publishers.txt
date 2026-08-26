@@ -1,0 +1,11 @@
+# Publishers whose entries are promoted from `presumed_benign` to `benign_verified`.
+#
+# One per line: <publisher-prefix> <tab or spaces> <basis>
+# The basis is written into `label_note`, because a verification with no stated reason is just a
+# stronger presumption wearing a better name.
+#
+# Be sparing. The default already assumes these are fine; this column means something narrower —
+# that somebody can say WHY. "It is a big company" is not a reason, it is a reputation, and the
+# xz backdoor was two years of patient work inside exactly that assumption.
+
+io.github.aughtone    the maintainer's own published libraries — authorship, not reputation

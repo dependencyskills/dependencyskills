@@ -68,3 +68,50 @@ A real cache contains the developer's own packages and possibly a client's. Thre
 2. the corpus and the exclusion list are **both gitignored**; only `PROSE-MANIFEST.md` is
    publishable, after review;
 3. the manifest records publishers, so it must be read before it is committed.
+
+## Next: extract once, keep it, and stop re-deriving it
+
+Right now every experiment that needs harvested content re-does the extraction from the Gradle
+cache. `test12` walks 1,892 jars for prose; `test14` walks them again with tree-sitter for declared
+surfaces; anything that needs both walks them twice. The cache is stable — the artifacts are
+version-pinned and immutable — so the work is being repeated against input that cannot change.
+
+**The proposal is one persisted extraction that several experiments read.** Per symbol: the
+coordinate, the symbol, its signature, its doc comment, its language, and the declaring library's
+full declared-name set. That is the union of what `test5`, `test12`, `test13`, `test14` and `test17`
+each build separately today.
+
+What it would unblock:
+
+- **`test14`'s resolution universe.** Pricing "does this directive name something real" needs
+  doc-to-symbol binding *and* a per-library surface. Both exist in separate harnesses and neither is
+  kept.
+- **Anything needing both faces of an entry** — the semantic prose and the syntactic signature —
+  which is the shape the codex itself uses.
+- **Re-runs.** A tree-sitter pass over the whole cache is minutes; a stored extraction is seconds,
+  which changes how freely a question gets asked.
+
+Open questions before building it: what format (JSONL keeps the current tooling; a small SQLite
+would give per-library lookups without loading everything); whether it is gitignored like
+`prose-corpus.jsonl` and rebuilt from the manifest, which it probably must be given the size; and
+whether the declared surface belongs in the same file or beside it.
+
+Worth pairing with [RAD-0039](../../docs/knowledge/research/0039-where-the-dependency-graph-comes-from.md),
+since the dependency *edges* are the other thing repeatedly derived and discarded — and a stored
+extraction with no graph would still leave `test14` resolving against the wrong universe.
+
+## Known defect in version selection
+
+This harness takes the **newest version** of each artifact and reads its sources jar. If the newest
+release ships no sources but an earlier one does, it finds nothing and moves on — a skip that looks
+exactly like an absence.
+
+Measured after the fact: **42 of 1,891 artifacts (2.2%)** are affected, and they are not obscure —
+`androidx.compose.ui:ui`, `androidx.core:core`, `ui-graphics` and `ui-text` among them. The
+published figures on this page were computed before this was found. They are ratios over a large
+corpus so the shortfall moves them little, but it is **not random**, and a number derived from this
+harness should be read with that in mind.
+
+[`corpus/build.py`](../corpus/build.py) takes the newest version that *has* a sources jar, which is
+the correct behaviour; this harness has been corrected to match but its published numbers have not
+been re-run.

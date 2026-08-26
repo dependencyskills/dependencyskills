@@ -90,3 +90,19 @@ That asymmetry is the actual state of the prose problem: the false-positive rate
 can be measured precisely and cheaply, and its catch rate cannot be measured at all until there is
 a payload set with the breadth the corpus now has. **Any future prose rule will hit the same wall**,
 so the useful next step is not another rule — it is a payload set wide enough to price one against.
+
+## Known defect in version selection
+
+This harness takes the **newest version** of each artifact and reads its sources jar. If the newest
+release ships no sources but an earlier one does, it finds nothing and moves on — a skip that looks
+exactly like an absence.
+
+Measured after the fact: **42 of 1,891 artifacts (2.2%)** are affected, and they are not obscure —
+`androidx.compose.ui:ui`, `androidx.core:core`, `ui-graphics` and `ui-text` among them. The
+published figures on this page were computed before this was found. They are ratios over a large
+corpus so the shortfall moves them little, but it is **not random**, and a number derived from this
+harness should be read with that in mind.
+
+[`corpus/build.py`](../corpus/build.py) takes the newest version that *has* a sources jar, which is
+the correct behaviour; this harness has been corrected to match but its published numbers have not
+been re-run.

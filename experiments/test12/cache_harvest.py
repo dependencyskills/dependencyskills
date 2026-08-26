@@ -80,6 +80,15 @@ def clean(raw):
     return out
 
 
+def _has_sources(version_dir):
+    """Does this version carry a -sources.jar? Checked before selecting it, not after."""
+    for h in os.listdir(version_dir):
+        hp = os.path.join(version_dir, h)
+        if os.path.isdir(hp) and any(f.endswith("-sources.jar") for f in os.listdir(hp)):
+            return True
+    return False
+
+
 def walk_cache(private, limit_per_artifact=1):
     """Newest version per artifact by default — old versions are near-duplicate prose."""
     if not os.path.isdir(CACHE):
@@ -98,8 +107,11 @@ def walk_cache(private, limit_per_artifact=1):
             ap = os.path.join(gp, artifact)
             if not os.path.isdir(ap):
                 continue
-            versions = sorted((v for v in os.listdir(ap) if os.path.isdir(os.path.join(ap, v))),
-                              reverse=True)[:limit_per_artifact]
+            # Newest versions that actually HAVE a sources jar. Taking simply the newest silently
+            # dropped 42 artifacts whose latest release ships none — androidx.compose.ui among them.
+            ordered = sorted((v for v in os.listdir(ap) if os.path.isdir(os.path.join(ap, v))),
+                             reverse=True)
+            versions = [v for v in ordered if _has_sources(os.path.join(ap, v))][:limit_per_artifact]
             for version in versions:
                 vp = os.path.join(ap, version)
                 jar = None

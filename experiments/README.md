@@ -150,12 +150,25 @@ paraphrase, signature-only display — and not the ones that try to recognise an
   close the identifier channel for about a fifth of a percent of real content, and leave prose
   untouched. The remaining identifier gap is a policy dial with a published cost curve, not a
   missing technique.
+- ~~The harvest is re-derived every time.~~ **Built:** [`corpus/`](corpus/) extracts the Gradle
+  and npm caches once into a single SQLite file — `entries` (symbol, signature, doc, and a label)
+  and `declared` (the per-library surface), indexed for the per-library lookup a resolution check
+  needs. Derived and disposable; the caches are the source of truth and `test12`'s manifest pins
+  the maven half. What it still lacks is **dependency edges**, without which a resolution check
+  cannot see a library's actual dependencies — see [RAD-0039](../docs/knowledge/research/0039-where-the-dependency-graph-comes-from.md).
+- ~~The corpus supplies no JavaScript.~~ **Closed by the npm harvest.** `test12` noted the Gradle
+  cache holds 17 `.js` files across 1,892 jars, which left the ecosystem every landed prose payload
+  came from with no corpus behind it. The npm cache supplies it from the same machine. **Swift is
+  still missing**, and its `///` line comments need a different extractor.
 - **Agent-laundered first-party content** (RAD-0029) — measured once, untested since, and inside
   the boundary declared-only indexing draws.
-- **Whether the permitted region is inert.** `test15` enumerated 5,408 identifiers that pass the
-  whole catalogue, and `test9` had already measured that the forms which pass were never obeyed
-  while every form that was obeyed is caught. That suggests constraints work by making an
-  instruction *illegible as one* rather than by blocking it — but it rests on four payload forms.
+- ~~Whether the permitted region is inert.~~ **Answered by `test16`.** `test15` enumerated 5,408
+  identifiers that pass the whole catalogue and noted, on four data points, that the forms which
+  pass were never obeyed. `test16` tested it directly: holding shape constant at camelCase and
+  varying only length, obedience is **0 of 6 at every rung from 3 to 12 words**, against a
+  spaced-form control firing 6 of 6. The permitted region is camelCase, and camelCase is not
+  followed. The remaining caveat is that this is one model, `N`=6, and the two other models tested
+  can no longer run the control at all.
 - **Prose, now with both candidates priced.** `test13` and `test14` measured the two structural
   signals available — reference to something external (29.8%) and resolution against the declared
   surface (1.73%) — against `test10`'s 0.221% bar. Both fail. What blocks progress is no longer a
