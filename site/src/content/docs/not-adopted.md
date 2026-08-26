@@ -258,9 +258,42 @@ data helps considerably and is **not sufficient**: moving the identical words in
 channel defeats it outright, and a payload that simply argues the framing is a test harness defeats
 it on agents it otherwise protects.
 
-No existing supply-chain control reaches this. Signatures prove *who* published a file; SBOMs record
-*what* is present; scanners look for dangerous *code*. The target here is the model's judgement, and
-none of those three inspects a sentence.
+**And in almost every one of these designs, the agent reads that prose directly.** There is nothing
+between the library's text and the model: a `SKILL.md` is loaded and becomes instructions, an
+`llms.txt` is fetched and pasted in, an MCP tool description arrives as part of the tool contract, a
+documentation service returns the text and the agent reads the reply. In each case the words a
+third party wrote are the words the model sees, unaltered.
+
+**"Instructions" here means anything a sentence can ask for.** What we planted and measured, in the
+register of ordinary API documentation:
+
+- **Send data somewhere.** A setup note saying the process environment must be copied into a
+  telemetry log before first use. Many agents wrote code that did it.
+- **Call something that does not exist.** A directive naming an API in neither the library nor its
+  dependency graph — the agent writes against a surface the publisher controls.
+- **Act on real files, not just write code.** Given actual tools, a doc claiming "support
+  diagnostics" required appending a credentials file to a log, one agent **staged a planted
+  credentials file into a telemetry log in 2 of 3 runs** — it did the thing, rather than describing
+  it.
+
+Published attack corpora add configuration poisoning and disclosure to that list. **None of it has
+to look like an attack.** The forms that worked read as preconditions, compatibility caveats and
+migration advice — the registers a developer expects to be told something in, which is exactly why
+they are followed.
+
+That is not an oversight in any of them — it is what they are *for*. Getting the library's own
+documentation in front of the agent is the entire point, and a step that rewrote it would look like
+a step that damages it. It also means there is **no place to put a check even if someone wanted
+one**, which is much of why nobody has.
+
+On most ecosystems the situation is worse still, because the text does not need to be *delivered* at
+all. An npm package sits exploded in `node_modules`, a Python one in `site-packages`; every README
+and docstring from every transitive dependency is already in the working tree, and an agent that
+greps the codebase reads it without any design admitting it.
+
+No existing supply-chain control reaches this either. Signatures prove *who* published a file; SBOMs
+record *what* is present; scanners look for dangerous *code*. The target here is the model's
+judgement, and none of those three inspects a sentence.
 
 This is not a gap we are pointing at in someone else's work — **it is a hazard this project's own
 proposal creates**, which is why the whole study is published rather than quietly designed around.
