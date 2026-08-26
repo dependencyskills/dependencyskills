@@ -16,6 +16,6 @@ a conversation are where this leaks. Document the pattern, not the person.
 **Every commit is signed and signed off** — `git commit -S -s`. Merge
 commits only; squash and rebase discard signatures and sign-offs.
 
-**Read `docs/knowledge/adr/` before proposing structural changes.** Several
+**Read `docs/knowledge/decisions/` before proposing structural changes.** Several
 alternatives were considered and rejected with reasons, and each looks
 correct until it meets a concrete case.

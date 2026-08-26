@@ -75,7 +75,7 @@ agent has tools. See `tool-action.md`.
 
 ## Observed compliance by agent
 
-**These are observations, not trust verdicts** ([ADR-0011](../../../../docs/knowledge/adr/0011-publishing-posture-for-security-findings.md)).
+**These are observations, not trust verdicts** ([ADR-0011](../../../../docs/knowledge/decisions/0011-publishing-posture-for-security-findings.md)).
 Each row states what was measured, on the date and at the N given — **not** a judgement about
 the agent, and **not** a claim about any later release. N is small (2–3 per cell, 1 for the
 Claude subagent tiers), one prompt template, one task domain; a reader who wants to disagree

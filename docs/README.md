@@ -10,10 +10,10 @@ at this level.
 reference material, one section per kind. It is git-native for now — the
 wiki is disabled while the repository is private, and will be enabled at
 public release, at which point this tree becomes the two-way sync domain.
-See [ADR-0008](knowledge/adr/0008-adopt-knowledge-tree.md) for why it is
+See [ADR-0008](knowledge/decisions/0008-adopt-knowledge-tree.md) for why it is
 arranged this way.
 
-- `knowledge/adr/` — Architecture Decision Records. One hard-to-reverse
+- `knowledge/decisions/` — Architecture Decision Records. One hard-to-reverse
   choice each and, more importantly, what was tried and abandoned first.
   Append-only; read these before proposing a structure or layout change. The
   records here are the decisions that have **settled** — the shape of the
@@ -36,7 +36,7 @@ arranged this way.
   inside a single repository where it is cheaper to measure.
 - `knowledge/reference/` — the other projects, specifications and
   discussions in this space.
-  [ADR-0007](knowledge/adr/0007-conform-to-existing-conventions.md) commits
+  [ADR-0007](knowledge/decisions/0007-conform-to-existing-conventions.md) commits
   this project to conforming to conventions it does not control, a standing
   tracking burden, and `reference/landscape.md` is where it is carried.
 

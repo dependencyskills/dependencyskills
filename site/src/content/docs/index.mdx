@@ -1,12 +1,16 @@
 ---
 title: Dependency Skills
-description: Give coding agents the current, version-matched knowledge a library already ships — and an index that makes hundreds of them usable at scale.
+description: A local index of what your dependencies can already do, built from what they already ship — so a coding agent stops reinventing them.
 ---
 
-A convention, and the research behind it, for giving coding agents the
-knowledge a library already ships — current, version-matched, and reachable —
-and an index that makes hundreds of them usable without drowning the context
-window.
+A coding agent should know what the libraries on your classpath can already do.
+This is the thing that tells it: **a local index of your dependencies'
+capabilities**, built from the documentation they already ship — current,
+version-matched, and reachable without drowning the context window.
+
+It is being built, and it is not adoptable yet. Everything on this site is the
+measurement that shaped it, including the parts that killed our own ideas.
+[How it works](/how-it-works/) is the shortest route to the design.
 
 ## What goes wrong
 
@@ -58,7 +62,67 @@ everything and never unpacks**, so the documentation it ships is not reachable
 on disk the way an npm or Python package's is. And everywhere, **nothing
 indexes that documentation against the dependency graph.**
 
-:::note[Research, not a product]
-This is a research project, not an adoptable tool yet. Start with
-[the findings](/findings/), then [what has been decided](/decisions/).
+## And nobody is checking that text
+
+Agents read library documentation constantly already — a README, a source file
+in `node_modules`, a hover in the IDE, a docs page fetched mid-task. And the
+whole emerging standards layer is built to do exactly this, deliberately and at
+scale: the skill formats, the documentation services, the manifest conventions.
+**Every one of them moves prose written by a third party straight into an
+agent's context, verbatim** — [ours included](/not-adopted/), until we did
+something about it. That text is written by whoever published the library, and
+some of it is hostile.
+
+**Very little stands in the way of it today.** A model's own resistance to
+following instructions it finds in library text varies enormously between
+models of similar capability, *within a single vendor's range* — it tracks how
+a model was trained, not how good it is, so you cannot rely on it. Quoting the
+text as untrusted data helps, and is defeated outright by putting the same
+words somewhere else. Of the attacks we ran that actually worked on an agent,
+the best security scanner caught **two of five**. And nothing filters at the
+point the text is read: the same payload written in five languages' native
+documentation conventions was delivered perfectly intact by every parser we
+tried.
+
+So this is not a hazard an index creates. It is one that is already running,
+on every agent that reads a dependency's docs — which is all of them.
+
+**And on most ecosystems there is no choice about it.** An npm package sits
+exploded in `node_modules`; a Python one in `site-packages`. Every README,
+every JSDoc block, every docstring from every transitive dependency is *already
+in the working tree*, and an agent that greps the codebase reads it without
+anyone deciding that it should. There is no moment where library text is
+admitted, because it never arrived — it was always there.
+
+The JVM is the odd one out, and for a reason we have spent most of this project
+complaining about: **Gradle and Maven never unpack.** A resolved dependency
+stays an archive in a cache, so none of its prose is on disk to be read
+incidentally. That is exactly why [an index is needed at all](/findings/) — and
+it is also the only reason there is a door to put a lock on.
+
+**What an index changes is that there is finally somewhere to put a control.**
+Library text reaches an agent by a dozen uncontrolled routes, which is much of
+the reason nothing checks it. An index is the first arrangement where all of it
+passes through **one place** — and that is the structural change. The rewriting
+step and the filter are only what we chose to put there. Nothing in the existing
+designs is wrong-headed; they simply have nowhere to put a check even if they
+wanted one.
+
+We are not claiming that generalises cleanly. On an ecosystem that explodes its
+dependencies onto disk, an index can control what it *serves* and cannot stop an
+agent reading `node_modules` directly. The control is real where the packaging
+already keeps the text out of the working tree, and partial where it does not —
+which is an honest limit rather than a feature.
+
+The honest cost is that an index pulls in *more* third-party text than an agent
+would have read by itself: hundreds of libraries rather than the handful it
+happened to open. The trade is breadth for control — every item rewritten
+before the agent sees it, rather than a few read raw. That trade is worth
+arguing about, and [the measurements behind it](/injection/) are published in
+full, including [where it does not hold](/experiments/).
+
+:::note[Being built — not adoptable yet]
+The architecture is settled and the measurement behind it is published, but
+there is no release. Start with [how it works](/how-it-works/), then
+[what has been decided](/decisions/).
 :::

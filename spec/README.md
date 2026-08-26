@@ -10,7 +10,7 @@ Three documents, three audiences:
   layout: a per-ecosystem conformance document. We conform to conventions
   that already exist and propose one only for Maven repositories, which
   have none and cannot have the directory convention the others share. See
-  [ADR-0007](../docs/knowledge/adr/0007-conform-to-existing-conventions.md).
+  [ADR-0007](../docs/knowledge/decisions/0007-conform-to-existing-conventions.md).
 - **`content.md`** — what a skill should actually say. The Agent Skills
   spec defines `name` and `description` and stops; this is the unclaimed
   ground, and the index is only as good as the prose it is built from.

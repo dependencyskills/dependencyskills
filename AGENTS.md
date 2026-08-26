@@ -16,7 +16,7 @@ A convention plus reference implementations of it — not a product. The
 audience is other people implementing the same convention, so the spec is
 the primary artifact and the code exists to demonstrate it.
 
-Read `docs/knowledge/adr/` before proposing structure or layout changes. Three
+Read `docs/knowledge/decisions/` before proposing structure or layout changes. Three
 different splits of this repository were considered and rejected, and each
 looks correct until it meets a concrete case. The reasoning is recorded
 precisely so it does not get re-litigated.

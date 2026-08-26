@@ -1,14 +1,17 @@
 # Dependency Skills
 
-Research into how a library can carry guidance an agent will actually use —
-across Maven, npm, SPM, Go and Python — and an index that makes it findable at
-the scale a real dependency graph reaches.
+A coding agent should know what the libraries on its classpath can already do.
+This builds the thing that tells it — a local index of your dependencies'
+capabilities, harvested from what they already ship, across Maven, npm, SPM, Go
+and Python.
 
-> **This is a research project, not a convention you can adopt.** It began as
-> a publishing proposal and is currently *not* proposing that mechanism, because
-> measurement moved the answer. There is no stable spec, no shipped
-> implementation, and the direction has changed twice. Do not publish anything
-> against it yet. What is worth reading now are the findings, in
+> **Being built, and not yet adoptable.** The architecture is settled and the
+> measurements behind it are published, but there is no release and no stable
+> spec. Do not publish anything against it yet.
+>
+> How it is shaped and why:
+> [ADR-0012](docs/knowledge/decisions/0012-a-shared-machine-level-index-store.md).
+> What the measurements found, including the ones that killed our own ideas:
 > [`docs/knowledge/research/`](docs/knowledge/research/).
 
 ## What actually goes wrong
@@ -124,7 +127,7 @@ against what, and a recommendation that is explicitly not a commitment.
 | **0008** | The field as it stands — what others have built, what it corroborates, and where each pattern's limits are |
 
 Decisions that have actually been made are in
-[`docs/knowledge/adr/`](docs/knowledge/adr/); several are now older than the
+[`docs/knowledge/decisions/`](docs/knowledge/decisions/); several are now older than the
 measurements and are flagged where that matters. What shipped and failed is in
 [`docs/knowledge/postmortems/`](docs/knowledge/postmortems/) — v1 is inside
 published artifacts on Maven Central and anyone can download one and look.
@@ -147,7 +150,7 @@ different in each ecosystem.
 | Path | What it holds |
 |---|---|
 | `docs/knowledge/` | Research records, decisions, postmortems and reference material |
-| `experiments/` | Spikes — the cost model, and test0 (the parse bake-off). Each self-contained: data plus a runnable harness |
+| `experiments/` | The measurements — the cost model and twenty-three numbered tests, plus the shared corpus, the summariser and the classifiers. Each self-contained: data plus a runnable harness |
 | `spec/` | The convention. Normative, and currently ahead of what has been decided |
 | `implementations/` | Per build system. Publishing and harvesting, per channel |
 | `agent-skills/` | This project's own skills |
@@ -157,21 +160,31 @@ different in each ecosystem.
 Implementations are organised by **build system**, not package ecosystem: a KMP
 library reaches npm consumers through Gradle, so the Gradle implementation owns
 that channel. See
-[ADR-0005](docs/knowledge/adr/0005-repository-structure.md).
+[ADR-0005](docs/knowledge/decisions/0005-repository-structure.md).
 
 ## State
 
-Nothing is published and nothing is adoptable.
+Nothing is published and nothing is adoptable. What has changed is that the
+measuring is largely done and the building has started.
 
-The Gradle implementation has a publisher for the Maven channel and has not
-been compiled since the project was retargeted. The harvester, the index, the
-emit steps for npm and SPM, and both skills are unwritten. A previous proposal
-argued for a mechanism the research now recommends against; it has been
-removed, and the reasoning survives in the research records.
+**Settled.** Where library content comes from
+([ADR-0009](docs/knowledge/decisions/0009-transport-is-sources-jar.md)), and the
+shape of the indexer that consumes it
+([ADR-0012](docs/knowledge/decisions/0012-a-shared-machine-level-index-store.md)):
+a shared machine-level store keyed by coordinate, so a library is indexed once
+per machine rather than once per project; declared dependencies by default with
+the transitive tail opt-in; and a boundary that decides what an agent is ever
+allowed to read.
 
-The next things worth doing are measurements rather than code: whether an
-injected instruction in a doc comment actually redirects an agent, and which of
-the importable libraries a project's source really references.
+**Unwritten.** The harvester, the index and the query layer. The Gradle
+implementation has a publisher for the Maven channel and has not been compiled
+since the project was retargeted. The emit steps for npm and SPM, and both
+skills, do not exist.
+
+**Open.** Whether prose a filter misses is prose an agent would have obeyed —
+the gap between catching text and preventing harm. And retrieval at a corpus
+size a real dependency graph produces, which is an order of magnitude past
+anything measured so far.
 
 ## If you are working on this too
 

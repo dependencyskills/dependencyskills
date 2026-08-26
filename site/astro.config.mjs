@@ -23,6 +23,7 @@ export default defineConfig({
 				// security work, which grew out of a single question and became most of the recent
 				// effort — sits under Research, so it supports the case rather than replacing it.
 				{ label: 'Overview', link: '/' },
+				{ label: 'How it works', link: '/how-it-works/' },
 				{ label: 'Adopted Standards', link: '/standards/' },
 				{ label: 'What we do not adopt', link: '/not-adopted/' },
 				{
@@ -41,21 +42,20 @@ export default defineConfig({
 						{ label: 'The dependency nobody declared', link: '/case-studies/the-dependency-nobody-declared/' },
 					],
 				},
+				// One flat, collapsed section. This is a product site now: the measurement is the
+				// evidence behind the design, not the thing on offer, so it should be one section a
+				// reader can open — not a second index competing with the product for attention.
 				{
 					label: 'Research',
+					collapsed: true,
 					items: [
 						{ label: 'Why any of this is measured', link: '/research/' },
 						{ label: 'What the tests show', link: '/experiments/' },
+						{ label: 'Prompt injection', link: '/injection/' },
 						{ label: 'The field as it stands', link: '/field/' },
 						{ label: 'The landscape', link: '/landscape/' },
-						{
-							label: 'Security',
-							items: [
-								{ label: 'Prompt Injection', link: '/injection/' },
-								{ label: 'Running attacks safely', link: '/safety/' },
-								{ label: 'What we are not running, and why', link: '/not-doing/' },
-							],
-						},
+						{ label: 'Running attacks safely', link: '/safety/' },
+						{ label: 'What we are not running, and why', link: '/not-doing/' },
 					],
 				},
 				{
