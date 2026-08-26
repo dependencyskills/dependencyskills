@@ -193,6 +193,19 @@ Two things surfaced while measuring it that were not visible before:
   moved cross-library resolution from 1.7% to 5.1% — real, and worth about three points against a
   gap of eight times.
 
+**A learned model does better than either hand-written rule — with one caveat this same finding
+predicts.** The rules above were written by hand. A classifier trained on the *shape* of the text
+instead catches the injected payloads while flagging about one real comment in twelve hundred — far
+below the 1.73% the resolution rule cost. It is not keying on imperativeness as such: hand-written
+legitimate directives like *"Use `newBuilder()` instead of the deprecated constructor"* pass it
+untouched. But the caveat this section raises is real and shows up in the numbers — **directive-bearing
+real comments are flagged eighteen times more often than plain ones** (0.89% against 0.05%). So a
+population that is imperative *by design* — agent-facing skill files rather than ordinary API docs —
+is exactly where the cheap filter would cost the most, and its headline rate is measured on ordinary
+documentation, not on that harder population. It is a first pass that prices casual injection into
+effort, not a solution to the problem this section describes. The full measurements are in
+[the experiments](/experiments/).
+
 ### Grounding documentation against the code that ships it
 
 Withdrawn. It caught about a third of attacks from an independent benchmark, missed whole classes

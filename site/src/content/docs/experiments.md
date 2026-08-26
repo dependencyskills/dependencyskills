@@ -106,6 +106,47 @@ small-sample single measurements meant to be re-run rather than believed.
 
 **[The full study, with the per-agent numbers and the mitigation, is here](/injection/).**
 
+## A cheap filter that catches the casual version
+
+The architectural conclusion above stands: library content must be placed where it cannot be
+followed. But not every deployment can rewrite everything, and a second question is worth answering
+on its own terms — **how much of this can a simple, fast filter catch before the text ever reaches
+an agent?** Not as a fortress. As a first pass that removes the obvious attempts cheaply, and admits
+what it cannot catch.
+
+We trained an ordinary text classifier — term frequencies and a linear model, the kind of thing a
+search index already computes, with no large model and no new runtime — on the doc comments of real
+libraries, and tested it on packages the machine had **never downloaded**.
+
+- **It flags roughly one real comment in twelve hundred** (4 in 4,995 fresh comments) while catching
+  every one of the three injection payloads from the earlier study.
+- **It is not a keyword list.** Deleting the entire attack vocabulary — `environment`, `secret`,
+  `token`, `log` and thirty others — from its training changes the catch rate not at all. It learned
+  the *shape* of an instruction, not a watchlist.
+- **It survives a change of source.** The same setting, untouched, works on identifiers recovered
+  from **compiled classes** — the libraries that ship no source at all — and even flags
+  machine-generated names *less* often than human-written ones.
+- **It is a dial, not a verdict.** Rather than one yes/no, it can name the *kind* of documentation an
+  instruction is hiding in, and an operator chooses how much to reject. A cautious setting loses
+  about twenty entries in ten thousand; a stricter one catches more and costs more. A rejected entry
+  is not deleted — it degrades to its signature and can be logged for review.
+
+**Then we attacked it, on the honest assumption that an attacker has it** — because it ships inside
+the tool, so of course they do. A search for wording that slips under the threshold, using only
+rewrites a human writer could make, got through **2% of the time within a fixed budget — and every
+success landed in the same two documentation registers the filter already reported as its weak
+spots.** The other six registers, and all three real payloads, held. Evasion also cost the attacker
+something visible: it forced concrete words (`credential`, `debug log`) toward vague ones
+(`identity detail`, `shared cache`), which is exactly the trade a filter is meant to impose.
+
+**What this is, stated plainly.** A cheap first pass that catches casual and accidental injection
+and prices deliberate evasion into more work. It is **not** protection against a determined attacker,
+and we do not claim it is — a simple model that ships with the tool can always be picked apart by
+someone willing to. It also measures whether text is *caught*, not whether an agent would have
+*obeyed* it, which is a separate question the earlier work leaves open. Fifty percent caught is
+better than zero; this does considerably better than fifty, at a cost low enough to run on
+everything. It sits **in front of** the architectural mitigation, not instead of it.
+
 ## Still open
 
 These tests measured whether an agent *uses* a capability placed in front of it, whether
@@ -208,9 +249,17 @@ from compiled code the near-injection-proof tier, because identifiers come from 
 rather than free text. **A method name carrying a full English sentence compiles, survives
 into the class file, and is printed back verbatim by the standard disassembler** — and the
 portable version of the trick needs no exotic syntax, because an imperative in camel case is a
-legal identifier in every language we harvest. An agent given such a signature ignored it and
-did its work, but that was one phrasing against one model.
+legal identifier in every language we harvest.
 
-What remains is building it honestly: the index still has to work against real corpora rather
-than a synthetic one, per-value labelling is the version worth measuring, and whether an
-identifier-borne instruction is genuinely inert needs a much harder try than we have given it.
+But two later measurements bound how much that matters. First, obedience tracks the *shape* of
+the identifier, not its length: a camel-case instruction, however long, was followed **zero times**
+across two dozen trials, while the same words with spaces in them — a form a source compiler
+rejects but the class-file format allows — was followed almost every time. Second, that spaced
+form is vanishingly rare in real compiled code: **one identifier in over eight hundred thousand**
+harvested from real libraries carried a space, and it was benign. The dangerous shape is
+expressible in bytecode and does occur; it is also the shape a filter catches for almost nothing,
+because a space inside a name is nearly a perfect tell.
+
+What remains is building it honestly: per-value labelling is the version worth measuring, and the
+filter's real limit — whether text it *misses* is text an agent would have *obeyed* — needs a model
+in the loop rather than the classifier alone.
