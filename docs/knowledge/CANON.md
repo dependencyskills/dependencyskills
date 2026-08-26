@@ -84,6 +84,12 @@ target — and not what the pipeline that builds them achieves. The **summarise*
 place on the critical path on its other and still-measured basis: it is the **quarantine**
 (`test7` — 0 of 3 harm, 2 of 3 task). RAD-0014 → v4, RAD-0019 → v4.
 
+The same run found what does help. A retrieval key is embedded and never read by an agent, so an
+entry can be findable on text it must never display — RAD-0013's **two-faced entry**, scored for
+the first time. An index carrying both faces as **two vectors** reaches **15 of 17** within ten
+against raw's 13 and summarised's 10, and fusing the two texts into **one** vector is worse than
+either alone — the same shape as RAD-0019's finding that an equal-weight hybrid hurt.
+
 ## Changelog
 
 **0.0.3 · 2026-08-17 — current.** The documentation-transport generation. After

@@ -48,6 +48,11 @@ experiments/corpus/private-swift-repos.txt
 # and large enough that committing it would put 220 machine-written sentences in the history.
 experiments/summariser/summaries.json
 
+# test18 — fetched from the npm registry for a clean false-positive test. Derived, and
+# re-fetching it is the point: a stale sample is no longer packages we have never seen.
+experiments/test18/fresh-identifiers.json
+experiments/test18/.tarball.tgz
+
 # BEGIN story-tools (generated - do not edit between markers)
 docs/stories/
 .agents/config/dimensions.md

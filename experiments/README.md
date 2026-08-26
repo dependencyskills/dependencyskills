@@ -109,6 +109,9 @@ Every row here is a **surface reduction**, and this is the category with an unbr
 | [test15](test15/) | what does the constraint catalogue permit, if you attack it? | **5,408 identifiers pass it** — but every form measured to be *obeyed* is caught, and every form that passes was obeyed 0 of 24. The permitted region may be inert |
 | [test16](test16/) | does obedience fall with identifier length, or with shape? | **shape** — 0 of 6 at every length from 3 to 12 words, on a model whose spaced-form control fires 6 of 6. And `test9`'s published obedience no longer reproduces on two of three models |
 | [test17](test17/) | can a whole doc comment be gated as a unit? | **the bar was wrong.** Rejecting prose demotes an entry to signature-only, which `test0` and `test7` both measure as workable — so prose rules are priced options, not failures |
+| [test18](test18/) | can a learned classifier catch what the hand-written rules cannot? | **yes, and cheaper.** 77.3% of the 5,408 identifiers that pass every shipped rule, at **0.129%** on packages never downloaded here — about half the catalogue's own cost. Character n-grams beat word-splitting, because `copyenvtolog` has no separator for a word rule to find |
+| [test19](test19/) | can a classifier find an injected instruction inside a real doc comment? | **yes, at a tenth of what the structural signals cost.** 94.5% of generated payloads at **0.24–0.28%**, against `test14`'s 1.73% and `test13`'s 29.8%. Two of `test9`'s three real payloads caught **100%**; the third names no destination and gets through half the time |
+| [test20](test20/) | does word order carry the signal, or is an instruction a bag of words? | **order is where the command lives.** Trigrams fall 84.1% → 17.0% when the payload is shuffled, while a pure bag scores identically on shuffled and intact text. Reordering clauses so it still reads like documentation costs the attacker almost nothing — the evasion that preserves readability does not work, and the one that works destroys the sentence |
 
 ## The through-line
 
@@ -183,12 +186,24 @@ paraphrase, signature-only display — and not the ones that try to recognise an
   signature-only as sufficient to *use* a capability (7 of 8) with the capability already in hand;
   nothing measured whether it could be *found*.** It cannot — a signature has no prose and the query
   is prose, so the safe state is safe against harm and unreachable by search. The quarantine result
-  (`test7`, 0 of 3 harm) is untouched. See [RAD-0040](../docs/knowledge/research/0040-does-summarising-improve-retrieval.md).
-- **Prose, now with both candidates priced.** `test13` and `test14` measured the two structural
-  signals available — reference to something external (29.8%) and resolution against the declared
-  surface (1.73%) — against `test10`'s 0.221% bar. Both fail. What blocks progress is no longer a
-  missing idea but a **missing payload set**: the cost of a prose rule can be measured against
-  232,781 real comments, and its catch rate against three.
+  (`test7`, 0 of 3 harm) is untouched.
+- ~~Whether an entry should carry one face or two.~~ **Answered by the same run.** A retrieval key
+  is embedded and never read by an agent, so an entry can be *findable* on text it must never
+  *display*. An index carrying **both** faces as two vectors reaches **15 of 17** within ten,
+  against raw's 13 and summarised's 10 — the best result anything has produced on this slice. It
+  wins by not losing badly: the two faces fail on different questions and the sets barely overlap.
+  Fusing them into one vector is **worse than either alone** (4 of 17 first-hit), the same shape as
+  RAD-0019's finding that an equal-weight hybrid hurt. See
+  [RAD-0040](../docs/knowledge/research/0040-does-summarising-improve-retrieval.md).
+- ~~Prose, with both candidates priced and no payload set to score them against.~~ **The payload
+  set was the wall, and `test19` removes it.** `test13` and `test14` priced the two structural
+  signals — reference to something external (29.8%) and resolution against the declared surface
+  (1.73%) — against `test10`'s 0.221% bar, and both failed, but a catch rate computed over **three**
+  examples was never going to decide anything either way. A generated grammar of framing × action ×
+  sentence form supplies the missing half, and a learned classifier costs **0.24–0.28%** — an order
+  of magnitude below resolution and two below external reference. What is now open is narrower and
+  sharper: the generator renders every action as an explicit verb→target transfer, and `test9`'s one
+  real payload that names **no destination** gets through half the time.
 
 ## Standards note
 

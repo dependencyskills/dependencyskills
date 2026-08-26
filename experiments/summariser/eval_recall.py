@@ -20,6 +20,23 @@ back to signature-only, which carries no prose, and it goes into the index that 
 is what the index would actually contain. Excluding them would measure a summariser that never
 fails, which is not the one that exists.
 
+FIVE INDEXES, BECAUSE THE KEY AND THE SHOWN TEXT ARE NOT THE SAME OBJECT. A retrieval key is
+embedded and never read by an agent; the shown text is what reaches it. The quarantine requirement
+binds the second, not the first — so an entry can be *findable* on text it must never *display*.
+That is not a loophole, it is RAD-0013's two-faced entry, and it makes two things measurable here
+that were previously assumed:
+
+  raw                   key = raw documentation                     (test5's baseline)
+  summarised            key = the capability line, or the signature where it degraded
+  summarised + raw key  same, except a DEGRADED entry keys on raw text and still shows only its
+                        signature — isolating "the safe state cannot be found" from everything else
+  both faces (max)      every entry carries BOTH keys; an entry is found if EITHER matches
+  both faces (concat)   the same two texts fused into one key, which is what a single-vector
+                        index would actually store
+
+The `max` and `concat` rows differ in cost, not in intent: one is two vectors per entry, the other
+one. Reporting both says whether the gain needs the extra storage.
+
 Run:  uv run --with mlx-embeddings python eval_recall.py
 """
 import json
@@ -54,6 +71,17 @@ def summarised_key(e, s):
     return f"{tail}. {(s or {}).get('signature') or e.get('signature') or ''}".strip()
 
 
+def rescued_key(e, s):
+    """What a degraded entry would be FOUND on if the fallback kept a key it never shows.
+
+    The agent still receives the signature and nothing else. Only the vector changes, and a vector
+    is not a channel: it decides which entry surfaces, not what text is read. The attack this does
+    leave open — prose written to win retrieval on merit — is `test6`'s fabricated capability, which
+    the summariser never addressed and which RAD-0037 s1 records as open. It is not made worse here.
+    """
+    return raw_key(e) if (s and s["degraded"]) else summarised_key(e, s)
+
+
 def cosine(a, b):
     dot = sum(x * y for x, y in zip(a, b))
     na = math.sqrt(sum(x * x for x in a))
@@ -62,13 +90,16 @@ def cosine(a, b):
 
 
 def score(order_idx, corpus, queries, V, qv):
+    """`V[i]` is a LIST of vectors — an entry's faces. An entry scores as its best-matching face,
+    so carrying two keys can only help it surface, never bury it."""
     hits, ranks = {k: 0 for k in KS}, []
     for q, v in zip(queries, qv):
         tgt = next((i for i in order_idx if corpus[i]["symbol"] == q["target"]), None)
         if tgt is None:
             ranks.append((q["target"].split(".")[-1], None))
             continue
-        pos = sorted(order_idx, key=lambda i: cosine(v, V[i]), reverse=True).index(tgt) + 1
+        best = {i: max(cosine(v, f) for f in V[i]) for i in order_idx}
+        pos = sorted(order_idx, key=lambda i: best[i], reverse=True).index(tgt) + 1
         ranks.append((q["target"].split(".")[-1], pos))
         for k in KS:
             hits[k] += pos <= k
@@ -110,10 +141,34 @@ def main():
             out.extend(generate(model, tok, texts=texts[i:i + B]).text_embeds.tolist())
         return out
 
-    views = {"raw harvested doc text": {i: raw_key(corpus[i]) for i in idx},
-             "summarised":             {i: summarised_key(corpus[i], sums[corpus[i]["symbol"]])
-                                        for i in idx}}
+    # One key text per entry per view, except the two-faced views which carry a list. Embedded
+    # once per distinct text and reused, so five indexes cost barely more than two.
+    def per(fn):
+        return {i: [fn(corpus[i], sums[corpus[i]["symbol"]])] for i in idx}
+
+    views = {
+        "raw harvested doc text": {i: [raw_key(corpus[i])] for i in idx},
+        "summarised":             per(summarised_key),
+        "summarised + raw key":   per(rescued_key),
+        "both faces (max)":       {i: [raw_key(corpus[i]),
+                                       summarised_key(corpus[i], sums[corpus[i]["symbol"]])]
+                                   for i in idx},
+        "both faces (concat)":    {i: [f"{raw_key(corpus[i])} "
+                                       f"{summarised_key(corpus[i], sums[corpus[i]['symbol']])}"]
+                                   for i in idx},
+    }
     qv = embed([q["query"] for q in queries])
+
+    # Embed each distinct key text once; several views share texts.
+    cache = {}
+    for keys in views.values():
+        for texts in keys.values():
+            for t in texts:
+                cache.setdefault(t, None)
+    distinct = list(cache)
+    for t, v in zip(distinct, embed(distinct)):
+        cache[t] = v
+    print(f"# {len(distinct)} distinct key texts embedded across {len(views)} indexes")
 
     tgt_deg = sum(1 for q in queries
                   if sums.get(q["target"], {}).get("degraded"))
@@ -128,10 +183,7 @@ def main():
 
     results = {}
     for name, keys in views.items():
-        V = {}
-        vecs = embed([keys[i] for i in idx])
-        for i, v in zip(idx, vecs):
-            V[i] = v
+        V = {i: [cache[t] for t in keys[i]] for i in idx}
         hits, ranks = score(idx, corpus, queries, V, qv)
         results[name] = (hits, ranks)
         cells = "  ".join(f"top {k:<2} {hits[k]:>2}/{len(queries)}" for k in KS)
@@ -151,7 +203,7 @@ def main():
         print("  Isolates the rewriter from the fallback. A subset chosen by an outcome of the run,")
         print("  so it is a diagnostic and never a headline.\n")
         for name, keys in views.items():
-            V = {i: v for i, v in zip(idx, embed([keys[i] for i in idx]))}
+            V = {i: [cache[t] for t in keys[i]] for i in idx}
             hits, _ = score(idx, corpus, sub_q, V, sub_v)
             cells = "  ".join(f"top {k:<2} {hits[k]:>2}/{len(sub_q)}" for k in KS)
             print(f"  {name:<24} {cells}   first {hits[1]/len(sub_q):.0%}")
@@ -159,14 +211,16 @@ def main():
     print("\n## per query, rank of the correct answer — lower is better, 1 means it came first\n")
     raw_r = dict(results["raw harvested doc text"][1])
     sum_r = dict(results["summarised"][1])
+    both_r = dict(results["both faces (max)"][1])
+    print(f"  {'':<34}{'raw':>6}{'summarised':>12}{'both':>7}")
     for name in raw_r:
-        a, b = raw_r[name], sum_r[name]
-        moved = "" if a == b else ("  better" if (b or 999) < (a or 999) else "  worse")
+        a, b, c = raw_r[name], sum_r[name], both_r[name]
+        flag = "  <- both beats either" if (c or 999) < min(a or 999, b or 999) else ""
         deg = "  [degraded]" if any(
             q["target"].split(".")[-1] == name and sums.get(q["target"], {}).get("degraded")
             for q in queries) else ""
-        print(f"  {name[:40]:<40} raw {str(a or '>220'):>5}   summarised "
-              f"{str(b or '>220'):>5}{moved}{deg}")
+        print(f"  {name[:32]:<34}{str(a or '>220'):>6}{str(b or '>220'):>12}"
+              f"{str(c or '>220'):>7}{flag}{deg}")
     return 0
 
 

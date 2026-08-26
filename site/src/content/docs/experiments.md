@@ -138,6 +138,20 @@ verbatim, and that result is unaffected. We are leaving the number on this page 
 quietly restating it, because it was the strongest thing we had said and it turned out to be
 measuring something else.
 
+**The same run found what does work, which we had been treating as a design detail.** What an
+entry is *found* on and what an agent is *shown* do not have to be the same text — the search key
+is a set of numbers nothing reads. So an entry can keep both: the library's own documentation as
+one key, the rewritten sentence as another, and the agent still only ever sees the rewrite. Asked
+the same 17 questions, that index puts the right answer in the first ten **15 times against 13 for
+the documentation alone and 10 for the rewrite alone**. It wins by not failing badly rather than by
+being better everywhere — each version has questions it gets hopelessly wrong, and they are mostly
+different questions.
+
+One more thing worth reporting because it is the opposite of the obvious move: **gluing the two
+texts together into a single key is worse than either on its own.** The gain needs them kept apart.
+That is the second time this project has measured a fusion of two search signals performing worse
+than the better one alone.
+
 Two questions that stood open here have since been answered. **Harvesting does not filter
 anything** — the same payload written in each of five languages' native doc conventions is
 delivered perfectly intact by every parser, so the parse stage is available as an enforcement

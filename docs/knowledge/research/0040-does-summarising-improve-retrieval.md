@@ -128,6 +128,35 @@ braces, angle brackets and the bare words `fun` and `class`. A sentence reading 
 of the serializer"* is rejected for the word `class`. That rule was written to keep markup out of an
 index entry and it is also throwing away well-formed capability descriptions.
 
+### Separating the key from the shown text answered the last two questions
+
+A retrieval key is embedded and never read by an agent; the shown text is what reaches it. The
+quarantine requirement binds the second, not the first — so an entry can be **findable on text it
+must never display**. That is RAD-0013's two-faced entry, and it makes two previously-assumed things
+measurable on this slice at the cost of embedding alone.
+
+| index over the same 220 entries | first hit | top 3 | top 5 | within ten |
+|---|---|---|---|---|
+| raw harvested doc text | 5 of 17 | 6 of 17 | 8 of 17 | 13 of 17 |
+| summarised | 5 of 17 | 7 of 17 | 8 of 17 | 10 of 17 |
+| summarised, degraded entries keyed on raw text | 5 of 17 | 7 of 17 | 9 of 17 | 11 of 17 |
+| **both faces — two vectors, best match wins** | **5 of 17** | **7 of 17** | **10 of 17** | **15 of 17** |
+| both faces fused into one vector | 4 of 17 | 7 of 17 | 8 of 17 | 10 of 17 |
+
+The two-faced index is the best result anything has produced on this slice. Nothing moves the
+first-hit figure, which sits at 5 for every index that is not actively worse.
+
+**Fusing the two texts into one key is worse than either alone at the head.** The gain needs two
+vectors, not one longer string — the same shape as this project's earlier finding that an
+equal-weight hybrid *hurt*, where keeping the arms separate won and averaging them dragged hits down.
+
+**It does not dominate per question.** On no single question does the two-faced index beat both
+single-face indexes: every entry gets two chances, so competitors improve too and ranks move
+relative to each other. What it does is stop losing badly — `DefaultHeadersConfig` 8 / 77 / **9**,
+`CallLoggingConfig` 8 / 46 / **9**, `Channel` 86 / 1 / **2**, `retryIf` 4 / 21 / **4**. Each
+single-face index fails a different set of questions catastrophically, the sets barely overlap, and
+the two-faced index inherits the better face's ballpark on nearly all of them.
+
 ## Findings
 
 **Measured.**
@@ -144,6 +173,14 @@ index entry and it is also throwing away well-formed capability descriptions.
   free safety margin.
 - **The rewriter's effect is bimodal and directional.** Large gains on entries buried by register
   collision; losses concentrated on configuration types.
+- **An index carrying both faces beats either alone** — 15 of 17 within ten against raw's 13 and
+  summarised's 10, and 10 of 17 within five against 8 for both. It wins by not losing badly rather
+  than by dominating: the two faces fail on different questions and the failure sets barely overlap.
+- **Fusing the two texts into one vector is worse than either alone at the head** (4 of 17). Two
+  vectors, not one longer string.
+- **A degraded entry can keep a retrieval key it never shows**, which recovers some of what the
+  fallback costs — 9 of 17 within five against 8. Small now only because narrowing the verifier
+  already took degraded question targets from 5 to 1.
 
 **Assumed, and worth separating.**
 
@@ -179,20 +216,24 @@ long as it did because the two properties were measured by different experiments
    *hand-written caller's-words entries* retrieve better than raw documentation, which is a claim
    about the target, not about the mechanism that would reach it. `CANON.md`, the site's experiments
    page, RAD-0014 and RAD-0019 all carry the inference and need the correction.
-2. **Make the fallback keep prose.** Narrowing the rule was done here and recovered the head.
-   What remains is the fallback itself: a rejected entry still degrades to a signature, which
-   cannot be retrieved at all. Degrading to *stripped* rather than *discarded* prose removes the
-   failure mode instead of shrinking it — a design change with a security argument attached, not a
-   tuning change, and so not made here.
-3. **Find out what raw text retrieves on.** If the `CallLoggingConfig` result generalises, part of
-   the raw baseline is boilerplate rather than documentation. Cheap to check and it would narrow
-   what every number compared against that baseline means.
-4. **Measure the union.** Neither index wins; they fail on different entries, and the failure modes
-   are complementary by construction — raw prose loses to register collision, rewritten prose loses
-   the incidental vocabulary that was retrieving well. Indexing both faces of an entry is what
-   [RAD-0013](0013-the-codex-entry.md) already describes, and it has never been scored.
+2. **Index both faces, with two vectors.** Measured here and it is the strongest configuration on
+   this slice. This is the one recommendation that hardens: it is what [RAD-0013](0013-the-codex-entry.md)
+   already describes, it needs no new component, and the alternative that looks cheaper — fusing
+   the texts into a single key — is measurably worse.
+3. **Let a rejected entry keep a key it never shows.** The agent still receives only the signature;
+   only the vector changes, and a vector decides which entry surfaces rather than what text is read.
+   This removes the *safe but unfindable* failure mode instead of shrinking it.
+4. **Find out what raw text retrieves on.** If the `CallLoggingConfig` result generalises, part of
+   the raw baseline is boilerplate rather than documentation. It matters more now, because the
+   recommended index keeps that face.
 
-**What would change the answer.** A verifier that degrades rather than discards, re-scored on this
-same slice. A larger query set — 17 is too few for the headline difference to carry weight on its
-own, and it is only the mechanism behind the fallback split that makes this reportable. And the
-scale question, which nothing here touches.
+**What would change the answer.** A larger query set — 17 is too few for a one-hit difference to
+carry weight, which is why the reportable results here are the ones with a mechanism behind them
+rather than a margin. And **scale**, which nothing here touches: `test5` measured raw recall falling
+29% → 6% → 0% between 220 and 3,000 entries, and whether the two-faced index degrades as steeply
+decides whether any of this survives a real dependency graph.
+
+**One thing it does not fix.** Keeping a raw retrieval key means prose written to win retrieval on
+merit still competes. `test6` measured a fabricated library beating the true answer 4 of 17, the
+summariser never addressed it, and RAD-0037 §1 records it as open. The two-faced index inherits that
+exposure rather than escaping it.

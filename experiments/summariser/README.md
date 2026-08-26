@@ -164,6 +164,46 @@ The summary says it once, in a longer sentence with more competing content. If t
 of what raw text retrieves on is **boilerplate**, not documentation — which would be worth knowing
 and is not established by two examples.
 
+## Two indexes are better than either, and fusing them is worse than both
+
+The rewritten text and the raw text fail on **different** questions, which suggests carrying both
+rather than choosing. RAD-0013 already describes an entry as having a semantic face and a syntactic
+one; nothing had scored an index that keeps both.
+
+Two more things become measurable once the key and the shown text are separated. **A retrieval key
+is embedded and never read by an agent; the shown text is what reaches it.** The quarantine
+requirement binds the second, not the first — so a degraded entry can be *findable* on text it must
+never *display*. That is not a loophole, it is the two-faced entry, and it means the safe state does
+not have to be an unreachable one.
+
+| index over the same 220 entries | top 1 | top 3 | top 5 | top 10 |
+|---|---|---|---|---|
+| raw harvested doc text | 5 of 17 | 6 of 17 | 8 of 17 | 13 of 17 |
+| summarised | 5 of 17 | 7 of 17 | 8 of 17 | 10 of 17 |
+| summarised, degraded entries keyed on raw text | 5 of 17 | 7 of 17 | 9 of 17 | 11 of 17 |
+| **both faces — two vectors, best match wins** | **5 of 17** | **7 of 17** | **10 of 17** | **15 of 17** |
+| both faces fused into one vector | 4 of 17 | 7 of 17 | 8 of 17 | 10 of 17 |
+
+**The two-faced index is the best result anything has produced on this slice** — 15 of 17 within ten
+against the raw baseline's 13, and 10 of 17 within five against 8. Nothing moves the top-1 figure,
+which stays at 5 for every index that is not actively worse.
+
+**Fusing the two texts into one key is worse than either alone at the head** — 4 of 17. The gain
+needs two vectors, not one longer string. That is the same shape as RAD-0019's finding that an
+equal-weight hybrid *hurt*: keeping the arms separate wins, averaging them drags hits down.
+
+**It does not dominate per question, and that is the mechanism.** On no single question does the
+two-faced index beat both single-face indexes — every entry gets two chances, so competitors improve
+too and ranks shift relative to each other. What it does is **stop losing badly**: `DefaultHeadersConfig`
+8 / 77 / **9**, `CallLoggingConfig` 8 / 46 / **9**, `Channel` 86 / 1 / **2**, `retryIf` 4 / 21 / **4**.
+Each single-face index has a set of questions it fails catastrophically; those sets barely overlap,
+and the two-faced index inherits the better face's ballpark on nearly all of them.
+
+**Keying degraded entries on raw text works too, and is now a small effect** — 9 of 17 within five
+against 8, 11 within ten against 10. Small only because narrowing the verifier already cut degraded
+question targets from 5 to 1. It removes the failure mode rather than shrinking it, which is what
+matters if the verifier ever tightens again.
+
 ## What this does not say
 
 - **It does not say the summariser is not worth having.** Its measured job is *quarantine*, and
@@ -183,20 +223,19 @@ and is not established by two examples.
 
 ## What it points at
 
-**Index both faces, and score it.** Neither index wins. They fail on different questions and the
-failure modes look complementary by construction — raw prose loses to register collision, rewritten
-prose loses whatever the raw text was repeating. [RAD-0013](../../docs/knowledge/decisions/) already
-describes an entry as having a semantic face and a syntactic one; nothing has ever scored an index
-carrying both. That is the obvious next measurement and it is cheap, because both key sets already
-exist in this directory.
-
 **Find out what raw text is actually retrieving on.** If the `CallLoggingConfig` result generalises
 — less informative text outranking more informative text because it repeats the symbol's own
-vocabulary — then part of the raw baseline is boilerplate rather than documentation, and both the
-29% and everything compared against it mean something narrower than they appear to. Two examples is
-not a finding. It is a cheap thing to check.
+vocabulary, feedback URL included — then part of the raw baseline is boilerplate rather than
+documentation, and both the 29% and everything compared against it mean something narrower than they
+appear to. Two examples is not a finding. It is a cheap thing to check, and it now matters more,
+because the best index here **keeps** that raw face.
 
-**The fallback still discards prose.** Narrowing the verifier cut degradation from 7% to 3%, but a
-rejected entry still falls back to a signature, which cannot be retrieved at all. Degrading to
-*stripped* prose rather than *discarded* prose would remove the failure mode instead of shrinking
-it — and that is a design change with a security argument attached, not a tuning change.
+**Scale.** Every number on this page is 220 entries. `test5` measured raw recall falling 29% → 6% →
+0% between 220 and 3,000. Whether the two-faced index degrades as steeply is the question that
+decides whether any of this survives a real dependency graph, and nothing here touches it.
+
+**The fabricated capability is untouched and now slightly more exposed.** Keeping a raw retrieval
+key means prose written to win retrieval on merit still competes — `test6` measured a fabricated
+library beating the true answer 4 of 17. The summariser never addressed that, and RAD-0037 §1
+records it as open. This measurement does not make it worse, but it does mean the two-faced index
+inherits it rather than escaping it.
