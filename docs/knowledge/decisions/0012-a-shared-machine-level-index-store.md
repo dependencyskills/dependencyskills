@@ -1,6 +1,31 @@
 # ADR-0012: The index is a shared machine-level store, keyed by coordinate
 
-Date: 2026-08-26 · Status: accepted · v1
+Date: 2026-08-26 · Status: accepted · v2
+
+**v2 (2026-08-27) — the path is `~/.gradle/dscodex/`, and it is configurable.** This record said
+"a machine-level directory, in the manner of `~/.gradle/caches` or `~/.m2`" and left the actual
+location open. Settled while triaging #1, against the machine rather than on taste:
+
+- **Gradle collects `caches/`, not its root.** Every `gc.properties` lives under `caches/`, and
+  `CACHEDIR.TAG` — which tells backup tools to skip a tree — sits at `caches/`, `jdks/` and
+  `daemon/`, not at `~/.gradle` itself. A sibling of `caches/` is neither collected nor excluded
+  from backups. That distinction matters more here than for Gradle's own caches, because ours is
+  expensive to rebuild: a model call per documented declaration, against a re-download.
+- **The precedent is direct.** `nodejs`, `yarn` and `binaryen` are third-party plugin caches at that
+  root already, placed there by the Kotlin Multiplatform JS plugin.
+- **The version goes in the schema, not the path.** `~/.m2` is Maven *2* and Maven 3 and 4 still use
+  it. A version in a directory name becomes a lie and cannot detect or migrate an old store; a
+  `schema_version` row can.
+
+**One consequence is left open on purpose.** ADR-0005 makes the Gradle implementation responsible
+for the Maven, npm and SPM channels a Kotlin Multiplatform library publishes to, so a store under
+`.gradle/` will hold npm and SwiftPM entries. A Maven-native or npm-native implementation would then
+have to look inside `.gradle` for them, which reads oddly.
+
+The alternative is **one codex per build system**, each smaller and independently owned, at the cost
+of harvesting a shared dependency more than once — the duplication this record exists to remove.
+Choosing between them needs a second implementation to exist, so the decision here is only that the
+**path is configurable**, which is what keeps the question answerable rather than foreclosed.
 
 ## Context
 
