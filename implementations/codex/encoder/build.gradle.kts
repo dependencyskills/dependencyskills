@@ -7,8 +7,9 @@
 
 plugins { base; `maven-publish` }
 
-group = "org.dependencyskills"
-version = providers.gradleProperty("encoderVersion").get()
+version = providers.gradleProperty("encoderVersion").get()   // versions with the model, not the plugin
+
+
 
 // BAAI/bge-small-en-v1.5, MIT. First-party ONNX export - not a community re-quantisation.
 val origin = "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/main"
@@ -45,12 +46,12 @@ val download by tasks.registering {
 
 val encoderJar by tasks.registering(Jar::class) {
     dependsOn(download)
-    archiveBaseName = "encoder-small-en"
-    from(layout.buildDirectory.dir("model")) { into("dependencyskills/encoder-small-en") }
+    archiveBaseName = "encoder"
+    from(layout.buildDirectory.dir("model")) { into("dependencyskills/encoder") }
     from(projectDir) { include("LICENSE", "NOTICE"); into("META-INF") }
     manifest {
         attributes(
-            "Implementation-Title" to "dependencyskills encoder-small-en",
+            "Implementation-Title" to "dependencyskills encoder",
             "Implementation-Version" to project.version,
             "Encoder-Model" to "BAAI/bge-small-en-v1.5",
             "Encoder-Dimensions" to "384",
@@ -64,11 +65,11 @@ tasks.assemble { dependsOn(encoderJar) }
 
 publishing {
     publications.create<MavenPublication>("encoder") {
-        artifactId = "encoder-small-en"
+        artifactId = "encoder"
         artifact(encoderJar)
         pom {
-            name = "dependencyskills encoder-small-en"
-            description = "BAAI/bge-small-en-v1.5 ONNX encoder, packaged for the dependencyskills codex."
+            name = "dependencyskills encoder"
+            description = "The default embedding model for the dependencyskills codex. The manifest names which model; the artifact does not, so swapping it is a version bump rather than a new coordinate."
             licenses { license { name = "MIT"; url = "https://opensource.org/licenses/MIT" } }
         }
     }

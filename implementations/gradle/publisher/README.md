@@ -1,4 +1,4 @@
-# gradle-plugin
+# publisher
 
 A Gradle plugin that **validates** a library's authored agent skills — that
 each `SKILL.md` conforms to the adopted [Agent Skills](https://agentskills.io)

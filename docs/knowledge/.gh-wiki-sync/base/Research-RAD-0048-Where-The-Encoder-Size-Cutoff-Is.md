@@ -11,7 +11,7 @@ Measured against: DJL 0.36.0 over ONNX Runtime 1.21.1, OpenJDK 26.0.2.1, macOS a
 
 > **How small can the encoder be before retrieval degrades — and does the pooling nobody chose deliberately cost anything?**
 
-[RAD-0047](RAD-0047-a-jvm-embedding-runtime.md) established that a JVM process reproduces this project's embeddings exactly, and in doing so put a number on the artifact: the BGE-M3 ONNX export is **2,267 MB**. That is what would have to reach every developer's machine.
+[RAD-0047](Research-RAD-0047-A-Jvm-Embedding-Runtime) established that a JVM process reproduces this project's embeddings exactly, and in doing so put a number on the artifact: the BGE-M3 ONNX export is **2,267 MB**. That is what would have to reach every developer's machine.
 
 It is very likely far more than the job needs, and the evidence that it is necessary turns out to be thin.
 
@@ -19,7 +19,7 @@ It is very likely far more than the job needs, and the evidence that it is neces
 
 ### The evidence for a large encoder is one pilot against a straw man
 
-[RAD-0019](RAD-0019-retrieval-at-scale.md) chose BGE-M3 on a bake-off: *"MiniLM-4bit 4/8, e5-large 5/8, nomic 6/8, BGE-M3 7/8"*. That record is careful to call it what it is — **N=58, eight queries, a pilot** — and its conclusion, that a genuinely strong encoder separates from weak ones on paraphrastic queries, is sound on its own terms.
+[RAD-0019](Research-RAD-0019-Retrieval-At-Scale) chose BGE-M3 on a bake-off: *"MiniLM-4bit 4/8, e5-large 5/8, nomic 6/8, BGE-M3 7/8"*. That record is careful to call it what it is — **N=58, eight queries, a pilot** — and its conclusion, that a genuinely strong encoder separates from weak ones on paraphrastic queries, is sound on its own terms.
 
 But it does not establish that a *small* encoder is inadequate, because the small candidate was `MiniLM-4bit`: a 2021-era 22M-parameter model **and** 4-bit quantized. Two handicaps at once, and neither is inherent to being small. No modern small English retriever was in the comparison — `bge-small-en-v1.5` is the same family and the same training recipe as the winner, and was never tried.
 
@@ -31,7 +31,7 @@ Multilingual capacity and long-context capacity are most of the weight, and both
 
 ### The project's own numbers argue the encoder is not the bottleneck
 
-At 14,899 real entries, BGE-M3 scores **0/17 at rank 1** and 1/17 at rank 10. Whatever is failing is not encoder capacity — it is that raw harvested doc text is a poor retrieval key at scale, which is the finding that motivates the rewritten face in the first place ([RAD-0040](RAD-0040-does-summarising-improve-retrieval.md)).
+At 14,899 real entries, BGE-M3 scores **0/17 at rank 1** and 1/17 at rank 10. Whatever is failing is not encoder capacity — it is that raw harvested doc text is a poor retrieval key at scale, which is the finding that motivates the rewritten face in the first place ([RAD-0040](Research-RAD-0040-Does-Summarising-Improve-Retrieval)).
 
 Paying 2.3 GB for an encoder that scores zero is paying for the wrong thing. The interesting question is where the *cutoff* is, not whether the largest available model is the best.
 
@@ -73,7 +73,7 @@ So the discriminating corpus is `test5`'s deterministic 220-entry subset — ded
 | bge-small fp16 | 64 MB | mean | 4/17 | 7/17 | 8/17 | 10/17 | 18.1 |
 | bge-small int8 | 33 MB | mean | 5/17 | 7/17 | 7/17 | 9/17 | 4.5 |
 
-**1. The pooling was costing us, and it is the largest single result here.** BGE-M3 with **CLS** — the pooling its own model card documents — scores **7/17 at r@1 against mean's 5/17**, and 11/17 against 8/17 at r@5. Every retrieval number this project holds was produced with mean pooling, so **every one of them understated the encoder**. This closes the question [RAD-0047](RAD-0047-a-jvm-embedding-runtime.md) raised.
+**1. The pooling was costing us, and it is the largest single result here.** BGE-M3 with **CLS** — the pooling its own model card documents — scores **7/17 at r@1 against mean's 5/17**, and 11/17 against 8/17 at r@5. Every retrieval number this project holds was produced with mean pooling, so **every one of them understated the encoder**. This closes the question [RAD-0047](Research-RAD-0047-A-Jvm-Embedding-Runtime) raised.
 
 It does **not** generalise: CLS is better for bge-m3, level for bge-base, and clearly worse for int8 (2/17 against 5/17 at r@1). **Pooling is a per-model property and must be measured per model**, not set globally.
 
@@ -86,7 +86,7 @@ It does **not** generalise: CLS is better for bge-m3, level for bge-base, and cl
 | 220 entries | r@10 **13/17** | r@10 9/17 |
 | **14,899 entries** | r@1 0/17 · r@10 **1/17** | r@1 0/17 · r@10 **2/17** |
 
-At realistic scale the 33 MB model is **marginally ahead of the 2.3 GB one**. Both are effectively zero, and that is the finding: **encoder capacity is not what is failing.** The retrieval key is — raw harvested doc text, exactly as [RAD-0040](RAD-0040-does-summarising-improve-retrieval.md) concluded. Spending 2.3 GB to score zero is spending it in the wrong place.
+At realistic scale the 33 MB model is **marginally ahead of the 2.3 GB one**. Both are effectively zero, and that is the finding: **encoder capacity is not what is failing.** The retrieval key is — raw harvested doc text, exactly as [RAD-0040](Research-RAD-0040-Does-Summarising-Improve-Retrieval) concluded. Spending 2.3 GB to score zero is spending it in the wrong place.
 
 **4. Small is also fast.** 4.5 ms against 75.9 ms per embedding, and the full 14,899-entry corpus embedded in **67 seconds** against roughly 19 minutes. That changes what a first harvest costs on a developer's machine, not just what it downloads.
 
@@ -102,15 +102,15 @@ int8 at 33 MB is defensible and meaningfully faster, but its numbers move in bot
 
 **Prefer the author's own export over a re-quantisation.** Two of the candidates here came from a community account rather than BAAI. That is normal practice and low risk, but this project's whole subject is what it costs to consume third-party artifacts without a provenance story, and it should not default into one it would criticise. Packaged as `encoder-small-en`, weights fetched from the author's repository at build time and verified against pinned digests.
 
-**Record the pooling per model, and pin it with the encoder.** CLS is right for bge-m3 and wrong for int8. Since [ADR-0012](../decisions/ADR-0012-a-shared-machine-level-index-store.md) already requires an entry to record what produced it, the pooling belongs in that same provenance — a store whose vectors were built under one pooling cannot be mixed with another.
+**Record the pooling per model, and pin it with the encoder.** CLS is right for bge-m3 and wrong for int8. Since [ADR-0012](Decisions-ADR-0012-A-Shared-Machine-Level-Index-Store) already requires an entry to record what produced it, the pooling belongs in that same provenance — a store whose vectors were built under one pooling cannot be mixed with another.
 
-**Re-run the affected numbers with CLS before treating them as the ceiling.** Every published retrieval figure used mean pooling and therefore understates BGE-M3. This does not invalidate any comparison — all four encoders in RAD-0019's bake-off got the same treatment — but the absolute numbers are low by roughly 2 of 17 at r@1, and [RAD-0019](RAD-0019-retrieval-at-scale.md)'s encoder ranking may not survive being redone per-model.
+**Re-run the affected numbers with CLS before treating them as the ceiling.** Every published retrieval figure used mean pooling and therefore understates BGE-M3. This does not invalidate any comparison — all four encoders in RAD-0019's bake-off got the same treatment — but the absolute numbers are low by roughly 2 of 17 at r@1, and [RAD-0019](Research-RAD-0019-Retrieval-At-Scale)'s encoder ranking may not survive being redone per-model.
 
 **Do not read this as "the encoder does not matter."** It matters at 220 entries. What the control establishes is narrower and more useful: at the scale a real project actually has, **no encoder in this range rescues raw doc text**, so the next gain is in the retrieval key rather than the model. That is an argument for the rewritten face, not against embeddings.
 
 ## Connections
 
-- [RAD-0047](RAD-0047-a-jvm-embedding-runtime.md) — the JVM probe that put a number on the artifact and found the pooling discrepancy
-- [RAD-0019](RAD-0019-retrieval-at-scale.md) — the original bake-off, its pilot size, and why BGE-M3 was picked
-- [RAD-0040](RAD-0040-does-summarising-improve-retrieval.md) — why raw doc text is a weak retrieval key at scale
-- [RAD-0010](RAD-0010-how-the-codex-is-stored-and-served.md) — the index this encoder feeds
+- [RAD-0047](Research-RAD-0047-A-Jvm-Embedding-Runtime) — the JVM probe that put a number on the artifact and found the pooling discrepancy
+- [RAD-0019](Research-RAD-0019-Retrieval-At-Scale) — the original bake-off, its pilot size, and why BGE-M3 was picked
+- [RAD-0040](Research-RAD-0040-Does-Summarising-Improve-Retrieval) — why raw doc text is a weak retrieval key at scale
+- [RAD-0010](Research-RAD-0010-How-The-Codex-Is-Stored-And-Served) — the index this encoder feeds

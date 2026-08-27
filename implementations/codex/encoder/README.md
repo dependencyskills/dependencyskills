@@ -1,12 +1,12 @@
-# encoder-small-en
+# encoder
 
 The default embedding model, packaged for Maven Central.
 
 ```
-org.dependencyskills:encoder-small-en:1.5.0        78 MB
+org.dependencyskills.codex:encoder:1.5.0        78 MB
 ```
 
-Contains `BAAI/bge-small-en-v1.5` — the ONNX export published by the model's own authors, unmodified — plus its tokenizer, at `dependencyskills/encoder-small-en/` inside the jar.
+Contains `BAAI/bge-small-en-v1.5` — the ONNX export published by the model's own authors, unmodified — plus its tokenizer, at `dependencyskills/encoder/` inside the jar.
 
 ## The weights are not in this repository
 
@@ -15,7 +15,7 @@ They are fetched from Hugging Face at build time and verified against **pinned S
 The verification is a hard failure, not a warning: a digest mismatch stops the build and refuses to package. That path is tested by corrupting a file and confirming the build fails — a verifier that passes everything is indistinguishable from no verifier.
 
 ```
-./gradlew :encoder-small-en:encoderJar
+./gradlew :encoder:encoderJar
 ```
 
 ## Why this model
@@ -27,6 +27,10 @@ The verification is a hard failure, not a warning: a digest mismatch stops the b
 - **fp16 matched fp32 at every k**, and this artifact compresses to 78 MB anyway — less than the fp16 export ships raw. So the smaller variant buys nothing here, and taking it would have meant redistributing a community re-quantisation instead of the authors' own export.
 
 `Encoder-Pooling: mean` in the manifest is not incidental. RAD-0048 measured pooling as a **per-model** property — CLS is better for bge-m3, level for bge-base, and clearly worse for the small quantised variants. A store's vectors cannot be mixed across poolings, so the value travels with the artifact.
+
+## The name says nothing about the model, on purpose
+
+The artifact is `encoder`, not `encoder-bge-small-en-v1.5`. Which model is inside is declared in the jar manifest — `Encoder-Model`, `Encoder-Dimensions`, `Encoder-Pooling` — where a consumer can read it, rather than in a coordinate nobody inspects on a classpath. Changing the model is then a version bump instead of a new coordinate and a migration for everyone depending on the old one.
 
 ## Versioning
 

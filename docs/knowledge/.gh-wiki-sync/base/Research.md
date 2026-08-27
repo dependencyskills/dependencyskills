@@ -64,6 +64,8 @@ overturned an earlier one.
 | [0044](Research-Studies-RAD-0044-The-Legacy-Library-Everyone-Remembers) | v1 | The Legacy Library Everyone Remembers | An agent picks the library its prior knows best, not the one the project should use — and half of "which one" is a gap nothing can close |
 | [0045](Research-Studies-RAD-0045-The-Dependency-Nobody-Declared) | v1 | The Dependency Nobody Declared | Most of what compiles was never declared, and an agent cannot tell the difference |
 | [0046](Research-Postmortems-RAD-0046-V1-Bundled-Flat-Files) | v1 | v1, a Convention Nothing Could Read | The first attempt, shipped and superseded — what no longer applies, and why the failure is worth keeping inspectable |
+| [0047](Research-RAD-0047-A-Jvm-Embedding-Runtime) | v2 | A JVM Embedding Runtime | JVM embeddings reproduce the reference at cosine 0.99999 and Lucene filters kNN by scope from inside the search — and the reference turned out to be mean-pooled, not the pooling BGE-M3 documents |
+| [0048](Research-RAD-0048-Where-The-Encoder-Size-Cutoff-Is) | v2 | Where the Encoder Size Cutoff Is | The pooling nobody chose cost 2 of 17 at rank 1; fp16 is free; and at realistic corpus size a 33 MB encoder is not worse than a 2,267 MB one |
 
 Numbering is sequential, runs across the sub-groups, and does not imply order
 of reading. 0001 and 0002 carry the measurements the rest lean on.

@@ -59,6 +59,8 @@ research/RAD-0038-an-external-model-review-of-the-corpus.md	Research-RAD-0038-An
 research/RAD-0039-where-the-dependency-graph-comes-from.md	Research-RAD-0039-Where-The-Dependency-Graph-Comes-From
 research/RAD-0040-does-summarising-improve-retrieval.md	Research-RAD-0040-Does-Summarising-Improve-Retrieval
 research/RAD-0041-deduplication-under-an-incremental-store.md	Research-RAD-0041-Deduplication-Under-An-Incremental-Store
+research/RAD-0047-a-jvm-embedding-runtime.md	Research-RAD-0047-A-Jvm-Embedding-Runtime
+research/RAD-0048-where-the-encoder-size-cutoff-is.md	Research-RAD-0048-Where-The-Encoder-Size-Cutoff-Is
 research/README.md	Research
 research/postmortems/RAD-0046-v1-bundled-flat-files.md	Research-Postmortems-RAD-0046-V1-Bundled-Flat-Files
 research/postmortems/README.md	Research-Postmortems
