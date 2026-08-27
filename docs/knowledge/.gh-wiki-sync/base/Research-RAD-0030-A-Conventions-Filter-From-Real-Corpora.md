@@ -1,6 +1,7 @@
 # A Conventions Filter Derived from Real Corpora
 
 RAD-0030 · 2026-08-24 · v2
+Keywords: can conventions be used as a filter; what do real identifiers actually look like per language; empirical bounds from a real corpus; surface reduction versus detection; what developer knowledge adds over a linter; why every detector lands in the same narrow band; where this does not help at all.
 
 **Recorded from a working conversation before it is lost.** The idea: measure what identifiers
 in real libraries actually look like — per language, across many libraries — and use those

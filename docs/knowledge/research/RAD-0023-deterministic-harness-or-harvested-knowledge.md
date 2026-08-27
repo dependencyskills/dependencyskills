@@ -1,6 +1,7 @@
 # A Deterministic Harness, or Harvested Knowledge
 
 RAD-0023 · 2026-08-22 · v2
+Keywords: should we build a deterministic harness instead of harvesting knowledge; a language for agent requirements; LBAC and SPL; deterministic versus probabilistic composition; is the codex a fact source or a control layer; why we should not build either language; what survives the survey.
 
 **v2 (2026-08-22) — the survey is done, and it closes half this record.** The language idea
 exists, is published, and covers nearly the whole candidate primitives list below.

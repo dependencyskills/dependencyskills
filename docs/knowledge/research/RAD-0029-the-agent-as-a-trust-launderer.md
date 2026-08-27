@@ -1,6 +1,7 @@
 # The Agent as a Trust Launderer
 
 RAD-0029 · 2026-08-24 · v2
+Keywords: can an agent launder untrusted text into trusted text; an agent writing an injected instruction into its own doc comment; provenance flowing uphill; the trust lattice running backwards; why every control in hand misses it; whether laundering improves the payload; diligence rather than evasion as the mechanism.
 
 **Split out of [RAD-0027](RAD-0027-the-identifier-as-a-free-text-channel.md) v3, where it turned up
 as a side effect and is plainly the more serious finding.** Measuring whether agents obey an

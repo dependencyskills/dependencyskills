@@ -1,6 +1,7 @@
 # The Content-Value A/B
 
 RAD-0016 · 2026-08-19 · v2
+Keywords: does the codex actually change what an agent writes; measuring content value; why a synthetic library removes the training-exposure confound; frontier versus local models; does the lift transfer to real public libraries; the local-model ladder from 270M to 70B; is the value about model size or the training gap to the classpath.
 
 **Design; measured.** This record specifies the experiment; a content-value sweep, a
 doc-level gradient, a three-library external test, and a **local-model ladder** have all

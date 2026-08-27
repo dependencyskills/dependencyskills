@@ -1,6 +1,7 @@
 # Better Linters, or Better Configuration?
 
 RAD-0034 · 2026-08-24 · v1
+Keywords: do we need a better linter or better configuration; SwiftLint has no function-naming rule; does another Swift tool do better; can stock linters catch an identifier payload; enforcing the bounds by configuration in all four ecosystems; why the configured rule catches what stock rules miss.
 
 **Opened by a gap `test9` measured and closed by testing rather than reasoning.** Swift carried
 every identifier payload and SwiftLint objected to none of them, because it ships no

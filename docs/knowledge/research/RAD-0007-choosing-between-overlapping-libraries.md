@@ -1,6 +1,7 @@
 # Choosing Between Overlapping Libraries
 
 RAD-0007 · 2026-08-19 · v3
+Keywords: which of two overlapping libraries should the agent use; moment versus date-fns; is overlap a defect or the domain; how much overlap on the JVM versus npm; dependency scope as a statement of intent; who may author a preference signal; preferOver and similar tags; negative guidance; why selection does not close with a better model.
 
 **Measured against:** the dependency graphs in `experiments/cost-model/data/`,
 collected 2026-08-13 — Now in Android, Spring PetClinic, the median

@@ -1,6 +1,7 @@
 # Unresolved Tensions in the Design
 
 RAD-0037 · 2026-08-25 · v1
+Keywords: where do our own findings contradict each other; unresolved tensions; retrieval needs what security cannot sanitise; excluding the transitive tail reintroduces the problem; the users who gain most are the most exposed; the summariser answers instructions but not fabrications; contradictions an ADR cannot carry.
 
 **Opened because the contradictions were distributed.** Thirty-six research records and a dozen
 experiments each settle a question locally, and several of those local answers pull against each

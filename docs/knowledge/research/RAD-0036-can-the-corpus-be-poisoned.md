@@ -1,6 +1,7 @@
 # Can the Training Corpus Be Poisoned?
 
 RAD-0036 · 2026-08-24 · v1
+Keywords: can the training corpus be poisoned; if the negative class is real library documentation, anyone who can publish can write it; should we train early before the idea is known; why racing does not close the exposure; observability rather than timing; three structural mitigations from the harvest; pinning and drifting a harvest.
 
 **Opened by a question about timing that turned out to be a question about observability.** If a
 classifier's negative class is real library documentation, then the negative class is written by

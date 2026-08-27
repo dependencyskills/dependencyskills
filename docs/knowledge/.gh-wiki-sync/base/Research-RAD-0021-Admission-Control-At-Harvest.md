@@ -1,6 +1,7 @@
 # Admission Control at Harvest
 
 RAD-0021 · 2026-08-22 · v4
+Keywords: should suspect documentation be rejected at harvest; a gate versus a flag; URL grounding as a signal; why the false-positive rate went from 1.3% to 26.9% on a real graph; the Ktor report-a-problem link; silent discard as a correctness hazard; why the recommendation did not survive; what a gate cannot close.
 
 **v4 (2026-08-22) — the surviving recommendation does not survive either.** v2 and v3 kept URL
 grounding as a *label*, on test3's measured 1.3% false-positive rate over five libraries. The

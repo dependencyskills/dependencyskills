@@ -1,6 +1,7 @@
 # Which Attack Vectors Actually Reach a Real Project?
 
 RAD-0031 · 2026-08-24 · v1
+Keywords: which published attacks would actually reach my project; attacks that need a precondition; the .env file assumption; how many vectors need nothing; integrity corruption versus exfiltration; is benchmark efficacy the same as efficacy here; what this does to the controls already chosen.
 
 **Opened from an observation that undercuts most published injection demos:** a developer with no
 `.env` file in their project root is immune to the single most-demonstrated attack in the

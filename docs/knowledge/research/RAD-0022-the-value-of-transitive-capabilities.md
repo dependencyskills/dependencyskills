@@ -1,6 +1,7 @@
 # The Value of Transitive Capabilities
 
 RAD-0022 · 2026-08-22 · v2
+Keywords: is it worth indexing transitive dependencies; declared versus transitive; how much of the graph is transitive; does the ratio hold for capabilities as well as libraries; kotlin-stdlib dominating the corpus; where the capabilities a developer reaches for actually live; whether the control is even available per ecosystem.
 
 **v2 (2026-08-22) — first measurement, and the strong form fails.** `experiments/test5`
 harvested this project's subject graph and found the declared/transitive ratio **inverts

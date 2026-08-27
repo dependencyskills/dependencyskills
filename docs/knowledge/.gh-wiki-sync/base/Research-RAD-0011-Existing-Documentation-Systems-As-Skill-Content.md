@@ -1,6 +1,7 @@
 # Existing Documentation Systems as Skill Content
 
 RAD-0011 · 2026-08-19 · v2
+Keywords: is KDoc actually rich enough to be worth harvesting; how much library documentation exists; whether @sample bodies travel; custom tags; the Swift DocC catalog; Go's coverage with no tags; TSDoc; what a doc comment gives a caller; documentation coverage per ecosystem.
 
 **Measured against:** `kotlinx-datetime` 0.8.0 sources for the KDoc content and
 tag measurement; a 90-coordinate coverage sample (seeded, one version per

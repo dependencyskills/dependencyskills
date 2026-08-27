@@ -1,6 +1,7 @@
 # Parsing the Documentation, and What to Index
 
 RAD-0009 · 2026-08-19 · v6
+Keywords: what parses the library documentation; tree-sitter versus Dokka; why not reuse the IDE's indexer; parsing documentation rather than API structure; the inherited-doc enrichment ceiling; AST versus line-based extraction; one contract for many parsers; what to index; KMP source sets.
 
 **Licenses:** tree-sitter MIT, Dokka Apache-2.0 (Dokka verified 2026-08-17; the
 rest to confirm on the artifacts). Capabilities are from general knowledge and

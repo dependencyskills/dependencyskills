@@ -1,6 +1,7 @@
 # One repository, split by whether a human is driving
 
 ADR-0005 · 2026-08-12 · Status: accepted · v2
+Keywords: how should this repository be laid out; one repo or one per ecosystem; why not -gradle, -maven, -ivy repos; where do spikes and prototypes live; poc versus experiments; what belongs in implementations; splitting by ecosystem versus by whether a human is driving.
 
 ADR-0001 and ADR-0002 belong to an earlier project. Some later numbers are
 gaps, left where a premature record was withdrawn to be re-decided from

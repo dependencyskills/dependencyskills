@@ -1,6 +1,7 @@
 # The Codex Entry
 
 RAD-0013 · 2026-08-19 · v3
+Keywords: what is the atomic unit an agent retrieves; a capability rather than a library or a symbol; the two-faced entry; syntactic face versus semantic face; the entry schema; why the retrieval key need not be what is displayed; semantic to find and exact to use; filtering by field.
 
 **Reasoned, not measured.** This record defines a unit and the retrieval it
 implies. The technique claims — that embedding a description gives meaning-match

@@ -1,6 +1,7 @@
 # Measure agent behaviour through developer tools, not model APIs
 
 ADR-0010 · 2026-08-19 · Status: accepted · v1
+Keywords: how do we measure whether an agent actually uses the codex; model API versus real coding agent; why not call the completion API; headless developer tools; the agentic loop; does an agent consult what is in front of it; avoiding paid API accounts per vendor; agent-agnostic results.
 
 The content-value A/B ([RAD-0016](Research-RAD-0016-The-Content-Value-Ab)) has to
 run coding agents on tasks and observe what they produce. There are two ways to

@@ -1,6 +1,7 @@
 # Existing Documentation Systems as Skill Transport
 
 RAD-0002 · 2026-08-13 (split 2026-08-17) · v2
+Keywords: what already ships with a library that could carry documentation; -sources.jar coverage on Central and Google Maven; why -javadoc.jar is not viable for Android; is there any carrier on Maven at all; scm and the git coordinate; npm, PyPI, Go and Swift transport; what it costs a publisher who does not already publish sources; why the -skills.zip sidecar should be abandoned.
 
 **Measured against:** Maven Central and Google Maven (`dl.google.com/dl/android/maven2`)
 as of 2026-08-13; coordinate samples drawn from the dependency graphs collected

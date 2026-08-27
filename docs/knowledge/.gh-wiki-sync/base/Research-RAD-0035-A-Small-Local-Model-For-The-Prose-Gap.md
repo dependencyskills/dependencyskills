@@ -1,6 +1,7 @@
 # A Small Local Model for the Prose Gap
 
 RAD-0035 · 2026-08-24 · v1
+Keywords: can a small local model close the prose gap; where form constraints stop; the volume objection and why it is wrong; the register objection and why it stands; training on injection data; running inference without MLX; the JVM embedding runtime; is the experiment worth running either way.
 
 **Opened because the gap stopped moving.** `test10` closed the identifier channel — every carried
 identifier form, in all four languages, for 0.221% of a real corpus. The same catalogue catches

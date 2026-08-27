@@ -1,6 +1,7 @@
 # Retrieval at Scale
 
 RAD-0019 · 2026-08-20 · v4
+Keywords: does retrieval work over hundreds of entries; index recall without an agent; paraphrastic queries in the caller's words; lexical versus vector versus hybrid; why equal-weight RRF underperformed the better arm; choosing an encoder on recall and licence; why the 77% figure is a target rather than a pipeline measurement.
 
 **v4 (2026-08-25) — the 77% is an upper bound on a target, not a measurement of the pipeline.**
 Every entry scored in this record was **written by hand**. [RAD-0040](Research-RAD-0040-Does-Summarising-Improve-Retrieval)

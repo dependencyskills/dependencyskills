@@ -1,6 +1,7 @@
 # How the Source Is Read
 
 RAD-0015 · 2026-08-19 · v1
+Keywords: how do we read source that lives inside an archive; extract everything or read in place; the archive-everything trap; the IntelliJ lazy-VFS precedent; NIO FileSystemProvider over zip; Commons VFS; a language-agnostic read layer; remote and git backends; loose first-party source.
 
 **Reasoned, not measured.** This record argues about an access strategy. The VFS
 reuse is grounded — JetBrains' VFS docs, `KotlinCoreEnvironment`'s use of

@@ -1,6 +1,7 @@
 # Development-Time Prompt Injection
 
 RAD-0006 · 2026-08-14 · v7
+Keywords: can library documentation attack a coding agent; prompt injection at development time; does framing text as untrusted data help; per-model compliance rates; credential exfiltration by a tool-enabled agent; local open-weight models versus frontier; why reviewing skills before use does not work; how large the surface is.
 
 **v7 (2026-08-22).** The case this record named as *the scenario to fear most* — a
 **tool-enabled agent from the locally-served open-weight tier** — is measured

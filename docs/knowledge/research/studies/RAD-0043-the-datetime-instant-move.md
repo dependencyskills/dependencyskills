@@ -1,6 +1,7 @@
 # The Datetime `Instant` That Moved
 
 RAD-0043 · 2026-08-21 · v1
+Keywords: the correct API changed and the model did not; kotlinx-datetime Instant moved to kotlin.time; why a model writes the old import confidently; a popularity-weighted average over time; why a bigger model does not fix drift; what a version-pinned index closes and what it does not.
 
 Where [the slug case](RAD-0042-thirteen-slug-functions.md) is about *space* — a
 capability invisible from where the work happens — this one is about *time*. The

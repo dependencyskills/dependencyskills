@@ -1,6 +1,7 @@
 # Library content is got from `-sources.jar`, not a bespoke artifact
 
 ADR-0009 · 2026-08-17 · Status: accepted · v1
+Keywords: where does library documentation come from; does anything already travel with a JVM library; -sources.jar coverage on Central and Google Maven; why -javadoc.jar fails for Android; why not publish a bespoke artifact; the sidecar abandoned; scm in the POM; asking publishers to do nothing new.
 
 ## Context
 

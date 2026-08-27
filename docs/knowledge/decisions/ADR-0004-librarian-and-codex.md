@@ -1,6 +1,7 @@
 # A librarian skill and a harvested codex, not one skill per library
 
 ADR-0004 · 2026-08-05 · Re-minted 2026-08-19 · Status: accepted · v2
+Keywords: how does an agent find the right library among hundreds; why not one skill per dependency; resident context cost of many skills; a librarian that triggers and a catalogue it points at; overlapping libraries; designing for recall rather than precision; two-layer architecture.
 
 **Re-mint note (2026-08-19).** Withdrawn in the ADR cull as premature, then
 restored. The **two-layer decision** it makes — a resident *librarian* that

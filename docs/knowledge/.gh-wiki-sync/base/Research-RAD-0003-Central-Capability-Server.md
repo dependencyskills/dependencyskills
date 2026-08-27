@@ -1,6 +1,7 @@
 # A Central Capability Server for Library Discovery
 
 RAD-0003 · 2026-08-13 · v1
+Keywords: should there be one central server for library capabilities; hosted index versus local; querying by need over MCP; cold-start cost; who would host the data; does a central server remove the coverage problem; what it routes around; centralised versus per-machine codex.
 
 **Measured against:** the measurements in
 [RAD-0002](Research-RAD-0002-Existing-Documentation-Systems-As-Skill-Transport) and

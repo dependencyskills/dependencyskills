@@ -1,6 +1,7 @@
 # Library agent-skills ship as repository artifacts, not archive payloads
 
 ADR-0003 · 2026-08-05 · Superseded by ADR-0009 (2026-08-19) · v2
+Keywords: how does a library ship a skill to an agent; -skills.zip sidecar artifact; Gradle Module Metadata variant; classifier artifact; why not bundle skills inside the jar; in-archive bundling on Android and KMP; why the sidecar was abandoned; publishing a new artifact per library.
 
 **Superseded (2026-08-19).** This decided the **sidecar** transport — a library
 ships a `-skills.zip` classifier artifact. The path was abandoned once measurement

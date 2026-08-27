@@ -1,6 +1,7 @@
 # One knowledge tree under docs/knowledge
 
 ADR-0008 · 2026-08-13 · Status: accepted · v2
+Keywords: where do project documents go; adopting docs/knowledge; a flat docs directory; why not keep adr/ and postmortems at the root; sections versus sub-groups; typed filename prefixes; git-native docs versus a wiki mirror; who is allowed to create a section.
 
 **v2 (2026-08-26) — the paths below are corrected to what was actually built.**
 The tree landed with `decisions/` rather than the `adr/` this record named, and

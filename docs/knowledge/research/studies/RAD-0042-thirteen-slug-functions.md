@@ -1,6 +1,7 @@
 # Thirteen Slug Functions
 
 RAD-0042 · 2026-08-21 · v1
+Keywords: a solved problem re-solved repeatedly; thirteen copies of the same function; why nobody found the existing one; duplication inside one repository; no dependency edge means no discoverability; the cost asymmetry that favours retyping; one concept under four names; discoverability at intra-repo scale.
 
 A worked example of an agent-and-human failure mode: **a solved problem gets
 re-solved repeatedly because the existing solution is undiscoverable from where

@@ -1,6 +1,7 @@
-# Adopt each ecosystem's convention where it works — reject what we can't reconcile, propose only what none has
+# Adopt what already works
 
 ADR-0007 · 2026-08-12 (revised 2026-08-16) · Status: accepted · v2
+Keywords: should we invent a layout or conform to what exists; which npm skill convention to follow; library-skills.io versus mise versus Vercel skills; SkillsJars META-INF; Swift DocC catalog; conforming to a standard still forming; when it is legitimate to propose something new; why not emit one layout everywhere.
 
 ## Context
 

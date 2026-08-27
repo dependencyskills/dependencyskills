@@ -1,6 +1,7 @@
 # The Selection A/B
 
 RAD-0018 · 2026-08-20 · v1
+Keywords: does the agent pick the library this project actually uses; Moshi versus kotlinx.serialization; Ktor client versus OkHttp; Strikt versus AssertJ; is the dependency tree itself a selection signal; does declaring both libraries help; why an authored preference is the only thing that resolves it; the gap model progress cannot close.
 
 **Design; measured.** Specifies and reports the selection A/B — the measurement of
 RAD-0007. Search-at-scale retrieval over the index remains the one open frontier test.

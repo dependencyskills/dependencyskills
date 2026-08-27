@@ -1,6 +1,7 @@
 # Can Standing Instructions Override Injection That Gets Through?
 
 RAD-0032 · 2026-08-24 · v1
+Keywords: can a consumer's own rules file beat an injected instruction; standing instructions versus injection; AGENTS.md as a defence; does it help most on the weakest models; why no property of the agent can be relied on; what is already known to fail; the two costs of relying on it.
 
 **Specified, not measured — queued behind `test9`.** Every control this project has kept works by
 stopping attacker text from *reaching* the agent. This asks the complementary question: once it

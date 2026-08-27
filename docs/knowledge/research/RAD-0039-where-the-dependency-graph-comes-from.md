@@ -1,6 +1,7 @@
 # Where the Dependency Graph Comes From
 
 RAD-0039 · 2026-08-25 · v1
+Keywords: where does the dependency graph come from; we already extract it and discard the edges; Gradle resolutionResult; what the edges would fix; SBOM versus running someone else's build; three sources and the trade between them; why this is not urgent yet.
 
 **Opened by noticing that we already have the graph and throw most of it away.**
 `experiments/cost-model/scripts/collect-deps.init.gradle` calls Gradle's `resolutionResult` — which

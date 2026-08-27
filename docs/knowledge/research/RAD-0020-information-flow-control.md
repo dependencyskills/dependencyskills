@@ -1,6 +1,7 @@
 # Information-Flow Control as the Trust Model
 
 RAD-0020 · 2026-08-23 · v4
+Keywords: what is the trust model; information-flow control; labelling untrusted library text; does enforcement stop the harm; why the naive policy blocked the legitimate task too; label granularity; a pipeline rather than a runtime; the quarantined paraphraser; the one enforcement point the codex owns.
 
 **v4 (2026-08-23) — the sink experiment is run. Enforcement prevents harm; the naive version
 costs everything.** `experiments/test7` executed the three-arm design specified below, plus three

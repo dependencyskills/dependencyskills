@@ -1,6 +1,7 @@
 # Can a Representation Carry Meaning Without Carrying a Command?
 
 RAD-0026 · 2026-08-23 · v2
+Keywords: can a representation carry meaning without carrying a command; suppressing verbs to remove the imperative; why modals defeat it because deontic force is not a verb; a ladder of representations by command capacity; where the retrieval key and the displayed entry can differ; what this does not address.
 
 **v2 (2026-08-23) — question 2 measured, and the strong form of this record does not survive.**
 `experiments/test5/eval_verb_ablation.py` ran the ladder's verb-suppression rung over the real

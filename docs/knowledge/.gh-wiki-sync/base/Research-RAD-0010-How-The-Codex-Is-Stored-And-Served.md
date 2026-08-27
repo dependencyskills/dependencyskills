@@ -1,6 +1,7 @@
 # How the Codex Is Stored and Served
 
 RAD-0010 · 2026-08-17 · v3
+Keywords: how is the codex stored and queried; SQLite FTS5 versus Lucene; lexical versus vector versus hybrid retrieval; why equal-weight RRF hurt; text as source of truth and the index as derived; serving over MCP; search and get; scoping results to a project.
 
 **Reasoned, not measured.** This record argues about structure. The figures it
 leans on come from RAD-0001 (measured 2026-08-13) and from adjacent

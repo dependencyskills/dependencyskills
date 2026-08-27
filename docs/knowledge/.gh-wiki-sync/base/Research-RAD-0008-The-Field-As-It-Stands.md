@@ -1,6 +1,7 @@
 # The Field as It Stands, and What This Research Rejects
 
 RAD-0008 · 2026-08-16 · v3
+Keywords: is anyone else already doing this; prior art for agent skills; who has measured the cost at greater scale; the academic injection literature; language and harness design for agents; LBAC and SPL; where the field has converged; what this research rejects; where this project turned out to be wrong.
 
 **v3 (2026-08-22).** Adds **language and harness design for agents** as a further active area
 the v1 survey missed — LBAC, SPL and the literature around them — surveyed for RAD-0023. The

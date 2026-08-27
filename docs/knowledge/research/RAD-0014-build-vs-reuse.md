@@ -1,6 +1,7 @@
 # Build vs Reuse: the Codex Pipeline
 
 RAD-0014 · 2026-08-19 · v4
+Keywords: which pipeline layers do we build and which do we reuse; tree-sitter, Dokka, Lucene, Commons VFS; assemble from libraries or adopt a whole pipeline; CocoIndex and Roo-Code; why Glean is a template not a dependency; why Mahout is the wrong layer; what is genuinely ours to build.
 
 **Reasoned, not measured.** This record decides, per pipeline layer, whether to
 reuse an existing tool or build. The tool capabilities and licenses come from

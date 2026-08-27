@@ -1,6 +1,7 @@
 # The Summariser as an Attack Surface
 
 RAD-0025 · 2026-08-23 · v3
+Keywords: what if the summariser is the thing being attacked; a model that reads attacker-controlled text and writes durable corpus content; pass-through, mis-description, trigger poisoning, hijack; can a false claim be planted in an honest library; why poisoning an honest doc comment fails; who wrote the document.
 
 **v3 (2026-08-23) — case 3 measured, and the answer turns on who wrote the document.**
 Trigger poisoning was run against `experiments/test5`'s real 14,899-entry index in three forms.

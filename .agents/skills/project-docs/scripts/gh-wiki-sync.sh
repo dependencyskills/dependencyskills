@@ -222,7 +222,19 @@ def same_text(text, path):
     try: return text == read(path)
     except OSError: return False
 
-def title_for(path):         # link text: last segment, words capitalized
+def title_for(path):         # sidebar label: the document's own H1
+    # The good title is in the file. A filename is a slug - typed prefix,
+    # hyphens, no punctuation - so deriving the label from it loses words
+    # and question marks that were part of the title. Display only: the
+    # sidebar is regenerated every sync and nothing references these.
+    # Page NAMES still come from the path; see the note above page_for().
+    try:
+        m = re.search(r'^#\s+(.+?)\s*$', read(os.path.join(KB, path)), re.M)
+        if m:
+            # ] and [ would break the markdown link the label sits inside
+            return m.group(1).replace('[', '(').replace(']', ')')
+    except OSError:
+        pass
     p = path[:-3] if path.endswith('.md') else path
     if p.endswith('/README'): p = p[:-len('/README')]
     return cap(os.path.basename(p)).replace('-', ' ')
@@ -497,7 +509,10 @@ def sidebar():
         ensure_dir(os.path.dirname(d))
         emitted.add(d)
         depth = d.count('/')
-        name = cap(os.path.basename(d)).replace('-', ' ')
+        # a section's label is its README's H1, same as a leaf's
+        readme = os.path.join(d, 'README.md')
+        name = (title_for(readme) if os.path.isfile(os.path.join(KB, readme))
+                else cap(os.path.basename(d)).replace('-', ' '))
         if d in section_page:
             lines.append('  ' * depth + f"- **[{name}]({section_page[d]})**")
         else:

@@ -1,6 +1,7 @@
 # v1, a convention nothing could read
 
 RAD-0046 · 2026-08-12 · v1
+Keywords: what shipped and failed; the v1 bundled flat files; a convention nothing could read; why in-archive bundling broke on Android and KMP; what was actually learned; what we would tell someone attempting this; why the failure is inspectable in published artifacts.
 
 Shipped in released libraries around April 2026; superseded by v2, then by
 v3. This document describes what no longer applies.

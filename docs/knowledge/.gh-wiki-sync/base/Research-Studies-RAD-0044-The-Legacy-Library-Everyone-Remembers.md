@@ -1,6 +1,7 @@
 # The Legacy Library Everyone Remembers
 
 RAD-0044 · 2026-08-21 · v1
+Keywords: the agent picked the library it has seen most, not the one we use; several valid answers in one field; why this is two problems rather than one; the part freshness closes and the part nothing does; the selection axis; local preference that no model can have.
 
 The first two case studies are about a *right* answer that is hard to find — in
 [space](Research-Studies-RAD-0042-Thirteen-Slug-Functions) and in

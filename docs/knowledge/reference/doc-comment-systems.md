@@ -1,5 +1,8 @@
 # Documentation-Comment Systems by Ecosystem
 
+Reference · 2026-08-27
+Keywords: KDoc vs Javadoc vs JSDoc vs docstrings vs rustdoc; which tags does each ecosystem use; how do I know a doc comment binds to a declaration; what can a harvester extract per language; doc_format values; where inherited documentation comes from; @sample and @throws support by ecosystem.
+
 Reference material: the in-source documentation system each ecosystem uses, its
 tag vocabulary, and the signals a harvester cares about. It feeds the parse and
 content layers (RAD-0009, RAD-0011) and the entry definition (RAD-0013).

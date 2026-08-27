@@ -1,6 +1,7 @@
 # The Retrieval / Disambiguation A/B
 
 RAD-0017 · 2026-08-20 · v1
+Keywords: can an agent pick the right capability from a catalogue; disambiguation before search at scale; adversarial distractors with colliding signatures; are signatures alone enough; when does the prose matter; opaque names; where a model confidently picks the wrong capability.
 
 **Design; measured.** This record specifies and reports the first cut of the retrieval
 question — disambiguation *within a presented catalogue*. Search-at-scale over hundreds

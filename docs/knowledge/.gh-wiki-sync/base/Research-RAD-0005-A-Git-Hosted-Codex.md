@@ -1,6 +1,7 @@
 # A Git-Hosted Codex
 
 RAD-0005 · 2026-08-14 · v1
+Keywords: can library guidance be fetched from the git repository instead of the artifact; scm in the POM; finding the right version by tag; integrity and checksums without a repository; borrowing the packument; llms.txt at a package root; what a git route cannot do.
 
 **Measured against:** measurements taken 2026-08-13 and recorded in
 [RAD-0002](Research-RAD-0002-Existing-Documentation-Systems-As-Skill-Transport) — `<scm>`

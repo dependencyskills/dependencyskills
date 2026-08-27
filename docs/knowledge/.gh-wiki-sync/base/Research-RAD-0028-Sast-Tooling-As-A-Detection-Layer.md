@@ -1,6 +1,7 @@
 # SAST Tooling as a Detection Layer
 
 RAD-0028 · 2026-08-23 · v2
+Keywords: can existing security scanners detect this; SpotBugs and find-sec-bugs; Semgrep published rulesets; why SAST finds nothing; the category mismatch between runtime misbehaviour and reading-time misbehaviour; detekt security extensions; copyleft licensing of the analysers; why a style linter outperforms them here.
 
 **v2 (2026-08-23) — question 1 answered: off-the-shelf SAST detects none of it.**
 `experiments/test7/sast_as_detector.py` ran SpotBugs with the find-sec-bugs plugin and Semgrep

@@ -1,5 +1,8 @@
 # Glossary
 
+Reference · 2026-08-27
+Keywords: what does codex mean here; codex vs librarian; declared vs resolved vs importable dependencies; what is the importable set; designed vs discovered entries; what is negative guidance; what counts as reinvention; the project's terms defined.
+
 The project's canonical terms. Several of these are coined here or used in a
 specific sense, and a few have already been confused for one another (codex vs
 librarian, importable vs declared), so the definitions are pinned here and the

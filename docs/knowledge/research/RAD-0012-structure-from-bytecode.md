@@ -1,6 +1,7 @@
 # Structure from Bytecode
 
 RAD-0012 · 2026-08-17 · v2
+Keywords: can the public API be recovered without source; parsing bytecode with ASM or javap; what a class file gives and what it loses; no parameter names, no doc comments; fully qualified supertypes; a fallback for a library with no sources jar; metalava and kotlin-metadata; when structure parsing earns its place.
 
 **Licenses verified 2026-08-17** (carried from RAD-0009): **ASM** BSD-3-Clause,
 **kotlin-metadata-jvm** and **metalava** Apache-2.0, checked against source. The

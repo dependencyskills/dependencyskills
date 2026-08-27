@@ -1,6 +1,7 @@
 # The Identifier as a Free-Text Channel
 
 RAD-0027 · 2026-08-23 · v4
+Keywords: can an identifier carry an attack; is the structure tier really free of attacker text; JVM backtick identifiers; does prose survive a compiler round trip; camel-cased imperatives needing no escape; why the backtick framing was the wrong emphasis; does a payload placed there actually work.
 
 **Opened because this project asserted something and then wrote it into another record as a
 correction without measuring it.** [RAD-0020](RAD-0020-information-flow-control.md) v4 states that

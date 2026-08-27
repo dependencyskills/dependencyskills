@@ -1,6 +1,7 @@
 # An External Model Review of the Corpus
 
 RAD-0038 · 2026-08-25 · v1
+Keywords: is handing the corpus to a model a useful review; what a structured model read is good for; joining records written apart; what it got wrong and why that is predictable; is it external scrutiny or a consistency check; the failure mode worth naming; is it worth doing again.
 
 **A method note, not a finding.** The `docs/knowledge/` corpus was handed to a frontier model
 (Gemini) with two requests: assess it, and find the places where its own conclusions contradict each

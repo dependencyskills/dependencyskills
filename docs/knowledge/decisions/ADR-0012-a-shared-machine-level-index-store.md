@@ -1,6 +1,7 @@
 # The index is a shared machine-level store, keyed by coordinate
 
 ADR-0012 · 2026-08-26 · Status: accepted · v3
+Keywords: where does the index live; one index per project or one per machine; ~/.gradle/dscodex; why not put it in Gradle's cache; content-addressed entries; why not deduplicate at harvest; one store per build system; scoped queries as a containment boundary; schema versioning; is the store reproducible and disposable.
 
 **v3 (2026-08-27) — entries are content-addressed, and harvesting is demand-driven.** Two refinements that [RAD-0041](../research/RAD-0041-deduplication-under-an-incremental-store.md) forced, after this record made the store incremental and scoped without re-checking the deduplication rule inherited from the batch experiments.
 

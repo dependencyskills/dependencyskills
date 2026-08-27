@@ -1,6 +1,7 @@
 # Publish security findings, but as observations rather than verdicts
 
 ADR-0011 · 2026-08-21 · Status: accepted · v2
+Keywords: how should prompt-injection findings be published; naming vendors and models in public; responsible disclosure when it is not a vulnerability; observations versus verdicts; right of reply; publishing working attack payloads; a public repo with permanent history; what to do when a vendor has no channel for this.
 
 The injection measurement ([RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection))
 produced working attack payloads, a demonstrated credential-exfiltration technique against a

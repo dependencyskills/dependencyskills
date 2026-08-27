@@ -1,6 +1,7 @@
 # The Dependency Nobody Declared
 
 RAD-0045 · 2026-08-21 · v1
+Keywords: too much is importable; most of what compiles was never declared; the agent cannot tell a declared dependency from a transitive one; the importable set felt in practice; provenance rather than freshness or discoverability; why the compiler accepting it is not the same as it being safe to depend on.
 
 The other case studies are about a right answer being hard to reach. This one is
 the opposite failure: **too much is reachable.** Nearly everything an agent can

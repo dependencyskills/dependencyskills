@@ -1,6 +1,7 @@
 # Does the Pipeline Itself Filter Injection?
 
 RAD-0024 · 2026-08-22 · v2
+Keywords: does the pipeline filter injection for free; does summarising strip a planted instruction; which payload classes it removes and which it misses; a payload aimed at the summariser itself; is the filtering general or class-specific; the obvious objection to relying on it.
 
 **v2 (2026-08-22) — first measurement: summarisation filters, narrowly.** `experiments/test6`
 ran RAD-0006's payloads through a real summarise step over real harvested doc comments.

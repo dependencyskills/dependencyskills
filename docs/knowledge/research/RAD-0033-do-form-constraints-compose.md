@@ -1,6 +1,7 @@
 # Do Form Constraints Compose Where Detectors Do Not?
 
 RAD-0033 · 2026-08-24 · v1
+Keywords: do form constraints compose where detectors do not; why stacking detectors adds nothing; detectors as strictly nested; two constraints that close each other's escape; is that structural or coincidence; what measurement would settle it; how it decides the pipeline shape.
 
 **A hypothesis raised by two accidental results, recorded before it hardens into an assumption.**
 `experiments/test8` measured detectors as strictly **nested** — stacking them adds nothing.

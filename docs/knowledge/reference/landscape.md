@@ -1,4 +1,7 @@
-# Landscape: the other projects in this space
+# The Other Projects in This Space
+
+Reference · 2026-08-27
+Keywords: who else is doing this; prior art for agent skills; llms.txt; Context7; DeepWiki; MCP documentation servers; skill registries; is someone already solving library discovery for agents; what conventions exist for shipping docs to an LLM; which of these actually work; where to find the projects we conform to.
 
 A source list. What each project is and where to find it — **not whether it
 works**, and not what this project thinks of it.

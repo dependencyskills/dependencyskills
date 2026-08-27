@@ -1,6 +1,7 @@
 # External Review of the Publishing Proposal
 
 RAD-0004 · 2026-08-14 · v1
+Keywords: what does someone outside the project think of this; objections to shipping library skills; why not just expect standard documentation; the prompt-injection objection nothing answered; intent clobbering; independent arrival at using KDoc; platform-specific packaging; what survives a reader with no investment.
 
 **Measured against:** nothing new. This record is a conversation, not an
 experiment. Where it cites numbers they come from
