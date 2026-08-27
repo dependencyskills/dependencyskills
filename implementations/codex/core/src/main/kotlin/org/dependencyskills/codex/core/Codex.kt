@@ -28,7 +28,17 @@ class SchemaVersionException(found: Int, supported: Int) : RuntimeException(
 class Codex private constructor(private val db: Connection) : AutoCloseable {
 
     companion object {
-        const val SCHEMA_VERSION = 1
+        const val SCHEMA_VERSION = 2
+
+        /**
+         * How `bm25` weighs the two indexed columns.
+         *
+         * The symbol is weighted above the documentation because it is the thing a caller is
+         * actually looking for and is far shorter, so a term appearing in it is a much stronger
+         * signal than the same term appearing somewhere in a paragraph.
+         */
+        private const val SYMBOL_WEIGHT = 3.0
+        private const val DOC_WEIGHT = 1.0
 
         fun open(file: Path): Codex {
             Files.createDirectories(file.parent)
@@ -130,9 +140,65 @@ class Codex private constructor(private val db: Connection) : AutoCloseable {
                     )""".trimIndent())
                 s.executeUpdate("CREATE INDEX idx_ce_entry ON coordinate_entry(entry_id)")
                 s.executeUpdate("CREATE INDEX idx_coord_state ON coordinate(harvest_state)")
-                s.executeUpdate("INSERT OR IGNORE INTO meta(key,value) VALUES('schema_version','$SCHEMA_VERSION')")
             }
         }
+        if (found == null || found < 2) transact { addSearchIndex(fresh = found == null) }
+        transact {
+            db.createStatement().use {
+                it.executeUpdate("REPLACE INTO meta(key,value) VALUES('schema_version','$SCHEMA_VERSION')")
+            }
+        }
+    }
+
+    /**
+     * Schema 2: the lexical index.
+     *
+     * External-content FTS5 rather than its own copy of the text. The raw doc is already the
+     * largest thing in the store and duplicating it would roughly double the file for nothing;
+     * this holds the terms and reads the text back through `entry`.
+     *
+     * `symbol_text` is a stored column because FTS5 cannot compute one. The tokenizer sees
+     * `respondOutputStream` as a single term, so a query written in prose could never reach it
+     * - splitting the symbol into words is what makes an identifier searchable at all, and it
+     * has to happen before the text is indexed.
+     */
+    private fun addSearchIndex(fresh: Boolean) {
+        db.createStatement().use { s ->
+            s.executeUpdate("ALTER TABLE entry ADD COLUMN symbol_text TEXT NOT NULL DEFAULT ''")
+            // `porter` stems, so "retrying" in a doc reaches a query that said "retry".
+            s.executeUpdate(
+                "CREATE VIRTUAL TABLE entry_fts USING fts5(" +
+                    "symbol_text, doc, content='entry', content_rowid='rowid', " +
+                    "tokenize='porter unicode61')"
+            )
+            // The triggers keep the index honest without the caller having to remember it.
+            // `put` inserts with ON CONFLICT DO NOTHING, so a duplicate entry fires no trigger
+            // and is indexed exactly once - the same content-addressing that collapses it.
+            s.executeUpdate(
+                "CREATE TRIGGER entry_fts_insert AFTER INSERT ON entry BEGIN " +
+                    "INSERT INTO entry_fts(rowid, symbol_text, doc) " +
+                    "VALUES (new.rowid, new.symbol_text, new.doc); END"
+            )
+            s.executeUpdate(
+                "CREATE TRIGGER entry_fts_delete AFTER DELETE ON entry BEGIN " +
+                    "INSERT INTO entry_fts(entry_fts, rowid, symbol_text, doc) " +
+                    "VALUES ('delete', old.rowid, old.symbol_text, old.doc); END"
+            )
+        }
+        if (fresh) return
+        // An existing store: fill the new column in, then build the index from what is there.
+        val symbols = db.prepareStatement("SELECT rowid, symbol FROM entry").use { p ->
+            p.executeQuery().use { rs ->
+                buildList { while (rs.next()) add(rs.getLong(1) to rs.getString(2)) }
+            }
+        }
+        db.prepareStatement("UPDATE entry SET symbol_text = ? WHERE rowid = ?").use { p ->
+            symbols.forEach { (rowid, symbol) ->
+                p.setString(1, symbolText(symbol)); p.setLong(2, rowid); p.addBatch()
+            }
+            p.executeBatch()
+        }
+        db.createStatement().use { it.executeUpdate("INSERT INTO entry_fts(entry_fts) VALUES('rebuild')") }
     }
 
     val schemaVersion: Int
@@ -266,8 +332,8 @@ class Codex private constructor(private val db: Connection) : AutoCloseable {
         val coordId = seen(c)
         transact {
         db.prepareStatement(
-            "INSERT INTO entry(id,symbol,signature,doc,rewrite,lang,doc_format,state,extractor,summariser,encoder,pooling) " +
-                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO NOTHING"
+            "INSERT INTO entry(id,symbol,signature,doc,rewrite,lang,doc_format,state,extractor,summariser,encoder,pooling,symbol_text) " +
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO NOTHING"
         ).use { p ->
             entries.forEach { e ->
                 p.setString(1, entryId(e.symbol, e.signature, e.doc))
@@ -276,6 +342,7 @@ class Codex private constructor(private val db: Connection) : AutoCloseable {
                 p.setString(8, e.state.name); p.setString(9, e.provenance.extractor)
                 p.setString(10, e.provenance.summariser); p.setString(11, e.provenance.encoder)
                 p.setString(12, e.provenance.pooling)
+                p.setString(13, symbolText(e.symbol))
                 p.addBatch()
             }
             p.executeBatch()
@@ -293,6 +360,95 @@ class Codex private constructor(private val db: Connection) : AutoCloseable {
             p.executeUpdate()
         }
         }
+    }
+
+    /**
+     * Ranks entries against a need written in plain words, within a supplied set of coordinates.
+     *
+     * **The coordinate set is a containment boundary, not a filter for speed.** The store holds
+     * entries from every project on this machine, so an entry reachable from a project that
+     * never depended on it is a laundering route - one this project's own caching decision
+     * would have created. The scope is therefore applied inside the query that ranks, before
+     * any limit: filtering the returned rows instead would silently drop matches to make room
+     * for entries the caller may not see, and would put the boundary somewhere a later change
+     * can step around.
+     *
+     * [coordinates] is an argument rather than something computed here. Which coordinates a
+     * caller may see is a question about a project and a source set, and it is answered
+     * elsewhere; this enforces the answer.
+     *
+     * Lexical only. No vectors, no rewriting, no classification - this is the spine, and what
+     * it scores is the raw harvested documentation.
+     */
+    fun search(need: String, coordinates: Set<Coordinate>, limit: Int = 20): SearchResults {
+        val scope = scopeOf(coordinates)
+        val match = ftsQuery(need)
+        if (match == null || scope.indexed.isEmpty()) {
+            return SearchResults(emptyList(), scope.searched, scope.notHarvested, scope.noSource)
+        }
+        val places = scope.indexed.joinToString(",") { "?" }
+        val sql = """
+            SELECT e.id, e.symbol, e.signature, e.rewrite, e.lang, e.doc_format, e.state,
+                   e.extractor, e.summariser, e.encoder, e.pooling,
+                   bm25(entry_fts, $SYMBOL_WEIGHT, $DOC_WEIGHT) AS score
+              FROM entry_fts
+              JOIN entry e ON e.rowid = entry_fts.rowid
+             WHERE entry_fts MATCH ?
+               AND EXISTS (SELECT 1 FROM coordinate_entry ce
+                            WHERE ce.entry_id = e.id AND ce.coordinate_id IN ($places))
+             ORDER BY score
+             LIMIT ?
+        """.trimIndent()
+        val hits = db.prepareStatement(sql).use { p ->
+            p.setString(1, match)
+            scope.indexed.forEachIndexed { i, id -> p.setLong(2 + i, id) }
+            p.setInt(2 + scope.indexed.size, limit)
+            p.executeQuery().use { rs ->
+                buildList {
+                    while (rs.next()) {
+                        add(Hit(readEntry(rs, within = coordinates), -rs.getDouble("score")))
+                    }
+                }
+            }
+        }
+        return SearchResults(hits, scope.searched, scope.notHarvested, scope.noSource)
+    }
+
+    private class Scope(
+        val indexed: List<Long>,
+        val searched: Set<Coordinate>,
+        val notHarvested: Set<Coordinate>,
+        val noSource: Set<Coordinate>,
+    )
+
+    /**
+     * Sorts the requested coordinates by what the store can say about them.
+     *
+     * A coordinate the store has never heard of lands in `notHarvested` beside one that is
+     * queued or last failed: from the caller's side they are the same fact - nothing has been
+     * read yet - and the difference between them is the harvester's business, not a searcher's.
+     */
+    private fun scopeOf(coordinates: Set<Coordinate>): Scope {
+        val indexed = ArrayList<Long>()
+        val searched = LinkedHashSet<Coordinate>()
+        val notHarvested = LinkedHashSet<Coordinate>()
+        val noSource = LinkedHashSet<Coordinate>()
+        db.prepareStatement(
+            "SELECT id, harvest_state FROM coordinate WHERE ecosystem = ? AND value = ?"
+        ).use { p ->
+            coordinates.forEach { c ->
+                p.setString(1, c.ecosystem); p.setString(2, c.value)
+                val state = p.executeQuery().use { rs ->
+                    if (rs.next()) rs.getLong(1) to HarvestState.valueOf(rs.getString(2)) else null
+                }
+                when (state?.second) {
+                    HarvestState.Indexed -> { indexed.add(state.first); searched.add(c) }
+                    HarvestState.NoSource -> noSource.add(c)
+                    else -> notHarvested.add(c)
+                }
+            }
+        }
+        return Scope(indexed, searched, notHarvested, noSource)
     }
 
     /** Entries owned by a coordinate. The raw documentation is not among them. */
@@ -319,7 +475,13 @@ class Codex private constructor(private val db: Connection) : AutoCloseable {
             p.executeQuery().use { if (it.next()) readEntry(it) else null }
         }
 
-    private fun readEntry(rs: java.sql.ResultSet): Entry {
+    /**
+     * [within], when given, restricts the coordinates reported on the entry to those the
+     * caller already named. An entry can be owned by coordinates from another project
+     * entirely, and listing them would leak what else this machine has indexed through a
+     * query that was scoped precisely to stop that.
+     */
+    private fun readEntry(rs: java.sql.ResultSet, within: Set<Coordinate>? = null): Entry {
         val id = rs.getString("id")
         return Entry(
             id = id,
@@ -333,7 +495,7 @@ class Codex private constructor(private val db: Connection) : AutoCloseable {
                 rs.getString("extractor"), rs.getString("summariser"),
                 rs.getString("encoder"), rs.getString("pooling"),
             ),
-            coordinates = ownersOf(id),
+            coordinates = ownersOf(id).let { owners -> if (within == null) owners else owners intersect within },
         )
     }
 

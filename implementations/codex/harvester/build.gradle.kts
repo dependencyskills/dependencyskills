@@ -52,3 +52,97 @@ tasks.test {
         }
     )
 }
+
+// ---------------------------------------------------------------------------------------------
+// The retrieval baseline corpus.
+//
+// These 59 coordinates are one real Ktor server project's resolved dependencies, pinned exactly
+// as `experiments/test5/CORPUS-MANIFEST.md` records them - 14,899 documented declarations across
+// 59 libraries. They are pinned rather than re-resolved so the recall numbers this produces are
+// comparable with the ones already measured against the same corpus with embeddings.
+//
+// A published Maven version is immutable, so re-fetching these reproduces the same harvest.
+val corpus: Configuration by configurations.creating {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+    isTransitive = false
+}
+
+dependencies {
+    corpus("org.jetbrains.kotlin:kotlin-stdlib:2.4.10:sources@jar")
+    corpus("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.11.0:sources@jar")
+    corpus("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0:sources@jar")
+    corpus("io.ktor:ktor-server-core-jvm:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-client-core-jvm:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-client-core:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-server-core:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-http-jvm:3.5.2:sources@jar")
+    corpus("org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:1.11.0:sources@jar")
+    corpus("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0:sources@jar")
+    corpus("io.ktor:ktor-http:3.5.2:sources@jar")
+    corpus("org.jetbrains.kotlinx:kotlinx-html-jvm:0.12.0:sources@jar")
+    corpus("org.jetbrains.kotlinx:kotlinx-html:0.12.0:sources@jar")
+    corpus("io.ktor:ktor-utils-jvm:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-utils:3.5.2:sources@jar")
+    corpus("org.jetbrains.kotlinx:kotlinx-io-core-jvm:0.9.1:sources@jar")
+    corpus("org.jetbrains.kotlinx:kotlinx-io-core:0.9.1:sources@jar")
+    corpus("org.jetbrains.kotlin:kotlin-reflect:2.3.21:sources@jar")
+    corpus("io.ktor:ktor-io-jvm:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-io:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-network-jvm:3.5.2:sources@jar")
+    corpus("org.jetbrains.kotlin:kotlin-test:2.4.10:sources@jar")
+    corpus("io.ktor:ktor-websockets-jvm:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-websockets:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-network:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-http-cio:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-http-cio-jvm:3.5.2:sources@jar")
+    corpus("org.jetbrains.kotlinx:kotlinx-io-bytestring-jvm:0.9.1:sources@jar")
+    corpus("org.jetbrains.kotlinx:kotlinx-coroutines-test-jvm:1.11.0:sources@jar")
+    corpus("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0:sources@jar")
+    corpus("org.jetbrains.kotlinx:kotlinx-io-bytestring:0.9.1:sources@jar")
+    corpus("io.ktor:ktor-network-tls-jvm:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-server-test-host-jvm:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-server-netty-jvm:3.5.2:sources@jar")
+    corpus("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.11.0:sources@jar")
+    corpus("io.ktor:ktor-network-tls:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-server-websockets-jvm:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-server-websockets:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-client-cio-jvm:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-network-tls-certificates-jvm:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-serialization-jvm:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-serialization:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-server-html-builder-jvm:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-server-html-builder:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-client-cio:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-server-call-logging-jvm:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-client-apache5-jvm:3.5.2:sources@jar")
+    corpus("org.jetbrains.kotlin:kotlin-test-junit:2.4.10:sources@jar")
+    corpus("io.ktor:ktor-events-jvm:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-events:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-server-default-headers-jvm:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-server-default-headers:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-sse-jvm:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-sse:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-websocket-serialization-jvm:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-websocket-serialization:3.5.2:sources@jar")
+    corpus("org.jetbrains.kotlinx:kotlinx-coroutines-slf4j:1.11.0:sources@jar")
+    corpus("io.ktor:ktor-test-dispatcher-jvm:3.5.2:sources@jar")
+    corpus("io.ktor:ktor-test-dispatcher:3.5.2:sources@jar")
+}
+
+tasks.test {
+    // Lenient: not every one of these publishes a sources jar, and a coordinate that does not is
+    // a finding the harvest reports rather than a resolution failure.
+    val corpusFiles = corpus.incoming.artifactView { isLenient = true }.files
+    inputs.files(corpusFiles).withPropertyName("corpus")
+    val needs = layout.projectDirectory.file("../../../experiments/test5/queries.json").asFile
+    jvmArgumentProviders.add(
+        CommandLineArgumentProvider {
+            listOf(
+                "-Dcodex.corpus=" + corpusFiles.joinToString(File.pathSeparator),
+                "-Dcodex.needs=" + needs.absolutePath,
+                "-Dcodex.reports=" + layout.buildDirectory.dir("reports").get().asFile.absolutePath,
+            )
+        }
+    )
+}

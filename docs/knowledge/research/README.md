@@ -66,6 +66,7 @@ overturned an earlier one.
 | [0046](postmortems/RAD-0046-v1-bundled-flat-files.md) | v1 | v1, a Convention Nothing Could Read | The first attempt, shipped and superseded — what no longer applies, and why the failure is worth keeping inspectable |
 | [0047](RAD-0047-a-jvm-embedding-runtime.md) | v2 | A JVM Embedding Runtime | JVM embeddings reproduce the reference at cosine 0.99999 and Lucene filters kNN by scope from inside the search — and the reference turned out to be mean-pooled, not the pooling BGE-M3 documents |
 | [0048](RAD-0048-where-the-encoder-size-cutoff-is.md) | v2 | Where the Encoder Size Cutoff Is | The pooling nobody chose cost 2 of 17 at rank 1; fp16 is free; and at realistic corpus size a 33 MB encoder is not worse than a 2,267 MB one |
+| [0049](RAD-0049-the-lexical-baseline.md) | v1 | What Lexical Search Alone Retrieves | The number the vector index has to beat — FTS5 over raw documentation gets 2 of 17 at 11,156 entries, and lands next door rather than nowhere |
 
 Numbering is sequential, runs across the sub-groups, and does not imply order
 of reading. 0001 and 0002 carry the measurements the rest lean on.

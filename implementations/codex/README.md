@@ -8,7 +8,7 @@ Published under `org.dependencyskills.codex`, so the coordinate says which build
 
 | module | what it is |
 |---|---|
-| `core` | the store. SQLite, content-addressed entries, coordinates pointing at them |
+| `core` | the store, and the lexical query over it. SQLite, content-addressed entries, coordinates pointing at them |
 | `harvester` | one sources jar in, entries out. Tree-sitter, no build system, no network |
 | `encoder` | the default embedding model, packaged for Maven Central |
 
@@ -29,6 +29,14 @@ Three things in its shape are decisions rather than details:
 **The raw documentation has no field on the public `Entry` type.** It is a retrieval key: the store searches on it and never hands it out. Leaving it off the type makes that structural rather than a rule a caller can forget.
 
 **A coordinate is a row in its own right**, carrying a harvest state and timestamps, so a library with no sources jar is distinguishable from one nobody has looked at — and can be re-checked later rather than re-queued on every build.
+
+### Asking it something
+
+`search(need, coordinates)` ranks entries against a need written in plain words, restricted to a supplied set of coordinates. SQLite FTS5 in the same file — not a second engine, because **the scope restriction is a containment boundary rather than a filter for speed**: the store holds every project on the machine, so an entry reachable from a project that never depended on it is a laundering route this project's own caching would have created. In one file that restriction is a join in the statement that ranks; across two stores it is a boundary in two places, which is where it leaks. It is applied before any limit, so out-of-scope entries can never eat the result slots.
+
+**Three outcomes, not two.** A match; a coordinate searched with nothing matching; a coordinate nothing has looked at yet. Collapsing them makes "nobody has indexed your dependencies" read as "this tool is useless", and `answerIsComplete` is the one bit that tells them apart.
+
+Which coordinates a caller may see is not decided here — it is an argument. What it is worth: [RAD-0049](../../docs/knowledge/research/RAD-0049-the-lexical-baseline.md) measures 2 of 17 at rank 10 over 11,156 entries, and finds it navigates to the right class and then cannot choose among its members.
 
 ## `harvester`
 
