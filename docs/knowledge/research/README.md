@@ -65,6 +65,7 @@ overturned an earlier one.
 | [0045](studies/RAD-0045-the-dependency-nobody-declared.md) | v1 | The Dependency Nobody Declared | Most of what compiles was never declared, and an agent cannot tell the difference |
 | [0046](postmortems/RAD-0046-v1-bundled-flat-files.md) | v1 | v1, a Convention Nothing Could Read | The first attempt, shipped and superseded — what no longer applies, and why the failure is worth keeping inspectable |
 | [0047](RAD-0047-a-jvm-embedding-runtime.md) | v2 | A JVM Embedding Runtime | JVM embeddings reproduce the reference at cosine 0.99999 and Lucene filters kNN by scope from inside the search — and the reference turned out to be mean-pooled, not the pooling BGE-M3 documents |
+| [0048](RAD-0048-where-the-encoder-size-cutoff-is.md) | v2 | Where the Encoder Size Cutoff Is | The pooling nobody chose cost 2 of 17 at rank 1; fp16 is free; and at realistic corpus size a 33 MB encoder is not worse than a 2,267 MB one |
 
 Numbering is sequential, runs across the sub-groups, and does not imply order
 of reading. 0001 and 0002 carry the measurements the rest lean on.

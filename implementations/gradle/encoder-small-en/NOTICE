@@ -1,0 +1,14 @@
+This artifact redistributes model weights authored by BAAI (Beijing Academy of
+Artificial Intelligence).
+
+  Model:   BAAI/bge-small-en-v1.5
+  Source:  https://huggingface.co/BAAI/bge-small-en-v1.5
+  Licence: MIT, as declared in the model card metadata at the address above
+
+The weights are unmodified. They are fetched from that address at build time and
+verified against pinned SHA-256 digests; this project neither re-exports nor
+re-quantises them.
+
+The upstream repository publishes no LICENSE file and no copyright line. The
+model card's licence declaration is cited as the authoritative statement, and
+the MIT terms it names are reproduced at META-INF/LICENSE.
