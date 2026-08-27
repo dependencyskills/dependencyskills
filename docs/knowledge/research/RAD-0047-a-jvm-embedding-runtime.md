@@ -1,9 +1,11 @@
 # A JVM Embedding Runtime
 
-RAD-0047 · 2026-08-27 · v1
+RAD-0047 · 2026-08-27 · v2
 Keywords: how does a JVM process embed text; running BGE-M3 without MLX; DJL versus Tribuo versus ONNX Runtime; do JVM embeddings match the Python ones; does Lucene support a filtered kNN query; scope filter inside the search rather than after it; how does the model file ship; what blocks the two-faced index.
 
-Not yet measured. This record specifies a probe and states what it must establish; the Findings section is empty until it runs.
+**v2 (2026-08-27) — the probe ran, and every question it asked came back favourable.** A JVM runtime reproduces the reference embeddings at cosine 0.99999 and returns bit-identical recall; Lucene holds two vectors per document and filters a kNN query by coordinate from inside the search. It also turned up something nobody was looking for: the reference vectors were **mean-pooled**, not CLS-pooled as BGE-M3 documents.
+
+Measured against: DJL 0.36.0 over ONNX Runtime 1.21.1, Lucene 10.5.1, OpenJDK 26.0.2.1, macOS arm64 CPU; `BAAI/bge-m3` official ONNX export (fp32) against `mlx-community/bge-m3-mlx-fp16`; `experiments/test23`, 2026-08-27.
 
 ## Question
 
@@ -59,29 +61,76 @@ This is named here rather than answered, because the probe will surface it wheth
 
 ## Findings
 
-**None yet.** This record specifies the probe; it will be revised with what the run establishes.
+**Measured.** All five questions the probe set itself, in the order it set them.
 
-The probe should establish, in this order, stopping at the first failure:
+**1. A JVM process embeds text, on CPU, at 74 ms per entry.** DJL 0.36.0 over ONNX Runtime 1.21.1, loading the official `BAAI/bge-m3` ONNX export. No GPU, no Python.
 
-1. **A JVM process loads BGE-M3 and produces embeddings.** Via DJL over ONNX Runtime, on CPU. Record the model artifact used, since a converted or quantised ONNX export is not the same object as the MLX one.
-2. **The vectors are good enough.** Re-run RAD-0040's eval — the same 220 entries, the same 17 queries, both faces — on the JVM and compare against 15 of 17. The number to beat is the number already measured, not an absolute.
-3. **Lucene holds two vector fields per document** without a schema hack, which is what [#6](https://github.com/dependencyskills/dependencyskills/issues/6) assumes.
-4. **Lucene filters a kNN query by a set of coordinates**, and stays usable when that set is several hundred. If it cannot, say so plainly: the design changes rather than the criterion relaxing.
-5. **Latency at query time on CPU**, for one short string, on ordinary developer hardware. Written down, because it decides whether this sits behind an interactive call.
+**2. The vectors match.** Over 200 randomly sampled entries from the real harvested corpus, embedded on the JVM and compared to the stored MLX vector:
 
-Throughput at harvest is deliberately **not** on that list. RAD-0035 already argued it is a batch job, and a probe that optimises before it validates has answered the wrong question.
+| | |
+|---|---|
+| mean cosine(MLX, ONNX) | **0.99999** |
+| minimum | 0.99961 |
+| below 0.99 | **0 of 200** |
+
+fp16 against fp32 costs nothing measurable. The concern that motivated this probe — that the runtime move would quietly shift results — does not materialise.
+
+**3. Retrieval is bit-identical.** ONNX query vectors against the MLX corpus, a mixed basis chosen so any systematic offset would show as lost recall:
+
+| | r@1 | r@3 | r@5 | r@10 |
+|---|---|---|---|---|
+| MLX reference | 0/17 | 0/17 | 0/17 | 1/17 |
+| ONNX on the JVM | 0/17 | 0/17 | 0/17 | 1/17 |
+
+Those absolute numbers are poor and that is **[RAD-0019](RAD-0019-retrieval-at-scale.md)'s and test5's finding, not this one**: raw harvested documentation was already measured collapsing toward zero by 3,000 entries, and this corpus is 14,899. The question here was whether the runtime reproduces the measurement, and it reproduces it exactly — including how bad it is.
+
+**4. Lucene holds two vectors per document**, queried independently, with no schema hack. This was [#6](https://github.com/dependencyskills/dependencyskills/issues/6)'s assumption and it holds.
+
+**5. Lucene filters a kNN query by coordinate, from inside the search — and the post-filter really does fail.** Built deliberately so the globally nearest vectors all belong to coordinates the asking project does not have, over 15,000 documents and 600 coordinates:
+
+| | in-scope hits |
+|---|---|
+| unfiltered kNN, k=10 | **0 of 10** |
+| filtered kNN, k=10 | **10 of 10** |
+
+A post-filter would have returned **nothing** with 250 in-scope entries present. This is no longer a reasoned warning; it is reproduced on Lucene 10.5.1.
+
+Cost against filter size, mean of 20 queries:
+
+| coordinates in filter | plain | with `--add-modules jdk.incubator.vector` |
+|---|---|---|
+| 50 | 995 µs | 882 µs |
+| 200 | 1,490 µs | 1,079 µs |
+| 500 | 2,962 µs | **1,603 µs** |
+
+A 500-coordinate filter is a large real project, and 1.6 ms is comfortably interactive. **The Vector API is worth roughly 2× at that size**, and Lucene warns at startup when it is missing — so a plugin embedding this must set the flag.
+
+### The pooling discrepancy, which nobody was looking for
+
+The first run returned cosine **0.75** and zero recall. The cause was not the runtime, the precision, the tokenizer or the text: Java and Python produce byte-identical input strings, and MLX reproduces its own stored vectors at cosine 1.0.
+
+The ONNX export exposes two outputs, `token_embeddings` and `sentence_embedding`. The pooled one is **CLS** — what BGE-M3's model card documents for dense retrieval. `mlx-embeddings` **mean-pools**. On identical text:
+
+| pooling | cosine against the reference |
+|---|---|
+| CLS | 0.746 – 0.771 |
+| mean | **1.00000** |
+
+**So every retrieval number this project holds was measured with mean pooling, not the pooling the model documents.** Nothing measured is invalidated — the numbers are internally consistent and remain comparable to one another, and RAD-0019's encoder bake-off compared four encoders under the same treatment. What is *not* established is whether the documented pooling retrieves better, and that question did not exist until now.
 
 ## Recommendation
 
-**Run the probe before either blocked story is scheduled**, and run it as an experiment in `experiments/`, not as product code. Its output is this record's Findings section plus a decision about the runtime; nothing it builds should be lifted into `implementations/`.
+**Unblock [#6](https://github.com/dependencyskills/dependencyskills/issues/6).** Every precondition it was waiting on is measured and favourable. The runtime is DJL over ONNX Runtime, on CPU, and the vector index can hold the containment boundary itself.
 
-**Do not treat RAD-0035's pick as settled until it runs.** DJL is a recommendation from a survey, and this project has already had to withdraw claims made by reasoning from specifications rather than measurement — [RAD-0027](RAD-0027-the-identifier-as-a-free-text-channel.md) was opened for exactly that reason.
+**Write the scope filter into the kNN query, never over its results.** The failure is reproduced rather than argued: a post-filter returned zero results while 250 in-scope entries sat in the index. An empty result is indistinguishable from "your dependencies have nothing", so this fails silently and in the direction that looks like the tool not working.
 
-**If the vectors do not reproduce**, the honest options are to re-run the encoder bake-off on the JVM rather than assume BGE-M3 is still the pick, or to accept a different encoder with its own measured number. What must not happen is carrying the Python number forward against a runtime that did not produce it.
+**Set `--add-modules jdk.incubator.vector` wherever this runs.** Worth ~2× at a realistic filter size, and Lucene says so at startup.
 
-**If Lucene cannot filter kNN by a large coordinate set**, the fallback is to keep scope enforcement in SQLite and use the vector index as a candidate generator only — with the filter applied to the candidate *set*, never to the final results. That is a worse design and should be recorded as such if it is taken.
+**Measure CLS against mean pooling before shipping an encoder.** This is the one new question. It is cheap — re-embed the corpus one way and re-run an eval already written — and it is worth answering before a store fills with vectors produced under a pooling chosen by accident rather than by measurement.
 
-Open, and deliberately left standing: how the model ships, and whether the generative runtime [#7](https://github.com/dependencyskills/dependencyskills/issues/7) needs is the same problem or a different one. They are related but not identical — one is an encoder, the other a text generator with a much larger footprint — and treating them as one question is how the smaller one gets held up by the larger.
+**Quantisation is the next question after that, and it is a product question.** The fp32 export is **2.3 GB**. An int8 export is roughly 570 MB and untested here; a smaller encoder is smaller still, and RAD-0019 already measured all-MiniLM-L6-v2 at 4/8 against BGE-M3's 7/8. What quantisation costs in recall decides what actually ships, and it must be measured with one variable moving, not folded into this record.
+
+**Still open, and unchanged by this probe:** how the model reaches a developer's machine. 2.3 GB is not a detail, and the answer interacts with quantisation above. The generative runtime [#7](https://github.com/dependencyskills/dependencyskills/issues/7) needs remains a different and larger problem; nothing here speaks to it.
 
 ## Connections
 
