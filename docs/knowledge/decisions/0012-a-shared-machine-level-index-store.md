@@ -17,15 +17,24 @@ location open. Settled while triaging #1, against the machine rather than on tas
   it. A version in a directory name becomes a lie and cannot detect or migrate an old store; a
   `schema_version` row can.
 
-**One consequence is left open on purpose.** ADR-0005 makes the Gradle implementation responsible
-for the Maven, npm and SPM channels a Kotlin Multiplatform library publishes to, so a store under
-`.gradle/` will hold npm and SwiftPM entries. A Maven-native or npm-native implementation would then
-have to look inside `.gradle` for them, which reads oddly.
+**One codex per build system, not one per machine.** The store belongs to the tool that resolved
+the dependencies: the Gradle plugin writes `~/.gradle/dscodex/`, a Maven one would write under
+`~/.m2/`, an npm one under npm's root. Each holds **everything that build system resolves** — the
+Gradle codex carries the npm and Yarn entries a Kotlin Multiplatform build pulls in, because Gradle
+is what pulled them.
 
-The alternative is **one codex per build system**, each smaller and independently owned, at the cost
-of harvesting a shared dependency more than once — the duplication this record exists to remove.
-Choosing between them needs a second implementation to exist, so the decision here is only that the
-**path is configurable**, which is what keeps the question answerable rather than foreclosed.
+This is the same seam [ADR-0005](0005-repository-structure.md) already draws: one directory per
+**build system**, not per package ecosystem. A single machine-wide store would cut across it, and
+would need cross-tool coordination over a file none of them owns.
+
+The cost is duplication in one narrow case — a library resolved by two different build systems on
+the same machine is harvested into each. That is rarer than it sounds, since a KMP library reaches
+npm consumers through Gradle rather than through npm. What this record set out to remove is
+per-*project* duplication, and that is removed in full: every Gradle project on the machine shares
+one codex.
+
+The path stays **configurable** regardless, so a project that wants a shared store, or a different
+root, is not blocked by the default.
 
 ## Context
 
