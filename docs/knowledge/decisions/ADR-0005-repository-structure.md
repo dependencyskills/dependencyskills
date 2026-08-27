@@ -1,7 +1,11 @@
 # One repository, split by whether a human is driving
 
-ADR-0005 · 2026-08-12 · Status: accepted · v3
-Keywords: how should this repository be laid out; one repo or one per ecosystem; why not -gradle, -maven, -ivy repos; where do spikes and prototypes live; poc versus experiments; what belongs in implementations; splitting by ecosystem versus by whether a human is driving; where does code that depends on no build system go; why the codex is not under gradle; one build root per directory.
+ADR-0005 · 2026-08-12 · Status: accepted · v4
+Keywords: how should this repository be laid out; one repo or one per ecosystem; why not -gradle, -maven, -ivy repos; where do spikes and prototypes live; poc versus experiments; what belongs in implementations; splitting by ecosystem versus by whether a human is driving; where does code that depends on no build system go; why the codex is not under gradle; one build root per directory; where did the publisher plugin go; why is there no publish-side implementation.
+
+**v4 (2026-08-27) — there is no publish-side implementation, and the paragraph below that assumes one is stale.**
+
+"Splitting `publish/` from `consume/`" argues against a directory split partly on the grounds that one Gradle jar would register both plugin ids. Only one id exists now: the v1 publisher was deleted when ADR-0009 settled that content comes from the sources jar a library already publishes, which leaves an author nothing bespoke to author and that plugin nothing to check. The decision is untouched — the split still belongs in the spec rather than the tree — but a reader should not go looking for the second half in the tree.
 
 **v3 (2026-08-27) — `implementations/` is one build root per directory, and not all of them are build systems.**
 

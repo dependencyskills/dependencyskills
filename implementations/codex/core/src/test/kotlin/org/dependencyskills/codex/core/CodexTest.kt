@@ -33,6 +33,35 @@ class CodexTest {
         }
     }
 
+    @Test fun `seenAll answers which coordinates were new`(@TempDir dir: Path) {
+        Codex.open(dir.resolve("c.db")).use { c ->
+            assertEquals(listOf(maven, npm), c.seenAll(listOf(maven, npm)))
+            // The second call is the one that matters: a consuming project resolves the same
+            // few hundred coordinates on every build, and almost none of them are ever new.
+            assertEquals(emptyList(), c.seenAll(listOf(maven, npm)))
+            val third = Coordinate("maven", "com.squareup.okio:okio:3.9.0")
+            assertEquals(listOf(third), c.seenAll(listOf(maven, third, npm)))
+        }
+    }
+
+    @Test fun `seenAll records pending, and repeats in one batch collapse`(@TempDir dir: Path) {
+        Codex.open(dir.resolve("c.db")).use { c ->
+            assertEquals(listOf(maven), c.seenAll(listOf(maven, maven, maven)))
+            assertEquals(HarvestState.Pending, c.coordinate(maven)!!.state)
+            assertEquals(listOf(maven), c.coordinatesIn(HarvestState.Pending).map { it.coordinate })
+        }
+    }
+
+    @Test fun `seenAll leaves a coordinate that has moved on where it is`(@TempDir dir: Path) {
+        Codex.open(dir.resolve("c.db")).use { c ->
+            c.harvestState(maven, HarvestState.NoSource)
+            assertEquals(emptyList(), c.seenAll(listOf(maven)))
+            // Re-recording it as pending would re-queue a library already known to have no
+            // sources, on every build, for ever.
+            assertEquals(HarvestState.NoSource, c.coordinate(maven)!!.state)
+        }
+    }
+
     @Test fun `writing the same coordinate twice does not duplicate`(@TempDir dir: Path) {
         Codex.open(dir.resolve("c.db")).use { c ->
             c.put(maven, listOf(entry("respond")))

@@ -160,7 +160,7 @@ different in each ecosystem.
 | `experiments/` | The measurements — the cost model and twenty-three numbered tests, plus the shared corpus, the summariser and the classifiers. Each self-contained: data plus a runnable harness |
 | `site/` | The published site at [dependencyskills.org](https://dependencyskills.org) |
 | `spec/` | The convention. Normative, and currently ahead of what has been decided — `discovery.md`, the hard part, is unwritten |
-| `implementations/` | Per build system. A Maven-channel publisher exists; the harvester does not |
+| `implementations/` | Per build system, plus the codex itself. The store, the harvester and the Gradle consumer plugin exist |
 | `agent-skills/` | This project's own skills — **empty** |
 | `conformance/` | Runs an implementation against the fixtures — **empty** |
 | `fixtures/` | Sample skills, expected archives, malformed cases — **empty** |
@@ -189,10 +189,12 @@ per machine rather than once per project; declared dependencies by default with
 the transitive tail opt-in; and a boundary that decides what an agent is ever
 allowed to read.
 
-**Unwritten.** The harvester, the index and the query layer. The Gradle
-implementation has a publisher for the Maven channel and has not been compiled
-since the project was retargeted. The emit steps for npm and SPM, and both
-skills, do not exist.
+**Built.** The store, the sources-jar harvester, and the Gradle plugin a
+consuming project applies to learn which of its dependencies the store has
+never seen.
+
+**Unwritten.** The index, the query layer and the summariser. The emit steps
+for npm and SPM, and both skills, do not exist.
 
 **Open.** Whether prose a filter misses is prose an agent would have obeyed —
 the gap between catching text and preventing harm. And retrieval at a corpus

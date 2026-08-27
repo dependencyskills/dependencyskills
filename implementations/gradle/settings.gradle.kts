@@ -5,9 +5,9 @@ dependencyResolutionManagement {
     repositories { mavenCentral() }
 }
 
-// The consumer plugin (#3) will need the codex store. When it does, add:
-//   includeBuild("../codex")
-// and depend on org.dependencyskills:core — Gradle substitutes the sibling project.
-// Not declared yet, because nothing here uses it and an unused composite is a prediction.
+// The store. A sibling build root rather than a module here, because nothing in the codex
+// depends on a build system and filing it under `gradle/` would make it a Gradle artifact by
+// proximity — ADR-0005 v3. Gradle substitutes `org.dependencyskills.codex:core` from it.
+includeBuild("../codex")
 
-include("publisher")
+include("dependency-skills")

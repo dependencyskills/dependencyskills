@@ -39,7 +39,7 @@ library reaches npm consumers through Gradle and never touches it.
 | Directory | What it is | State |
 |---|---|---|
 | `codex/` | the store, the harvester, the query layer, the server — no build system. Publishes `org.dependencyskills.codex:…` | store built; the rest not started |
-| `gradle/` | Gradle plugins, `org.dependencyskills.gradle:…`. Channels: Maven (JVM, Android, native, JS), npm, SPM | publisher for Maven only; experimental |
+| `gradle/` | Gradle plugins, `org.dependencyskills.gradle:…`. Channels: Maven (JVM, Android, native, JS), npm, SPM | the consumer plugin; the npm and SPM emit steps not started |
 | `maven/` | Maven plugins | not started |
 | `npm/` | npm tooling | not started |
 | `swift/` | SPM tooling | not started |

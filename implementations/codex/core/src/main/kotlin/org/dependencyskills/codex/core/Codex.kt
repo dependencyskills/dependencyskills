@@ -32,6 +32,11 @@ class Codex private constructor(private val db: Connection) : AutoCloseable {
 
         fun open(file: Path): Codex {
             Files.createDirectories(file.parent)
+            // Registers the driver explicitly. DriverManager discovers drivers through
+            // META-INF/services using the thread context classloader, which inside a Gradle
+            // plugin is not the loader that has this jar - so auto-discovery finds nothing and
+            // reports it as "no suitable driver", which reads like a missing dependency.
+            Class.forName("org.sqlite.JDBC")
             val c = DriverManager.getConnection("jdbc:sqlite:${file.toAbsolutePath()}")
             // Pragmas first: SQLite refuses to change journal mode inside a transaction,
             // and turning autoCommit off opens one.
@@ -147,6 +152,47 @@ class Codex private constructor(private val db: Connection) : AutoCloseable {
             p.executeUpdate()
         }
         idOf(c) ?: error("coordinate vanished after insert: $c")
+    }
+
+    /**
+     * Records a batch of coordinates as seen, and answers which of them were new.
+     *
+     * One transaction rather than one per coordinate: a consuming project's compile classpath
+     * is hundreds of coordinates and every build resolves it again, so the overwhelmingly
+     * common case is a few hundred rows that all already exist.
+     *
+     * The return value is the point. A caller that has to ask afterwards which ones it added
+     * has to re-read them, and between the write and the read another build may have added
+     * more — so it would report someone else's work as its own.
+     */
+    fun seenAll(coordinates: Collection<Coordinate>): List<Coordinate> {
+        if (coordinates.isEmpty()) return emptyList()
+        val distinct = coordinates.distinct()
+        return transact {
+            val known = HashSet<Coordinate>()
+            db.prepareStatement("SELECT 1 FROM coordinate WHERE ecosystem=? AND value=?").use { p ->
+                distinct.forEach { c ->
+                    p.setString(1, c.ecosystem); p.setString(2, c.value)
+                    p.executeQuery().use { if (it.next()) known.add(c) }
+                }
+            }
+            val fresh = distinct.filterNot { it in known }
+            if (fresh.isNotEmpty()) {
+                val now = Instant.now().epochSecond
+                db.prepareStatement(
+                    "INSERT INTO coordinate(ecosystem,value,harvest_state,first_seen) VALUES(?,?,?,?) " +
+                        "ON CONFLICT(ecosystem,value) DO NOTHING"
+                ).use { p ->
+                    fresh.forEach { c ->
+                        p.setString(1, c.ecosystem); p.setString(2, c.value)
+                        p.setString(3, HarvestState.Pending.name); p.setLong(4, now)
+                        p.addBatch()
+                    }
+                    p.executeBatch()
+                }
+            }
+            fresh
+        }
     }
 
     private fun idOf(c: Coordinate): Long? =
