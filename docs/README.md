@@ -21,6 +21,11 @@ arranged this way.
   conventions the project adopts. Decisions still being worked out — how a
   library skill travels, how the index works — live in Research until they
   lock, then graduate here.
+- `knowledge/requirements/` — Product Requirements. What the product must do
+  and for whom, as numbered narrative requirements a tracker story can cite.
+  A PRD is where an ADR's settled choice and a research record's measurement
+  turn into an obligation; the stories that verify it live in the tracker,
+  and acceptance criteria are never written here.
 - `knowledge/research/` — investigations: the question that prompted the
   work, the trail of options weighed, the findings, and a recommendation. A
   recommendation that hardens into a commitment graduates to an ADR.

@@ -53,6 +53,7 @@ graduates to an ADR, cross-linked both ways.
 | [0038](0038-an-external-model-review-of-the-corpus.md) | An External Model Review of the Corpus | What a structured model read is good for — joining records written apart — and why it is a consistency check rather than external scrutiny |
 | [0039](0039-where-the-dependency-graph-comes-from.md) | Where the Dependency Graph Comes From | We already extract the graph and discard the edges — what they would buy, and why an SBOM beats running someone else's build |
 | [0040](0040-does-summarising-improve-retrieval.md) | Does Summarising Actually Improve Retrieval? | The 29%-to-77% gap was hand-written and does not reproduce — the rewriter is neutral and the signature-only fallback is what costs |
+| [0041](0041-deduplication-under-an-incremental-store.md) | Deduplication Under an Incremental, Scoped Store | Dedup at harvest loses entries once queries are scoped — an entry dropped for a sibling target is invisible to a project that depends only on the sibling |
 
 Numbering is sequential and does not imply order of reading. 0001 and 0002
 carry the measurements the rest lean on.

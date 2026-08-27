@@ -1,6 +1,18 @@
 # ADR-0012: The index is a shared machine-level store, keyed by coordinate
 
-Date: 2026-08-26 · Status: accepted · v2
+Date: 2026-08-26 · Status: accepted · v3
+
+**v3 (2026-08-27) — entries are content-addressed, and harvesting is demand-driven.** Two refinements that [RAD-0041](../research/0041-deduplication-under-an-incremental-store.md) forced, after this record made the store incremental and scoped without re-checking the deduplication rule inherited from the batch experiments.
+
+**An entry is keyed by its content, and coordinates point at it.** A hash of `(symbol, signature, doc)` identifies the entry; a second table maps coordinate to entry. A query filters coordinates to the asking project's scope, joins, and takes distinct entries.
+
+This was chosen over deduplicating at harvest, which RAD-0041 showed breaks twice over once the store is incremental and scoped: the surviving copy depends on which build ran first, so the store is not reproducible; and a project depending only on the artifact that *lost* cannot see the entry at all, silently. Content-addressing fixes both rather than relocating them — identity is content, not arrival order, and every owning coordinate is recorded, so no consumer loses an entry a sibling artifact happened to also carry.
+
+The unit came out of the data rather than assumption. Measured over one real project's resolved set: 2,939 doc texts appear in more than one library, and **2,929 of them — 99.7% — are the same module published twice**, a Kotlin Multiplatform root metadata artifact beside its per-target sibling. Only **10** are genuinely different libraries sharing prose, and those merge correctly under content-addressing for free. "Which library is this from" becomes a *set*, which is the more truthful answer: the capability really is in both.
+
+**Harvesting is driven by a project's dependency tree, not by the cache.** The plugin indexes what the calling project resolved and nothing else, so the first build on a machine is bounded by one dependency graph rather than by everything ever downloaded. `experiments/test5`'s real project is 59 documented libraries and 14,899 entries, which content-addressing stores as **6,892 distinct docs — 54% saved before any sharing between projects**. The 537,480 entries in `experiments/corpus/` are the ceiling for a machine that has built everything, not a starting cost.
+
+The trade is a join on every query, and a schema that is a step less obvious to read. Both were accepted for correctness.
 
 **v2 (2026-08-27) — the path is `~/.gradle/dscodex/`, and it is configurable.** This record said
 "a machine-level directory, in the manner of `~/.gradle/caches` or `~/.m2`" and left the actual
