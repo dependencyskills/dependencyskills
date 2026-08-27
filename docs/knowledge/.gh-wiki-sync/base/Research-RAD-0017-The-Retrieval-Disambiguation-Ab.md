@@ -116,13 +116,13 @@ over the index (RAD-0010), then **selection** (RAD-0007).
 
 ## Connections
 
-- [RAD-0013](RAD-0013-the-codex-entry.md) — the two-faced entry this measures; syntactic face
+- [RAD-0013](Research-RAD-0013-The-Codex-Entry) — the two-faced entry this measures; syntactic face
   = use, semantic face = discovery/disambiguation, now both shown.
-- [RAD-0016](RAD-0016-the-content-value-ab.md) — content-value, the sibling A/B (use, not
+- [RAD-0016](Research-RAD-0016-The-Content-Value-Ab) — content-value, the sibling A/B (use, not
   disambiguation) this builds on; same fixture and runner.
-- [RAD-0010](RAD-0010-how-the-codex-is-stored-and-served.md) — the store/retrieval layer the
+- [RAD-0010](Research-RAD-0010-How-The-Codex-Is-Stored-And-Served) — the store/retrieval layer the
   search-at-scale test needs.
-- [RAD-0007](RAD-0007-choosing-between-overlapping-libraries.md) — selection, the distinct
+- [RAD-0007](Research-RAD-0007-Choosing-Between-Overlapping-Libraries) — selection, the distinct
   next question (preference among options that all fit).
-- [ADR-0010](../decisions/ADR-0010-measure-through-developer-tools.md) — measure through developer
+- [ADR-0010](Decisions-ADR-0010-Measure-Through-Developer-Tools) — measure through developer
   tools; the frontier arm ran as a subagent.

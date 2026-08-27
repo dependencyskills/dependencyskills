@@ -160,7 +160,7 @@ aggregate, while noting that transfer to harsher external sources remains open.
 
 ### Language and harness design for agents — an active subfield (added v3)
 
-Surveyed 2026-08-22 for [RAD-0023](RAD-0023-deterministic-harness-or-harvested-knowledge.md), which
+Surveyed 2026-08-22 for [RAD-0023](Research-RAD-0023-Deterministic-Harness-Or-Harvested-Knowledge), which
 asked whether engineering judgement should live in a deterministic harness rather than in the
 model. The answer to "does this exist" is yes, in force.
 
@@ -256,7 +256,7 @@ rather than let a reader infer priority.
   the library that shipped it — is available only in this corpus, because a library has a
   symbol graph and an authored skill does not. The scanners SkillJect benchmarks are
   semantic; this one is structural, and it is the basis of the harvest-time filter proposed
-  in [RAD-0020](RAD-0020-information-flow-control.md).
+  in [RAD-0020](Research-RAD-0020-Information-Flow-Control).
 
 **Unverified.** These four survivals rest on abstracts plus targeted reads of two full
 papers. Confirm them against the full texts before any is published as a novelty claim —
@@ -398,7 +398,7 @@ resolved; antfu's proposal rejects it for exactly this, and RAD-0005 measured
 why the metadata cannot rescue it — `<scm><tag>` identifies the released
 version in 2% of POMs and no sampled jar manifest records a commit. *Boundary:*
 version-independent content only, unless the layout is version-addressed, which
-[RAD-0005](RAD-0005-a-git-hosted-codex.md) sets out and nobody in the field is
+[RAD-0005](Research-RAD-0005-A-Git-Hosted-Codex) sets out and nobody in the field is
 currently doing.
 
 **A central catalogue** — skillsjars.com, Skilldex, Agentic Resource Discovery.
@@ -408,7 +408,7 @@ is the only place a corpus can be scanned, signed or revoked once for everyone.
 is as durable as the service, which is the ephemeral-mechanism failure the v1
 postmortem argues against, in a new outfit. It is also a single point of
 compromise for the injection surface in
-[RAD-0006](RAD-0006-development-time-prompt-injection.md). *Boundary:* front-end
+[RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection). *Boundary:* front-end
 yes, system of record no.
 
 **Documentation retrieval by library identifier** — Context7, as integrated by
@@ -533,17 +533,17 @@ ecosystems and the harvesting model.
 
 - `docs/knowledge/reference/landscape.md` — the descriptive tracker this record
   judges; needs updating from it.
-- [RAD-0001](RAD-0001-cost-of-a-skill-per-dependency.md) — the cost measurement,
+- [RAD-0001](Research-RAD-0001-Cost-Of-A-Skill-Per-Dependency) — the cost measurement,
   and the overclaim to fix.
-- [RAD-0002](RAD-0002-existing-documentation-systems-as-skill-transport.md) — the
+- [RAD-0002](Research-RAD-0002-Existing-Documentation-Systems-As-Skill-Transport) — the
   67-skill description corpus to check against SkillReducer's 55,315.
-- [RAD-0003](RAD-0003-central-capability-server.md) — `maven-tools-mcp` is a
+- [RAD-0003](Research-RAD-0003-Central-Capability-Server) — `maven-tools-mcp` is a
   working instance of that architecture.
-- [RAD-0005](RAD-0005-a-git-hosted-codex.md) — version misalignment, corroborated
+- [RAD-0005](Research-RAD-0005-A-Git-Hosted-Codex) — version misalignment, corroborated
   independently by antfu's proposal.
 - ADR-0003 — the
   sidecar, against SkillsJars' in-jar approach.
-- [ADR-0007](../decisions/ADR-0007-conform-to-existing-conventions.md) — conformance,
+- [ADR-0007](Decisions-ADR-0007-Conform-To-Existing-Conventions) — conformance,
   strengthened by Microsoft adopting the format unchanged.
 - `docs/knowledge/research/postmortems/RAD-0046-v1-bundled-flat-files.md` — the measured
   failures that apply to SkillsJars' mechanism.

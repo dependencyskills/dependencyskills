@@ -4,13 +4,13 @@ What the product must do, and for whom. Each record states a problem in a user's
 
 A requirement here is narrative and numbered, so a story can cite it. **Acceptance criteria are not written here** — done-ness belongs to the tracker, on the story that carries it, and a checklist duplicated into a document is a checklist that goes stale without anyone noticing. The Stories table is a list of tracker IDs and the requirements each one covers; it is the only place this section touches work.
 
-This is also not where a choice is argued. A requirement says what must be true; an [architecture decision](../decisions/README.md) says which of several ways it is done and what was rejected, and a [research record](../research/README.md) says what was measured to get there. A PRD cites both rather than restating them.
+This is also not where a choice is argued. A requirement says what must be true; an [architecture decision](Decisions) says which of several ways it is done and what was rejected, and a [research record](Research) says what was measured to get there. A PRD cites both rather than restating them.
 
-**[PRD-0001 — The Dependency Codex](PRD-0001-the-dependency-codex.md)**
+**[PRD-0001 — The Dependency Codex](Requirements-PRD-0001-The-Dependency-Codex)**
 
 A local, machine-shared index of what the dependencies a project resolved can already do — harvested from what libraries already publish, queried by need, and served where an agent works.
 
-**[PRD-0002 — The Trust Boundary](PRD-0002-the-trust-boundary.md)**
+**[PRD-0002 — The Trust Boundary](Requirements-PRD-0002-The-Trust-Boundary)**
 
 That library prose never reaches an agent verbatim through this tool — rewriting rather than detection, degradation rather than silence, and an honest account of what none of it catches.
 

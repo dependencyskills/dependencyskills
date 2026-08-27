@@ -81,7 +81,7 @@ as a jar dependency (third-party) — same capabilities, source no longer in the
 The A/B runs real coding agents in their real environments — **Claude Code**
 subagents and the **Antigravity `agy`** CLI (headless `-p`) — not raw model API
 calls. That is a methodology decision in its own right, recorded as
-[ADR-0010](../decisions/ADR-0010-measure-through-developer-tools.md): the agent-plus-tools loop
+[ADR-0010](Decisions-ADR-0010-Measure-Through-Developer-Tools): the agent-plus-tools loop
 is what the codex actually lives in, so measuring it is more honest than a synthetic
 API prompt — and it needs no API accounts.
 
@@ -308,13 +308,13 @@ project's core claim fails. That is the point of running it.
 
 ## Connections
 
-- [ADR-0010](../decisions/ADR-0010-measure-through-developer-tools.md) — the runner decision
+- [ADR-0010](Decisions-ADR-0010-Measure-Through-Developer-Tools) — the runner decision
   (developer tools, not API) this depends on.
 - RAD-0009 v4 — the test0 first pass whose data sets the predictions.
-- [RAD-0011](RAD-0011-existing-documentation-systems-as-skill-content.md) — the
+- [RAD-0011](Research-RAD-0011-Existing-Documentation-Systems-As-Skill-Content) — the
   content-value question this operationalises.
-- [RAD-0015](RAD-0015-how-the-source-is-read.md) — first-party proximity and the read
+- [RAD-0015](Research-RAD-0015-How-The-Source-Is-Read) — first-party proximity and the read
   layer that packages the third-party scenario.
-- [RAD-0007](RAD-0007-choosing-between-overlapping-libraries.md) — the selection failure a
+- [RAD-0007](Research-RAD-0007-Choosing-Between-Overlapping-Libraries) — the selection failure a
   later retrieval A/B would target.
-- [RAD-0001](RAD-0001-cost-of-a-skill-per-dependency.md) — the cost the codex must justify.
+- [RAD-0001](Research-RAD-0001-Cost-Of-A-Skill-Per-Dependency) — the cost the codex must justify.

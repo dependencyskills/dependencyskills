@@ -27,8 +27,9 @@ anyone approving it. Nothing else under `docs/` is - that distinction is
 what the directory is for.
 
 **Sections belong to the taxonomy; sub-groups are free.** Subdivide a
-section you are already filing into whenever it helps - `research/studies/`,
-`research/postmortems/`. A sub-group inherits its parent's meaning, its
+section you are already filing into when the section has grown enough to
+need it - which is uncommon, and never on the first document of a kind. A
+sub-group inherits its parent's meaning, its
 audience and its publish status, so it asserts nothing new. A new
 *top-level* directory does: it claims the project has a kind of knowledge
 it did not have before, and publishes it as a side effect. That is a
@@ -39,8 +40,9 @@ an existing section rather than a new one. Work down this list and stop at
 the first that fits:
 
 1. **The section it belongs to.** Nearly everything lands here.
-2. **A sub-group inside one** - `research/studies/`, `research/postmortems/`.
-   A kind of research is still research.
+2. **A sub-group inside one.** A kind of research is still research; a
+   kind of guide is still a guide. Name it for what it is, give it a
+   README, and expect most projects never to need one.
 3. **`documents/`**, as `DOC-000N-<slug>.md`. Genuinely informational
    material, and the honest answer when nothing above fits. Say in the
    summary what it is and which sections you rejected, so a person can
@@ -95,7 +97,7 @@ falls back to the directory stem, de-hyphenated and title-cased, so
 | `decisions/` | Architecture Decision Records | One hard-to-reverse choice each; append-only history |
 | `requirements/` | Product Requirements | PRD narratives + Stories tables of tracker IDs (never AC) |
 | `specifications/` | Specifications | How a thing IS - architecture, component specs; update in place |
-| `research/` | Research | Investigations - question, trail, findings. Postmortems and worked case studies are kinds of research: nest them (`research/postmortems/`, `research/studies/`) rather than minting a section |
+| `research/` | Research | Investigations - question, trail, findings. Postmortems and worked case studies are kinds of investigation and belong here, as files or as a sub-group if there are enough to warrant one |
 | `reference/` | Reference | External facts: vendors, prospects, regulations, domain material - and the **Domain Glossary** (the project's canonical terms; `AGENTS.md` at the repo root points at it so agents find it without a path) |
 | `guides/` | Developer Guides | How-to - onboarding, environment, CI |
 | `testing/` | Quality Assurance | Durable test plans and protocols (QA *runs* are issues) |

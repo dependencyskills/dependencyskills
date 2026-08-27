@@ -2,7 +2,7 @@
 
 RAD-0043 · 2026-08-21 · v1
 
-Where [the slug case](RAD-0042-thirteen-slug-functions.md) is about *space* — a
+Where [the slug case](Research-Studies-RAD-0042-Thirteen-Slug-Functions) is about *space* — a
 capability invisible from where the work happens — this one is about *time*. The
 correct answer to "how do I get the current instant in Kotlin Multiplatform"
 **changed**, and every model trained before the change keeps giving the old one,

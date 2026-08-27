@@ -157,16 +157,16 @@ RAD-0010's SQLite-FTS recommendation; RAD-0010 is revised to it (v2).
 
 ## Connections
 
-- [RAD-0009](RAD-0009-reusing-indexers-and-what-to-index.md) — the parse that
+- [RAD-0009](Research-RAD-0009-Reusing-Indexers-And-What-To-Index) — the parse that
   produces both faces (tree-sitter + Dokka).
-- [RAD-0010](RAD-0010-how-the-codex-is-stored-and-served.md) — storage and serving;
+- [RAD-0010](Research-RAD-0010-How-The-Codex-Is-Stored-And-Served) — storage and serving;
   its retrieval half is superseded here (hybrid/Lucene, not SQLite-FTS) and
   revised to it in v2.
-- [RAD-0003](RAD-0003-central-capability-server.md) — the query layer that serves
+- [RAD-0003](Research-RAD-0003-Central-Capability-Server) — the query layer that serves
   these entries; `search` is semantic, `get` is exact.
-- [RAD-0011](RAD-0011-existing-documentation-systems-as-skill-content.md) — the
+- [RAD-0011](Research-RAD-0011-Existing-Documentation-Systems-As-Skill-Content) — the
   summarise step that fills the semantic face, and the coverage that limits it.
-- [RAD-0007](RAD-0007-choosing-between-overlapping-libraries.md) — the local
+- [RAD-0007](Research-RAD-0007-Choosing-Between-Overlapping-Libraries) — the local
   preference and `not-for` that no harvest supplies.
-- [RAD-0012](RAD-0012-structure-from-bytecode.md) — the deferred bytecode path, *not*
+- [RAD-0012](Research-RAD-0012-Structure-From-Bytecode) — the deferred bytecode path, *not*
   needed for the syntactic face.

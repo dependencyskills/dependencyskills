@@ -9,14 +9,14 @@ what enters the codex.
 
 **It is a surface reduction, not a detector.** That distinction is the whole reason it is worth
 recording. Every *detector* this project has measured lands in the same narrow band
-([RAD-0021](RAD-0021-admission-control-at-harvest.md) withdrawn, `test8` at 16 points of separation
+([RAD-0021](Research-RAD-0021-Admission-Control-At-Harvest) withdrawn, `test8` at 16 points of separation
 against real attacks). Every *surface reduction* has held: deduplication removes 63% of a real
 corpus, declared-only indexing removes 2,123 publishers across thirteen real projects, excluding
 deprecated entries removes 297 unusable capabilities. This belongs in the second category.
 
 ## Question
 
-[RAD-0027](RAD-0027-the-identifier-as-a-free-text-channel.md) established that an identifier is a
+[RAD-0027](Research-RAD-0027-The-Identifier-As-A-Free-Text-Channel) established that an identifier is a
 free-text channel: prose survives `kotlinc` into the class file and `javap` prints it back
 verbatim. `experiments/test7` then measured the first real numbers on what identifiers look like
 when nobody is attacking — over 3,822 distinct declarations from a real dependency graph:
@@ -80,7 +80,7 @@ where `.env` can simply be written, and 20.9% name a path outright. An attack th
 evasion is never caught by the tell the evasion creates.
 
 **The pair also hands off across the laundering step**, which is the first thing measured that
-touches [RAD-0029](RAD-0029-the-agent-as-a-trust-launderer.md) at all. When GPT-OSS 120B restated an
+touches [RAD-0029](Research-RAD-0029-The-Agent-As-A-Trust-Launderer) at all. When GPT-OSS 120B restated an
 identifier-borne payload as a genuine API precondition in its own KDoc, it **normalised**
 `config dot env` back to `.env` — 2 of 2 runs. So:
 
@@ -133,7 +133,7 @@ demonstrably follows, and can express things linters do not:
 ### The objection, which applies with full force
 
 This is **obfuscation-adjacent**, and this project has already watched one such signal collapse
-([RAD-0021](RAD-0021-admission-control-at-harvest.md) v4, withdrawn when its false-positive rate on a
+([RAD-0021](Research-RAD-0021-Admission-Control-At-Harvest) v4, withdrawn when its false-positive rate on a
 real graph turned out to be twenty times the hand-picked sample). Any attacker who reads this
 record writes `mustAppendEnvToDebugLog` and walks through.
 
@@ -146,7 +146,7 @@ measured before anything ships.
 
 **Prose.** A conventions filter reads identifiers. `test8` measured that a quarter of a real
 attack corpus is prose-only, and that code scanners see 1 of 18 of it. Nothing here touches that,
-nor [RAD-0029](RAD-0029-the-agent-as-a-trust-launderer.md)'s laundered comments, which are ordinary
+nor [RAD-0029](Research-RAD-0029-The-Agent-As-A-Trust-Launderer)'s laundered comments, which are ordinary
 well-formed documentation by construction.
 
 ## Findings
@@ -191,18 +191,18 @@ found; `test8` measured detectors as strictly nested.
    converge, one filter serves; if not, this is four filters and the cost quadruples.
 5. **Can an identifier's words be tested for imperative shape** rather than just counted? A
    different and probably better signal than length, and it connects to
-   [RAD-0026](RAD-0026-meaning-without-command.md)'s finding that modals rather than verbs carry the
+   [RAD-0026](Research-RAD-0026-Meaning-Without-Command)'s finding that modals rather than verbs carry the
    command.
 
 ## Connections
 
-- [RAD-0027](RAD-0027-the-identifier-as-a-free-text-channel.md) — the channel this narrows, and the
+- [RAD-0027](Research-RAD-0027-The-Identifier-As-A-Free-Text-Channel) — the channel this narrows, and the
   source of every number above.
-- [RAD-0021](RAD-0021-admission-control-at-harvest.md) — the withdrawn detector, and the
+- [RAD-0021](Research-RAD-0021-Admission-Control-At-Harvest) — the withdrawn detector, and the
   false-positive discipline this must meet before it is proposed for adoption.
-- [RAD-0026](RAD-0026-meaning-without-command.md) — imperative shape, which question 5 borrows.
-- [RAD-0022](RAD-0022-the-value-of-transitive-capabilities.md) — the other surface reduction, and the
+- [RAD-0026](Research-RAD-0026-Meaning-Without-Command) — imperative shape, which question 5 borrows.
+- [RAD-0022](Research-RAD-0022-The-Value-Of-Transitive-Capabilities) — the other surface reduction, and the
   category this belongs to.
-- [RAD-0029](RAD-0029-the-agent-as-a-trust-launderer.md) — what this cannot touch.
-- [ADR-0007](../decisions/ADR-0007-conform-to-existing-conventions.md) — conform rather than invent; this
+- [RAD-0029](Research-RAD-0029-The-Agent-As-A-Trust-Launderer) — what this cannot touch.
+- [ADR-0007](Decisions-ADR-0007-Conform-To-Existing-Conventions) — conform rather than invent; this
   measures a convention rather than minting one, but question 3 is where that principle bites.

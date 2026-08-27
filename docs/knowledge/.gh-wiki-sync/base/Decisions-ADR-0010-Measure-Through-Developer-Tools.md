@@ -2,7 +2,7 @@
 
 ADR-0010 · 2026-08-19 · Status: accepted · v1
 
-The content-value A/B ([RAD-0016](../research/RAD-0016-the-content-value-ab.md)) has to
+The content-value A/B ([RAD-0016](Research-RAD-0016-The-Content-Value-Ab)) has to
 run coding agents on tasks and observe what they produce. There are two ways to
 drive them, and the choice shapes what the experiment actually measures.
 
@@ -61,8 +61,8 @@ gives it an isolated task workspace, and captures its output for scoring.
 
 ## Connections
 
-- [RAD-0016](../research/RAD-0016-the-content-value-ab.md) — the A/B this runner serves.
-- [RAD-0015](../research/RAD-0015-how-the-source-is-read.md) — the proximity question that
+- [RAD-0016](Research-RAD-0016-The-Content-Value-Ab) — the A/B this runner serves.
+- [RAD-0015](Research-RAD-0015-How-The-Source-Is-Read) — the proximity question that
   only an agentic run can pose.
-- [RAD-0008](../research/RAD-0008-the-field-as-it-stands.md) — the vendor-neutral,
+- [RAD-0008](Research-RAD-0008-The-Field-As-It-Stands) — the vendor-neutral,
   agent-agnostic framing this tests directly.

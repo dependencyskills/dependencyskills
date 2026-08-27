@@ -18,7 +18,7 @@ result and the reasons for it.
 
 **v3 (2026-08-22) — a correction to v2's routing claim.** v2 closed by asserting that every
 attack class the gate missed *"names nothing foreign, which routes them to
-[RAD-0020](RAD-0020-information-flow-control.md)"*. Reading the FIDES paper shows that was too
+[RAD-0020](Research-RAD-0020-Information-Flow-Control)"*. Reading the FIDES paper shows that was too
 strong. Information-flow control enforces **only at tool calls**, so it covers the misses that
 end in an action — config poisoning, destructive writes, and encoded payloads (labels travel
 with data regardless of representation, which is a genuine strength against the arms-race
@@ -38,7 +38,7 @@ gaps. Per this record's own stated outcomes that lands on (b): **keep the signal
 a warning, and do not build the gate.** Findings below.
 
 **Design; the signal is measured, the gate is not.** Split out of
-[RAD-0020](RAD-0020-information-flow-control.md) v2, which had it as a subsection. It belongs on
+[RAD-0020](Research-RAD-0020-Information-Flow-Control) v2, which had it as a subsection. It belongs on
 its own because it can be **valued on its own merits** — adopted or rejected independently of
 anything else: it needs no information-flow control, no cooperation from the agent runtime, and
 no consumer to honour a label. The detection signal it rests on is measured in `experiments/test3`; the gate built on
@@ -46,7 +46,7 @@ that signal is not.
 
 ## Question
 
-[RAD-0006](RAD-0006-development-time-prompt-injection.md) established that library prose redirects
+[RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection) established that library prose redirects
 coding agents and that every control proposed so far runs through something the codex does not
 own — the agent's judgement (positional discipline), or the agent runtime's policy engine
 (RAD-0020's information-flow control). Both are worth having and neither is enforceable by a
@@ -164,7 +164,7 @@ Stated first, because it is strong and the record should not read as advocacy.
 languages the payload arrives intact, so the enforcement point exists and is unoccupied. A
 gate would be a natural occupant of it. Were one adopted, it would also imply a field on the
 entry recording the admission decision and its reason — a change to
-[RAD-0013](RAD-0013-the-codex-entry.md)'s format, to be specified there rather than here.
+[RAD-0013](Research-RAD-0013-The-Codex-Entry)'s format, to be specified there rather than here.
 
 ## Findings
 
@@ -220,7 +220,7 @@ production gate, and the first of which is the crux:
 1. **Coverage against attacks this project did not design.** The bounding question is *what
    fraction of realistic payloads name something foreign?* Testing that against RAD-0006's own
    three payloads is circular — they were written by the same people proposing the defence.
-   [RAD-0008](RAD-0008-the-field-as-it-stands.md) v2 identifies published corpora that solve this:
+   [RAD-0008](Research-RAD-0008-The-Field-As-It-Stands) v2 identifies published corpora that solve this:
    **AgentTrap**'s 91 malicious tasks over 16 security dimensions, and **SkillJect**'s
    automatically generated poisoned skills. Running the grounding signal over an independent
    attack corpus gives an honest coverage number and is the single most informative thing to do
@@ -228,7 +228,7 @@ production gate, and the first of which is the crux:
 2. **False-positive cost** — genuine capabilities the signal would remove from a real harvest,
    per language.
 3. **Whether the product survives it**, which is already runnable:
-   [RAD-0019](RAD-0019-retrieval-at-scale.md)'s Layer 1 rig measures recall over an index. Gate the
+   [RAD-0019](Research-RAD-0019-Retrieval-At-Scale)'s Layer 1 rig measures recall over an index. Gate the
    corpus, re-run recall, compare. **A control that costs more retrieval than it prevents harm
    is not worth shipping**, and this measures the trade rather than arguing it.
 
@@ -249,9 +249,9 @@ available — a cost that is certain against a benefit that is partial.
    argued for down-weighting over discarding, and nothing here changes that.
 3. **Do not build audit machinery.** It was a hard requirement only if a gate shipped.
 4. **The retrieval-cost experiments are moot** and should not be run — they priced a control
-   that is not being adopted. [RAD-0022](RAD-0022-the-value-of-transitive-capabilities.md) still
+   that is not being adopted. [RAD-0022](Research-RAD-0022-The-Value-Of-Transitive-Capabilities) still
    wants the Layer 1 rig for its own question.
-5. **Route *most* of the uncovered classes to [RAD-0020](RAD-0020-information-flow-control.md) —
+5. **Route *most* of the uncovered classes to [RAD-0020](Research-RAD-0020-Information-Flow-Control) —
    but not all of them (corrected v3).** Enforcing at the sink covers the misses that end in a
    tool call: config poisoning, destructive writes, and encoded payloads. It does not cover
    resource abuse, and it may not cover exfiltration through the agent's own response, since
@@ -264,14 +264,14 @@ principled, measured well against our own payloads, and failed quietly against r
 
 ## Connections
 
-- [RAD-0006](RAD-0006-development-time-prompt-injection.md) — the injection measurement, and
+- [RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection) — the injection measurement, and
   mitigation 4 which this makes concrete.
-- [RAD-0020](RAD-0020-information-flow-control.md) — the trust model this was split from;
+- [RAD-0020](Research-RAD-0020-Information-Flow-Control) — the trust model this was split from;
   complementary, and the record that owns the payload class this gate cannot see.
-- [RAD-0019](RAD-0019-retrieval-at-scale.md) — the recall rig that measures what the gate costs.
-- [RAD-0013](RAD-0013-the-codex-entry.md) — where the admission decision would be recorded on the
+- [RAD-0019](Research-RAD-0019-Retrieval-At-Scale) — the recall rig that measures what the gate costs.
+- [RAD-0013](Research-RAD-0013-The-Codex-Entry) — where the admission decision would be recorded on the
   entry.
-- [RAD-0009](RAD-0009-reusing-indexers-and-what-to-index.md) — the parse stage the gate occupies,
+- [RAD-0009](Research-RAD-0009-Reusing-Indexers-And-What-To-Index) — the parse stage the gate occupies,
   and the resolve-in-index machinery that would lower the symbol false-positive rate.
-- [RAD-0011](RAD-0011-existing-documentation-systems-as-skill-content.md) — the harvested content
+- [RAD-0011](Research-RAD-0011-Existing-Documentation-Systems-As-Skill-Content) — the harvested content
   a gate would be admitting or refusing.

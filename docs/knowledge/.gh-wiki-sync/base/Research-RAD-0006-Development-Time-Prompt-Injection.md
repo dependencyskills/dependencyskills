@@ -26,7 +26,7 @@ here, one through the same Claude Code harness. What survives is narrower — th
 channel measured against the mitigation**, the **locally-served open-weight tier**, the
 **dependency-graph corpus** rather than authored skills, and **structure grounding**, which
 only a library corpus makes possible. Filed in full as the third correction in
-[RAD-0008](RAD-0008-the-field-as-it-stands.md) v2. Corroboration is not a loss: independent
+[RAD-0008](Research-RAD-0008-The-Field-As-It-Stands) v2. Corroboration is not a loss: independent
 large-N agreement says the method here is sound. Also records two arguments this record was
 missing: **manual review does not scale to a dependency graph** — the same population that
 defeats hand-curation defeats hand-review — and **a central corpus amplifies the problem**,
@@ -53,7 +53,7 @@ data-framing** on models it otherwise protects (gpt-oss-20b: 0 → 2/2). With to
 became a **real credential-exfiltration action** (Haiku leaked a planted `.env` 2/3 in the
 naive arm, 0/3 with data-framing). The roll-up carries **per-agent compliance as observations,
 not trust verdicts** — small N, version-stamped, with transcripts to check — per
-[ADR-0011](../decisions/ADR-0011-publishing-posture-for-security-findings.md); the claims that generalise
+[ADR-0011](Decisions-ADR-0011-Publishing-Posture-For-Security-Findings); the claims that generalise
 are stated about architecture, which every agent tested supports. See
 `injection/results-summary.md`.
 
@@ -62,8 +62,8 @@ are stated about architecture, which every agent tested supports. See
 claim, subtle exfil-as-diagnostics, blatant override), two framings (instruction channel vs
 untrusted data), across five local models (LM Studio, N=3) and two Claude tiers (developer-tool
 subagents). Surface sizes from
-[RAD-0002](RAD-0002-existing-documentation-systems-as-skill-transport.md) and
-[RAD-0001](RAD-0001-cost-of-a-skill-per-dependency.md), measured 2026-08-13.
+[RAD-0002](Research-RAD-0002-Existing-Documentation-Systems-As-Skill-Transport) and
+[RAD-0001](Research-RAD-0001-Cost-Of-A-Skill-Per-Dependency), measured 2026-08-13.
 
 **v3 (2026-08-21).** The pilot was scaled to a **model × payload × arm matrix**, and the
 answer flipped from "de-risked" to **"real, measured, and it changes the design."** Capable
@@ -84,7 +84,7 @@ which tested exactly those.
 An external reviewer of the proposal asked whether shipping agent-readable
 guidance with libraries opens a large new surface for prompt injection
 arriving through transitive dependencies
-([RAD-0004](RAD-0004-external-review-of-the-proposal.md) §2). He is not named and not
+([RAD-0004](Research-RAD-0004-External-Review-Of-The-Proposal) §2). He is not named and not
 quoted, at his request; the objection is paraphrased throughout.
 
 The answer given at the time — that the risk exists anyway and has not changed
@@ -192,7 +192,7 @@ that can be injected and one where injection is a category error. It should be
 a **normative requirement of the spec**, not an implementation detail.
 
 **2. Weight declared dependencies over transitive ones.** From
-[RAD-0004](RAD-0004-external-review-of-the-proposal.md) §3: RAD-0002 measured declared
+[RAD-0004](Research-RAD-0004-External-Review-Of-The-Proposal) §3: RAD-0002 measured declared
 as 3–18× smaller than importable — 13 against 238 for `codeviewer`, 102
 against 311 for Now in Android. As a security control this cuts the
 trusted-prose surface by roughly an order of magnitude, and it is the same
@@ -223,7 +223,7 @@ record's design.
 
 **6. Pinning and caching.** An entry that changed since it was pinned is
 visible; this is what makes the git-hosted route
-([RAD-0005](RAD-0005-a-git-hosted-codex.md)) auditable rather than merely fetchable.
+([RAD-0005](Research-RAD-0005-A-Git-Hosted-Codex)) auditable rather than merely fetchable.
 
 ### The result generalises to every standard in the category (added v4)
 
@@ -256,7 +256,7 @@ format (ADR-0007). The finding is about the category's default architecture, not
   on injection through third-party agent skills — including automated skill-based injection
   and runtime trust-failure measurement. It has not been read yet and is not characterised
   here; it is recorded so that nothing in this record reads as a claim of novelty.
-  [RAD-0008](RAD-0008-the-field-as-it-stands.md) already had to correct one such overclaim, and
+  [RAD-0008](Research-RAD-0008-The-Field-As-It-Stands) already had to correct one such overclaim, and
   this is the same failure mode in a new area. **Reading that literature is outstanding work
   and should precede any public claim about what is unmeasured.**
 
@@ -267,10 +267,10 @@ read it before loading it, do not run a skill you have not looked at. For a hand
 deliberately-installed skills that is sound advice and this record does not argue against it.
 
 **It does not survive contact with a dependency graph.** The population here is 112–995
-libraries per project ([RAD-0001](RAD-0001-cost-of-a-skill-per-dependency.md)), 70–90% of it
+libraries per project ([RAD-0001](Research-RAD-0001-Cost-Of-A-Skill-Per-Dependency)), 70–90% of it
 transitive, re-resolved on every version bump. Nobody reads that, and nobody re-reads it when
 a transitive moves underneath them. This is precisely the argument
-[RAD-0008](RAD-0008-the-field-as-it-stands.md) already makes against the field's answer to *scale* —
+[RAD-0008](Research-RAD-0008-The-Field-As-It-Stands) already makes against the field's answer to *scale* —
 *be selective, curate by hand* — arriving now for *security*: *the same population that defeats
 manual curation defeats manual review.* A control that assumes a human reads the corpus is not
 available at this scale, whatever its merits elsewhere.
@@ -344,7 +344,7 @@ independently, which is why "just don't ingest prose" is not a free mitigation.
    It does **not** catch P3, the pure instruction hijack, and cannot: that payload references
    nothing outside the library because it asks for nothing outside it. That is the boundary of
    the technique rather than a tuning problem, and it is precisely the class that needs the
-   stronger control in [RAD-0020](RAD-0020-information-flow-control.md) — an IFC policy refuses the
+   stronger control in [RAD-0020](Research-RAD-0020-Information-Flow-Control) — an IFC policy refuses the
    sink regardless of what persuaded the model. So this is **detection, not prevention**:
    mitigation 4 made concrete and cheap, complementing the architectural control rather than
    replacing it.
@@ -357,7 +357,7 @@ and it is currently a passthrough — whatever the doc comment contains reaches 
 - **`-sources.jar` harvest** — content is signed by the publisher and
   immutable once released. Compromise requires a malicious or compromised
   publisher, and it is attributable and revocable.
-- **Git-hosted codex** ([RAD-0005](RAD-0005-a-git-hosted-codex.md)) — the weakest
+- **Git-hosted codex** ([RAD-0005](Research-RAD-0005-A-Git-Hosted-Codex)) — the weakest
   posture of the three: a mutable file on a third-party host, verified only if
   the consumer opts in, and reachable by anyone who can push to the
   repository, which is a wider set than those who can publish a release. This
@@ -548,14 +548,14 @@ down-weighted.
 
 ## Connections
 
-- [RAD-0004](RAD-0004-external-review-of-the-proposal.md) §2 — where the objection was
+- [RAD-0004](Research-RAD-0004-External-Review-Of-The-Proposal) §2 — where the objection was
   raised, and §3 for the declared-over-transitive filter.
-- [RAD-0002](RAD-0002-existing-documentation-systems-as-skill-transport.md) — surface
+- [RAD-0002](Research-RAD-0002-Existing-Documentation-Systems-As-Skill-Transport) — surface
   sizes, signature coverage, and the designed-versus-discovered distinction
   that changes the detection story.
-- [RAD-0005](RAD-0005-a-git-hosted-codex.md) — the route with the weakest security
+- [RAD-0005](Research-RAD-0005-A-Git-Hosted-Codex) — the route with the weakest security
   posture; this record is why its manifest signature should be required.
-- [RAD-0003](RAD-0003-central-capability-server.md) — a central intermediary as both
+- [RAD-0003](Research-RAD-0003-Central-Capability-Server) — a central intermediary as both
   mitigation and single point of compromise.
 - ADR-0004 — where
   declared-over-transitive should be recorded.

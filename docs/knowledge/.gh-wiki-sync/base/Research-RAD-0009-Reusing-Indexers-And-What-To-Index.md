@@ -10,9 +10,9 @@ measurement.
 **v2 note.** v1 framed this as "reuse the IDE's *structural* indexers." That was
 aimed at the wrong content: the codex is built from **documentation**, not the
 API surface. The structural/bytecode path is split to
-[RAD-0012](RAD-0012-structure-from-bytecode.md) as a deferred lever. This record is
+[RAD-0012](Research-RAD-0012-Structure-From-Bytecode) as a deferred lever. This record is
 now the **parse stage** — turning source into the two faces of a codex entry
-([RAD-0013](RAD-0013-the-codex-entry.md)) — plus *what to index*. This is one layer:
+([RAD-0013](Research-RAD-0013-The-Codex-Entry)) — plus *what to index*. This is one layer:
 parsing. Storage and retrieval are a different layer (Lucene, RAD-0010); Lucene
 does not parse.
 
@@ -308,14 +308,14 @@ reach into; parsing is not solved by the index.
 
 ## Connections
 
-- [RAD-0013](RAD-0013-the-codex-entry.md) — the two-faced entry this parse produces.
-- [RAD-0010](RAD-0010-how-the-codex-is-stored-and-served.md) — the storage/retrieval
+- [RAD-0013](Research-RAD-0013-The-Codex-Entry) — the two-faced entry this parse produces.
+- [RAD-0010](Research-RAD-0010-How-The-Codex-Is-Stored-And-Served) — the storage/retrieval
   layer (Lucene) this feeds; a distinct layer.
-- [RAD-0012](RAD-0012-structure-from-bytecode.md) — the bytecode/structure path split
+- [RAD-0012](Research-RAD-0012-Structure-From-Bytecode) — the bytecode/structure path split
   off, deferred.
-- [RAD-0011](RAD-0011-existing-documentation-systems-as-skill-content.md) — the
+- [RAD-0011](Research-RAD-0011-Existing-Documentation-Systems-As-Skill-Content) — the
   content the summarise step works from, and its coverage limit.
-- [RAD-0002](RAD-0002-existing-documentation-systems-as-skill-transport.md) — get;
+- [RAD-0002](Research-RAD-0002-Existing-Documentation-Systems-As-Skill-Transport) — get;
   `-sources.jar` is the carrier this parses.
-- [RAD-0014](RAD-0014-build-vs-reuse.md) — build-vs-reuse across the pipeline; parse
+- [RAD-0014](Research-RAD-0014-Build-Vs-Reuse) — build-vs-reuse across the pipeline; parse
   is a reuse layer.

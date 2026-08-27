@@ -216,7 +216,7 @@ to 0007 or a new record cross-linked to this one.
   full tables, `scripts/` the five collectors, `data/` the raw graphs.
 - ADR-0004 — the two-layer design this
   tests.
-- [ADR-0007](../decisions/ADR-0007-conform-to-existing-conventions.md) — conformance,
+- [ADR-0007](Decisions-ADR-0007-Conform-To-Existing-Conventions) — conformance,
   and where this recommends drawing its boundary.
-- [landscape.md](../reference/landscape.md) — the conventions whose cost was
+- [landscape.md](Reference-Landscape) — the conventions whose cost was
   modelled.

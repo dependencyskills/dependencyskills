@@ -24,17 +24,17 @@ rest. The codex makes the model *better informed*. It does not make it *more con
 
 Two of this project's own measurements sit awkwardly beside that assumption.
 
-- **[RAD-0018](RAD-0018-the-selection-ab.md): selection is 0/18 unaided.** No model, however
+- **[RAD-0018](Research-RAD-0018-The-Selection-Ab): selection is 0/18 unaided.** No model, however
   capable, picks the library a project has standardised on. Only an *authored preference* —
   something a human wrote down — resolved it.
-- **[RAD-0006](RAD-0006-development-time-prompt-injection.md): every control routed through the
+- **[RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection): every control routed through the
   model's judgement failed.** Positional discipline, data-framing, meta-argument resistance —
   each depends on the agent declining to act, and each was defeated on some agent.
 
 Those are the same finding in two domains. **Where a decision is left to model judgement, it
 is unreliable — whether the decision is "which library" or "should I follow this text".** The
-project already responded to the second with architecture ([RAD-0020](RAD-0020-information-flow-control.md),
-[RAD-0021](RAD-0021-admission-control-at-harvest.md)). It has not responded to the first the same
+project already responded to the second with architecture ([RAD-0020](Research-RAD-0020-Information-Flow-Control),
+[RAD-0021](Research-RAD-0021-Admission-Control-At-Harvest)). It has not responded to the first the same
 way.
 
 So: **should the engineering judgement live in a deterministic harness rather than in the
@@ -192,7 +192,7 @@ other side of it instead of an imagined one.
    surrounding literature.
 2. **What does a harness refuse that a prompt cannot?** Still worth asking, and now answerable
    against a real system rather than a sketch: would LBAC's type discipline have prevented the
-   0/18 selection failure in [RAD-0018](RAD-0018-the-selection-ab.md)? That is a cheap thought
+   0/18 selection failure in [RAD-0018](Research-RAD-0018-The-Selection-Ab)? That is a cheap thought
    experiment and it tests whether the fork matters for *this* project's problem, which is
    selection rather than security.
 3. **Does the composition hold?** The live question. If LBAC-style systems need facts about the
@@ -202,15 +202,15 @@ other side of it instead of an imagined one.
 
 ## Connections
 
-- [RAD-0018](RAD-0018-the-selection-ab.md) — selection unaided at 0/18; the measurement that makes
+- [RAD-0018](Research-RAD-0018-The-Selection-Ab) — selection unaided at 0/18; the measurement that makes
   this question live.
-- [RAD-0006](RAD-0006-development-time-prompt-injection.md) — every judgement-routed control
+- [RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection) — every judgement-routed control
   failed; the same result in the security domain.
-- [RAD-0020](RAD-0020-information-flow-control.md) — enforcement rather than persuasion, and the
+- [RAD-0020](Research-RAD-0020-Information-Flow-Control) — enforcement rather than persuasion, and the
   source of several candidate primitives.
-- [RAD-0021](RAD-0021-admission-control-at-harvest.md) — a control the pipeline owns rather than
+- [RAD-0021](Research-RAD-0021-Admission-Control-At-Harvest) — a control the pipeline owns rather than
   asks for.
-- [RAD-0007](RAD-0007-choosing-between-overlapping-libraries.md) — the authored-preference model,
+- [RAD-0007](Research-RAD-0007-Choosing-Between-Overlapping-Libraries) — the authored-preference model,
   which is the smallest existing version of "engineering judgement written down".
-- [RAD-0008](RAD-0008-the-field-as-it-stands.md) — the field record, and the standing warning
+- [RAD-0008](Research-RAD-0008-The-Field-As-It-Stands) — the field record, and the standing warning
   against claiming novelty before surveying.

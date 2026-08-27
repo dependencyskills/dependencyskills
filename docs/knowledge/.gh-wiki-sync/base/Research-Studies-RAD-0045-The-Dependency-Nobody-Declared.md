@@ -136,8 +136,8 @@ but not yours.
 
 ## Connections
 
-- [Cost of a Skill Per Dependency](../RAD-0001-cost-of-a-skill-per-dependency.md)
+- [Cost of a Skill Per Dependency](Research-RAD-0001-Cost-Of-A-Skill-Per-Dependency)
   — the importable-vs-declared measurement this case makes concrete.
-- [External Review of the Publishing Proposal](../RAD-0004-external-review-of-the-proposal.md)
+- [External Review of the Publishing Proposal](Research-RAD-0004-External-Review-Of-The-Proposal)
   — where weighting declared over transitive was adopted (a ~10× filter on the
   trusted surface).

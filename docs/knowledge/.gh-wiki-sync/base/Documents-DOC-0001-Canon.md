@@ -3,7 +3,7 @@
 DOC-0001 · 2026-08-27
 Keywords: what did we get wrong; which findings were later overturned; corrections to earlier results; why the 77% retrieval number was withdrawn; how the design got here; which generation of work a finding belongs to; what the checkpoint version means; project history.
 
-Each research record carries its own `vN`, bumped when it is meaningfully revised or restarted; the version of any one record lives on that record, and the [index](../research/README.md) lists them all. This file is the **history**: how the research programme got here, which generation of work each finding belongs to, and — most importantly — where a later result overturned an earlier one.
+Each research record carries its own `vN`, bumped when it is meaningfully revised or restarted; the version of any one record lives on that record, and the [index](Research) lists them all. This file is the **history**: how the research programme got here, which generation of work each finding belongs to, and — most importantly — where a later result overturned an earlier one.
 
 The **checkpoint** names the current generation. It is a fixed value for the whole of that generation — it does not move as the work proceeds from one stage to the next. It moves only when a line of work in it is found not to work and is **started over**, at which point the whole set moves together to the next value.
 
@@ -24,7 +24,7 @@ RAD-0019 v3 built on it the argument that the **summarise** layer is load-bearin
 raw harvested documentation retrieving at 29% against 77% for caller's-words entries.
 
 Both numbers stand. The inference does not. Every entry behind the 77% was **written by hand**.
-[RAD-0040](../research/RAD-0040-does-summarising-improve-retrieval.md) ran the built summariser over the
+[RAD-0040](Research-RAD-0040-Does-Summarising-Improve-Retrieval) ran the built summariser over the
 same 220 entries, the same 17 queries and the same encoder: raw and machine-summarised **both**
 retrieve the correct answer first **5 of 17**, and summarised trails in the tail (10 of 17 within
 ten against 13). The lift belonged to *who wrote the summary*, not to *summarising*.

@@ -34,7 +34,7 @@ attacks worth worrying about. Case 3 (trigger poisoning) remains the priority an
 directly measurable on `experiments/test5`'s real index.
 
 **Split out of
-[RAD-0024](RAD-0024-does-the-pipeline-filter-injection.md), which raised summarisation as a
+[RAD-0024](Research-RAD-0024-Does-The-Pipeline-Filter-Injection), which raised summarisation as a
 possible *defence*. This record takes the opposite reading of the same fact and is the more
 serious of the two.
 
@@ -58,7 +58,7 @@ So: **what can an attacker do to the summariser, and what does a poisoned entry 
 
 **1. Pass-through.** The summariser copies the injected instruction into the entry. Crude, and
 the easiest to detect — a canary check finds it, which is exactly what
-[RAD-0006](RAD-0006-development-time-prompt-injection.md)'s harness already does.
+[RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection)'s harness already does.
 
 **2. A mis-described capability.** The entry describes what the library does *incorrectly*, so
 agents use it wrongly. No instruction is carried; the damage is that the codex is now
@@ -68,12 +68,12 @@ project's current thinking would catch it.
 **3. Trigger poisoning — the entry is written to be retrieved for queries it should not
 answer.** The attacker does not need the agent to obey anything at all. They need the *entry*
 to surface for needs it has no business answering, so their library is what an agent reaches
-for. Given [RAD-0018](RAD-0018-the-selection-ab.md) measured selection at 0/18 unaided — agents
+for. Given [RAD-0018](Research-RAD-0018-The-Selection-Ab) measured selection at 0/18 unaided — agents
 take what they are given — an entry that wins retrieval largely wins the decision.
 
 This is an attack on **the index rather than the agent**, and it is the one this project is
 least equipped to see. A poisoned entry of this kind contains no instruction, names nothing
-foreign (so [RAD-0021](RAD-0021-admission-control-at-harvest.md)'s withdrawn grounding signal would
+foreign (so [RAD-0021](Research-RAD-0021-Admission-Control-At-Harvest)'s withdrawn grounding signal would
 not have seen it either), and reads exactly like a well-written capability description. It is
 *supposed* to be in caller's words. That is the whole problem.
 
@@ -92,14 +92,14 @@ consumer, by every agent, until the corpus is rebuilt. The variance that protect
 disappears.
 
 **It survives the mitigations this project has settled on.** Placing library content outside
-the instruction channel ([RAD-0006](RAD-0006-development-time-prompt-injection.md)) protects
+the instruction channel ([RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection)) protects
 against text the agent might *obey*. A mis-described or trigger-poisoned entry is not obeyed —
 it is *believed*, as ordinary reference data, which is precisely how the design says it should
-be treated. Information-flow control ([RAD-0020](RAD-0020-information-flow-control.md)) does not
+be treated. Information-flow control ([RAD-0020](Research-RAD-0020-Information-Flow-Control)) does not
 help either: nothing is exfiltrated and no consequential tool call is influenced by an
 untrusted label — the corruption already happened, upstream, at authoring time.
 
-**A central corpus multiplies it.** [RAD-0006](RAD-0006-development-time-prompt-injection.md) v6
+**A central corpus multiplies it.** [RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection) v6
 records that a shared corpus is the one place a payload need be planted once to reach everyone.
 Summarisation is where that planting would occur.
 
@@ -133,7 +133,7 @@ summariser that has only the document.
 **This cannot be defended at the summarise step, which changes where the control has to sit.**
 The summarise step behaved correctly in every condition. What fails is the assumption that a
 document describes the code it ships with. That is an *admission* question — rejected in
-[RAD-0021](RAD-0021-admission-control-at-harvest.md) — or an *attribution* one, and this record
+[RAD-0021](Research-RAD-0021-Admission-Control-At-Harvest) — or an *attribution* one, and this record
 already predicted the latter: entry provenance becomes load-bearing for telling a consumer which
 library an entry describes.
 
@@ -170,13 +170,13 @@ a throughput cost worth paying.
 
 ## Connections
 
-- [RAD-0024](RAD-0024-does-the-pipeline-filter-injection.md) — the same step read as a possible
+- [RAD-0024](Research-RAD-0024-Does-The-Pipeline-Filter-Injection) — the same step read as a possible
   defence; these two must be answered together or the answer is half a picture.
-- [RAD-0014](RAD-0014-build-vs-reuse.md) — where summarise is named as a step to build; test5
+- [RAD-0014](Research-RAD-0014-Build-Vs-Reuse) — where summarise is named as a step to build; test5
   measured it as load-bearing.
-- [RAD-0018](RAD-0018-the-selection-ab.md) — 0/18 unaided, which is why winning retrieval matters.
-- [RAD-0006](RAD-0006-development-time-prompt-injection.md) — use-time injection, and the
+- [RAD-0018](Research-RAD-0018-The-Selection-Ab) — 0/18 unaided, which is why winning retrieval matters.
+- [RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection) — use-time injection, and the
   mitigations this threat routes around.
-- [RAD-0020](RAD-0020-information-flow-control.md) — enforcement at the sink, which does not
+- [RAD-0020](Research-RAD-0020-Information-Flow-Control) — enforcement at the sink, which does not
   address corruption at authoring time.
-- [RAD-0013](RAD-0013-the-codex-entry.md) — the entry, which is what gets poisoned.
+- [RAD-0013](Research-RAD-0013-The-Codex-Entry) — the entry, which is what gets poisoned.

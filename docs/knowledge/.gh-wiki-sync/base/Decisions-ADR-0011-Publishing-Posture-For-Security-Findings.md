@@ -2,7 +2,7 @@
 
 ADR-0011 · 2026-08-21 · Status: accepted · v2
 
-The injection measurement ([RAD-0006](../research/RAD-0006-development-time-prompt-injection.md))
+The injection measurement ([RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection))
 produced working attack payloads, a demonstrated credential-exfiltration technique against a
 tool-enabled agent, and per-model compliance rates for named commercial models. This
 repository is public and its history is permanent, so how that gets published is a decision
@@ -60,7 +60,7 @@ by its own bug. That risk is asymmetric: the cost of over-claiming lands on a th
 
 **Findings about agents rot faster than findings about artifacts.** The repository already
 requires measured findings to carry the versions they were measured against
-([ADR-0007](ADR-0007-conform-to-existing-conventions.md), `docs/README.md`). A "do not trust X"
+([ADR-0007](Decisions-ADR-0007-Conform-To-Existing-Conventions), `docs/README.md`). A "do not trust X"
 line that outlives the release it was measured on becomes misinformation rather than evidence.
 
 ## Decision
@@ -124,9 +124,9 @@ documentation-harvesting into agents: they can act on this, and model vendors la
 
 ## Connections
 
-- [RAD-0006](../research/RAD-0006-development-time-prompt-injection.md) — the research this
+- [RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection) — the research this
   governs, and the mitigations it recommends.
-- [ADR-0010](ADR-0010-measure-through-developer-tools.md) — measuring through real agent tools is
+- [ADR-0010](Decisions-ADR-0010-Measure-Through-Developer-Tools) — measuring through real agent tools is
   what makes per-agent results meaningful, and what makes them version-bound.
-- [RAD-0008](../research/RAD-0008-the-field-as-it-stands.md) — the practice of naming projects,
+- [RAD-0008](Research-RAD-0008-The-Field-As-It-Stands) — the practice of naming projects,
   not individuals, when a critique lands; the same restraint applies to naming models.

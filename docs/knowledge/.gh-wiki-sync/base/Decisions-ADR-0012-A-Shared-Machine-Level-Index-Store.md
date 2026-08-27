@@ -2,7 +2,7 @@
 
 ADR-0012 · 2026-08-26 · Status: accepted · v3
 
-**v3 (2026-08-27) — entries are content-addressed, and harvesting is demand-driven.** Two refinements that [RAD-0041](../research/RAD-0041-deduplication-under-an-incremental-store.md) forced, after this record made the store incremental and scoped without re-checking the deduplication rule inherited from the batch experiments.
+**v3 (2026-08-27) — entries are content-addressed, and harvesting is demand-driven.** Two refinements that [RAD-0041](Research-RAD-0041-Deduplication-Under-An-Incremental-Store) forced, after this record made the store incremental and scoped without re-checking the deduplication rule inherited from the batch experiments.
 
 **An entry is keyed by its content, and coordinates point at it.** A hash of `(symbol, signature, doc)` identifies the entry; a second table maps coordinate to entry. A query filters coordinates to the asking project's scope, joins, and takes distinct entries.
 
@@ -35,7 +35,7 @@ the dependencies: the Gradle plugin writes `~/.gradle/dscodex/`, a Maven one wou
 Gradle codex carries the npm and Yarn entries a Kotlin Multiplatform build pulls in, because Gradle
 is what pulled them.
 
-This is the same seam [ADR-0005](ADR-0005-repository-structure.md) already draws: one directory per
+This is the same seam [ADR-0005](Decisions-ADR-0005-Repository-Structure) already draws: one directory per
 **build system**, not per package ecosystem. A single machine-wide store would cut across it, and
 would need cross-tool coordination over a file none of them owns.
 
@@ -55,9 +55,9 @@ is where it runs, what it costs, and who pays that cost.
 
 **The expensive stage is per entry, not per project.** The summariser is a local model
 call for every documented declaration
-([`experiments/summariser`](../../../experiments/summariser/README.md)). One small real
+([`experiments/summariser`](https://github.com/dependencyskills/dependencyskills/blob/HEAD/experiments/summariser/README.md)). One small real
 project — 99 dependencies — yields **5,440 deduplicated entries**
-([RAD-0019](../research/RAD-0019-retrieval-at-scale.md)). Rebuilding that per project puts
+([RAD-0019](Research-RAD-0019-Retrieval-At-Scale)). Rebuilding that per project puts
 hours of model time in front of every checkout, and a developer with several projects
 pays repeatedly for the same libraries.
 
@@ -69,7 +69,7 @@ experiments.
 
 Three further constraints come from measurement rather than preference:
 
-- **Two faces, two vectors.** [RAD-0040](../research/RAD-0040-does-summarising-improve-retrieval.md)
+- **Two faces, two vectors.** [RAD-0040](Research-RAD-0040-Does-Summarising-Improve-Retrieval)
   measured an index carrying both the raw documentation and the rewritten sentence
   reaching **15 of 17** within ten against 13 for documentation alone and 10 for the
   rewrite alone — and fusing the two texts into one key scoring **worse than either**.
@@ -95,12 +95,12 @@ per-project view over it.**
 - **What is per project.** Dependency resolution, and a **query scoped to the coordinate
   set that project resolved**. Nothing else.
 - **Runtime.** Kotlin on the JVM, with Lucene as the derived index
-  ([RAD-0010](../research/RAD-0010-how-the-codex-is-stored-and-served.md)). Chosen over a
+  ([RAD-0010](Research-RAD-0010-How-The-Codex-Is-Stored-And-Served)). Chosen over a
   Python reference implementation despite every measured component existing in Python,
   because the port would have to happen anyway and the JVM is where the harvester already
   has to run.
 - **Scope.** Declared dependencies by default; the transitive tail is opt-in.
-  [RAD-0022](../research/RAD-0022-the-value-of-transitive-capabilities.md) measured that 11 of
+  [RAD-0022](Research-RAD-0022-The-Value-Of-Transitive-Capabilities) measured that 11 of
   17 real capabilities lived only in the tail, so the default is not free — it is the
   safe side of a trade the operator can take deliberately.
 
@@ -109,7 +109,7 @@ per-project view over it.**
 A shared store holds entries from every library any project on the machine has ever
 resolved. If a query ranged over the whole store, a poisoned entry pulled in by one
 project would be reachable from another that never depended on it — a laundering route of
-exactly the shape [RAD-0029](../research/RAD-0029-the-agent-as-a-trust-launderer.md)
+exactly the shape [RAD-0029](Research-RAD-0029-The-Agent-As-A-Trust-Launderer)
 describes, created by our own caching decision.
 
 **Queries are therefore filtered to the resolved coordinate set of the project asking.**
@@ -136,13 +136,13 @@ amortised, not eliminated.
 components — extraction, the summariser's verifier, the classifier — are ported rather than
 reused. The classifier ports cheaply: term frequencies and a dot product are what Lucene
 already computes. The embedder does not, and
-[RAD-0035](../research/RAD-0035-a-small-local-model-for-the-prose-gap.md) records the JVM
+[RAD-0035](Research-RAD-0035-A-Small-Local-Model-For-The-Prose-Gap) records the JVM
 embedding runtime as the open piece.
 
 **A precomputed store could be distributed, and deliberately is not.** Because the key is
 immutable, someone could publish a prebuilt index and remove the cost entirely — while
 importing their trust decisions wholesale.
-[RAD-0036](../research/RAD-0036-can-the-corpus-be-poisoned.md) is about exactly that hazard.
+[RAD-0036](Research-RAD-0036-Can-The-Corpus-Be-Poisoned) is about exactly that hazard.
 Not now, and not without its own decision.
 
 ## Alternatives rejected

@@ -3,8 +3,8 @@
 RAD-0044 · 2026-08-21 · v1
 
 The first two case studies are about a *right* answer that is hard to find — in
-[space](RAD-0042-thirteen-slug-functions.md) and in
-[time](RAD-0043-the-datetime-instant-move.md). This one is about a field with
+[space](Research-Studies-RAD-0042-Thirteen-Slug-Functions) and in
+[time](Research-Studies-RAD-0043-The-Datetime-Instant-Move). This one is about a field with
 *several* answers, where the agent reaches for the one it has seen most, and
 where "which one" splits cleanly into a part a fresh codex closes and a part
 nothing does. It is the **selection** axis: the gap that closes with neither

@@ -72,7 +72,7 @@ agent:
 | deduplication | duplicate hiding places | marginally |
 | enforcement at the sink | consequential tool calls | **no — writing a wrong number is not a sensitive sink** |
 
-The last row is the sharp one. [RAD-0020](RAD-0020-information-flow-control.md) records that
+The last row is the sharp one. [RAD-0020](Research-RAD-0020-Information-Flow-Control) records that
 information-flow control enforces **only at tool calls**, and the FIDES authors say plainly that
 attacks changing what the agent *says* rather than what it *does* pass untouched. A 10% revenue
 error is exactly that shape. The strongest control in the set is aimed at the 19% case and blind
@@ -119,11 +119,11 @@ project's own harness uses, is 4%.
 
 ## Connections
 
-- [RAD-0006](RAD-0006-development-time-prompt-injection.md) — the threat model this widens, and whose
+- [RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection) — the threat model this widens, and whose
   harness is built on the 4% vector.
-- [RAD-0020](RAD-0020-information-flow-control.md) — enforcement at tool calls, structurally blind to
+- [RAD-0020](Research-RAD-0020-Information-Flow-Control) — enforcement at tool calls, structurally blind to
   output tampering; the FIDES text-to-text limitation, now with a number attached.
-- [RAD-0029](RAD-0029-the-agent-as-a-trust-launderer.md) — another attack on what the agent produces
+- [RAD-0029](Research-RAD-0029-The-Agent-As-A-Trust-Launderer) — another attack on what the agent produces
   rather than what it reads.
-- [RAD-0022](RAD-0022-the-value-of-transitive-capabilities.md) — surface reduction, which addresses
+- [RAD-0022](Research-RAD-0022-The-Value-Of-Transitive-Capabilities) — surface reduction, which addresses
   delivery and not this.

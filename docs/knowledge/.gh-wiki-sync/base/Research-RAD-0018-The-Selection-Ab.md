@@ -115,13 +115,13 @@ retrieval** over the index (RAD-0010).
 
 ## Connections
 
-- [RAD-0007](RAD-0007-choosing-between-overlapping-libraries.md) — the design this measures:
+- [RAD-0007](Research-RAD-0007-Choosing-Between-Overlapping-Libraries) — the design this measures:
   overlap-is-domain, the preference-authorship trust model, consumer preference weighted
   highest.
-- [RAD-0016](RAD-0016-the-content-value-ab.md) — content-value; drift closes with freshness.
-- [RAD-0017](RAD-0017-the-retrieval-disambiguation-ab.md) — disambiguation; closes with
+- [RAD-0016](Research-RAD-0016-The-Content-Value-Ab) — content-value; drift closes with freshness.
+- [RAD-0017](Research-RAD-0017-The-Retrieval-Disambiguation-Ab) — disambiguation; closes with
   capability. Selection closes with neither — the contrast is the point.
-- [RAD-0015](RAD-0015-how-the-source-is-read.md) — the read layer that would surface the
+- [RAD-0015](Research-RAD-0015-How-The-Source-Is-Read) — the read layer that would surface the
   declared dependency tree the design leans on.
-- [ADR-0010](../decisions/ADR-0010-measure-through-developer-tools.md) — measure through developer
+- [ADR-0010](Decisions-ADR-0010-Measure-Through-Developer-Tools) — measure through developer
   tools; the frontier arms ran as a subagent and via `agy`.

@@ -8,7 +8,7 @@ tools' capabilities are from general knowledge; confirm on the artifacts before
 this is load-bearing. No new measurement.
 
 **Split note.** Split out of
-[RAD-0009](RAD-0009-reusing-indexers-and-what-to-index.md) on 2026-08-17. RAD-0009 is
+[RAD-0009](Research-RAD-0009-Reusing-Indexers-And-What-To-Index) on 2026-08-17. RAD-0009 is
 now the *documentation* parse path (KDoc from `-sources.jar`). This record holds
 **bytecode / structure** parsing as a *deferred option* — not the parse path for
 the codex today, but the obvious lever if the doc path proves insufficient, and
@@ -93,9 +93,9 @@ it later is an integration job, not new research.
 
 ## Connections
 
-- [RAD-0009](RAD-0009-reusing-indexers-and-what-to-index.md) — the documentation
+- [RAD-0009](Research-RAD-0009-Reusing-Indexers-And-What-To-Index) — the documentation
   parse path this was split from and complements.
-- [RAD-0011](RAD-0011-existing-documentation-systems-as-skill-content.md) — the 33%
+- [RAD-0011](Research-RAD-0011-Existing-Documentation-Systems-As-Skill-Content) — the 33%
   coverage gap the undocumented-tail hypothesis targets.
-- [ADR-0009](../decisions/ADR-0009-transport-is-sources-jar.md) — get; the `classes.jar`
+- [ADR-0009](Decisions-ADR-0009-Transport-Is-Sources-Jar) — get; the `classes.jar`
   travels alongside the `-sources.jar` this defers in favour of.

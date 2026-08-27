@@ -27,8 +27,8 @@ beat random nonwords (3/17 vs 2/17) and lost to simply deleting (5/17).
 
 **Design; the rest of this record is unmeasured, and it rests on two measurements this project
 already has.** The third of the questions raised alongside
-[RAD-0024](RAD-0024-does-the-pipeline-filter-injection.md) and
-[RAD-0025](RAD-0025-the-summariser-as-attack-surface.md).
+[RAD-0024](Research-RAD-0024-Does-The-Pipeline-Filter-Injection) and
+[RAD-0025](Research-RAD-0025-The-Summariser-As-Attack-Surface).
 
 ## Question
 
@@ -69,10 +69,10 @@ been measured.
 
 Two existing measurements point at a design neither anticipated.
 
-- **[RAD-0016](RAD-0016-the-content-value-ab.md): a bare signature is enough to be used.** With
+- **[RAD-0016](Research-RAD-0016-The-Content-Value-Ab): a bare signature is enough to be used.** With
   only the symbol and its signature — no prose — agents used the capability 7/8. The
   *syntactic* face drives use.
-- **[RAD-0019](RAD-0019-retrieval-at-scale.md) and `test5`: prose in a caller's words is what makes
+- **[RAD-0019](Research-RAD-0019-Retrieval-At-Scale) and `test5`: prose in a caller's words is what makes
   retrieval work.** 77% against 29% at matched size — and 0/17 for raw text on the real
   5,440-entry corpus. The *semantic* face drives discovery.
 
@@ -87,14 +87,14 @@ convenient.
 
 ### What this does not address, and it is the more serious threat
 
-**Trigger poisoning is untouched by any of this.** [RAD-0025](RAD-0025-the-summariser-as-attack-surface.md)
+**Trigger poisoning is untouched by any of this.** [RAD-0025](Research-RAD-0025-The-Summariser-As-Attack-Surface)
 argues — and `test6` supports — that the dangerous attack is not a command in an entry but an
 entry *written to be retrieved for needs it should not answer*. A term bag poisons perfectly
 well: the attacker does not need grammar, only the right terms present. A controlled vocabulary
 makes it *easier*, by telling the attacker exactly which tokens matter.
 
 So constraining the representation defends against command injection, which
-[RAD-0006](RAD-0006-development-time-prompt-injection.md) measured and which the architectural
+[RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection) measured and which the architectural
 control already addresses, and **does nothing against the attack this project currently thinks
 is worse**. Any finding here must say so plainly rather than presenting a narrow defence as a
 general one.
@@ -103,7 +103,7 @@ general one.
 
 Order destruction is **obfuscation in reverse**, and this project has watched an
 obfuscation-adjacent signal collapse once already
-([RAD-0021](RAD-0021-admission-control-at-harvest.md) v4). A defence that works because attackers
+([RAD-0021](Research-RAD-0021-Admission-Control-At-Harvest) v4). A defence that works because attackers
 have not adapted is not a defence. But note the asymmetry that makes this different: encoding
 defeats a *detector* because the detector must recognise something. A representation that
 cannot express imperatives is not recognising anything — the capacity is absent rather than
@@ -157,17 +157,17 @@ and test5's 29%-against-77% gap **at matched size** — the real corpus scores 0
 5. **What does an attacker do about it?** Only after the above, and framed as attacker effort per
    the objection — specifically, a payload aimed at *triggers* rather than at grammar.
 6. **Survey first.** Constrained generation and structured output are heavily worked areas, and
-   [RAD-0008](RAD-0008-the-field-as-it-stands.md) has withdrawn three novelty claims already.
+   [RAD-0008](Research-RAD-0008-The-Field-As-It-Stands) has withdrawn three novelty claims already.
 
 ## Connections
 
-- [RAD-0013](RAD-0013-the-codex-entry.md) — the two-faced entry; this asks whether the two faces
+- [RAD-0013](Research-RAD-0013-The-Codex-Entry) — the two-faced entry; this asks whether the two faces
   must be the same artifact.
-- [RAD-0016](RAD-0016-the-content-value-ab.md) — the bare-signature result the key/display split
+- [RAD-0016](Research-RAD-0016-The-Content-Value-Ab) — the bare-signature result the key/display split
   rests on.
-- [RAD-0019](RAD-0019-retrieval-at-scale.md) — the retrieval side, and the rig for question 2.
-- [RAD-0024](RAD-0024-does-the-pipeline-filter-injection.md) — the same instinct applied to the
+- [RAD-0019](Research-RAD-0019-Retrieval-At-Scale) — the retrieval side, and the rig for question 2.
+- [RAD-0024](Research-RAD-0024-Does-The-Pipeline-Filter-Injection) — the same instinct applied to the
   pipeline's existing steps; this proposes a deliberate one.
-- [RAD-0025](RAD-0025-the-summariser-as-attack-surface.md) — the threat this does **not** address.
-- [RAD-0021](RAD-0021-admission-control-at-harvest.md) — the obfuscation-adjacent control that
+- [RAD-0025](Research-RAD-0025-The-Summariser-As-Attack-Surface) — the threat this does **not** address.
+- [RAD-0021](Research-RAD-0021-Admission-Control-At-Harvest) — the obfuscation-adjacent control that
   already failed, and why this may differ.

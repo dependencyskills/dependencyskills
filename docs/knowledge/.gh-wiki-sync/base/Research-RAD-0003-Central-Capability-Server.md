@@ -3,8 +3,8 @@
 RAD-0003 · 2026-08-13 · v1
 
 **Measured against:** the measurements in
-[RAD-0002](RAD-0002-existing-documentation-systems-as-skill-transport.md) and
-[RAD-0001](RAD-0001-cost-of-a-skill-per-dependency.md), all collected 2026-08-13 —
+[RAD-0002](Research-RAD-0002-Existing-Documentation-Systems-As-Skill-Transport) and
+[RAD-0001](Research-RAD-0001-Cost-Of-A-Skill-Per-Dependency), all collected 2026-08-13 —
 Maven Central and Google Maven artifact availability, KDoc/Javadoc coverage
 across 72 sampled libraries, `<scm>` metadata across 86 POMs, and the resident
 cost model. No new network measurement was taken for this record beyond the
@@ -243,7 +243,7 @@ Y works", invented, is the failure.
   intermediary cuts both ways here: it is the only place that could scan,
   sign or revoke, and it is a single point of compromise serving every agent.
   Unresolved anywhere in this repository — see
-  [RAD-0004](RAD-0004-external-review-of-the-proposal.md) §2.
+  [RAD-0004](Research-RAD-0004-External-Review-Of-The-Proposal) §2.
 - Whether a cached-and-pinned query response satisfies offline, air-gapped and
   CI builds, or whether those still need an on-disk path.
 
@@ -272,7 +272,7 @@ It carries the governance cost in exchange.
 
 **Treat the server as a third layer, not a replacement.** It does not negate
 the shipping convention and it does not negate
-[RAD-0002](RAD-0002-existing-documentation-systems-as-skill-transport.md). The layering
+[RAD-0002](Research-RAD-0002-Existing-Documentation-Systems-As-Skill-Transport). The layering
 that falls out of the measurements:
 
 1. **Content substrate** — existing documentation systems, per RAD-0002.
@@ -349,13 +349,13 @@ make sure the convention does not foreclose the server.
 
 ## Connections
 
-- [RAD-0001](RAD-0001-cost-of-a-skill-per-dependency.md) — the resident cost this is
+- [RAD-0001](Research-RAD-0001-Cost-Of-A-Skill-Per-Dependency) — the resident cost this is
   proposed to remove.
-- [RAD-0002](RAD-0002-existing-documentation-systems-as-skill-transport.md) — the
+- [RAD-0002](Research-RAD-0002-Existing-Documentation-Systems-As-Skill-Transport) — the
   content substrate and the harvest seed.
 - ADR-0004 — the two layers; the trigger
   survives, the codex is what a server could serve.
-- [docs/postmortems/v1-bundled-flat-files.md](postmortems/RAD-0046-v1-bundled-flat-files.md)
+- [docs/postmortems/v1-bundled-flat-files.md](Research-Postmortems-RAD-0046-V1-Bundled-Flat-Files)
   — why a server-only corpus repeats the ephemeral-mechanism failure.
 - `conformance/` — where a publisher-side completeness check belongs.
 - `outbox/mcp-capability-server-idea.md` — the scratch note this record

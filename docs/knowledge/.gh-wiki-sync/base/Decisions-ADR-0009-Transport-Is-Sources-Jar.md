@@ -8,7 +8,7 @@ The withdrawn sidecar decision (the `-skills.zip` classifier artifact, now in
 `_to_delete/premature-adrs/`) rested on the premise that nothing suitable already
 travels with a JVM library, so a new artifact had to be published.
 
-[RAD-0002](../research/RAD-0002-existing-documentation-systems-as-skill-transport.md)
+[RAD-0002](Research-RAD-0002-Existing-Documentation-Systems-As-Skill-Transport)
 measured that the premise is false:
 
 - **`-sources.jar` is published by 93–98%** of libraries — 95.3% on Maven
@@ -24,12 +24,12 @@ measured that the premise is false:
 - The ability to **read** these carriers at scale is not hypothetical: IDEs parse
   the API surface and doc comments out of jars over massive dependency graphs and
   cache per version
-  ([RAD-0009](../research/RAD-0009-reusing-indexers-and-what-to-index.md)).
+  ([RAD-0009](Research-RAD-0009-Reusing-Indexers-And-What-To-Index)).
 
 The system is built up in stages — **get, parse, store, query**. This decision
 settles **get**. Whether the content that travels is rich enough to be worth
 harvesting is a separate, still-open question
-([RAD-0011](../research/RAD-0011-existing-documentation-systems-as-skill-content.md)).
+([RAD-0011](Research-RAD-0011-Existing-Documentation-Systems-As-Skill-Content)).
 
 ## Decision
 
@@ -43,7 +43,7 @@ from a new artifact:**
   no transport problem at all, and where reinvention is worst.
 - **The git repository named in `<scm>`** — an additive, retroactive route,
   specified separately in
-  [RAD-0005](../research/RAD-0005-a-git-hosted-codex.md).
+  [RAD-0005](Research-RAD-0005-A-Git-Hosted-Codex).
 
 **No bespoke `-skills.zip` is published. The sidecar is abandoned.** `-javadoc.jar`
 is not used, being effectively absent on Google Maven.
@@ -67,8 +67,8 @@ is not used, being effectively absent on Google Maven.
   be **parsed** rather than read — an integration cost handed to the parse stage
   (RAD-0009), not a blocker, since the tooling exists and runs at IDE scale.
 - **This settles get, and only get.** Parse (RAD-0009), store
-  ([RAD-0010](../research/RAD-0010-how-the-codex-is-stored-and-served.md)), query
-  ([RAD-0003](../research/RAD-0003-central-capability-server.md)), and content value
+  ([RAD-0010](Research-RAD-0010-How-The-Codex-Is-Stored-And-Served)), query
+  ([RAD-0003](Research-RAD-0003-Central-Capability-Server)), and content value
   (RAD-0011) remain downstream and open.
 
 ## Rejected
@@ -83,12 +83,12 @@ is not used, being effectively absent on Google Maven.
 
 ## References
 
-- [RAD-0002](../research/RAD-0002-existing-documentation-systems-as-skill-transport.md)
+- [RAD-0002](Research-RAD-0002-Existing-Documentation-Systems-As-Skill-Transport)
   — the transport measurement this decision is drawn from.
-- [RAD-0009](../research/RAD-0009-reusing-indexers-and-what-to-index.md) — the parse
+- [RAD-0009](Research-RAD-0009-Reusing-Indexers-And-What-To-Index) — the parse
   stage: the tooling that reads these carriers, demonstrated at IDE scale.
-- [RAD-0005](../research/RAD-0005-a-git-hosted-codex.md) — the git-repository route.
-- [RAD-0011](../research/RAD-0011-existing-documentation-systems-as-skill-content.md)
+- [RAD-0005](Research-RAD-0005-A-Git-Hosted-Codex) — the git-repository route.
+- [RAD-0011](Research-RAD-0011-Existing-Documentation-Systems-As-Skill-Content)
   — whether what travels is rich enough to be worth harvesting (open).
-- [ADR-0007](ADR-0007-conform-to-existing-conventions.md) — conform to what exists;
+- [ADR-0007](Decisions-ADR-0007-Conform-To-Existing-Conventions) — conform to what exists;
   `-sources.jar` is a stronger instance than a new classifier.

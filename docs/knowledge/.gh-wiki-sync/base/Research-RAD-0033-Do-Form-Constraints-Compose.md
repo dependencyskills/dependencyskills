@@ -4,7 +4,7 @@ RAD-0033 · 2026-08-24 · v1
 
 **A hypothesis raised by two accidental results, recorded before it hardens into an assumption.**
 `experiments/test8` measured detectors as strictly **nested** — stacking them adds nothing.
-[RAD-0030](RAD-0030-a-conventions-filter-from-real-corpora.md) then found two constraints that
+[RAD-0030](Research-RAD-0030-A-Conventions-Filter-From-Real-Corpora) then found two constraints that
 **compose** — each closes the other's escape route. If that difference is structural rather than
 coincidental, it decides how the pipeline is built.
 
@@ -134,10 +134,10 @@ naming.
 
 ## Connections
 
-- [RAD-0030](RAD-0030-a-conventions-filter-from-real-corpora.md) — the two composing pairs, and the
+- [RAD-0030](Research-RAD-0030-A-Conventions-Filter-From-Real-Corpora) — the two composing pairs, and the
   measured bounds this generalises from.
-- [RAD-0021](RAD-0021-admission-control-at-harvest.md) — the adapting-attacker discipline that
+- [RAD-0021](Research-RAD-0021-Admission-Control-At-Harvest) — the adapting-attacker discipline that
   question 3 enforces.
-- [RAD-0027](RAD-0027-the-identifier-as-a-free-text-channel.md) — the payload set the evasion tree
+- [RAD-0027](Research-RAD-0027-The-Identifier-As-A-Free-Text-Channel) — the payload set the evasion tree
   starts from, including the terminal one.
-- [RAD-0029](RAD-0029-the-agent-as-a-trust-launderer.md) — the stage boundary the second pair spans.
+- [RAD-0029](Research-RAD-0029-The-Agent-As-A-Trust-Launderer) — the stage boundary the second pair spans.

@@ -298,7 +298,7 @@ Ranked by expected effect:
 This is why the codex is a searchable index over what libraries already ship,
 not a pile of documents an agent has to know to go looking for. Discoverability
 from where the work happens is the whole point — at repository scale here, and
-at ecosystem scale in the [findings](../RAD-0001-cost-of-a-skill-per-dependency.md).
+at ecosystem scale in the [findings](Research-RAD-0001-Cost-Of-A-Skill-Per-Dependency).
 
 ---
 

@@ -99,8 +99,8 @@ comes back. Measuring that is the first step whenever this is picked up.
 
 ## Connections
 
-- [RAD-0001](RAD-0001-cost-of-a-skill-per-dependency.md) — why the flattening was right at the time
-- [RAD-0009](RAD-0009-reusing-indexers-and-what-to-index.md) — the graph join that needs edges
-- [RAD-0022](RAD-0022-the-value-of-transitive-capabilities.md) — the declared-only control this would give structure to
-- [RAD-0037](RAD-0037-unresolved-tensions.md) §2 — the transitive dilemma, which edges would let you cost
+- [RAD-0001](Research-RAD-0001-Cost-Of-A-Skill-Per-Dependency) — why the flattening was right at the time
+- [RAD-0009](Research-RAD-0009-Reusing-Indexers-And-What-To-Index) — the graph join that needs edges
+- [RAD-0022](Research-RAD-0022-The-Value-Of-Transitive-Capabilities) — the declared-only control this would give structure to
+- [RAD-0037](Research-RAD-0037-Unresolved-Tensions) §2 — the transitive dilemma, which edges would let you cost
 - `experiments/test14` — the measurement resolving against the wrong universe

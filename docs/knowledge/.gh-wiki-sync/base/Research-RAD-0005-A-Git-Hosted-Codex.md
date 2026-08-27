@@ -3,14 +3,14 @@
 RAD-0005 · 2026-08-14 · v1
 
 **Measured against:** measurements taken 2026-08-13 and recorded in
-[RAD-0002](RAD-0002-existing-documentation-systems-as-skill-transport.md) — `<scm>`
+[RAD-0002](Research-RAD-0002-Existing-Documentation-Systems-As-Skill-Transport) — `<scm>`
 presence and content across 86 POMs, `-sources.jar` availability across 215
 coordinates on two repositories, and signature/checksum availability across a
 170-coordinate Central sample. No new measurement for this record.
 
 ## Question
 
-[RAD-0002](RAD-0002-existing-documentation-systems-as-skill-transport.md) established
+[RAD-0002](Research-RAD-0002-Existing-Documentation-Systems-As-Skill-Transport) established
 that the source repository is reachable from a coordinate: `<scm>` is present
 in 90% of Maven Central POMs and 82% of Google Maven POMs, and every URL found
 resolved to a fetchable git host. That opens a route to library guidance that
@@ -225,15 +225,15 @@ tested against a real graph in an afternoon.
 
 ## Connections
 
-- [RAD-0002](RAD-0002-existing-documentation-systems-as-skill-transport.md) — the
+- [RAD-0002](Research-RAD-0002-Existing-Documentation-Systems-As-Skill-Transport) — the
   measurements this rests on, and the designed-versus-discovered distinction.
-- [RAD-0003](RAD-0003-central-capability-server.md) — a manifest can point at a
+- [RAD-0003](Research-RAD-0003-Central-Capability-Server) — a manifest can point at a
   capability server; the two compose.
-- [RAD-0006](RAD-0006-development-time-prompt-injection.md) — a fetched, mutable,
+- [RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection) — a fetched, mutable,
   third-party-hosted instruction source is squarely in that threat model.
 - ADR-0003 — the
   artifact route this is additional to.
-- [ADR-0007](../decisions/ADR-0007-conform-to-existing-conventions.md) — one document,
+- [ADR-0007](Decisions-ADR-0007-Conform-To-Existing-Conventions) — one document,
   per-ecosystem placement.
-- [docs/landscape.md](../reference/landscape.md) — `llms.txt` and pnpm RFC #13422, both
+- [docs/landscape.md](Reference-Landscape) — `llms.txt` and pnpm RFC #13422, both
   prior art for the manifest shape and its placement.

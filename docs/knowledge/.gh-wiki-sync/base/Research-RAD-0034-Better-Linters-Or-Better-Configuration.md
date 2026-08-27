@@ -37,19 +37,19 @@ No plugin, no custom code, no change of tool.
 
 **The Swift gap is a default-configuration gap, not a capability gap.** SwiftLint's `custom_rules`
 takes arbitrary regex with a severity, which is enough to express both the casing rule it lacks
-and the word-count bound [RAD-0030](RAD-0030-a-conventions-filter-from-real-corpora.md) measured.
+and the word-count bound [RAD-0030](Research-RAD-0030-A-Conventions-Filter-From-Real-Corpora) measured.
 
 ### The finding that matters more than the Swift fix
 
 **A length-bounded name pattern catches `camel` in all four languages.** That is the payload that
 passed every stock linter, that Gemini 3.1 Pro accepted 2 of 3, and that Claude Haiku 4.5 accepted
 2 of 3. It is also the *portable* form — no backticks, no spaces, legal everywhere — which
-[RAD-0027](RAD-0027-the-identifier-as-a-free-text-channel.md) v4 identified as the more dangerous
+[RAD-0027](Research-RAD-0027-The-Identifier-As-A-Free-Text-Channel) v4 identified as the more dangerous
 attack precisely because the linters passed it.
 
 So the gap `test9` exposed is closable in every ecosystem, today, with configuration. That is a
 better outcome than a new tool and a much better one than a new detector, and it is
-[ADR-0007](../decisions/ADR-0007-conform-to-existing-conventions.md) working as intended: conform to the
+[ADR-0007](Decisions-ADR-0007-Conform-To-Existing-Conventions) working as intended: conform to the
 tool the ecosystem already runs, and add the measured bound to it.
 
 ### What this does not settle, and it is the expensive half
@@ -89,7 +89,7 @@ configuration alone. Swift's stock silence is a default-configuration gap.
 - A length-bounded naming pattern is the single most valuable rule found, because it is the only
   thing measured that catches the portable, lint-invisible form.
 - This closes a detection gap, not the channel: prose is untouched, and
-  [RAD-0031](RAD-0031-which-vectors-reach-a-real-project.md)'s 46% precondition-free class is
+  [RAD-0031](Research-RAD-0031-Which-Vectors-Reach-A-Real-Project)'s 46% precondition-free class is
   untouched.
 - **The cost is unpriced in three of the four languages**, and one probe already produced a false
   rejection on a legitimate class name.
@@ -108,11 +108,11 @@ configuration alone. Swift's stock silence is a default-configuration gap.
 
 ## Connections
 
-- [RAD-0030](RAD-0030-a-conventions-filter-from-real-corpora.md) — the measured bounds these
+- [RAD-0030](Research-RAD-0030-A-Conventions-Filter-From-Real-Corpora) — the measured bounds these
   configurations encode, and the pricing discipline question 1 enforces.
-- [RAD-0027](RAD-0027-the-identifier-as-a-free-text-channel.md) — the `camel` payload this closes, and
+- [RAD-0027](Research-RAD-0027-The-Identifier-As-A-Free-Text-Channel) — the `camel` payload this closes, and
   why it was the dangerous one.
-- [ADR-0007](../decisions/ADR-0007-conform-to-existing-conventions.md) — conform to the ecosystem's tool
+- [ADR-0007](Decisions-ADR-0007-Conform-To-Existing-Conventions) — conform to the ecosystem's tool
   rather than mint another; this is that principle producing a concrete answer.
-- [RAD-0028](RAD-0028-sast-tooling-as-a-detection-layer.md) — the earlier survey, which asked whether
+- [RAD-0028](Research-RAD-0028-Sast-Tooling-As-A-Detection-Layer) — the earlier survey, which asked whether
   a *different class* of tool helped and found it did not.

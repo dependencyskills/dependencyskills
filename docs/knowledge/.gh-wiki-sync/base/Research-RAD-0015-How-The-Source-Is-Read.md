@@ -253,15 +253,15 @@ matter — the IntelliJ eager-index/lazy-read shape.
 
 ## Connections
 
-- [ADR-0009](../decisions/ADR-0009-transport-is-sources-jar.md) — get; this is the read
+- [ADR-0009](Decisions-ADR-0009-Transport-Is-Sources-Jar) — get; this is the read
   stage immediately downstream of it.
-- [RAD-0009](RAD-0009-reusing-indexers-and-what-to-index.md) — parse; tree-sitter
+- [RAD-0009](Research-RAD-0009-Reusing-Indexers-And-What-To-Index) — parse; tree-sitter
   takes bytes, Dokka may force extraction — a cost to weigh in the bake-off.
-- [RAD-0012](RAD-0012-structure-from-bytecode.md) — the structural enumeration that
+- [RAD-0012](Research-RAD-0012-Structure-From-Bytecode) — the structural enumeration that
   becomes the read-planner for selective reads.
-- [RAD-0013](RAD-0013-the-codex-entry.md) — the entry the read ultimately feeds; the
+- [RAD-0013](Research-RAD-0013-The-Codex-Entry) — the entry the read ultimately feeds; the
   ~10–20-per-library count that makes full reads wasteful.
-- [RAD-0011](RAD-0011-existing-documentation-systems-as-skill-content.md) — the 33%
+- [RAD-0011](Research-RAD-0011-Existing-Documentation-Systems-As-Skill-Content) — the 33%
   coverage that makes two-thirds of an extract-all pass yield nothing.
-- [RAD-0007](RAD-0007-choosing-between-overlapping-libraries.md) — the selection
+- [RAD-0007](Research-RAD-0007-Choosing-Between-Overlapping-Libraries) — the selection
   failure that first-party indexing addresses even with the source in hand.

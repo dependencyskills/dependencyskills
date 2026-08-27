@@ -20,7 +20,7 @@ roughly a third as good, which puts it on the product's critical path rather tha
 backlog.
 
 **v4 (2026-08-25) — the retrieval half of v3 is withdrawn.** The 77% was measured on entries
-**written by hand**. [RAD-0040](RAD-0040-does-summarising-improve-retrieval.md) ran the built
+**written by hand**. [RAD-0040](Research-RAD-0040-Does-Summarising-Improve-Retrieval) ran the built
 summariser over the same 220 entries, the same 17 queries and the same encoder: raw and
 summarised **both** retrieve the correct answer first **5 of 17**, and summarised trails in the
 tail. The rewriter is retrieval-neutral at the head, and the 2.6× lift this note attributed to
@@ -153,17 +153,17 @@ producer pattern is the template; Mahout is the wrong layer and abandoned.
 
 ## Connections
 
-- [RAD-0009](RAD-0009-reusing-indexers-and-what-to-index.md) — the parse layer's
+- [RAD-0009](Research-RAD-0009-Reusing-Indexers-And-What-To-Index) — the parse layer's
   reuse decision (tree-sitter/Dokka).
-- [RAD-0015](RAD-0015-how-the-source-is-read.md) — the read layer's reuse decision
+- [RAD-0015](Research-RAD-0015-How-The-Source-Is-Read) — the read layer's reuse decision
   (Commons VFS / the Kotlin core VFS).
-- [RAD-0010](RAD-0010-how-the-codex-is-stored-and-served.md) — the store layer's reuse
+- [RAD-0010](Research-RAD-0010-How-The-Codex-Is-Stored-And-Served) — the store layer's reuse
   decision (Lucene), which this record's fork could override with a pipeline.
-- [RAD-0013](RAD-0013-the-codex-entry.md) — the entry whose hybrid requirement rules
+- [RAD-0013](Research-RAD-0013-The-Codex-Entry) — the entry whose hybrid requirement rules
   out the vector-only pipelines as the store.
-- [RAD-0011](RAD-0011-existing-documentation-systems-as-skill-content.md) — the
+- [RAD-0011](Research-RAD-0011-Existing-Documentation-Systems-As-Skill-Content) — the
   summarise layer, one of the two build layers.
-- [RAD-0007](RAD-0007-choosing-between-overlapping-libraries.md) — the curate layer,
+- [RAD-0007](Research-RAD-0007-Choosing-Between-Overlapping-Libraries) — the curate layer,
   the other build layer.
-- [RAD-0008](RAD-0008-the-field-as-it-stands.md) — the field survey these tools were
+- [RAD-0008](Research-RAD-0008-The-Field-As-It-Stands) — the field survey these tools were
   weighed against.

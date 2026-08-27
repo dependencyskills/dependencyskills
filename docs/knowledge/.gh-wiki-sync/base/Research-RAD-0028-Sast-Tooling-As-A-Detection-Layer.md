@@ -10,8 +10,8 @@ verdict rather than a broken harness. The category mismatch reasoned below is no
 
 **Opened from a working developer's observation** that the JVM already has security-focused
 static analysis, and that this project should not be inventing detectors when the ecosystem
-ships them — which is [ADR-0007](../decisions/ADR-0007-conform-to-existing-conventions.md)'s position.
-[RAD-0027](RAD-0027-the-identifier-as-a-free-text-channel.md) makes it timely: `experiments/test7`
+ships them — which is [ADR-0007](Decisions-ADR-0007-Conform-To-Existing-Conventions)'s position.
+[RAD-0027](Research-RAD-0027-The-Identifier-As-A-Free-Text-Channel) makes it timely: `experiments/test7`
 found that stock detekt and ktlint already catch **every identifier-borne payload measured to
 produce harm**, which raises the obvious question of what the security-specific tools add.
 
@@ -70,7 +70,7 @@ maintained (`detekt-sec-bugs`, a Kotlin OWASP ruleset with no stars). There is n
 security extension for detekt comparable to find-sec-bugs for SpotBugs. **This corrects the
 premise the record was opened on** — the recommendation cannot rest on it.
 
-*Adjacent, and worth noting for [RAD-0008](RAD-0008-the-field-as-it-stands.md):* a CI scanner
+*Adjacent, and worth noting for [RAD-0008](Research-RAD-0008-The-Field-As-It-Stands):* a CI scanner
 advertising **prompt-injection detection for AI agents** exists at ~2 stars. Tiny, but it means
 this project is not alone in the idea, and RAD-0008 has had to withdraw three novelty claims
 already.
@@ -84,11 +84,11 @@ ktlint caught nothing detekt missed, which follows from detekt being the structu
 ktlint the formatter.
 
 The gap is **comments**, and it is the gap that matters, because prose in doc comments is
-[RAD-0006](RAD-0006-development-time-prompt-injection.md)'s original threat. A `//` comment carrying
+[RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection)'s original threat. A `//` comment carrying
 an instruction was caught by **neither** tool. What did fire on comment payloads was
 `MaxLineLength`, and that is not detection: **14.4% of documented declarations in the real
 harvest already carry a line over 120 characters**, so it is a 14% false-positive rate — three
-times what got [RAD-0021](RAD-0021-admission-control-at-harvest.md) withdrawn.
+times what got [RAD-0021](Research-RAD-0021-Admission-Control-At-Harvest) withdrawn.
 
 ## Findings
 
@@ -137,13 +137,13 @@ measured in `lint_as_detector.py` outperforms both security tools on this threat
 
 ## Connections
 
-- [RAD-0027](RAD-0027-the-identifier-as-a-free-text-channel.md) — the channel this would detect, and
+- [RAD-0027](Research-RAD-0027-The-Identifier-As-A-Free-Text-Channel) — the channel this would detect, and
   the measurement showing stock lint already covers its effective forms.
-- [RAD-0021](RAD-0021-admission-control-at-harvest.md) — the withdrawn detector, and the
+- [RAD-0021](Research-RAD-0021-Admission-Control-At-Harvest) — the withdrawn detector, and the
   false-positive discipline any rule here must meet.
-- [RAD-0006](RAD-0006-development-time-prompt-injection.md) — the comment channel, which none of
+- [RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection) — the comment channel, which none of
   these tools addresses.
-- [ADR-0007](../decisions/ADR-0007-conform-to-existing-conventions.md) — conform rather than invent, which
+- [ADR-0007](Decisions-ADR-0007-Conform-To-Existing-Conventions) — conform rather than invent, which
   is the argument for lint and the argument against bespoke Semgrep rules.
-- [RAD-0008](RAD-0008-the-field-as-it-stands.md) — where the adjacent prompt-injection scanner
+- [RAD-0008](Research-RAD-0008-The-Field-As-It-Stands) — where the adjacent prompt-injection scanner
   belongs.

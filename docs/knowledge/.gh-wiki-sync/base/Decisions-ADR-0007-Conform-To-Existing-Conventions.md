@@ -106,8 +106,8 @@ the same time. This is an argument for ordering, not exclusion.
 
 ## References
 
-- [landscape.md](../reference/landscape.md) — who is doing what, and where; the tracking burden this decision takes on has to live somewhere
-- [RAD-0002](../research/RAD-0002-existing-documentation-systems-as-skill-transport.md) — the documentation systems that already ship; conformance-over-invention applied to content, not just packaging
-- [RAD-0008](../research/RAD-0008-the-field-as-it-stands.md) — the field as it stands: the format adopted unchanged, the in-jar approach and why it does not survive Android/KMP, the manifest-field RFC
+- [landscape.md](Reference-Landscape) — who is doing what, and where; the tracking burden this decision takes on has to live somewhere
+- [RAD-0002](Research-RAD-0002-Existing-Documentation-Systems-As-Skill-Transport) — the documentation systems that already ship; conformance-over-invention applied to content, not just packaging
+- [RAD-0008](Research-RAD-0008-The-Field-As-It-Stands) — the field as it stands: the format adopted unchanged, the in-jar approach and why it does not survive Android/KMP, the manifest-field RFC
 - The **index** (librarian + codex) is decided separately; its ADR is being regenerated as the design settles.
 - [Agent Skills specification](https://agentskills.io/specification)

@@ -11,10 +11,10 @@ tracking file carrying opinions has to be re-argued every time it is re-read.
 - **RADs** weigh an approach while it is still open — where a pattern stops
   working and why, where the field corroborates this research, where this
   research turned out to be wrong.
-  [RAD-0008](../research/RAD-0008-the-field-as-it-stands.md) does that across the
+  [RAD-0008](Research-RAD-0008-The-Field-As-It-Stands) does that across the
   whole field; the others do it for a specific question.
 - **ADRs** record where this project has committed — to conform to something,
-  to diverge from it, or to reject it. [ADR-0007](../decisions/ADR-0007-conform-to-existing-conventions.md)
+  to diverge from it, or to reject it. [ADR-0007](Decisions-ADR-0007-Conform-To-Existing-Conventions)
   is the standing commitment to conform to conventions this project does not
   control; the JVM packaging position is being worked out in Research.
 

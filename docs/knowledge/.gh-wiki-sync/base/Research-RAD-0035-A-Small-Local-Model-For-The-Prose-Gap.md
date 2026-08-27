@@ -102,7 +102,7 @@ register, which is why the evaluation below is cross-register by construction.
 
 **Measured against:** AgentTrap's 141 cases (91 malicious / 50 benign) as scored by `test8`,
 logistic regression over 68 binary (tool, rule) features, stratified 5-fold out-of-fold, pure
-Python, 2026-08-24. Harness: [`experiments/test11`](../../../experiments/test11).
+Python, 2026-08-24. Harness: [`experiments/test11`](https://github.com/dependencyskills/dependencyskills/blob/HEAD/experiments/test11).
 
 - **A learned combination composes where boolean stacking did not.** `test8` found stacking
   detectors added nothing — union caught exactly what the best single one caught. Weighting the
@@ -205,9 +205,9 @@ surface reduction rather than detection. A small local model is arguably better 
 
 ## Connections
 
-- [RAD-0010](RAD-0010-how-the-codex-is-stored-and-served.md) — Lucene as the JVM substrate; embeddings generated outside it
-- [RAD-0019](RAD-0019-retrieval-at-scale.md) — the recall eval this proposes to re-run on the JVM
-- [RAD-0021](RAD-0021-admission-control-at-harvest.md) — withdrawn on false-positive cost; the standard this must meet
-- [RAD-0029](RAD-0029-the-agent-as-a-trust-launderer.md) — well-formed prose that is merely false
-- [RAD-0031](RAD-0031-which-vectors-reach-a-real-project.md) — demonstrability, not reach
-- [RAD-0034](RAD-0034-better-linters-or-better-configuration.md) — configuration closed the identifier channel; this is the gap it left
+- [RAD-0010](Research-RAD-0010-How-The-Codex-Is-Stored-And-Served) — Lucene as the JVM substrate; embeddings generated outside it
+- [RAD-0019](Research-RAD-0019-Retrieval-At-Scale) — the recall eval this proposes to re-run on the JVM
+- [RAD-0021](Research-RAD-0021-Admission-Control-At-Harvest) — withdrawn on false-positive cost; the standard this must meet
+- [RAD-0029](Research-RAD-0029-The-Agent-As-A-Trust-Launderer) — well-formed prose that is merely false
+- [RAD-0031](Research-RAD-0031-Which-Vectors-Reach-A-Real-Project) — demonstrability, not reach
+- [RAD-0034](Research-RAD-0034-Better-Linters-Or-Better-Configuration) — configuration closed the identifier channel; this is the gap it left

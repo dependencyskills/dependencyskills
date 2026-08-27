@@ -109,7 +109,7 @@ git clone -q "$WIKI_URL" "$TMP/wiki" || { echo "error: wiki clone failed" >&2; e
 export KB_DIR REPO WIKI_URL DRY PULL_ONLY ALLOW_DELETE FORCE NEW_SECTIONS
 export WIKI_CLONE="$TMP/wiki"
 python3 <<'EOF'
-import os, re, subprocess, sys, datetime
+import os, re, subprocess, sys, datetime, tempfile
 
 KB   = os.environ['KB_DIR'].rstrip('/')
 W    = os.environ['WIKI_CLONE']
@@ -150,6 +150,77 @@ def page_for(path):          # rel path -> wiki page name
     if p == 'README': return 'Home'
     if p.endswith('/README'): p = p[:-len('/README')]
     return '-'.join(cap(re.sub(r'[^A-Za-z0-9._ -]+', '', s)) for s in p.split('/'))
+
+# ---- link notation ---------------------------------------------------------
+# Repo-relative is the authoring form and stays that way on disk. The wiki has
+# a flat page namespace, so a link correct in the repo dead-ends there. The
+# INVARIANT: wiki form is the comparison and merge currency; the working tree
+# is the only thing in repo-relative form. Every read of a local file for
+# comparison or merging goes through wikify(); every write back to one goes
+# through unwikify(); base/ and the clone are always wiki form.
+LINK = re.compile(r'(\]\()([^)\s]+)(\))')
+ESCAPED = []                 # real targets with no page - served by the repo
+UNRESOLVED = []              # link targets that name nothing at all
+
+def _blob(rel):              # HEAD resolves to the repo's default branch
+    return f"https://github.com/{REPO}/blob/HEAD/{rel}"
+
+def wikify(text, pth):       # repo-relative -> wiki page names
+    d = os.path.dirname(pth)
+    def sub(mo):
+        pre, t, post = mo.groups()
+        if re.match(r'^(https?:|mailto:|#)', t): return mo.group(0)
+        body, sep, frag = t.partition('#')
+        if not body: return mo.group(0)
+        full = os.path.normpath(os.path.join(KB, d, body))
+        # Does it name something real? A target already in page form has no
+        # extension either, and resolving it would invent a path. Anything
+        # that does not exist is left alone: a page name stays a page name
+        # (so wikify is idempotent), and a typo stays visibly broken rather
+        # than becoming a plausible URL that 404s.
+        if not os.path.exists(full):
+            # A page name has neither a slash nor '.md', so it is left in
+            # peace. Anything that LOOKS like a path and resolves to nothing
+            # is a broken cross-reference in the repo - say so.
+            if '/' in body or body.endswith('.md'):
+                UNRESOLVED.append(f"{pth} -> {body}")
+            return mo.group(0)
+        rel = os.path.relpath(full, KB)
+        inside = not rel.startswith('..')
+        # A page exists only for a .md FILE inside the sync domain. page_for
+        # strips '.md' and prefixes anything else, so it must not be handed a
+        # directory, an image, or a non-markdown file - and none of those has
+        # a page to link to anyway.
+        if inside and body.endswith('.md') and os.path.isfile(full):
+            return pre + page_for(rel) + sep + frag + post
+        # Everything else real - a directory, an image, a file outside the
+        # KB - is served by the repo, not the wiki. Relative to the REPO
+        # ROOT, which is where this runs and where the pointer lives.
+        out = os.path.relpath(full, os.path.abspath('.'))
+        if out.startswith('..'): return mo.group(0)   # outside the repo
+        ESCAPED.append(f"{pth} -> {body}")
+        return pre + _blob(out) + sep + frag + post
+    return LINK.sub(sub, text)
+
+def unwikify(text, pth):     # wiki page names -> repo-relative
+    d = os.path.dirname(pth)
+    def sub(mo):
+        pre, t, post = mo.groups()
+        if re.match(r'^(https?:|mailto:|#)', t): return mo.group(0)
+        body, sep, frag = t.partition('#')
+        tgt = pairs_path(body)
+        if not tgt: return mo.group(0)
+        return pre + os.path.relpath(tgt, d or '.') + sep + frag + post
+    return LINK.sub(sub, text)
+
+def pairs_path(pg):          # page name -> local path, this run or recorded
+    for pth, g in pairs.items():
+        if g == pg: return pth
+    return pages_of.get(pg)
+
+def same_text(text, path):
+    try: return text == read(path)
+    except OSError: return False
 
 def title_for(path):         # link text: last segment, words capitalized
     p = path[:-3] if path.endswith('.md') else path
@@ -266,8 +337,9 @@ def push_page(pth, pg):
     global wiki_dirty
     if DRY: return
     src = os.path.join(KB, pth)
-    write(os.path.join(W, pg + '.md'), read(src))
-    write(os.path.join(BASE, pg + '.md'), read(src))
+    body = wikify(read(src), pth)
+    write(os.path.join(W, pg + '.md'), body)
+    write(os.path.join(BASE, pg + '.md'), body)
     wiki_dirty = True
 
 # ---- pass 1: known pairings ------------------------------------------------
@@ -282,7 +354,8 @@ for pth in sorted(manifest):
     if not l_ex:
         moved = next((c for c in local_files
                       if c not in manifest and c not in pairs
-                      and os.path.isfile(B) and same(os.path.join(KB, c), B)), None)
+                      and os.path.isfile(B)
+                      and same_text(wikify(read(os.path.join(KB, c)), c), B)), None)
         if moved:
             newpg = page_for(moved)
             RENAMED.append(f"{pg} -> {newpg} ({moved})")
@@ -297,7 +370,7 @@ for pth in sorted(manifest):
         continue
 
     if not r_ex:                                   # page deleted in the UI
-        if os.path.isfile(B) and same(L, B):
+        if os.path.isfile(B) and same_text(wikify(read(L), pth), B):
             PULLED.append(f"{pth} (page '{pg}' deleted in wiki - file pruned)")
             if not DRY:
                 os.remove(L)
@@ -327,7 +400,7 @@ for pth in sorted(manifest):
         CONFLICTS.append(f"{pth} still has conflict markers - not pushed")
         continue
 
-    l_chg = not (os.path.isfile(B) and same(L, B))
+    l_chg = not (os.path.isfile(B) and same_text(wikify(read(L), pth), B))
     r_chg = not (os.path.isfile(B) and same(R, B))
 
     if not l_chg and not r_chg:
@@ -339,16 +412,22 @@ for pth in sorted(manifest):
     elif r_chg and not l_chg:
         PULLED.append(f"{pg} -> {pth}")
         if not DRY:
-            write(L, read(R)); write(B, read(R))
+            write(L, unwikify(read(R), pth)); write(B, read(R))
     else:                                          # both changed: 3-way merge
         base = B if os.path.isfile(B) else os.devnull
+        # merge in wiki form on all three sides. Feeding the raw working tree
+        # here would show every link line as a local edit - a notation
+        # difference, not a change - and conflict on every cross-reference.
+        fd, ltmp = tempfile.mkstemp(suffix='.md'); os.close(fd)
+        write(ltmp, wikify(read(L), pth))
         r = subprocess.run(['git', 'merge-file', '-p',
                             '-L', f'{pth} (local)', '-L', 'base', '-L', f'wiki:{pg}',
-                            L, base, R], capture_output=True, text=True)
+                            ltmp, base, R], capture_output=True, text=True)
+        os.unlink(ltmp)
         if r.returncode == 0:
             MERGED.append(f"{pth} <-> {pg}")
             if not DRY:
-                write(L, r.stdout)
+                write(L, unwikify(r.stdout, pth))
                 if PULL:
                     PENDING.append(f"{pth} (merged locally, push pending)")
                     write(B, read(R))
@@ -357,7 +436,9 @@ for pth in sorted(manifest):
         elif r.returncode > 0 and r.returncode < 128:
             CONFLICTS.append(f"{pth} (vs page '{pg}')")
             if not DRY:
-                write(L, r.stdout)
+                # markers are not links, so this is safe to map back; the
+                # resolved file re-wikifies on the next push
+                write(L, unwikify(r.stdout, pth))
                 write(B, read(R))   # base := wiki; resolved local pushes next sync
         else:
             CONFLICTS.append(f"{pth}: merge failed ({r.stderr.strip()})")
@@ -375,9 +456,10 @@ for pth in local_files:
         CONFLICTS.append(f"{pth} still has conflict markers - not pushed"); continue
     if pg in wiki_pages and pg not in pages_of:
         # bootstrap: both sides have this page
-        if same(L, os.path.join(W, pg + '.md')):
+        if same_text(wikify(read(L), pth), os.path.join(W, pg + '.md')):
             pairs[pth] = pg
-            if not DRY: write(os.path.join(BASE, pg + '.md'), read(L))
+            if not DRY:
+                write(os.path.join(BASE, pg + '.md'), wikify(read(L), pth))
             continue
         if not FORCE:
             CONFLICTS.append(f"{pth} and wiki page '{pg}' differ with no sync state - reconcile by hand or --force (local wins)")
@@ -393,12 +475,13 @@ for pg in wiki_pages:
     if pg in pairs.values() or pg in pages_of: continue
     pth = 'README.md' if pg == 'Home' else pg + '.md'
     L = os.path.join(KB, pth)
-    if os.path.isfile(L) and not same(L, os.path.join(W, pg + '.md')):
+    if os.path.isfile(L) and not same_text(wikify(read(L), pth),
+                                           os.path.join(W, pg + '.md')):
         CONFLICTS.append(f"{pth} exists locally with different content than new wiki page '{pg}' - reconcile by hand")
         continue
     NEWWIKI.append(f"{pg} -> {pth}")
     if not DRY:
-        write(L, read(os.path.join(W, pg + '.md')))
+        write(L, unwikify(read(os.path.join(W, pg + '.md')), pth))
         write(os.path.join(BASE, pg + '.md'), read(os.path.join(W, pg + '.md')))
     pairs[pth] = pg
 
@@ -460,6 +543,19 @@ for title, items in (("Pushed:", PUSHED), ("Pulled:", PULLED), ("Merged:", MERGE
     if items:
         print(title)
         for i in items: print("  " + i)
+if ESCAPED:
+    uniq = sorted(set(ESCAPED))
+    print(f"Links with no wiki page ({len(uniq)}) - published as github.com/…/blob/HEAD/… :")
+    for e in uniq[:10]: print("  " + e)
+    if len(uniq) > 10: print(f"  ... and {len(uniq)-10} more")
+    print("  These 404 silently if the target moves - GitHub does not warn.")
+
+if UNRESOLVED:
+    uniq = sorted(set(UNRESOLVED))
+    print(f"Broken links ({len(uniq)}) - these target nothing in the repo either:")
+    for u in uniq[:10]: print("  " + u)
+    if len(uniq) > 10: print(f"  ... and {len(uniq)-10} more")
+
 if CONFLICTS:
     print("CONFLICTS - resolve the markers, then sync again:")
     for c in CONFLICTS: print("  " + c)

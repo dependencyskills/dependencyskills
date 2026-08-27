@@ -68,7 +68,7 @@ a catalogue. Discovery had to work before content mattered at all, and v1
 handed discovery to a human with a prompt to paste.
 
 Both complaints are answered now, in different places. Drift, by
-[`spec/content.md`](../../../../spec/content.md), which requires a skill to say
+[`spec/content.md`](https://github.com/dependencyskills/dependencyskills/blob/HEAD/spec/content.md), which requires a skill to say
 what moved, what it was called before and which version changed it, and by
 `metadata.version`, which is what makes that account credible against a
 stale prior. Reinvention, by ADR-0004

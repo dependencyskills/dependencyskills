@@ -21,7 +21,7 @@ and that is available because of a property of the registry rather than a proper
 
 ### This is RAD-0029 one layer up
 
-[RAD-0029](RAD-0029-the-agent-as-a-trust-launderer.md) recorded an agent writing an injected
+[RAD-0029](Research-RAD-0029-The-Agent-As-A-Trust-Launderer) recorded an agent writing an injected
 instruction into first-party source, promoting third-party payload to trusted content. Corpus
 poisoning is the same shape at a different layer: an attacker publishes a library so that their
 prose is harvested into the **known-good class**. Both are attacker text being reclassified as
@@ -80,7 +80,7 @@ forward, and every day without it is a day the comparison cannot reach back to.
 
 - The harvest is **59 version-pinned coordinates from 3 publishers**. One library is **48.8%** of
   entries; the top ten are **77.7%**.
-- Recorded as [`experiments/test5/CORPUS-MANIFEST.md`](../../../experiments/test5/CORPUS-MANIFEST.md)
+- Recorded as [`experiments/test5/CORPUS-MANIFEST.md`](https://github.com/dependencyskills/dependencyskills/blob/HEAD/experiments/test5/CORPUS-MANIFEST.md)
   with a sha256 of the harvest. `corpus.json` itself stays gitignored — derived and 9.7 MB — so the
   manifest is what makes the snapshot verifiable.
 
@@ -145,8 +145,8 @@ rather than prospective. That is what check 2 is for.
 
 ## Connections
 
-- [RAD-0029](RAD-0029-the-agent-as-a-trust-launderer.md) — the same laundering, one layer down
-- [RAD-0031](RAD-0031-which-vectors-reach-a-real-project.md) — precondition analysis; poisoning is a high-precondition vector
-- [RAD-0035](RAD-0035-a-small-local-model-for-the-prose-gap.md) — the classifier whose negative class this is
+- [RAD-0029](Research-RAD-0029-The-Agent-As-A-Trust-Launderer) — the same laundering, one layer down
+- [RAD-0031](Research-RAD-0031-Which-Vectors-Reach-A-Real-Project) — precondition analysis; poisoning is a high-precondition vector
+- [RAD-0035](Research-RAD-0035-A-Small-Local-Model-For-The-Prose-Gap) — the classifier whose negative class this is
 - `experiments/test11` — the inspectable-model technique this proposes as the drift canary
 - `experiments/test5` — the harvest, and the manifest that pins it

@@ -14,7 +14,7 @@ build list; `swift-composable-architecture` at its checked-in `Package.resolved`
 2026-08-17 the content half — whether KDoc and its cross-ecosystem equivalents
 are rich enough to *be* skill content, how much exists, and the custom-tag
 constraint — was moved to
-[RAD-0011: Existing Documentation Systems as Skill Content](RAD-0011-existing-documentation-systems-as-skill-content.md).
+[RAD-0011: Existing Documentation Systems as Skill Content](Research-RAD-0011-Existing-Documentation-Systems-As-Skill-Content).
 This record is now transport only: whether a suitable carrier already travels
 with a library. The two are complementary and cross-reference.
 
@@ -36,7 +36,7 @@ RAD-0011.)
 
 **Corroborated independently.** The idea was held before this investigation
 began, but an external reviewer of the v3 proposal proposed the same mechanism
-unprompted (see [RAD-0004](RAD-0004-external-review-of-the-proposal.md) §4). A
+unprompted (see [RAD-0004](Research-RAD-0004-External-Review-Of-The-Proposal) §4). A
 convention is a bet that others find the same shape natural; someone reaching
 for it from their own experience is evidence the bet is sound. What this record
 adds is measurement.
@@ -154,7 +154,7 @@ and git is mutable and unchecksummed — are consequences of inheriting git's
 defaults, and both dissolve once the file is *designed* rather than discovered
 (version-addressed paths; git object IDs are content hashes; 99% of Central
 publishers already sign). Working that into a specification is its own design
-piece, now [RAD-0005: A Git-Hosted Codex](RAD-0005-a-git-hosted-codex.md). What
+piece, now [RAD-0005: A Git-Hosted Codex](Research-RAD-0005-A-Git-Hosted-Codex). What
 matters here is only that the route survives its objections and is worth
 specifying, as an *additional* source.
 
@@ -283,14 +283,14 @@ git route stays second to `-sources.jar` for anything version-exact.
 
 - The withdrawn sidecar decision (in `_to_delete/premature-adrs/`) — what this
   recommends replacing; the transport ADR is a new record, not a supersession.
-- [RAD-0011](RAD-0011-existing-documentation-systems-as-skill-content.md) — the
+- [RAD-0011](Research-RAD-0011-Existing-Documentation-Systems-As-Skill-Content) — the
   content half split out of this record: is what travels rich enough to use.
-- [RAD-0005](RAD-0005-a-git-hosted-codex.md) — the git-hosted route, its own design.
-- [RAD-0009](RAD-0009-reusing-indexers-and-what-to-index.md) — the harvester that
+- [RAD-0005](Research-RAD-0005-A-Git-Hosted-Codex) — the git-hosted route, its own design.
+- [RAD-0009](Research-RAD-0009-Reusing-Indexers-And-What-To-Index) — the harvester that
   reads these carriers; the selective-read cost is its feasibility question.
-- [ADR-0007](../decisions/ADR-0007-conform-to-existing-conventions.md) — conforming to what
+- [ADR-0007](Decisions-ADR-0007-Conform-To-Existing-Conventions) — conforming to what
   exists; `-sources.jar` is a stronger instance than a new classifier.
-- [RAD-0006](RAD-0006-development-time-prompt-injection.md) — the security objection
+- [RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection) — the security objection
   to harvesting prose, split out.
-- [RAD-0004](RAD-0004-external-review-of-the-proposal.md) §4 — the independent arrival
+- [RAD-0004](Research-RAD-0004-External-Review-Of-The-Proposal) §4 — the independent arrival
   at this mechanism.

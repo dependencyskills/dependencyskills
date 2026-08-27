@@ -11,7 +11,7 @@ capability and license claims come from general knowledge and the tools reviewed
 in RAD-0009/0013; **verify before load-bearing.** No new measurement here.
 
 **v2 note.** v1 leaned lexical-only (SQLite FTS5) and put vectors off as likely
-over-engineering. [RAD-0013](RAD-0013-the-codex-entry.md) then defined the entry and
+over-engineering. [RAD-0013](Research-RAD-0013-The-Codex-Entry) then defined the entry and
 showed *finding* a capability is a **meaning** match — "retry with backoff" must
 reach "resilience policies" — which is exactly what lexical-only cannot do. So
 retrieval is now **hybrid**, and the index engine is **Apache Lucene**
@@ -200,9 +200,9 @@ requirement stands and the engine is swapped, not the design.
 
 ## Connections
 
-- [RAD-0013](RAD-0013-the-codex-entry.md) — the entry this stores and the hybrid
+- [RAD-0013](Research-RAD-0013-The-Codex-Entry) — the entry this stores and the hybrid
   retrieval and Lucene candidate this record adopts; the source of the v2 change.
-- [RAD-0009](RAD-0009-reusing-indexers-and-what-to-index.md) — the parse that fills
+- [RAD-0009](Research-RAD-0009-Reusing-Indexers-And-What-To-Index) — the parse that fills
   `generated/`; a separate layer Lucene does not cover.
 - **RAD-0001** — the scale (311–995 entries, 20k–139k tokens) that makes
   retrieval mandatory rather than optional.
@@ -210,5 +210,5 @@ requirement stands and the engine is swapped, not the design.
   irreducibility of the resident trigger that MCP does not replace.
 - **RAD-0007** — the hand-authored, un-harvestable local preference that
   `local.md` exists to hold.
-- [RAD-0014](RAD-0014-build-vs-reuse.md) — whether to assemble this store from Lucene
+- [RAD-0014](Research-RAD-0014-Build-Vs-Reuse) — whether to assemble this store from Lucene
   or adopt an end-to-end pipeline that bundles one.

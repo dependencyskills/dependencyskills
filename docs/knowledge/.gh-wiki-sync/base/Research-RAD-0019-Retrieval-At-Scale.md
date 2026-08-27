@@ -3,7 +3,7 @@
 RAD-0019 · 2026-08-20 · v4
 
 **v4 (2026-08-25) — the 77% is an upper bound on a target, not a measurement of the pipeline.**
-Every entry scored in this record was **written by hand**. [RAD-0040](RAD-0040-does-summarising-improve-retrieval.md)
+Every entry scored in this record was **written by hand**. [RAD-0040](Research-RAD-0040-Does-Summarising-Improve-Retrieval)
 ran the built summariser over `test5`'s 220 harvested entries with its 17 queries and this
 encoder: raw documentation and machine-summarised entries **both** retrieve the correct answer
 first **5 of 17**, with summarised trailing in the tail. So 77%
@@ -151,12 +151,12 @@ JVM/Lucene substrate, and swap the synthetic corpus for a harvested one.
 
 ## Connections
 
-- [RAD-0011](RAD-0011-existing-documentation-systems-as-skill-content.md) — "capability in the
+- [RAD-0011](Research-RAD-0011-Existing-Documentation-Systems-As-Skill-Content) — "capability in the
   caller's words"; this measures it as retrieval.
-- [RAD-0013](RAD-0013-the-codex-entry.md) — the two-faced entry; the semantic face now shown to
+- [RAD-0013](Research-RAD-0013-The-Codex-Entry) — the two-faced entry; the semantic face now shown to
   work as a *retrieval key*, not only a disambiguation cue.
-- [RAD-0010](RAD-0010-how-the-codex-is-stored-and-served.md) — the hybrid store; this revises
+- [RAD-0010](Research-RAD-0010-How-The-Codex-Is-Stored-And-Served) — the hybrid store; this revises
   the fusion policy to vector-primary.
-- [RAD-0017](RAD-0017-the-retrieval-disambiguation-ab.md) — disambiguation among inlined
+- [RAD-0017](Research-RAD-0017-The-Retrieval-Disambiguation-Ab) — disambiguation among inlined
   candidates; this is the retrieval step that precedes it.
-- [RAD-0003](RAD-0003-central-capability-server.md) — the MCP query server Layer 2 needs.
+- [RAD-0003](Research-RAD-0003-Central-Capability-Server) — the MCP query server Layer 2 needs.

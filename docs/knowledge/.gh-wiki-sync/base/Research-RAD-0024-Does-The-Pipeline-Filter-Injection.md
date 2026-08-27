@@ -10,14 +10,14 @@ the payloads that did real harm in RAD-0006, and it holds for a step the product
 anyway. **But the filtering is class-specific**, not general: it works because those payloads
 instruct a *downstream* consumer, and the summariser is not that consumer. A payload aimed at
 the summariser's own task is not filtered — see
-[RAD-0025](RAD-0025-the-summariser-as-attack-surface.md) v2, which is the other half of the same
+[RAD-0025](Research-RAD-0025-The-Summariser-As-Attack-Surface) v2, which is the other half of the same
 measurement and the more consequential one.
 
 **Sketched from an idea raised in conversation and recorded before
 it is lost. Every control this project has considered was **added** to the pipeline — a gate
-([RAD-0021](RAD-0021-admission-control-at-harvest.md), rejected), labels
-([RAD-0020](RAD-0020-information-flow-control.md)), positional discipline
-([RAD-0006](RAD-0006-development-time-prompt-injection.md)). This asks the opposite question.
+([RAD-0021](Research-RAD-0021-Admission-Control-At-Harvest), rejected), labels
+([RAD-0020](Research-RAD-0020-Information-Flow-Control)), positional discipline
+([RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection)). This asks the opposite question.
 
 ## Question
 
@@ -44,7 +44,7 @@ the entry is reassembled for display. Treat any protection here as incidental an
 **Summarising is far stronger, and this project is building it anyway.** `experiments/test5`
 measured the summarise step as **load-bearing for retrieval** — raw doc text retrieves at 29%
 r@1 against 77% for caller's-words entries at matched corpus size — so it is on the critical
-path regardless of security ([RAD-0014](RAD-0014-build-vs-reuse.md) v3). That matters here because
+path regardless of security ([RAD-0014](Research-RAD-0014-Build-Vs-Reuse) v3). That matters here because
 summarising *rewrites* the text rather than slicing it: an instruction survives into the entry
 only if the summariser reproduces it. **A control the product needs anyway, that may also
 happen to filter injection, is the cheapest defence available** — if it works.
@@ -57,7 +57,7 @@ central risk to test, and it could equally make things worse.
 **Retrieval is the one nobody has counted.** The agent is shown the top-k entries for the query
 it asked. An instruction sitting in the documentation of an unrelated capability is never
 retrieved and never seen. This bears directly on
-[RAD-0006](RAD-0006-development-time-prompt-injection.md)'s surface figure: that record sizes the
+[RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection)'s surface figure: that record sizes the
 exposure as **112–995 libraries**, which is the *corpus*, not the *per-interaction* surface. If
 an agent sees five entries per query, the surface an attacker must land in is far narrower —
 they must get a payload into an entry that matches a query the developer will actually make.
@@ -93,7 +93,7 @@ real harvested doc comments, RAD-0006's two realistic payloads were filtered **c
 mechanism is that both instruct a *downstream* consumer — call this, POST that — and the
 summariser is writing a description, not code, so the instruction is irrelevant to its task. A
 payload aimed at the summariser's own task is **not** filtered (4/6), which is
-[RAD-0025](RAD-0025-the-summariser-as-attack-surface.md)'s half of the result.
+[RAD-0025](Research-RAD-0025-The-Summariser-As-Attack-Surface)'s half of the result.
 
 So the free defence is real but **class-specific**, and it should be described that way rather
 than as "summarising filters injection".
@@ -118,17 +118,17 @@ than as "summarising filters injection".
 3. **What does routing around it cost?** Only after 1 and 2, and only framed as attacker
    effort, per the objection above.
 4. **Survey first.** Chunking and paraphrase as injection defences are an obvious idea and
-   [RAD-0008](RAD-0008-the-field-as-it-stands.md) has had to withdraw three novelty claims. Check
+   [RAD-0008](Research-RAD-0008-The-Field-As-It-Stands) has had to withdraw three novelty claims. Check
    before claiming anything.
 
 ## Connections
 
-- [RAD-0006](RAD-0006-development-time-prompt-injection.md) — the injection measurement, and the
+- [RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection) — the injection measurement, and the
   corpus-sized surface figure this would refine.
-- [RAD-0014](RAD-0014-build-vs-reuse.md) — summarise as a step the product needs anyway.
-- [RAD-0013](RAD-0013-the-codex-entry.md) — the entry, and therefore what chunking produces.
-- [RAD-0019](RAD-0019-retrieval-at-scale.md) — retrieval, the third transformation.
-- [RAD-0021](RAD-0021-admission-control-at-harvest.md) — the rejected added control, and the
+- [RAD-0014](Research-RAD-0014-Build-Vs-Reuse) — summarise as a step the product needs anyway.
+- [RAD-0013](Research-RAD-0013-The-Codex-Entry) — the entry, and therefore what chunking produces.
+- [RAD-0019](Research-RAD-0019-Retrieval-At-Scale) — retrieval, the third transformation.
+- [RAD-0021](Research-RAD-0021-Admission-Control-At-Harvest) — the rejected added control, and the
   encoding objection that applies here too.
-- [RAD-0020](RAD-0020-information-flow-control.md) — enforcement, which does not depend on any of
+- [RAD-0020](Research-RAD-0020-Information-Flow-Control) — enforcement, which does not depend on any of
   this working.

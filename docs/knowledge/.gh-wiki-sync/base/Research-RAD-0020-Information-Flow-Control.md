@@ -27,7 +27,7 @@ sending the agent only symbol and signature. Both 2/3 on task against the baseli
 the *near-injection-proof tier* because identifiers come from a grammar rather than free text.
 **The justification is wrong**, and this record initially overstated the reason. It is now
 measured and written up separately as
-[RAD-0027](RAD-0027-the-identifier-as-a-free-text-channel.md): prose in a method name survives into
+[RAD-0027](Research-RAD-0027-The-Identifier-As-A-Free-Text-Channel): prose in a method name survives into
 the class file and `javap -public` — the harvester's own structure path — prints it verbatim, and
 `kotlinc` round-trips a backtick identifier containing a full sentence unchanged.
 More to the point, a **camel-cased imperative is a legal identifier in every language this
@@ -49,11 +49,11 @@ second-hand.
 **v2 (2026-08-22).** Corrects v1's central claim that the codex "can label but not enforce".
 It can enforce — at **harvest**, the one boundary it fully owns — by discarding content that
 fails structure grounding rather than indexing it. That question is split out as
-[RAD-0021](RAD-0021-admission-control-at-harvest.md).
+[RAD-0021](Research-RAD-0021-Admission-Control-At-Harvest).
 
 **Design; not yet measured.** This record opens the investigation into adopting
 information-flow control (IFC) as the codex's trust model, in place of — or beneath — the
-positional discipline [RAD-0006](RAD-0006-development-time-prompt-injection.md) v4 recommends.
+positional discipline [RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection) v4 recommends.
 It specifies the question, the candidate to adopt, and the experiment that would settle it.
 
 **Reviewed 2026-08-22 from public sources; nothing here is measured by this project.**
@@ -130,7 +130,7 @@ metadata needed to make a positional decision. The likely division:
 
 That reframes adoption from "implement FIDES" to "**emit labels a FIDES-style enforcer can
 consume**", which is a far smaller and more tractable commitment — and is exactly the shape
-[ADR-0007](../decisions/ADR-0007-conform-to-existing-conventions.md) counsels: conform to a convention
+[ADR-0007](Decisions-ADR-0007-Conform-To-Existing-Conventions) counsels: conform to a convention
 we do not control rather than mint our own.
 
 ### The one enforcement point the codex does own (added v2)
@@ -143,7 +143,7 @@ not index it* — is enforcement in the strict sense, needs no runtime cooperati
 consumers who run no flow-control layer at all.
 
 That is a separable question with its own trade-offs and its own experiment, so it is written
-up as **[RAD-0021](RAD-0021-admission-control-at-harvest.md)** rather than carried here. The two
+up as **[RAD-0021](Research-RAD-0021-Admission-Control-At-Harvest)** rather than carried here. The two
 are complementary and neither subsumes the other: **a gate handles content that names
 something foreign; flow control handles persuasion that names nothing** — RAD-0006's P3
 payload passes any grounding check untouched, and is exactly what a policy refusing the sink
@@ -156,18 +156,18 @@ which is evidence the model fits rather than being imported:
 
 | source | proposed integrity | why |
 |---|---|---|
-| First-party source in the user's own repository | **trusted** | developer-controlled by definition ([RAD-0015](RAD-0015-how-the-source-is-read.md) makes this a first-class input) |
-| Consumer-authored preference | **trusted** | the project's own statement about its own choices ([RAD-0007](RAD-0007-choosing-between-overlapping-libraries.md) v2's authorship model) |
-| Structure from bytecode / signatures | **constrained** | identifiers from a grammar ([RAD-0012](RAD-0012-structure-from-bytecode.md)) — but **not free of free text**: a camel-cased imperative is a legal identifier in every language, and prose in a method name survives `javap` verbatim ([RAD-0027](RAD-0027-the-identifier-as-a-free-text-channel.md)) |
+| First-party source in the user's own repository | **trusted** | developer-controlled by definition ([RAD-0015](Research-RAD-0015-How-The-Source-Is-Read) makes this a first-class input) |
+| Consumer-authored preference | **trusted** | the project's own statement about its own choices ([RAD-0007](Research-RAD-0007-Choosing-Between-Overlapping-Libraries) v2's authorship model) |
+| Structure from bytecode / signatures | **constrained** | identifiers from a grammar ([RAD-0012](Research-RAD-0012-Structure-From-Bytecode)) — but **not free of free text**: a camel-cased imperative is a legal identifier in every language, and prose in a method name survives `javap` verbatim ([RAD-0027](Research-RAD-0027-The-Identifier-As-A-Free-Text-Channel)) |
 | Prose from a **declared** dependency | **untrusted** | third-party text, but from a library the project deliberately chose |
-| Prose from a **transitive** dependency | **untrusted, lowest** | 70–90% of the graph, chosen by nobody ([RAD-0001](RAD-0001-cost-of-a-skill-per-dependency.md)) |
+| Prose from a **transitive** dependency | **untrusted, lowest** | 70–90% of the graph, chosen by nobody ([RAD-0001](Research-RAD-0001-Cost-Of-A-Skill-Per-Dependency)) |
 
 RAD-0007's preference-authorship trust model — self-referential and neutral tags trusted, an
 interested `@preferOver` a weak nudge — is an integrity lattice arrived at independently for
 the *selection* problem. Unifying the two under one labelling scheme is a simplification, not
 an addition.
 
-**The confidentiality axis is not idle either.** [RAD-0003](RAD-0003-central-capability-server.md)'s
+**The confidentiality axis is not idle either.** [RAD-0003](Research-RAD-0003-Central-Capability-Server)'s
 query service means an agent sends a description of what the user is building to a third
 party. That is a confidentiality flow, and it is currently unlabelled and unexamined.
 
@@ -188,7 +188,7 @@ of tool calls and data, and explicit secrecy for the confidentiality of data."* 
 | **Confidentiality** | **explicit secrecy** | explicit flows of secret data are caught; **implicit flows are not** |
 
 The vendor material presents the two labels as peers. They are not, and it matters here: the
-confidentiality axis is the one [RAD-0003](RAD-0003-central-capability-server.md)'s query service
+confidentiality axis is the one [RAD-0003](Research-RAD-0003-Central-Capability-Server)'s query service
 would lean on, and it is the weaker of the two.
 
 **Enforcement is at tool calls, and only there.** This is the load-bearing limitation for this
@@ -209,7 +209,7 @@ flows remain an open problem in the agent setting. **RTBAS** is named as related
 taint-tracking, and is worth reading alongside.
 
 **Date matters for the field record.** The paper is May 2025, which places it *before* the
-agent-skill injection papers surveyed in [RAD-0008](RAD-0008-the-field-as-it-stands.md) v2. The
+agent-skill injection papers surveyed in [RAD-0008](Research-RAD-0008-The-Field-As-It-Stands) v2. The
 defence predates the attack literature this project found.
 
 ### What has to be checked before adopting
@@ -219,7 +219,7 @@ defence predates the attack literature this project found.
   nothing and binds us to nobody. Depending on the *implementation* binds the codex to one
   agent framework, which the project's multi-agent posture (ADR-0010) argues against.
 - **Does a label survive transport?** Entries derived from a `-sources.jar` have nowhere to
-  carry a label unless the entry format defines one ([RAD-0013](RAD-0013-the-codex-entry.md)).
+  carry a label unless the entry format defines one ([RAD-0013](Research-RAD-0013-The-Codex-Entry)).
   If labels are a field on the entry, that is a format change and belongs in that record.
 - **Does over-restriction break retrieval?** If all harvested prose is untrusted and a
   retrieval tool refuses untrusted context, the codex returns nothing useful. The paper is
@@ -271,7 +271,7 @@ defence predates the attack literature this project found.
   pipeline.
 - This project is **behind** the state of the art here, not ahead of it. Publishing the
   positional recommendation without naming a stronger published control would misrepresent
-  the field ([RAD-0008](RAD-0008-the-field-as-it-stands.md) has already had to correct one
+  the field ([RAD-0008](Research-RAD-0008-The-Field-As-It-Stands) has already had to correct one
   overclaim; RAD-0006 v4 records this one).
 
 **The experiment that would settle it.** The existing tool-action rig
@@ -311,7 +311,7 @@ one can end the investigation.
    the artifacts. Everything above is currently other people's summaries.
 2. **Can a label survive the pipeline at all?** An entry derived from a `-sources.jar` has
    nowhere to carry one unless the entry format defines a field for it
-   ([RAD-0013](RAD-0013-the-codex-entry.md)). If it cannot, the codex cannot participate in
+   ([RAD-0013](Research-RAD-0013-The-Codex-Entry)). If it cannot, the codex cannot participate in
    information-flow control in any form, and the rest of this record is moot.
 3. **Does enforcement actually prevent harm here?** The three-arm sink experiment on the
    existing tool-action sandbox, scored on harm prevented *and* task still completed. The
@@ -333,25 +333,25 @@ discipline becoming the fallback for runtimes that cannot enforce. If a policy s
 prevent harm also prevents useful retrieval, the trade may be worth taking at the agent layer
 and not at the codex layer, and this record ends with that as its finding.
 
-[RAD-0021](RAD-0021-admission-control-at-harvest.md) asks a related question that does not depend
+[RAD-0021](Research-RAD-0021-Admission-Control-At-Harvest) asks a related question that does not depend
 on any of these answers.
 
 ## Connections
 
-- [RAD-0006](RAD-0006-development-time-prompt-injection.md) — the measurement that motivates this,
+- [RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection) — the measurement that motivates this,
   and the positional recommendation this may supersede.
-- [RAD-0013](RAD-0013-the-codex-entry.md) — where a label field on the entry would have to live.
-- [RAD-0007](RAD-0007-choosing-between-overlapping-libraries.md) — the preference-authorship trust
+- [RAD-0013](Research-RAD-0013-The-Codex-Entry) — where a label field on the entry would have to live.
+- [RAD-0007](Research-RAD-0007-Choosing-Between-Overlapping-Libraries) — the preference-authorship trust
   model, an integrity lattice arrived at independently.
-- [RAD-0012](RAD-0012-structure-from-bytecode.md) — the structure tier, the natural
+- [RAD-0012](Research-RAD-0012-Structure-From-Bytecode) — the structure tier, the natural
   highest-integrity harvested content.
-- [RAD-0003](RAD-0003-central-capability-server.md) — where the *confidentiality* axis bites: a
+- [RAD-0003](Research-RAD-0003-Central-Capability-Server) — where the *confidentiality* axis bites: a
   query describing the user's work sent to a third party.
-- [RAD-0021](RAD-0021-admission-control-at-harvest.md) — the harvest gate split out of this
+- [RAD-0021](Research-RAD-0021-Admission-Control-At-Harvest) — the harvest gate split out of this
   record; complementary enforcement at a boundary the codex owns.
-- [RAD-0008](RAD-0008-the-field-as-it-stands.md) — the field record; this is prior art that
+- [RAD-0008](Research-RAD-0008-The-Field-As-It-Stands) — the field record; this is prior art that
   belongs in it.
-- [ADR-0007](../decisions/ADR-0007-conform-to-existing-conventions.md) — conform to a convention we do
+- [ADR-0007](Decisions-ADR-0007-Conform-To-Existing-Conventions) — conform to a convention we do
   not control, where it works.
-- [ADR-0010](../decisions/ADR-0010-measure-through-developer-tools.md) — why the test should stay
+- [ADR-0010](Decisions-ADR-0010-Measure-Through-Developer-Tools) — why the test should stay
   framework-agnostic.

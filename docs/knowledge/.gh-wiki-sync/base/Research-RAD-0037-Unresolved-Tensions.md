@@ -25,15 +25,15 @@ were not known, and are marked.
 
 Vector recall depends on **rich natural-language capability prose in the caller's vocabulary**:
 77% recall@1 against 29% for raw doc text and effectively 0% for signatures alone
-([RAD-0019](RAD-0019-retrieval-at-scale.md), `test5`). Natural-language prose is also the one channel
+([RAD-0019](Research-RAD-0019-Retrieval-At-Scale), `test5`). Natural-language prose is also the one channel
 no control has closed — `test13` and `test14` priced both structural candidates and rejected both,
-and form constraints reach identifiers only ([RAD-0033](RAD-0033-do-form-constraints-compose.md)).
+and form constraints reach identifiers only ([RAD-0033](Research-RAD-0033-Do-Form-Constraints-Compose)).
 
 **The retrieval system and the threat model are contesting the same field.**
 
 The summariser is this project's answer, and it is a good one for the *instruction* case: it
 rewrites rather than filters, so a payload it fails to notice is still discarded
-([RAD-0024](RAD-0024-does-the-pipeline-filter-injection.md), and the built component neutralised 3 of 3
+([RAD-0024](Research-RAD-0024-Does-The-Pipeline-Filter-Injection), and the built component neutralised 3 of 3
 injected docs).
 
 **But it does not answer the fabrication case, and that gap is not covered anywhere.** A malicious
@@ -49,13 +49,13 @@ the answer to one half of it.
 
 Declared-only indexing is the strongest measured control — 2,123 publishers dropped across 13 real
 projects, roughly a tenfold cut in ingested prose
-([RAD-0004](RAD-0004-external-review-of-the-proposal.md), [RAD-0022](RAD-0022-the-value-of-transitive-capabilities.md)).
+([RAD-0004](Research-RAD-0004-External-Review-Of-The-Proposal), [RAD-0022](Research-RAD-0022-The-Value-Of-Transitive-Capabilities)).
 
 But **86–99% of the importable JVM surface is transitive** (102 declared against 311 importable in
 one real project; 16 against 112 in another), and 100% in flat ecosystems like npm and pip
-([RAD-0001](RAD-0001-cost-of-a-skill-per-dependency.md)). Excluding it hides most of what an agent can
+([RAD-0001](Research-RAD-0001-Cost-Of-A-Skill-Per-Dependency)). Excluding it hides most of what an agent can
 actually call — so the agent hand-rolls a `Mutex`, a Jackson module, a commons helper. **That is
-the reinvention failure the project was founded on** ([postmortems/v1](postmortems/RAD-0046-v1-bundled-flat-files.md)).
+the reinvention failure the project was founded on** ([postmortems/v1](Research-Postmortems-RAD-0046-V1-Bundled-Flat-Files)).
 
 Admit the tail and the untrusted surface grows tenfold. Exclude it and the product's core value
 shrinks by the same order. Neither branch has been costed against the other.
@@ -63,10 +63,10 @@ shrinks by the same order. Neither branch has been costed against the other.
 ### 3. The most durable value depends on the practice the project rejected
 
 The move from v1 to v3 was justified by **human curation not scaling**
-([ADR-0004](../decisions/ADR-0004-librarian-and-codex.md)). Yet **selection** — choosing between overlapping
+([ADR-0004](Decisions-ADR-0004-Librarian-And-Codex)). Yet **selection** — choosing between overlapping
 libraries on an ambiguous classpath — is identified as the one value model progress cannot erode,
 and it **depends entirely on hand-authored local preference**
-([RAD-0018](RAD-0018-the-selection-ab.md)). Unaided, models resolve ambiguity 3 of 18.
+([RAD-0018](Research-RAD-0018-The-Selection-Ab)). Unaided, models resolve ambiguity 3 of 18.
 
 The project automated the third-party documentation burden and moved a curation burden to the
 consumer's own repository. That may be the right trade — a preference file is small and changes
@@ -76,9 +76,9 @@ one.
 ### 4. Information-flow control cannot see the attack that needs no preconditions
 
 The defensive design targets exfiltration: credential staging, filesystem and network sinks
-([RAD-0020](RAD-0020-information-flow-control.md)). But **46% of published attacks require no
+([RAD-0020](Research-RAD-0020-Information-Flow-Control)). But **46% of published attacks require no
 precondition at all** and corrupt logic silently, while the `.env` vector this project's harness is
-built on is **4%** ([RAD-0031](RAD-0031-which-vectors-reach-a-real-project.md)).
+built on is **4%** ([RAD-0031](Research-RAD-0031-Which-Vectors-Reach-A-Real-Project)).
 
 Writing a subtly wrong calculation, or omitting a validation branch, is an **ordinary text edit** —
 not a privileged sink. No lattice, sandbox or tool gate inspects it, because nothing dangerous is
@@ -89,11 +89,11 @@ class does not need delivery to anywhere.
 
 Content value is concentrated in **local open-weight models**: frontier models showed no lift on
 well-known public libraries, while local models were stale on every one and the index corrected
-them ([RAD-0016](RAD-0016-the-content-value-ab.md)).
+them ([RAD-0016](Research-RAD-0016-The-Content-Value-Ab)).
 
 Those same local instruction-tuned coding models are **the most injectable measured** — one complied
 8 of 9 times *despite* explicit untrusted-data framing, where framing protected several frontier
-agents completely ([RAD-0006](RAD-0006-development-time-prompt-injection.md)).
+agents completely ([RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection)).
 
 **So the risk profile is inverted against the value profile.** A team self-hosting a coding model
 for cost or privacy reasons gets the most from the codex and has the least protection from it.
@@ -103,7 +103,7 @@ for cost or privacy reasons gets the most from the codex and has the least prote
 ### 6. Index-side resolution is validated only where a compiler already ran
 
 Offloading documentation inheritance from the parser to a **transitive graph join in the index**
-([RAD-0009](RAD-0009-reusing-indexers-and-what-to-index.md), [RAD-0012](RAD-0012-structure-from-bytecode.md))
+([RAD-0009](Research-RAD-0009-Reusing-Indexers-And-What-To-Index), [RAD-0012](Research-RAD-0012-Structure-From-Bytecode))
 was validated on JVM bytecode, where `.class` files carry fully-qualified supertypes.
 
 Dynamically-typed and macro-heavy ecosystems have no equivalent. Tree-sitter alone cannot link
@@ -157,10 +157,10 @@ project's central design.
 
 ## Connections
 
-- [RAD-0019](RAD-0019-retrieval-at-scale.md), [RAD-0024](RAD-0024-does-the-pipeline-filter-injection.md), [RAD-0025](RAD-0025-the-summariser-as-attack-surface.md) — §1
-- [RAD-0001](RAD-0001-cost-of-a-skill-per-dependency.md), [RAD-0022](RAD-0022-the-value-of-transitive-capabilities.md) — §2
-- [RAD-0018](RAD-0018-the-selection-ab.md), [ADR-0004](../decisions/ADR-0004-librarian-and-codex.md) — §3
-- [RAD-0020](RAD-0020-information-flow-control.md), [RAD-0031](RAD-0031-which-vectors-reach-a-real-project.md) — §4
-- [RAD-0006](RAD-0006-development-time-prompt-injection.md), [RAD-0016](RAD-0016-the-content-value-ab.md) — §5
-- [RAD-0009](RAD-0009-reusing-indexers-and-what-to-index.md), [RAD-0012](RAD-0012-structure-from-bytecode.md) — §6
-- [RAD-0035](RAD-0035-a-small-local-model-for-the-prose-gap.md), [RAD-0036](RAD-0036-can-the-corpus-be-poisoned.md) — §7
+- [RAD-0019](Research-RAD-0019-Retrieval-At-Scale), [RAD-0024](Research-RAD-0024-Does-The-Pipeline-Filter-Injection), [RAD-0025](Research-RAD-0025-The-Summariser-As-Attack-Surface) — §1
+- [RAD-0001](Research-RAD-0001-Cost-Of-A-Skill-Per-Dependency), [RAD-0022](Research-RAD-0022-The-Value-Of-Transitive-Capabilities) — §2
+- [RAD-0018](Research-RAD-0018-The-Selection-Ab), [ADR-0004](Decisions-ADR-0004-Librarian-And-Codex) — §3
+- [RAD-0020](Research-RAD-0020-Information-Flow-Control), [RAD-0031](Research-RAD-0031-Which-Vectors-Reach-A-Real-Project) — §4
+- [RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection), [RAD-0016](Research-RAD-0016-The-Content-Value-Ab) — §5
+- [RAD-0009](Research-RAD-0009-Reusing-Indexers-And-What-To-Index), [RAD-0012](Research-RAD-0012-Structure-From-Bytecode) — §6
+- [RAD-0035](Research-RAD-0035-A-Small-Local-Model-For-The-Prose-Gap), [RAD-0036](Research-RAD-0036-Can-The-Corpus-Be-Poisoned) — §7

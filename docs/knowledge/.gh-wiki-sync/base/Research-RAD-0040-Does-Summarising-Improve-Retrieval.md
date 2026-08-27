@@ -11,11 +11,11 @@ Measured against: BGE-M3 (`mlx-community/bge-m3-mlx-fp16`), Qwen3-Coder-30B-A3B-
 `test5`'s 220-entry harvested slice (`subset(seed=11)`) and its 17 queries, 2026-08-25.
 
 **Opened because the number the product argument rests on had never been produced by the product.**
-[RAD-0019](RAD-0019-retrieval-at-scale.md) measured recall over an index whose entries were **written by
-hand**, and [`test5`](../../../experiments/test5/README.md) measured raw harvested documentation on
+[RAD-0019](Research-RAD-0019-Retrieval-At-Scale) measured recall over an index whose entries were **written by
+hand**, and [`test5`](https://github.com/dependencyskills/dependencyskills/blob/HEAD/experiments/test5/README.md) measured raw harvested documentation on
 the same rig. The two numbers — the correct answer coming back first **77%** of the time against
 **29%** — became the standing argument that the summarise step *is* the product rather than an
-optimisation of it, and [RAD-0014](RAD-0014-build-vs-reuse.md) named *summarise* as something this
+optimisation of it, and [RAD-0014](Research-RAD-0014-Build-Vs-Reuse) named *summarise* as something this
 project must build largely on that basis.
 
 Nothing in that chain involved a machine writing a summary.
@@ -190,7 +190,7 @@ the two-faced index inherits the better face's ballpark on nearly all of them.
   measurement inherits it rather than answering it.
 - That a different local model would behave the same. One model, pinned deliberately.
 
-**Not touched by this.** The summariser's *quarantine* result stands: [`test7`](../../../experiments/test7/README.md)
+**Not touched by this.** The summariser's *quarantine* result stands: [`test7`](https://github.com/dependencyskills/dependencyskills/blob/HEAD/experiments/test7/README.md)
 measured a tool-less paraphraser stopping a planted credential (0 of 3) while the task still
 completed (2 of 3). That is what the component is for, and this measures a different claim made for
 it.
@@ -199,7 +199,7 @@ it.
 
 **A safe state that cannot be retrieved is not a safe state for an index.**
 
-[`test0`](../../../experiments/test0/README.md) measured signature-only as sufficient for an agent
+[`test0`](https://github.com/dependencyskills/dependencyskills/blob/HEAD/experiments/test0/README.md) measured signature-only as sufficient for an agent
 to *use* a capability — 7 of 8 — and `test7` measured it as a working control. Both measurements
 started with the capability **already in hand**. Neither asked whether it could be found. It cannot:
 a signature carries no prose, and the query is prose.
@@ -217,7 +217,7 @@ long as it did because the two properties were measured by different experiments
    about the target, not about the mechanism that would reach it. `DOC-0001-canon.md`, the site's experiments
    page, RAD-0014 and RAD-0019 all carry the inference and need the correction.
 2. **Index both faces, with two vectors.** Measured here and it is the strongest configuration on
-   this slice. This is the one recommendation that hardens: it is what [RAD-0013](RAD-0013-the-codex-entry.md)
+   this slice. This is the one recommendation that hardens: it is what [RAD-0013](Research-RAD-0013-The-Codex-Entry)
    already describes, it needs no new component, and the alternative that looks cheaper — fusing
    the texts into a single key — is measurably worse.
 3. **Let a rejected entry keep a key it never shows.** The agent still receives only the signature;

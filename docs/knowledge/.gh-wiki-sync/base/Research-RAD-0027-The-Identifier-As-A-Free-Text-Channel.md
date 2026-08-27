@@ -3,18 +3,18 @@
 RAD-0027 · 2026-08-23 · v4
 
 **Opened because this project asserted something and then wrote it into another record as a
-correction without measuring it.** [RAD-0020](RAD-0020-information-flow-control.md) v4 states that
+correction without measuring it.** [RAD-0020](Research-RAD-0020-Information-Flow-Control) v4 states that
 JVM backtick identifiers carry arbitrary prose into the class file. That was reasoning from the
 specification, not a measurement, and
-[RAD-0008](RAD-0008-the-field-as-it-stands.md) has already had to withdraw three claims made that
+[RAD-0008](Research-RAD-0008-The-Field-As-It-Stands) has already had to withdraw three claims made that
 way. **It is now measured, and it holds** — but the measurement also shows the backtick framing
 was the wrong emphasis.
 
 ## Question
 
-[RAD-0020](RAD-0020-information-flow-control.md)'s integrity lattice places **structure from
+[RAD-0020](Research-RAD-0020-Information-Flow-Control)'s integrity lattice places **structure from
 bytecode** above harvested prose, on the grounds that *identifiers come from a grammar, not free
-text* — the near-injection-proof tier. [RAD-0012](RAD-0012-structure-from-bytecode.md) leans on that
+text* — the near-injection-proof tier. [RAD-0012](Research-RAD-0012-Structure-From-Bytecode) leans on that
 tier as the fallback for libraries shipping no `-sources.jar`, and `experiments/test2` proved
 that path works end to end.
 
@@ -98,7 +98,7 @@ three it is **3/12** against `authority`'s 8/12 — a strong effect, not a defen
 snake_case both trip `FunctionNaming`, so detekt and ktlint flag `authority`,
 `authority_nospace` and `imperative` in stock configuration with no false positive on a clean
 control (`experiments/test7/lint_as_detector.py`). The two forms lint misses scored **0/12
-each**. That is [ADR-0007](../decisions/ADR-0007-conform-to-existing-conventions.md) paying off: the check
+each**. That is [ADR-0007](Decisions-ADR-0007-Conform-To-Existing-Conventions) paying off: the check
 does not need inventing.
 
 **The portable form is noticed and declined.** The camel-case identifier — legal everywhere, no
@@ -145,7 +145,7 @@ justification given for it is wrong.
   grammar constrains characters, not meaning. The ranking may still be right for a different
   reason: the channel is narrow and conspicuous.
 - Any control that admits content because it came from "structure rather than prose" is admitting
-  attacker-controlled text. [RAD-0012](RAD-0012-structure-from-bytecode.md)'s source-less fallback
+  attacker-controlled text. [RAD-0012](Research-RAD-0012-Structure-From-Bytecode)'s source-less fallback
   path inherits this directly.
 - It cannot be closed by rejecting unusual identifiers, because the portable form of the attack
   uses entirely ordinary ones.
@@ -162,24 +162,24 @@ justification given for it is wrong.
    a general one.
 4. **Does an agent's own laundered prose get harvested back?** GPT-OSS 120B wrote the injected
    instruction into a doc comment it authored. First-party source is the **highest-integrity**
-   tier in [RAD-0020](RAD-0020-information-flow-control.md)'s lattice, so a payload that reaches it
+   tier in [RAD-0020](Research-RAD-0020-Information-Flow-Control)'s lattice, so a payload that reaches it
    has been promoted from untrusted to trusted by the agent itself. This is the most serious
    thing found here and it is untested.
 4. ~~Does `kotlinc` round-trip a backtick identifier?~~ **Answered: yes, verbatim.**
 5. **Is there any cheap normalisation worth having?** Rejecting identifiers with spaces or
    punctuation is trivial and syntactic — unlike the semantic grounding
-   [RAD-0021](RAD-0021-admission-control-at-harvest.md) rejected — but it stops only the loud form.
+   [RAD-0021](Research-RAD-0021-Admission-Control-At-Harvest) rejected — but it stops only the loud form.
    Splitting camel case does not help, because the split words are the message.
 
 ## Connections
 
-- [RAD-0020](RAD-0020-information-flow-control.md) — the lattice whose justification this corrects,
+- [RAD-0020](Research-RAD-0020-Information-Flow-Control) — the lattice whose justification this corrects,
   and the record that made the unmeasured claim.
-- [RAD-0012](RAD-0012-structure-from-bytecode.md) — the fallback path that inherits the channel.
-- [RAD-0016](RAD-0016-the-content-value-ab.md) — the bare-signature result that makes shipping only
+- [RAD-0012](Research-RAD-0012-Structure-From-Bytecode) — the fallback path that inherits the channel.
+- [RAD-0016](Research-RAD-0016-The-Content-Value-Ab) — the bare-signature result that makes shipping only
   structure attractive, and therefore makes this worth knowing.
-- [RAD-0021](RAD-0021-admission-control-at-harvest.md) — the rejected harvest gate; a syntactic
+- [RAD-0021](Research-RAD-0021-Admission-Control-At-Harvest) — the rejected harvest gate; a syntactic
   identifier check is a much cheaper cousin that fails for a different reason.
-- [RAD-0026](RAD-0026-meaning-without-command.md) — the same shape of error: a representation assumed
+- [RAD-0026](Research-RAD-0026-Meaning-Without-Command) — the same shape of error: a representation assumed
   unable to carry a command, which carried one anyway.
-- [RAD-0006](RAD-0006-development-time-prompt-injection.md) — the injection surface this widens.
+- [RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection) — the injection surface this widens.

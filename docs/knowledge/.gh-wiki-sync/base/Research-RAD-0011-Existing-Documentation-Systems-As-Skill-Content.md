@@ -11,7 +11,7 @@ virtualenv; `swift-composable-architecture` at its checked-in `Package.resolved`
 for the DocC catalog. DocC and TSDoc behaviour per vendor documentation. All
 2026-08-13.
 
-**Split note.** Split out of [RAD-0002](RAD-0002-existing-documentation-systems-as-skill-transport.md)
+**Split note.** Split out of [RAD-0002](Research-RAD-0002-Existing-Documentation-Systems-As-Skill-Transport)
 on 2026-08-17. RAD-0002 settled the *transport* question — a carrier
 (`-sources.jar`) already travels with the library. This record is the *content*
 question: is what travels rich enough to *be* skill content, how much of it
@@ -310,16 +310,16 @@ not a threshold to clear.**
 
 ## Connections
 
-- [RAD-0002](RAD-0002-existing-documentation-systems-as-skill-transport.md) — the
+- [RAD-0002](Research-RAD-0002-Existing-Documentation-Systems-As-Skill-Transport) — the
   transport half; get is settled, this is content.
-- [RAD-0009](RAD-0009-reusing-indexers-and-what-to-index.md) — the parse tooling that
+- [RAD-0009](Research-RAD-0009-Reusing-Indexers-And-What-To-Index) — the parse tooling that
   extracts this content; the scope fork (index everything vs opt-in) is the
   designed/discovered question in another guise.
-- [RAD-0010](RAD-0010-how-the-codex-is-stored-and-served.md) — where the harvested
+- [RAD-0010](Research-RAD-0010-How-The-Codex-Is-Stored-And-Served) — where the harvested
   content is stored, and the local preference no harvest can supply.
-- [RAD-0003](RAD-0003-central-capability-server.md) — the query layer, which also
+- [RAD-0003](Research-RAD-0003-Central-Capability-Server) — the query layer, which also
   needs the designed/discovered trust label.
-- [RAD-0001](RAD-0001-cost-of-a-skill-per-dependency.md) — the cost model the
+- [RAD-0001](Research-RAD-0001-Cost-Of-A-Skill-Per-Dependency) — the cost model the
   ~59.5k-token figure feeds.
-- [RAD-0006](RAD-0006-development-time-prompt-injection.md) — harvesting prose from
+- [RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection) — harvesting prose from
   112–995 libraries; the injection posture differs by tier.

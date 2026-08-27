@@ -5,10 +5,10 @@ RAD-0038 · 2026-08-25 · v1
 **A method note, not a finding.** The `docs/knowledge/` corpus was handed to a frontier model
 (Gemini) with two requests: assess it, and find the places where its own conclusions contradict each
 other. The output was two documents. Their substance is recorded as
-[RAD-0037](RAD-0037-unresolved-tensions.md); this record is about **the review as a method** — what it
+[RAD-0037](Research-RAD-0037-Unresolved-Tensions); this record is about **the review as a method** — what it
 caught, what it got wrong, and whether it is worth doing again.
 
-It parallels [RAD-0004](RAD-0004-external-review-of-the-proposal.md), which put the proposal in front of
+It parallels [RAD-0004](Research-RAD-0004-External-Review-Of-The-Proposal), which put the proposal in front of
 an outside engineer. The difference is instructive and is most of the point.
 
 ## Question
@@ -103,6 +103,6 @@ wrong, and the method would deserve more standing than a consistency check.
 
 ## Connections
 
-- [RAD-0037](RAD-0037-unresolved-tensions.md) — what this review found; the substance
-- [RAD-0004](RAD-0004-external-review-of-the-proposal.md) — the human external review, for contrast
-- [RAD-0036](RAD-0036-can-the-corpus-be-poisoned.md) — the finding it reported as open and that was already closed
+- [RAD-0037](Research-RAD-0037-Unresolved-Tensions) — what this review found; the substance
+- [RAD-0004](Research-RAD-0004-External-Review-Of-The-Proposal) — the human external review, for contrast
+- [RAD-0036](Research-RAD-0036-Can-The-Corpus-Be-Poisoned) — the finding it reported as open and that was already closed

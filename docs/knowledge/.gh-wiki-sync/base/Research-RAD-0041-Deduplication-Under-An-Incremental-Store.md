@@ -6,7 +6,7 @@ Keywords: where should deduplication happen; dedupe at harvest or at index build
 
 Measured against: the figures cited are from `experiments/test5` (2026-08-22), `experiments/test12`, and `experiments/corpus/build.py` as of 2026-08-26. Nothing new was measured for this record.
 
-**Opened while triaging [#2](https://github.com/dependencyskills/dependencyskills/issues/2).** The harvest rules were settled in a batch context — `experiments/corpus/build.py` walks every cached artifact in one pass, holding a global `seen_docs` set. [ADR-0012](../decisions/ADR-0012-a-shared-machine-level-index-store.md) then made the store **incremental** (one jar at a time, whenever a build resolves something new) and **scoped** (a query only sees the coordinates the asking project resolved). Both changes were made for other reasons, and neither was checked against the dedup rule.
+**Opened while triaging [#2](https://github.com/dependencyskills/dependencyskills/issues/2).** The harvest rules were settled in a batch context — `experiments/corpus/build.py` walks every cached artifact in one pass, holding a global `seen_docs` set. [ADR-0012](Decisions-ADR-0012-A-Shared-Machine-Level-Index-Store) then made the store **incremental** (one jar at a time, whenever a build resolves something new) and **scoped** (a query only sees the coordinates the asking project resolved). Both changes were made for other reasons, and neither was checked against the dedup rule.
 
 > **Does deduplication still belong at harvest, and does the answer change what parses the source?**
 
@@ -48,7 +48,7 @@ Under a scoped store, the honest unit is narrower — the **KMP module**, of whi
 
 Reopening dedup does not reopen the parser choice, and the record on that is stronger than a triage summary made it sound.
 
-[RAD-0009](RAD-0009-reusing-indexers-and-what-to-index.md) v6 settled it with a measurement: standalone Dokka on kaml realised **≈18** inherited docs against a ceiling of **144**, because the supertypes were on the classpath as compiled jars rather than source roots. Adding the supertype's *source* flipped it. Tree-sitter alone then reproduced the same result — `resolve_in_index.py` harvested two libraries independently and realised **16** cross-library inheritances via a transitive graph join, including the exact case Dokka needed both sources loaded to produce.
+[RAD-0009](Research-RAD-0009-Reusing-Indexers-And-What-To-Index) v6 settled it with a measurement: standalone Dokka on kaml realised **≈18** inherited docs against a ceiling of **144**, because the supertypes were on the classpath as compiled jars rather than source roots. Adding the supertype's *source* flipped it. Tree-sitter alone then reproduced the same result — `resolve_in_index.py` harvested two libraries independently and realised **16** cross-library inheritances via a transitive graph join, including the exact case Dokka needed both sources loaded to produce.
 
 The conclusion is about **where enrichment happens**: parse is local extraction; enrich is a graph join in the index. Dokka's cross-library value is fully replaced, and what remains is local — resolved type spellings, overload-exact targets, `@sample` bodies.
 
@@ -68,7 +68,7 @@ What *is* new, and what RAD-0009 had no reason to weigh, is that the parser now 
 
 **Not a commitment.**
 
-1. **Store every entry; deduplicate when building the derived index.** This keeps harvest a pure function of one jar — testable, re-runnable, order-independent — and puts the merge where the corpus is known and the scope is applied. It also matches [RAD-0010](RAD-0010-how-the-codex-is-stored-and-served.md)'s existing split: text is the source of truth, the index is derived and disposable. The cost is a store roughly 2.7× larger, which for SQLite is not obviously a cost at all.
+1. **Store every entry; deduplicate when building the derived index.** This keeps harvest a pure function of one jar — testable, re-runnable, order-independent — and puts the merge where the corpus is known and the scope is applied. It also matches [RAD-0010](Research-RAD-0010-How-The-Codex-Is-Stored-And-Served)'s existing split: text is the source of truth, the index is derived and disposable. The cost is a store roughly 2.7× larger, which for SQLite is not obviously a cost at all.
 
 2. **Deduplicate within the query's scope, not globally.** Whatever the unit, the merge has to happen after the coordinate filter, or the defect above returns in a different place.
 

@@ -4,8 +4,8 @@ RAD-0004 · 2026-08-14 · v1
 
 **Measured against:** nothing new. This record is a conversation, not an
 experiment. Where it cites numbers they come from
-[RAD-0001](RAD-0001-cost-of-a-skill-per-dependency.md) and
-[RAD-0002](RAD-0002-existing-documentation-systems-as-skill-transport.md), both measured
+[RAD-0001](Research-RAD-0001-Cost-Of-A-Skill-Per-Dependency) and
+[RAD-0002](Research-RAD-0002-Existing-Documentation-Systems-As-Skill-Transport), both measured
 2026-08-13.
 
 ## Question
@@ -115,7 +115,7 @@ Two observations of my own, neither settled:
 - **A central capability server changes the threat model in both directions.**
   It is one intermediary that could scan, sanitise, sign and revoke — which no
   per-artifact convention can do. It is also one point of compromise serving
-  every agent that queries it. Both belong in [RAD-0003](RAD-0003-central-capability-server.md).
+  every agent that queries it. Both belong in [RAD-0003](Research-RAD-0003-Central-Capability-Server).
 
 **This objection needs its own investigation.** It is the kind of thing that
 sinks a proposal in public review, the project has no answer written down, and
@@ -223,7 +223,7 @@ plainly, because as written it invites exactly this correction.
 
 ### 6. The local MCP server, and why it may be the better first target
 
-The reviewer proposed a variant that [RAD-0003](RAD-0003-central-capability-server.md)
+The reviewer proposed a variant that [RAD-0003](Research-RAD-0003-Central-Capability-Server)
 does not consider, in paraphrase: a documentation MCP server that inspects the
 project's folder paths or the classpath to locate what it needs, indexing at
 startup and watching for changes during development.
@@ -266,7 +266,7 @@ the library cannot be found; it is that the agent does not go looking, because
 it is confident it already knows. That is the same mechanism as the
 package-move case in §1, and it is a second independent argument that the
 resident trigger of ADR-0004 is irreducible — a conclusion
-[RAD-0003](RAD-0003-central-capability-server.md) reaches from the other direction,
+[RAD-0003](Research-RAD-0003-Central-Capability-Server) reaches from the other direction,
 that a query service cannot answer a question nobody asked.
 
 It also extends the librarian's scope to first-party code in a multi-module
@@ -356,13 +356,13 @@ record. Nothing here establishes that either way.
 
 ## Connections
 
-- [RAD-0002](RAD-0002-existing-documentation-systems-as-skill-transport.md) — the KDoc
+- [RAD-0002](Research-RAD-0002-Existing-Documentation-Systems-As-Skill-Transport) — the KDoc
   pivot, which originated in §4 of this conversation.
-- [RAD-0003](RAD-0003-central-capability-server.md) — the capability server; §6 here
+- [RAD-0003](Research-RAD-0003-Central-Capability-Server) — the capability server; §6 here
   adds the local variant.
-- [RAD-0001](RAD-0001-cost-of-a-skill-per-dependency.md) — the volume numbers that make
+- [RAD-0001](Research-RAD-0001-Cost-Of-A-Skill-Per-Dependency) — the volume numbers that make
   §3's filter a 10× reduction rather than a tie-break.
 - ADR-0004 — overlap and the two layers;
   both are reinforced.
-- [ADR-0007](../decisions/ADR-0007-conform-to-existing-conventions.md) — per-ecosystem
+- [ADR-0007](Decisions-ADR-0007-Conform-To-Existing-Conventions) — per-ecosystem
   packaging, confirmed independently by the reviewer.

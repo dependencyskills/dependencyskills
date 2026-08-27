@@ -16,7 +16,7 @@ much it is weighted, and where the `@similar` / `@category` / `@triggers` /
 `@preferOver` tags sit on that line.
 
 **v3 (2026-08-20).** Folds in the first measurement of this record's claim — the
-**selection A/B** ([RAD-0018](RAD-0018-the-selection-ab.md)). Unaided, the sanctioned
+**selection A/B** ([RAD-0018](Research-RAD-0018-The-Selection-Ab)). Unaided, the sanctioned
 library is picked **0/18**: no model, however capable or current, knows the
 preference. The **declared dependency tree** redirects a single-choice classpath
 almost universally, and where genuine ambiguity remains only an **authored
@@ -30,7 +30,7 @@ agent that can now *see* all of them has to pick one, and picking wrong is a
 new failure introduced by solving the first two.
 
 An external reviewer put it concretely
-([RAD-0004](RAD-0004-external-review-of-the-proposal.md) §3), paraphrased here at his
+([RAD-0004](Research-RAD-0004-External-Review-Of-The-Proposal) §3), paraphrased here at his
 request: a project that includes both a node-graph library and a
 graph-rendering library may find each describes itself in terms that collide
 with the other, sending an agent to the wrong one for the task in hand.
@@ -214,7 +214,7 @@ problem — would be substantially smaller.
 That makes `api`/`implementation` hygiene a **lever on the cost model**, not
 just a build-tidiness concern, and a candidate check for the
 completeness-verification plugin in
-[RAD-0003](RAD-0003-central-capability-server.md): a library that marks internal
+[RAD-0003](Research-RAD-0003-Central-Capability-Server): a library that marks internal
 dependencies `api` inflates every consumer's surface.
 
 ### How other ecosystems compare
@@ -242,7 +242,7 @@ Signals available from the resolved graph, with no author cooperation:
 
 1. **Declared versus transitive.** RAD-0002 measured declared as 3–18×
    smaller than importable. In the NiA JSON case it is decisive on its own,
-   and [RAD-0006](RAD-0006-development-time-prompt-injection.md) notes it also cuts the
+   and [RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection) notes it also cuts the
    trusted-prose surface by the same factor. One rule, three benefits.
 2. **Dependency scope — `api` versus `implementation`.** Published for 68% of
    Central coordinates in Gradle Module Metadata and recoverable more coarsely
@@ -330,7 +330,7 @@ for a correct-first-time ranker. Three consequences worth designing for:
   wrong turn in the diff rather than in production.
 - **Ask, when the signals genuinely tie.** An interactive tool can hand the
   choice back; a static index cannot. This is one of the things
-  [RAD-0003](RAD-0003-central-capability-server.md) identifies as specific to the MCP
+  [RAD-0003](Research-RAD-0003-Central-Capability-Server) identifies as specific to the MCP
   form.
 
 ## Findings
@@ -401,7 +401,7 @@ build system has already excluded lint tooling, annotation processors,
 benchmarks and every private `implementation` dependency of every library in
 the graph. Ranking over everything resolvable manufactures a problem that the
 metadata had already solved. It also shrinks the trusted-prose surface that
-[RAD-0006](RAD-0006-development-time-prompt-injection.md) is about, for free.
+[RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection) is about, for free.
 
 **Use an npm case as the worked example, not a JVM one.** The
 `moment`/`date-fns` pair in the p90 Next.js example is public, reproducible
@@ -443,18 +443,18 @@ demonstrated; there is still no such observation.
 
 ## Connections
 
-- [ADR-0004](../decisions/ADR-0004-librarian-and-codex.md) — the two-layer design; overlap
+- [ADR-0004](Decisions-ADR-0004-Librarian-And-Codex) — the two-layer design; overlap
   as domain, which this record supplies the worked example and taxonomy for.
-- [RAD-0004](RAD-0004-external-review-of-the-proposal.md) §3 — where the objection was
+- [RAD-0004](Research-RAD-0004-External-Review-Of-The-Proposal) §3 — where the objection was
   raised, and the `dep_usage.md` suggestion.
-- [RAD-0002](RAD-0002-existing-documentation-systems-as-skill-transport.md) — the
+- [RAD-0002](Research-RAD-0002-Existing-Documentation-Systems-As-Skill-Transport) — the
   declared-versus-importable measurement that makes the first signal a ~10×
   filter.
-- [RAD-0006](RAD-0006-development-time-prompt-injection.md) — the same
+- [RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection) — the same
   declared-over-transitive rule as a security control.
-- [RAD-0003](RAD-0003-central-capability-server.md) — asking the developer when signals
+- [RAD-0003](Research-RAD-0003-Central-Capability-Server) — asking the developer when signals
   tie is specific to the interactive form.
-- [RAD-0013](RAD-0013-the-codex-entry.md) — the entry these signals and author tags
+- [RAD-0013](Research-RAD-0013-The-Codex-Entry) — the entry these signals and author tags
   populate.
-- [RAD-0001](RAD-0001-cost-of-a-skill-per-dependency.md) — the import scan that would
+- [RAD-0001](Research-RAD-0001-Cost-Of-A-Skill-Per-Dependency) — the import scan that would
   sharpen all of this, still unmeasured.
