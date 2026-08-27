@@ -88,7 +88,14 @@ Auditability is a goal of this project, so the repository practises it.
 
 - **Every commit is signed and signed off.** `git commit -S -s`. A
   contribution without a `Signed-off-by` line cannot be merged; see the
-  [DCO](https://developercertificate.org/).
+  [DCO](https://developercertificate.org/). Git has a `commit.gpgsign` but
+  no `commit.signoff`, so `-s` never happens by itself and any GUI client
+  drops it. `.githooks/prepare-commit-msg` adds the trailer when it is
+  missing; point git at it once per clone, since a repository cannot
+  configure this for you:
+
+      git config core.hooksPath .githooks
+
 - **Merge commits only.** No squash, no rebase merging. Squash and rebase
   both create new commits, which discards the contributor's signature and
   the per-commit sign-off, collapses the reasoning for individual changes,

@@ -1,0 +1,5 @@
+#!/bin/sh
+# Git has no commit.signoff to match commit.gpgsign, so -s never happens by itself.
+# AGENTS.md requires every commit to carry the trailer; this adds it if absent.
+grep -qi '^Signed-off-by: ' "$1" && exit 0
+printf '\nSigned-off-by: %s <%s>\n' "$(git config user.name)" "$(git config user.email)" >> "$1"
