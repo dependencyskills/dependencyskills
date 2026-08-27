@@ -165,4 +165,4 @@ agent verbatim, and a cheap classifier sits in front of it to catch
 What crosses the line to the agent is the rewrite and the signature. Nothing else does.
 
 The decision behind all of this, including what was rejected, is
-[ADR-0012](https://github.com/dependencyskills/dependencyskills/blob/master/docs/knowledge/decisions/0012-a-shared-machine-level-index-store.md).
+[ADR-0012](https://github.com/dependencyskills/dependencyskills/blob/master/docs/knowledge/decisions/ADR-0012-a-shared-machine-level-index-store.md).

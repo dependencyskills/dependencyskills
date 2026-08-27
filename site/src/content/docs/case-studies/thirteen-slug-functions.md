@@ -9,7 +9,7 @@ inter-*library* problem — someone else's code, on Maven, that you have never
 heard of. This case study is the same failure inside a single repository, where
 every fact is measurable and none of it is exotic. The full record, with the
 four tests that would have caught it, is in the repository under
-`docs/knowledge/case-studies/`.
+`docs/knowledge/research/studies/`.
 
 Setting: a Kotlin Multiplatform monorepo — mobile client, desktop admin UI, a
 CLI, and a Ktor server. Counts are from `grep` over tracked sources; the

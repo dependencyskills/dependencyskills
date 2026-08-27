@@ -24,6 +24,9 @@
 #                   .agents/config/story-tools.json)
 #   --pull-only     apply wiki -> local only; local changes reported pending
 #   --allow-delete  a locally deleted file deletes its wiki page
+#   --new-section N approve publishing a top-level section not seen before
+#                   (repeatable). Sub-groups inside a known section need no
+#                   approval - only a new top-level directory does.
 #   --force         bootstrap over a non-empty KB_DIR with no sync state:
 #                   local files are adopted and pushed as pages
 #   --dry-run       print the full action plan; change nothing anywhere
@@ -34,12 +37,13 @@
 # Exit codes: 0 ok, 1 error, 2 completed but conflicts need resolution.
 set -uo pipefail
 
-KB_DIR=""; REPO=""; DRY=0; PULL_ONLY=0; ALLOW_DELETE=0; FORCE=0
+KB_DIR=""; REPO=""; DRY=0; PULL_ONLY=0; ALLOW_DELETE=0; FORCE=0; NEW_SECTIONS=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --repo) REPO="$2"; shift 2;;
     --pull-only) PULL_ONLY=1; shift;;
     --allow-delete) ALLOW_DELETE=1; shift;;
+    --new-section) NEW_SECTIONS="$NEW_SECTIONS $2"; shift 2;;
     --force) FORCE=1; shift;;
     --dry-run) DRY=1; shift;;
     --help) awk 'NR>1 && !/^#/{exit} NR>1{sub(/^# ?/,""); print}' "$0"; exit 0;;
@@ -102,7 +106,7 @@ fi
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 git clone -q "$WIKI_URL" "$TMP/wiki" || { echo "error: wiki clone failed" >&2; exit 1; }
 
-export KB_DIR REPO WIKI_URL DRY PULL_ONLY ALLOW_DELETE FORCE
+export KB_DIR REPO WIKI_URL DRY PULL_ONLY ALLOW_DELETE FORCE NEW_SECTIONS
 export WIKI_CLONE="$TMP/wiki"
 python3 <<'EOF'
 import os, re, subprocess, sys, datetime
@@ -114,6 +118,7 @@ DRY  = os.environ['DRY'] == '1'
 PULL = os.environ['PULL_ONLY'] == '1'
 ADEL = os.environ['ALLOW_DELETE'] == '1'
 FORCE = os.environ['FORCE'] == '1'
+NEWSEC = set(os.environ.get('NEW_SECTIONS', '').split())
 
 STATE = os.path.join(KB, '.gh-wiki-sync')
 BASE  = os.path.join(STATE, 'base')
@@ -132,6 +137,14 @@ def write(p, s):
 def cap(seg):
     return '-'.join(w[:1].upper() + w[1:] for w in re.split(r'[-_ ]+', seg) if w)
 
+# CHANGING THIS BREAKS THE NEW-SECTION GUARD - fix both in one commit.
+# The guard decides "this section is already published" by testing live page
+# names against page_for(sec + '/README.md') + '-', which encodes the
+# flattening separator. Give pages real paths and every section fails the
+# test, so the sync hard-exits on every run asking to approve sections that
+# have existed for months. Replace the prefix test with a directory-existence
+# check against the wiki clone at the same time: that tests the fact rather
+# than a name derived from it, and survives any later naming change.
 def page_for(path):          # rel path -> wiki page name
     p = path[:-3] if path.endswith('.md') else path
     if p == 'README': return 'Home'
@@ -170,6 +183,52 @@ local_files.sort()
 
 wiki_pages = sorted(f[:-3] for f in os.listdir(W)
                     if f.endswith('.md') and f not in ('_Sidebar.md', '_Footer.md'))
+
+# A new TOP-LEVEL directory is a new public section - a claim that the
+# project has a kind of knowledge it did not have before, published as a
+# side effect of an agent creating a folder. Sub-groups inside a known
+# section inherit their parent's meaning and publish status, so they pass
+# without ceremony. Only interrupt for the line that actually matters.
+if os.path.isfile(MANF):
+    # Known means PUBLISHED UNDER THAT SECTION. The manifest is sync state an
+    # agent may rewrite, and its path column is the field a staged rename
+    # touches - so reading sections from it lets one already-published page
+    # moved into a fresh directory mark that directory approved. The wiki's
+    # own page names cannot be rewritten locally, so ask them instead.
+    # Forward through page_for() rather than trying to invert it: a section
+    # like case-studies becomes the two tokens Case-Studies, and splitting a
+    # page name on '-' cannot tell where the directory ends.
+    # This is a PROXY for "the section exists on the wiki", and it holds only
+    # while page names encode the path. See the note above page_for(): under
+    # directory mirroring this must become a directory-existence check, in
+    # the same commit, or it flags every section on every run.
+    live = set(wiki_pages)
+    found = {p.split('/')[0] for p in local_files if '/' in p}
+    unapproved = []
+    for sec in sorted(found - NEWSEC):
+        pfx = page_for(sec + '/README.md')        # section -> its page prefix
+        if not any(pg == pfx or pg.startswith(pfx + '-') for pg in live):
+            unapproved.append(sec)
+    if unapproved:
+        print("error: this sync would publish new top-level section(s):",
+              file=sys.stderr)
+        for sec in unapproved:
+            n = sum(1 for p in local_files if p.split('/')[0] == sec)
+            print(f"    {sec}/  ({n} page{'s' if n != 1 else ''})",
+                  file=sys.stderr)
+        print("  Sections are created by people, so this needs your nod once.",
+              file=sys.stderr)
+        print("  A section named in the taxonomy is fine - approve it and it",
+              file=sys.stderr)
+        print("  never asks again. One an agent invented usually belongs inside",
+              file=sys.stderr)
+        print("  an existing section instead: a sub-group like research/studies/",
+              file=sys.stderr)
+        print("  needs no approval and publishes fine.",
+              file=sys.stderr)
+        print("  Meant it? " + " ".join(f"--new-section {s}" for s in unapproved),
+              file=sys.stderr)
+        sys.exit(1)
 
 if not os.path.isfile(MANF) and local_files and not FORCE:
     print(f"error: {KB} is non-empty but has no sync state.", file=sys.stderr)
@@ -254,7 +313,14 @@ for pth in sorted(manifest):
         RENAMED.append(f"{pg} -> {expected} ({pth})")
         if not PULL: wiki_mv(pg, expected)
         pg = expected
-        R, B = os.path.join(W, pg + '.md'), os.path.join(BASE, pg + '.md')
+        # wiki_mv is a no-op under --dry-run, so the page and its base are
+        # still at the OLD names. Repointing R/B at the post-rename paths
+        # would stat files the dry run declined to create, and every rename
+        # would read as a conflict - which made dry-run useless on exactly
+        # the reorganizations it exists to preview. Report the new name;
+        # keep reading where the content is.
+        if not DRY:
+            R, B = os.path.join(W, pg + '.md'), os.path.join(BASE, pg + '.md')
     pairs[pth] = pg
 
     if has_markers(L):

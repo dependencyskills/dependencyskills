@@ -56,7 +56,7 @@ files, paths, credentials and hosts.
 On the 15 skill documents the external rule cost 4% and looked excellent. On a real corpus it costs
 29.8% and is unusable. **The rule did not change; the sample did.**
 
-That is [RAD-0036](../../docs/knowledge/research/0036-can-the-corpus-be-poisoned.md)'s
+That is [RAD-0036](../../docs/knowledge/research/RAD-0036-can-the-corpus-be-poisoned.md)'s
 corpus-breadth argument measured rather than argued, and the same shape as `test11`'s provenance
 seam: a number that looks like a result and is actually a property of the sample. Both were caught
 by pricing against a wide population, and neither would have been caught by better analysis of the

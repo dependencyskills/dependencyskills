@@ -1,7 +1,7 @@
 # test12 — a wide prose corpus, from what is already on the machine
 
 Every corpus this project measured against came from **59 coordinates published by three
-organisations**. [RAD-0036](../../docs/knowledge/research/0036-can-the-corpus-be-poisoned.md)
+organisations**. [RAD-0036](../../docs/knowledge/research/RAD-0036-can-the-corpus-be-poisoned.md)
 recorded why that is a problem: three publishers is not a definition of *normal library
 documentation*, it is one house style. Documentation voice — length, whether preconditions are
 stated at all, how imperative a comment is willing to be — is set by a team's review culture and
@@ -96,7 +96,7 @@ would give per-library lookups without loading everything); whether it is gitign
 `prose-corpus.jsonl` and rebuilt from the manifest, which it probably must be given the size; and
 whether the declared surface belongs in the same file or beside it.
 
-Worth pairing with [RAD-0039](../../docs/knowledge/research/0039-where-the-dependency-graph-comes-from.md),
+Worth pairing with [RAD-0039](../../docs/knowledge/research/RAD-0039-where-the-dependency-graph-comes-from.md),
 since the dependency *edges* are the other thing repeatedly derived and discarded — and a stored
 extraction with no graph would still leave `test14` resolving against the wrong universe.
 

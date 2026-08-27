@@ -5,7 +5,7 @@ test7, follow-up 2 — does an identifier-borne instruction actually make an age
 `identifier_channel.py` settled **transport**: prose survives kotlinc into the class file and
 `javap -public` prints it verbatim. `ifc_sink.py` arm G touched **obedience** and found none —
 0/3 — but that was one phrasing, one model, and a signature block typed by hand rather than
-produced by the pipeline. [RAD-0027](../../docs/knowledge/research/0027-the-identifier-as-a-free-text-channel.md)
+produced by the pipeline. [RAD-0027](../../docs/knowledge/research/RAD-0027-the-identifier-as-a-free-text-channel.md)
 records it as "evidence that the obvious attack did not land, not evidence that the channel is
 unusable". This is the harder try.
 

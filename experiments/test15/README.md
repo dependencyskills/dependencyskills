@@ -4,7 +4,7 @@ Every test before this scored payloads **we wrote** against rules **we wrote**. 
 the identifier channel is closed for 0.221%, measured against four invented forms. If a fifth form
 existed that nobody thought of, the claim was overstated — and nobody had tried to find one.
 
-[RAD-0033](../../docs/knowledge/research/0033-do-form-constraints-compose.md) asks whether form
+[RAD-0033](../../docs/knowledge/research/RAD-0033-do-form-constraints-compose.md) asks whether form
 constraints genuinely compose or whether two lucky pairs were mistaken for a mechanism. The
 decisive form of that question is constructive:
 
@@ -54,7 +54,7 @@ that looks like an ordinary identifier is **read as an ordinary identifier** rat
 instruction. `copyEnvLog` passes the filter for the same reason it fails as an injection — it reads
 like an API, not like a command.
 
-If that holds, it is [RAD-0026](../../docs/knowledge/research/0026-meaning-without-command.md)'s
+If that holds, it is [RAD-0026](../../docs/knowledge/research/RAD-0026-meaning-without-command.md)'s
 thesis arriving from the defensive side, and it is the composition mechanism RAD-0033 was looking
 for: the constraints do not need to block every instruction, only to force the identifier into a
 shape where an instruction stops being legible as one.

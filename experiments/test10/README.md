@@ -4,7 +4,7 @@
 caught the loud forms and nothing else, and SwiftLint had no function-naming rule at all, so
 nothing objected in Swift.
 
-That leaves the question [RAD-0034](../../docs/knowledge/research/0034-better-linters-or-better-configuration.md)
+That leaves the question [RAD-0034](../../docs/knowledge/research/RAD-0034-better-linters-or-better-configuration.md)
 was opened for: the gap might be a property of the *defaults* rather than of the tools. Every one
 of these linters takes custom rules — SwiftLint `custom_rules`, Checkstyle `MethodName`, ESLint
 `id-match`, detekt `FunctionNaming` / `FunctionMaxLength`. So:
@@ -72,7 +72,7 @@ at the measured p99 and the curve is published beside it rather than the dial be
 English doc comments making a false claim. No constraint on the *form* of an identifier or a
 comment touches them, because there is nothing malformed to catch. Reaching them means judging
 whether a well-formed claim is *true*, which is the semantic grounding RAD-0021 already withdrew,
-and the trust-laundering case in [RAD-0029](../../docs/knowledge/research/0029-the-agent-as-a-trust-launderer.md)
+and the trust-laundering case in [RAD-0029](../../docs/knowledge/research/RAD-0029-the-agent-as-a-trust-launderer.md)
 where an agent writes the injected instruction into first-party source as a genuine precondition.
 
 So the honest summary of what configuration buys:

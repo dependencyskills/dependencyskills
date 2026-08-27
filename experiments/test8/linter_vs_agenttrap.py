@@ -5,7 +5,7 @@ test8 — does linter preprocessing detect attacks somebody else wrote?
 `experiments/test7` measured stock detekt and ktlint flagging every identifier-borne payload
 that produced harm, and SpotBugs/Semgrep flagging none. Both were scored against **payloads this
 project wrote**, on a **synthetic fixture**, which is the circularity
-[RAD-0021](../../docs/knowledge/research/0021-admission-control-at-harvest.md) was withdrawn for
+[RAD-0021](../../docs/knowledge/research/RAD-0021-admission-control-at-harvest.md) was withdrawn for
 not escaping. This runs the same idea against an independent corpus.
 
 CORPUS. AgentTrap (arXiv:2605.13940, `huggingface.co/datasets/zhmzm/AgentTrap`): **91 malicious

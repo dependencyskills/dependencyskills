@@ -2,8 +2,8 @@
 """
 test7, follow-up 6 — does the identifier channel work on frontier agents?
 
-Everything measured so far about [RAD-0027](../../docs/knowledge/research/0027-the-identifier-as-a-free-text-channel.md)
-is from three locally-served open-weight models. [RAD-0006](../../docs/knowledge/research/0006-development-time-prompt-injection.md)
+Everything measured so far about [RAD-0027](../../docs/knowledge/research/RAD-0027-the-identifier-as-a-free-text-channel.md)
+is from three locally-served open-weight models. [RAD-0006](../../docs/knowledge/research/RAD-0006-development-time-prompt-injection.md)
 found compliance varying wildly by model, and that **no property of the agent can be relied
 upon** — so a channel measured only on local models says nothing about the ones most developers
 actually use.

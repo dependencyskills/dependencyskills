@@ -17,7 +17,7 @@ and Python.
 > If you came looking for something to install, there isn't one yet.
 >
 > How it is shaped and why:
-> [ADR-0012](docs/knowledge/decisions/0012-a-shared-machine-level-index-store.md).
+> [ADR-0012](docs/knowledge/decisions/ADR-0012-a-shared-machine-level-index-store.md).
 > What the measurements found, including the ones that killed our own ideas:
 > [`docs/knowledge/research/`](docs/knowledge/research/).
 
@@ -136,7 +136,7 @@ against what, and a recommendation that is explicitly not a commitment.
 Decisions that have actually been made are in
 [`docs/knowledge/decisions/`](docs/knowledge/decisions/); several are now older than the
 measurements and are flagged where that matters. What shipped and failed is in
-[`docs/knowledge/postmortems/`](docs/knowledge/postmortems/) — v1 is inside
+[`docs/knowledge/research/postmortems/`](docs/knowledge/research/postmortems/) — v1 is inside
 published artifacts on Maven Central and anyone can download one and look.
 
 ## Why Kotlin Multiplatform is the reference case
@@ -167,13 +167,13 @@ different in each ecosystem.
 
 The directories marked empty are scaffolding for work that has not started.
 They are kept because the layout is a decision
-([ADR-0005](docs/knowledge/decisions/0005-repository-structure.md)) and an empty
+([ADR-0005](docs/knowledge/decisions/ADR-0005-repository-structure.md)) and an empty
 directory with a README is a clearer statement of intent than a missing one.
 
 Implementations are organised by **build system**, not package ecosystem: a KMP
 library reaches npm consumers through Gradle, so the Gradle implementation owns
 that channel. See
-[ADR-0005](docs/knowledge/decisions/0005-repository-structure.md).
+[ADR-0005](docs/knowledge/decisions/ADR-0005-repository-structure.md).
 
 ## State
 
@@ -181,9 +181,9 @@ Nothing is published and nothing is adoptable. What has changed is that the
 measuring is largely done and the building has started.
 
 **Settled.** Where library content comes from
-([ADR-0009](docs/knowledge/decisions/0009-transport-is-sources-jar.md)), and the
+([ADR-0009](docs/knowledge/decisions/ADR-0009-transport-is-sources-jar.md)), and the
 shape of the indexer that consumes it
-([ADR-0012](docs/knowledge/decisions/0012-a-shared-machine-level-index-store.md)):
+([ADR-0012](docs/knowledge/decisions/ADR-0012-a-shared-machine-level-index-store.md)):
 a shared machine-level store keyed by coordinate, so a library is indexed once
 per machine rather than once per project; declared dependencies by default with
 the transitive tail opt-in; and a boundary that decides what an agent is ever
@@ -218,7 +218,7 @@ dependency actually costs.
 
 **If we have characterised your project wrongly, tell us.** The landscape file
 is descriptive on purpose, and
-[RAD-0008](docs/knowledge/research/0008-the-field-as-it-stands.md) says where we
+[RAD-0008](docs/knowledge/research/RAD-0008-the-field-as-it-stands.md) says where we
 think each pattern's limits are. Both were written from the outside, from
 sources read on a date that is recorded. Arguing with a position you no longer
 hold helps nobody, and we would rather be corrected than accurate-sounding.

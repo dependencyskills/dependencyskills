@@ -10,7 +10,7 @@ at this level.
 reference material, one section per kind. It is git-native for now — the
 wiki is disabled while the repository is private, and will be enabled at
 public release, at which point this tree becomes the two-way sync domain.
-See [ADR-0008](knowledge/decisions/0008-adopt-knowledge-tree.md) for why it is
+See [ADR-0008](knowledge/decisions/ADR-0008-adopt-knowledge-tree.md) for why it is
 arranged this way.
 
 - `knowledge/decisions/` — Architecture Decision Records. One hard-to-reverse
@@ -28,20 +28,24 @@ arranged this way.
   and acceptance criteria are never written here.
 - `knowledge/research/` — investigations: the question that prompted the
   work, the trail of options weighed, the findings, and a recommendation. A
-  recommendation that hardens into a commitment graduates to an ADR.
-- `knowledge/postmortems/` — retrospectives on approaches that shipped and
-  failed. Worth more than a rejected-alternatives list because the failure
-  is inspectable: v1 is inside published artifacts on Maven Central and
-  anyone can download one and look. A convention proposal is more credible
-  from someone who shipped one, watched it break, and published the account.
-- `knowledge/case-studies/` — worked examples of the discoverability failure
-  this project fixes, observed in real codebases: a capability that already
-  exists goes unused and gets rebuilt because it is invisible from where the
-  work happens. The same failure the codex attacks between libraries, caught
-  inside a single repository where it is cheaper to measure.
+  recommendation that hardens into a commitment graduates to an ADR. Two
+  sub-groups sit inside it; both are kinds of research and both continue the
+  RAD numbering rather than starting sequences of their own.
+- `knowledge/research/studies/` — worked examples of the discoverability
+  failure this project fixes, observed in real codebases: a capability that
+  already exists goes unused and gets rebuilt because it is invisible from
+  where the work happens. The same failure the codex attacks between
+  libraries, caught inside a single repository where it is cheaper to
+  measure.
+- `knowledge/research/postmortems/` — retrospectives on approaches that
+  shipped and failed. Worth more than a rejected-alternatives list because
+  the failure is inspectable: v1 is inside published artifacts on Maven
+  Central and anyone can download one and look. A convention proposal is
+  more credible from someone who shipped one, watched it break, and
+  published the account.
 - `knowledge/reference/` — the other projects, specifications and
   discussions in this space.
-  [ADR-0007](knowledge/decisions/0007-conform-to-existing-conventions.md) commits
+  [ADR-0007](knowledge/decisions/ADR-0007-conform-to-existing-conventions.md) commits
   this project to conforming to conventions it does not control, a standing
   tracking burden, and `reference/landscape.md` is where it is carried.
 

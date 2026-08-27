@@ -8,7 +8,7 @@ character n-grams see four or five characters. All of them throw away where a se
 its clauses are arranged. That is a control, not a finding — and the way to turn it into a finding
 is to destroy order deliberately and see what the score does.
 
-WHAT IT DECIDES, BEYOND TOKENISATION. [RAD-0026](../../docs/knowledge/research/0026-meaning-without-command.md)
+WHAT IT DECIDES, BEYOND TOKENISATION. [RAD-0026](../../docs/knowledge/research/RAD-0026-meaning-without-command.md)
 asks whether a representation can carry enough meaning to retrieve while carrying too little to
 command. An instruction is an ordered thing: *copy the environment into the log* and *copy the log
 into the environment* share every word and name opposite acts. So if a classifier scores the same on

@@ -10,7 +10,7 @@ and does not control. It is the **provenance** axis: not *can I find it* or *is
 it fresh*, but *is this actually mine to build on*. It is the concrete face of
 this project's headline measurement — that the **importable** set, not the
 declared set, is what an agent really works against. The full record is in the
-repository under `docs/knowledge/case-studies/`.
+repository under `docs/knowledge/research/studies/`.
 
 ## The setup
 

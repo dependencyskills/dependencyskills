@@ -104,7 +104,7 @@ have been believed, and it would have been mostly wrong.
 
 So for evaluating a corpus, **inspectability is a requirement rather than a convenience**, and a
 linear model over named features is methodologically superior to a stronger opaque one. That is now
-step zero in [RAD-0035](../../docs/knowledge/research/0035-a-small-local-model-for-the-prose-gap.md):
+step zero in [RAD-0035](../../docs/knowledge/research/RAD-0035-a-small-local-model-for-the-prose-gap.md):
 before believing any score from any corpus, fit a linear model and read the top features.
 
 ## What it does not show

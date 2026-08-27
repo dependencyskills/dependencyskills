@@ -21,6 +21,44 @@ Pure agent instructions stay at the repo root (`AGENTS.md`,
 `WIRING.md`). Indexes and doc-system notes the agent maintains live at
 the `docs/` root. None of that syncs.
 
+**Everything under `docs/knowledge/` is published.** On a synced project
+that is a public wiki page or a KB article, on the next sync, without
+anyone approving it. Nothing else under `docs/` is - that distinction is
+what the directory is for.
+
+**Sections belong to the taxonomy; sub-groups are free.** Subdivide a
+section you are already filing into whenever it helps - `research/studies/`,
+`research/postmortems/`. A sub-group inherits its parent's meaning, its
+audience and its publish status, so it asserts nothing new. A new
+*top-level* directory does: it claims the project has a kind of knowledge
+it did not have before, and publishes it as a side effect. That is a
+person's call, not an agent's.
+
+An agent that cannot place something has nearly always found a *kind* of
+an existing section rather than a new one. Work down this list and stop at
+the first that fits:
+
+1. **The section it belongs to.** Nearly everything lands here.
+2. **A sub-group inside one** - `research/studies/`, `research/postmortems/`.
+   A kind of research is still research.
+3. **`documents/`**, as `DOC-000N-<slug>.md`. Genuinely informational
+   material, and the honest answer when nothing above fits. Say in the
+   summary what it is and which sections you rejected, so a person can
+   promote it later.
+4. **Never a new top-level section.** That is a claim about the project,
+   and it belongs to a person.
+
+`documents/` is the last stop, not the easy one. Reaching for it before
+working through 1 and 2 is how a section becomes a drawer nobody can find
+anything in - and a document filed there that belonged in `decisions/` is
+lost to everyone looking for a decision.
+
+**Numbering is per record type, not per directory.** A study nested under
+research continues the RAD sequence - `research/studies/RAD-0042-….md`,
+never a fresh `RAD-0001`. The identifier is the identity; the directory is
+only organisation. Wiki page names are flat and globally unique, so a
+restarted sequence collides.
+
 `docs/design/` is a **companion tree to `docs/knowledge/`**, not a section
 inside it: design records plus the images that make them worth reading.
 It stays git-native because the sync carries `.md` only - a record pushed
@@ -57,12 +95,13 @@ falls back to the directory stem, de-hyphenated and title-cased, so
 | `decisions/` | Architecture Decision Records | One hard-to-reverse choice each; append-only history |
 | `requirements/` | Product Requirements | PRD narratives + Stories tables of tracker IDs (never AC) |
 | `specifications/` | Specifications | How a thing IS - architecture, component specs; update in place |
-| `research/` | Research | Investigations - question, trail, findings |
+| `research/` | Research | Investigations - question, trail, findings. Postmortems and worked case studies are kinds of research: nest them (`research/postmortems/`, `research/studies/`) rather than minting a section |
 | `reference/` | Reference | External facts: vendors, prospects, regulations, domain material - and the **Domain Glossary** (the project's canonical terms; `AGENTS.md` at the repo root points at it so agents find it without a path) |
 | `guides/` | Developer Guides | How-to - onboarding, environment, CI |
 | `testing/` | Quality Assurance | Durable test plans and protocols (QA *runs* are issues) |
 | `compliance/` | Mandates & Compliance | Legal/regulatory rules the work must satisfy |
 | `support/` | Support | Support knowledge, runbooks, customer-facing material |
+| `documents/` | Documents | Informational pages that explain the project - what it is, why it exists, how the pieces relate. Numbered `DOC-0001-…`, and maintained in place rather than dated and closed. Also the honest home for a KB document that fits no other section |
 
 These are starting points, not a required tree. Match what a project
 already has rather than renaming its directories to fit this table.
@@ -91,7 +130,9 @@ earns it by having them.
 Every section directory's `README.md` is the section article's body:
 one or two sentences on what lives there and who reads it, so both KB
 readers and filing agents get the same guidance. Write one whenever you
-create a section.
+create a section **or a sub-group** - a sub-group is a page too, and one
+without a README publishes as a bare list of links with nothing saying
+what the group is for.
 
 **Subsystems (monorepos):** split WITHIN a section by subsystem
 subdirectory, one per Subsystem field value, lazily - only where a system

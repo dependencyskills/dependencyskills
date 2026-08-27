@@ -10,7 +10,7 @@ The first two case studies are about a *right* answer that is hard to find — i
 the **selection** axis: the gap that closes with neither freshness nor model
 capability. Everything here is public — the library announces its own status in
 its own docs. The full record is in the repository under
-`docs/knowledge/case-studies/`.
+`docs/knowledge/research/studies/`.
 
 ## The field
 

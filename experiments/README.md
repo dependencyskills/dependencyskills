@@ -160,7 +160,7 @@ paraphrase, signature-only display — and not the ones that try to recognise an
   and `declared` (the per-library surface), indexed for the per-library lookup a resolution check
   needs. Derived and disposable; the caches are the source of truth and `test12`'s manifest pins
   the maven half. What it still lacks is **dependency edges**, without which a resolution check
-  cannot see a library's actual dependencies — see [RAD-0039](../docs/knowledge/research/0039-where-the-dependency-graph-comes-from.md).
+  cannot see a library's actual dependencies — see [RAD-0039](../docs/knowledge/research/RAD-0039-where-the-dependency-graph-comes-from.md).
 - ~~The corpus supplies no JavaScript or Swift.~~ **Closed by the npm and SwiftPM harvests.**
   `test12` noted the Gradle cache holds 17 `.js` files across 1,892 jars and no `.swift` at all,
   which left the ecosystem every landed prose payload came from with no corpus behind it. Both now
@@ -196,7 +196,7 @@ paraphrase, signature-only display — and not the ones that try to recognise an
   wins by not losing badly: the two faces fail on different questions and the sets barely overlap.
   Fusing them into one vector is **worse than either alone** (4 of 17 first-hit), the same shape as
   RAD-0019's finding that an equal-weight hybrid hurt. See
-  [RAD-0040](../docs/knowledge/research/0040-does-summarising-improve-retrieval.md).
+  [RAD-0040](../docs/knowledge/research/RAD-0040-does-summarising-improve-retrieval.md).
 - ~~Prose, with both candidates priced and no payload set to score them against.~~ **The payload
   set was the wall, and `test19` removes it.** `test13` and `test14` priced the two structural
   signals — reference to something external (29.8%) and resolution against the declared surface

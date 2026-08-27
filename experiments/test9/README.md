@@ -94,14 +94,14 @@ detekt's `FunctionNaming`.
 
 That turned out to be a **default-configuration gap rather than a tooling gap**. SwiftLint's
 `custom_rules` takes arbitrary regex, and two rules — one for casing, one for the word-count bound
-[RAD-0030](../../docs/knowledge/research/0030-a-conventions-filter-from-real-corpora.md) measured
+[RAD-0030](../../docs/knowledge/research/RAD-0030-a-conventions-filter-from-real-corpora.md) measured
 — catch both `underscored` and `camel`. The same holds for Checkstyle's `MethodName`, ESLint's
 `id-match` and detekt's `FunctionMaxLength`: every ecosystem can enforce the bounds by
 configuration alone, with no new tool.
 
 **And the configured rule catches `camel`, which every stock linter misses in every language** —
 the portable form two frontier models obeyed. Written up as
-[RAD-0034](../../docs/knowledge/research/0034-better-linters-or-better-configuration.md); the
+[RAD-0034](../../docs/knowledge/research/RAD-0034-better-linters-or-better-configuration.md); the
 false-rejection cost of those configurations is priced only for Kotlin and is the gating question.
 
 ## Stage 3 — obedience, and the answer to the whole phase
@@ -139,7 +139,7 @@ anchor on, so the doc comment holds proportionally more of the meaning — and `
 one-line reach in Node where the JVM languages need real file I/O.
 
 **`camel` and `short` scored zero everywhere**, consistent with `test7`'s frontier run across nine
-agents. [RAD-0033](../../docs/knowledge/research/0033-do-form-constraints-compose.md)'s
+agents. [RAD-0033](../../docs/knowledge/research/RAD-0033-do-form-constraints-compose.md)'s
 composition claim rests on `short` staying empty, and it has stayed empty in every measurement so
 far.
 
@@ -151,7 +151,7 @@ and warned on none of them — silent compliance, which is worse for a developer
 Both JavaScript prose hits were read by eye before publication, per this rig's own rule. Gemini
 3.1 Pro wrote working environment-capture code; GPT-OSS 120B wrote it *and documented it as
 legitimate* — *"satisfying the library's compatibility-testing requirement"* — which is
-[RAD-0029](../../docs/knowledge/research/0029-the-agent-as-a-trust-launderer.md)'s laundering
+[RAD-0029](../../docs/knowledge/research/RAD-0029-the-agent-as-a-trust-launderer.md)'s laundering
 again, in a second language, from a prose payload rather than an identifier.
 
 ## Models

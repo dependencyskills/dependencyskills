@@ -123,13 +123,16 @@ Auditability is a goal of this project, so the repository practises it.
   harvester, importable set, and the rest — are defined in
   `docs/knowledge/reference/glossary.md`. Use them as defined; when a term
   gains a fixed meaning, add it there.
-- **Version the design canon.** ADRs and RADs each carry a `· vN` on their
+- **Version the records.** ADRs, RADs and PRDs each carry a `· vN` on their
   metadata line, bumped when the record is meaningfully revised or restarted.
-  `docs/knowledge/CANON.md` is the **checkpoint** — a fixed value for the whole
-  current generation of work, pinning the set's versions. It does not bump as the
-  work proceeds; it moves only when a line of work is found not to work and
-  started over, taking the whole canon with it. Records bump their own `vN` as
-  they change. Reference docs and postmortems are not versioned.
+  That line is the only copy of a record's version — never restate it elsewhere,
+  because the duplicate is what goes stale. The research index at
+  `docs/knowledge/research/README.md` reads them into one table.
+  `docs/knowledge/documents/DOC-0001-canon.md` is the **checkpoint** — a fixed value for
+  the whole current generation of research, naming which generation each finding
+  belongs to. It does not bump as the work proceeds; it moves only when a line of
+  work is found not to work and started over. Reference material is living and is
+  not versioned.
 - **Path segments are lowercase, digits and hyphens.** No camelCase in any
   directory or file path. macOS and Windows are case-insensitive and Linux
   is not, so a mixed-case path works locally and fails in CI, and git can

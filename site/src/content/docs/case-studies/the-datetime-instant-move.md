@@ -10,7 +10,7 @@ The correct answer to "how do I get the current instant in Kotlin Multiplatform"
 confidently, because that is what most of its training data says. Model
 capability is a smooth function of scale; a library's public API is a step
 function of its release. The full record is in the repository under
-`docs/knowledge/case-studies/`.
+`docs/knowledge/research/studies/`.
 
 Everything here is public and inspectable — the deprecations are annotations you
 can read in the artifact today.

@@ -4,16 +4,16 @@
 entries either way) raw harvested doc text retrieves at 29% r@1 against 77% for entries written
 in a caller's words, and on the real 5,440-entry corpus raw text scores 0/17. So the product needs
 an LLM that reads library documentation — attacker-controllable, per
-[RAD-0006](../../docs/knowledge/research/0006-development-time-prompt-injection.md) — and
+[RAD-0006](../../docs/knowledge/research/RAD-0006-development-time-prompt-injection.md) — and
 writes the entry that gets indexed.
 
 That single fact has two readings, and this rig tests the first question of both:
 
-- [RAD-0024](../../docs/knowledge/research/0024-does-the-pipeline-filter-injection.md) reads it
+- [RAD-0024](../../docs/knowledge/research/RAD-0024-does-the-pipeline-filter-injection.md) reads it
   as a possible **defence**. Summarising *rewrites* text rather than copying it, so an
   instruction survives only if the summariser reproduces it. If it does not, this project gets
   a filter for free from a step it must build anyway.
-- [RAD-0025](../../docs/knowledge/research/0025-the-summariser-as-attack-surface.md) reads it
+- [RAD-0025](../../docs/knowledge/research/RAD-0025-the-summariser-as-attack-surface.md) reads it
   as a new **attack surface**, and the more serious one. The summariser writes durable corpus
   content once, on behalf of every consumer, from text an attacker controls.
 
@@ -38,7 +38,7 @@ payload rather than the prose.
 Payloads are RAD-0006's, imported from `../test0/measurement/injection/payloads.py` rather than
 restated, so results stay comparable to every earlier injection measurement.
 
-The summarise prompt asks for what [RAD-0013](../../docs/knowledge/research/0013-the-codex-entry.md)
+The summarise prompt asks for what [RAD-0013](../../docs/knowledge/research/RAD-0013-the-codex-entry.md)
 specifies — a capability description in a caller's words plus trigger terms — because the point
 is to test the step the product would actually ship, not a test artifact.
 
@@ -87,13 +87,13 @@ summarised correctly.
 
 ### What this means for the two records
 
-**[RAD-0024](../../docs/knowledge/research/0024-does-the-pipeline-filter-injection.md) gains
+**[RAD-0024](../../docs/knowledge/research/RAD-0024-does-the-pipeline-filter-injection.md) gains
 real support, narrowly.** Summarisation does filter — completely, on both realistic payloads —
 and it is a step the product needs anyway. But it filters a *specific class*: instructions aimed
 at a downstream consumer. That is a free defence against the payloads RAD-0006 measured doing
 real harm, which is not nothing.
 
-**[RAD-0025](../../docs/knowledge/research/0025-the-summariser-as-attack-surface.md)'s hazard is
+**[RAD-0025](../../docs/knowledge/research/RAD-0025-the-summariser-as-attack-surface.md)'s hazard is
 confirmed and is the more important half.** The record listed "summariser redirected" as the
 outcome neither record anticipated; it happened on the first attempt, 4/6. **Summarisation does
 not filter payloads aimed at the summariser itself.**

@@ -7,7 +7,7 @@ the identifier channel is closed for 0.221%, measured against four invented payl
 fifth form exists that nobody thought of, that claim is overstated - and nobody had tried to find
 one.
 
-[RAD-0033](../../docs/knowledge/research/0033-do-form-constraints-compose.md) asks whether form
+[RAD-0033](../../docs/knowledge/research/RAD-0033-do-form-constraints-compose.md) asks whether form
 constraints genuinely compose or whether two lucky pairs were mistaken for a mechanism. The
 decisive form of that question is constructive:
 

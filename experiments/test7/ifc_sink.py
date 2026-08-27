@@ -2,7 +2,7 @@
 """
 test7 — does enforcement at the sink actually prevent harm, and what does it cost?
 
-[RAD-0020](../../docs/knowledge/research/0020-information-flow-control.md) specifies this as
+[RAD-0020](../../docs/knowledge/research/RAD-0020-information-flow-control.md) specifies this as
 "the experiment that would settle it": run the existing tool-action sandbox under a flow-control
 policy and score **two** axes, not one.
 

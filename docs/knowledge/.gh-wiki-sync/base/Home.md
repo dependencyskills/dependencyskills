@@ -10,23 +10,28 @@ Research asks, decisions settle, requirements oblige, and the tracker verifies. 
 
 | | |
 |---|---|
-| [Research](Research) | An investigation: the question, the options weighed, the dead ends, what was measured, and a recommendation. Recommends; never commits. |
-| [Decisions](Decisions) | One hard-to-reverse choice each, and — more importantly — what was tried and abandoned first. Append-only. A recommendation that hardened into a commitment. |
-| [Requirements](Requirements) | What the product must do and for whom, numbered so a tracker story can cite it. No acceptance criteria: done-ness belongs to [the issues](https://github.com/dependencyskills/dependencyskills/issues). |
+| [Research](research/README.md) | An investigation: the question, the options weighed, the dead ends, what was measured, and a recommendation. Recommends; never commits. |
+| [Decisions](decisions/README.md) | One hard-to-reverse choice each, and — more importantly — what was tried and abandoned first. Append-only. A recommendation that hardened into a commitment. |
+| [Requirements](requirements/README.md) | What the product must do and for whom, numbered so a tracker story can cite it. No acceptance criteria: done-ness belongs to [the issues](https://github.com/dependencyskills/dependencyskills/issues). |
 
-Three more sections carry material that is not part of that chain.
+Research subdivides where it helps. Both sub-groups are research, so both continue the RAD numbering rather than starting sequences of their own.
 
 | | |
 |---|---|
-| [Case Studies](Case-Studies) | Worked examples of the failure this project exists to fix, found in real codebases: a capability that already exists goes unused, and gets rebuilt, because it is invisible from where the work happens. |
-| [Postmortems](Postmortems) | Approaches that shipped and failed. Worth more than a rejected-alternatives list because the failure is inspectable — v1 is inside published artifacts on Maven Central and anyone can download one and look. |
-| [Reference](Reference) | Someone else's facts, kept close: the other projects and specifications in this space, the documentation conventions, and the [glossary](Reference-Glossary) that pins the terms these records use. |
+| [Research — Studies](research/studies/README.md) | Worked examples of the failure this project exists to fix, found in real codebases: a capability that already exists goes unused, and gets rebuilt, because it is invisible from where the work happens. |
+| [Research — Postmortems](research/postmortems/README.md) | Approaches that shipped and failed. Worth more than a rejected-alternatives list because the failure is inspectable — v1 is inside published artifacts on Maven Central and anyone can download one and look. |
+
+One more section sits outside the chain.
+
+| | |
+|---|---|
+| [Reference](reference/README.md) | Someone else's facts, kept close: the other projects and specifications in this space, the documentation conventions, and the [glossary](reference/glossary.md) that pins the terms these records use. |
 
 ## Two things to read first
 
-[CANON](CANON) is the checkpoint — a coherent snapshot pinning the version of every design record at a point in time, and a short list of **corrections to the record**, where later work overturned an inference the narrative still contains. The changelog is history and is not rewritten; that list is how a reader knows which conclusions no longer follow from it.
+[Canon](documents/DOC-0001-canon.md) is the history of the research programme — which generation of work each finding belongs to, and a short list of **corrections to the record**, where later work overturned an inference the narrative still contains. The changelog is history and is not rewritten; that list is how a reader knows which conclusions no longer follow from it.
 
-[Reference — Glossary](Reference-Glossary) pins the terms. Several have already been confused for one another — codex and librarian, importable and declared and resolved — so they are defined once and used consistently.
+[Reference — Glossary](reference/glossary.md) pins the terms. Several have already been confused for one another — codex and librarian, importable and declared and resolved — so they are defined once and used consistently.
 
 ## What is written here, and what is not
 

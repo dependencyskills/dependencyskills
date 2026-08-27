@@ -5,7 +5,7 @@ test7, follow-up 4 — do the ecosystem's own linters already catch this?
 `identifier_stats.py` derived two candidate rules from the real harvest: reject identifiers
 containing a space (0 false positives in 14,899 entries) and reject identifiers longer than six
 words (0.47%). Both were derived here, from scratch, which is the shape of mistake
-[ADR-0007](../../docs/knowledge/adr/0007-conform-to-existing-conventions.md) warns about:
+[ADR-0007](../../docs/knowledge/decisions/ADR-0007-conform-to-existing-conventions.md) warns about:
 **conform to a convention we do not control rather than mint our own.**
 
 Kotlin already ships two static analysers that encode naming conventions:

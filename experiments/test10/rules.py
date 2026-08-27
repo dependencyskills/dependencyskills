@@ -2,7 +2,7 @@
 """
 test10 — the candidate rule catalogue. Add a rule, re-run, watch the gap close.
 
-[RAD-0034](../../docs/knowledge/research/0034-better-linters-or-better-configuration.md) measured
+[RAD-0034](../../docs/knowledge/research/RAD-0034-better-linters-or-better-configuration.md) measured
 that every ecosystem can enforce a naming bound through the linter it already runs - SwiftLint
 `custom_rules`, Checkstyle `MethodName`, ESLint `id-match`, detekt `FunctionNaming` /
 `FunctionMaxLength`. This catalogue is the set of bounds to enforce, kept separate from the runner
@@ -17,14 +17,14 @@ here should be re-checked through the real tool before it is proposed.
 EVERY RULE CARRIES ITS COST. A bound is only usable if its false-rejection rate on real library
 content is known, so `evaluate.py` prices each one against `test5`'s 14,899-entry harvest. A rule
 with no cost line has not been measured and must not be adopted -
-[RAD-0021](../../docs/knowledge/research/0021-admission-control-at-harvest.md) was withdrawn for
+[RAD-0021](../../docs/knowledge/research/RAD-0021-admission-control-at-harvest.md) was withdrawn for
 exactly that.
 
 WHAT THIS CANNOT DO. These are constraints on the *form* of an identifier or a doc comment. They
 do not touch prose that is well-formed and merely false
-([RAD-0029](../../docs/knowledge/research/0029-the-agent-as-a-trust-launderer.md)), and they do not
+([RAD-0029](../../docs/knowledge/research/RAD-0029-the-agent-as-a-trust-launderer.md)), and they do not
 touch the 46% of published attacks that need no precondition at all
-([RAD-0031](../../docs/knowledge/research/0031-which-vectors-reach-a-real-project.md)).
+([RAD-0031](../../docs/knowledge/research/RAD-0031-which-vectors-reach-a-real-project.md)).
 """
 import re
 

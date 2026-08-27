@@ -2,7 +2,7 @@
 """
 test7, follow-up 5 — do the JVM's SECURITY analysers catch this, off the shelf?
 
-[RAD-0028](../../docs/knowledge/research/0028-sast-tooling-as-a-detection-layer.md) question 1.
+[RAD-0028](../../docs/knowledge/research/RAD-0028-sast-tooling-as-a-detection-layer.md) question 1.
 `lint_as_detector.py` showed stock detekt and ktlint already flag every identifier-borne payload
 measured to produce harm. This asks what the security-specific tools add **before anyone writes
 a custom rule** — the point being that a rule we author forfeits ADR-0007's "conform rather than

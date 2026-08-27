@@ -158,12 +158,12 @@ errored — a concrete unknown-tag behaviour, unlike KDoc's undocumented one.
 
 ## Connections
 
-- [RAD-0011](../research/0011-existing-documentation-systems-as-skill-content.md) —
+- [RAD-0011](../research/RAD-0011-existing-documentation-systems-as-skill-content.md) —
   doc systems as skill content; the custom-tag question `@suppress`/`@since` and
   this catalogue feed.
-- [RAD-0009](../research/0009-reusing-indexers-and-what-to-index.md) — the
+- [RAD-0009](../research/RAD-0009-reusing-indexers-and-what-to-index.md) — the
   per-ecosystem parsers that read these tags.
-- [RAD-0013](../research/0013-the-codex-entry.md) — entry fields these populate
+- [RAD-0013](../research/RAD-0013-the-codex-entry.md) — entry fields these populate
   (`@since` → version, `@suppress` → exclude, `@deprecated`/`replaceWith` → drift).
-- [RAD-0007](../research/0007-choosing-between-overlapping-libraries.md) —
+- [RAD-0007](../research/RAD-0007-choosing-between-overlapping-libraries.md) —
   `@suppress` as an author-intent signal alongside `api`/`implementation`.

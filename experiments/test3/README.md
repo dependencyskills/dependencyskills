@@ -3,7 +3,7 @@
 RAD-0006's mitigation 4 — anomaly detection on instruction-shaped prose — was left unverified
 because *"does this read like an instruction"* is a fuzzy NLP problem with an unknown
 false-positive rate. This tests a sharper, **computable** form of the same idea (RAD-0006 v4,
-[RAD-0020](../../docs/knowledge/research/0020-information-flow-control.md)):
+[RAD-0020](../../docs/knowledge/research/RAD-0020-information-flow-control.md)):
 
 > Does this documentation reference symbols or endpoints that exist nowhere in the declared
 > surface of the library that shipped it?
@@ -91,7 +91,7 @@ tuning problem; it is the boundary of the technique.
   rather than a shrug: **1.3% for URLs, ≤5.9% for symbols.**
 - **It is detection, not prevention** — mitigation 4, not mitigation 1. It flags; it does not
   stop an agent acting. It complements the architectural control rather than replacing it,
-  which is the case [RAD-0020](../../docs/knowledge/research/0020-information-flow-control.md)
+  which is the case [RAD-0020](../../docs/knowledge/research/RAD-0020-information-flow-control.md)
   makes for information-flow control.
 - **Its blind spot is exactly the class that needs the stronger control.** A pure instruction
   hijack references nothing, so no amount of grounding sees it — and that payload is precisely
@@ -165,7 +165,7 @@ It is also a minority of the attacks an independent benchmark contains.
 The honest reading is that this belongs as **one input among several — a label or a
 down-weight — rather than an admission gate**, which is the same conclusion part A's
 false-positive asymmetry pointed at for the symbol signal. See
-[RAD-0021](../../docs/knowledge/research/0021-admission-control-at-harvest.md) v2.
+[RAD-0021](../../docs/knowledge/research/RAD-0021-admission-control-at-harvest.md) v2.
 
 ### Provenance and reuse of the benchmark
 
@@ -208,7 +208,7 @@ AgentTrap benchmark uses the same convention.
 changes the payload, and every published figure measured against the current set becomes
 unreproducible. It needs a **payload-set version bump**: change the host, re-run the affected
 measurements, and re-stamp the results — see
-[ADR-0011](../../docs/knowledge/decisions/0011-publishing-posture-for-security-findings.md).
+[ADR-0011](../../docs/knowledge/decisions/ADR-0011-publishing-posture-for-security-findings.md).
 
 Until then, `dig +short datefmt-telemetry.io` before running, and skip the tool-enabled arms if
 it resolves.

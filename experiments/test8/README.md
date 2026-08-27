@@ -5,7 +5,7 @@ produced harm**, with no false positive on a clean control, and concluded that t
 linters were a cheap control this project should reuse rather than reinvent.
 
 That result has a problem, and it is the same one
-[RAD-0021](../../docs/knowledge/research/0021-admission-control-at-harvest.md) was withdrawn for:
+[RAD-0021](../../docs/knowledge/research/RAD-0021-admission-control-at-harvest.md) was withdrawn for:
 **the same people wrote the attack and the defence**, and the corpus was a synthetic fixture. This
 runs the idea against an independent corpus of real skills.
 
@@ -76,7 +76,7 @@ Attacks caught, by where the payload sits — higher is better, denominator in e
 **Blind to prose, as expected and now measured**: 1 of 18 on `NL-SKILL`, 0 of 6 on `NL-AUX`. That
 is 24 of 91 cases — a quarter of the corpus — that a code linter cannot see at all, and prose in a
 doc comment is precisely
-[RAD-0006](../../docs/knowledge/research/0006-development-time-prompt-injection.md)'s original
+[RAD-0006](../../docs/knowledge/research/RAD-0006-development-time-prompt-injection.md)'s original
 threat.
 
 **And it is weakest where it should be strongest.** Pure `CODE` payloads score 3 of 19, *worse*

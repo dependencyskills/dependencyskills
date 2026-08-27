@@ -120,12 +120,12 @@ word for it:
 - **v1 — the file inside the artifact**, authored at
   `src/commonMain/resources/META-INF/ai-skills/` and packaged as an ordinary resource. This is
   effectively the SkillsJars mechanism.
-  [The postmortem](https://github.com/dependencyskills/dependencyskills/blob/master/docs/knowledge/postmortems/v1-bundled-flat-files.md) records what went wrong and why.
+  [The postmortem](https://github.com/dependencyskills/dependencyskills/blob/master/docs/knowledge/research/postmortems/RAD-0046-v1-bundled-flat-files.md) records what went wrong and why.
 - **v2 — a classified sidecar**, `<artifact>-<version>-skills.zip` published beside the main
   artifact, to sidestep what v1 hit.
-  [ADR-0003](https://github.com/dependencyskills/dependencyskills/blob/master/docs/knowledge/decisions/0003-library-skills-via-repository-artifacts.md) decided it and marks where it
+  [ADR-0003](https://github.com/dependencyskills/dependencyskills/blob/master/docs/knowledge/decisions/ADR-0003-library-skills-via-repository-artifacts.md) decided it and marks where it
   was superseded.
-- **v3 — harvest what already ships**, [ADR-0009](https://github.com/dependencyskills/dependencyskills/blob/master/docs/knowledge/decisions/0009-transport-is-sources-jar.md).
+- **v3 — harvest what already ships**, [ADR-0009](https://github.com/dependencyskills/dependencyskills/blob/master/docs/knowledge/decisions/ADR-0009-transport-is-sources-jar.md).
 
 **We shipped it. It is on Maven Central right now.** Nine libraries under `io.github.aughtone`
 publish an `ai-skill.md` at `META-INF/ai-skills/` inside the jar — 1.4 KB to 7.9 KB each, across

@@ -100,7 +100,7 @@ AgentTrap benchmark uses the same convention.
 changes the payload, and every published figure measured against the current set becomes
 unreproducible. It needs a **payload-set version bump**: change the host, re-run the affected
 measurements, and re-stamp the results — see
-[ADR-0011](../../docs/knowledge/decisions/0011-publishing-posture-for-security-findings.md).
+[ADR-0011](../../docs/knowledge/decisions/ADR-0011-publishing-posture-for-security-findings.md).
 
 Until then, `dig +short datefmt-telemetry.io` before running, and skip the tool-enabled arms if
 it resolves.

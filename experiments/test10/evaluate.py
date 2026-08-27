@@ -8,7 +8,7 @@ Two questions per rule, and neither is useful without the other:
   **cost**     — what share of *real* library content would it reject too?
 
 `test8` established that a detector's catch rate means nothing without its false-alarm rate on the
-same population, and [RAD-0021](../../docs/knowledge/research/0021-admission-control-at-harvest.md)
+same population, and [RAD-0021](../../docs/knowledge/research/RAD-0021-admission-control-at-harvest.md)
 was withdrawn on precisely that number. So every rule is priced against `test5`'s 14,899-entry
 harvest of real libraries before it is reported.
 

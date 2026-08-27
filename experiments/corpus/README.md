@@ -28,7 +28,7 @@ whose harnesses are deliberately dependency-free; it is a single file, gitignore
 `prose-corpus.jsonl` is; and a new question needs a SQL clause rather than a new filter loop.
 
 **The counter-argument, recorded because it is a good one.** This project's own architecture holds
-that text is the source of truth and an index is derived and disposable — [RAD-0010](../../docs/knowledge/research/0010-how-the-codex-is-stored-and-served.md)
+that text is the source of truth and an index is derived and disposable — [RAD-0010](../../docs/knowledge/research/RAD-0010-how-the-codex-is-stored-and-served.md)
 keeps Lucene rebuilt from text and never authoritative. The consistent version of that here would be
 JSONL as the record with SQLite built from it. That is right for the **product**. For an experiment
 corpus rebuilt in minutes from an immutable cache, the extra layer buys nothing: the cache *is* the
@@ -142,7 +142,7 @@ run experiments on and a corpus with no ground truth cannot support one.
 | `suspect` | something flagged it and nobody has adjudicated |
 
 The default is deliberately not `benign`. Half a million declarations harvested from a package cache
-have not been audited, and [RAD-0036](../../docs/knowledge/research/0036-can-the-corpus-be-poisoned.md)
+have not been audited, and [RAD-0036](../../docs/knowledge/research/RAD-0036-can-the-corpus-be-poisoned.md)
 records that the negative class in any classifier is written by whoever can publish a package. A
 column asserting these were verified would be the most misleading thing in the database. *Assume
 they are fine; do not claim they were checked.*
@@ -293,7 +293,7 @@ is nearly all of its repetition, while maven dedupes within the publisher and le
 comment standing across unrelated groups.
 
 **No dependency edges.** A resolution check wants a library's own surface *plus its actual
-dependencies*, and this has only the first. See [RAD-0039](../../docs/knowledge/research/0039-where-the-dependency-graph-comes-from.md).
+dependencies*, and this has only the first. See [RAD-0039](../../docs/knowledge/research/RAD-0039-where-the-dependency-graph-comes-from.md).
 
 ## Whose cache this is
 

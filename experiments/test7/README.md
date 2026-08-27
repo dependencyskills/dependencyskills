@@ -1,6 +1,6 @@
 # test7 — does enforcement at the sink prevent harm, and what does it cost?
 
-[RAD-0020](../../docs/knowledge/research/0020-information-flow-control.md) names this as *"the
+[RAD-0020](../../docs/knowledge/research/RAD-0020-information-flow-control.md) names this as *"the
 experiment that would settle it"*. Every injection result this project has measures whether an
 agent **complied**. This measures whether compliance **reached anything that mattered**, which is
 the question a user actually has.
@@ -45,7 +45,7 @@ round-trips a backtick identifier containing a full sentence into the class file
 language** — so no backticks are needed at all. So an
 attacker who publishes the library controls a free-text channel **inside the structure tier**,
 with no documentation involved. Written up as
-[RAD-0027](../../docs/knowledge/research/0027-the-identifier-as-a-free-text-channel.md).
+[RAD-0027](../../docs/knowledge/research/RAD-0027-the-identifier-as-a-free-text-channel.md).
 
 ## What this shim is not
 

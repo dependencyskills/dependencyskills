@@ -3,8 +3,8 @@
 The thesis test: does the codex change what an agent does? This directory runs
 coding tasks through **real developer agents** (Claude Code subagents, Antigravity
 `agy`), with and without a codex entry, and scores whether the agent **uses** an
-existing capability or **reinvents** it. See [RAD-0016](../../../docs/knowledge/research/0016-the-content-value-ab.md)
-and [ADR-0010](../../../docs/knowledge/decisions/0010-measure-through-developer-tools.md).
+existing capability or **reinvents** it. See [RAD-0016](../../../docs/knowledge/research/RAD-0016-the-content-value-ab.md)
+and [ADR-0010](../../../docs/knowledge/decisions/ADR-0010-measure-through-developer-tools.md).
 
 ## Smoke test (one cell)
 
