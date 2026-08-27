@@ -9,6 +9,7 @@ Published under `org.dependencyskills.codex`, so the coordinate says which build
 | module | what it is |
 |---|---|
 | `core` | the store. SQLite, content-addressed entries, coordinates pointing at them |
+| `harvester` | one sources jar in, entries out. Tree-sitter, no build system, no network |
 | `encoder` | the default embedding model, packaged for Maven Central |
 
 ## Why this is not under `gradle/`
@@ -28,6 +29,14 @@ Three things in its shape are decisions rather than details:
 **The raw documentation has no field on the public `Entry` type.** It is a retrieval key: the store searches on it and never hands it out. Leaving it off the type makes that structural rather than a rule a caller can forget.
 
 **A coordinate is a row in its own right**, carrying a harvest state and timestamps, so a library with no sources jar is distinguishable from one nobody has looked at — and can be re-checked later rather than re-queued on every build.
+
+## `harvester`
+
+A `-sources.jar` in, entries out ([ADR-0009](../../docs/knowledge/decisions/ADR-0009-transport-is-sources-jar.md)). Gradle and Maven never unpack a dependency, so the archive is read in place. Tree-sitter does the parsing, settled by [RAD-0009](../../docs/knowledge/research/RAD-0009-reusing-indexers-and-what-to-index.md) v6 against standalone Dokka.
+
+**It is a pure function of the jar** — no prior state read, no deduplication decision, the same bytes out every run. That is what makes it re-runnable and testable, and it is only possible because the store collapses duplicates by content address instead.
+
+**Nothing it declines to index is silent.** A doc comment binds to a declaration only across whitespace, which is stricter than proximity and refuses the licence header every published file opens with; the refusals are counted and returned. An archive with no source in it, an archive that cannot be read, and an archive that yielded nothing are three different answers rather than one empty list — the failure this project keeps re-learning is that a skip and an absence look identical once both are zero.
 
 ## `encoder`
 

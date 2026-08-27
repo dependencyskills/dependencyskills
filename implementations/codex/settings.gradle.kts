@@ -7,3 +7,4 @@ dependencyResolutionManagement {
 
 include("core")
 include("encoder")
+include("harvester")
