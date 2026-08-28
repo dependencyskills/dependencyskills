@@ -10,6 +10,7 @@ Published under `org.dependencyskills.codex`, so the coordinate says which build
 |---|---|
 | `core` | the store, and the lexical query over it. SQLite, content-addressed entries, coordinates pointing at them |
 | `harvester` | one sources jar in, entries out. Tree-sitter, no build system, no network |
+| `classifier` | degrades suspect prose so no rewrite is made for it. A term table and a dot product |
 | `encoder` | the default embedding model, packaged for Maven Central |
 
 ## Why this is not under `gradle/`
@@ -45,6 +46,12 @@ A `-sources.jar` in, entries out ([ADR-0009](../../docs/knowledge/decisions/ADR-
 **It is a pure function of the jar** — no prior state read, no deduplication decision, the same bytes out every run. That is what makes it re-runnable and testable, and it is only possible because the store collapses duplicates by content address instead.
 
 **Nothing it declines to index is silent.** A doc comment binds to a declaration only across whitespace, which is stricter than proximity and refuses the licence header every published file opens with; the refusals are counted and returned. An archive with no source in it, an archive that cannot be read, and an archive that yielded nothing are three different answers rather than one empty list — the failure this project keeps re-learning is that a skip and an absence look identical once both are zero.
+
+## `classifier`
+
+Scores harvested documentation for an instruction hiding inside it, per sentence, and marks the entry when it finds one. **Nothing is discarded** — a suspect entry keeps its retrieval key and stays findable, and loses only the right to have a rewrite produced for it. Its own README carries the operating characteristics, which are measured against the weights that ship rather than carried over from the experiment.
+
+No runtime, no network, no model download: the weights are fitted offline and committed. That is why it could be built while the encoder and the summariser were still waiting on one.
 
 ## `encoder`
 

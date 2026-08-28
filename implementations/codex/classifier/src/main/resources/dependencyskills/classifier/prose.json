@@ -1,0 +1,24 @@
+{
+  "analyzer": "char 4-5 grams, lowercased",
+  "bar": 0.00221,
+  "terms": 120000,
+  "tfidf": {
+    "min_df": 3,
+    "norm": "l2",
+    "smooth_idf": true,
+    "sublinear_tf": true
+  },
+  "thresholds": {
+    "javadoc": -2.6755087579815195,
+    "jsdoc": -3.0323101231858463,
+    "kdoc": -2.8141372400460725
+  },
+  "trained_on": {
+    "conventions": [
+      "javadoc",
+      "kdoc",
+      "jsdoc"
+    ],
+    "sample_per_convention": 10000
+  }
+}

@@ -67,6 +67,7 @@ overturned an earlier one.
 | [0047](RAD-0047-a-jvm-embedding-runtime.md) | v2 | A JVM Embedding Runtime | JVM embeddings reproduce the reference at cosine 0.99999 and Lucene filters kNN by scope from inside the search — and the reference turned out to be mean-pooled, not the pooling BGE-M3 documents |
 | [0048](RAD-0048-where-the-encoder-size-cutoff-is.md) | v2 | Where the Encoder Size Cutoff Is | The pooling nobody chose cost 2 of 17 at rank 1; fp16 is free; and at realistic corpus size a 33 MB encoder is not worse than a 2,267 MB one |
 | [0049](RAD-0049-the-lexical-baseline.md) | v1 | What Lexical Search Alone Retrieves | The number the vector index has to beat — FTS5 over raw documentation gets 2 of 17 at 11,156 entries, and lands next door rather than nowhere |
+| [0050](RAD-0050-porting-the-prose-classifier.md) | v1 | What Survived Porting the Prose Classifier | The port is exact to 1e-6, the operating point transferred to another ecosystem at 0.170%, and the attribution model's 100% is template recognition |
 
 Numbering is sequential, runs across the sub-groups, and does not imply order
 of reading. 0001 and 0002 carry the measurements the rest lean on.

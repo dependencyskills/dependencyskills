@@ -18,6 +18,10 @@ dependencies {
     implementation("io.github.bonede:tree-sitter-java:0.23.5")
     implementation("io.github.bonede:tree-sitter-kotlin:0.3.8.1")
 
+    // Test-scope only, and one-directional: the classifier depends on `core`, never on this.
+    // The operating-characteristics measurement needs a real harvested corpus and the shipped
+    // classifier at once, and this is the module that can see both.
+    testImplementation(project(":classifier"))
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
 }

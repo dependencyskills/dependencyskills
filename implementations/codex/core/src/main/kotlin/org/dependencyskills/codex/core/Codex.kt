@@ -466,6 +466,55 @@ class Codex private constructor(private val db: Connection) : AutoCloseable {
             p.executeQuery().use { rs -> buildList { while (rs.next()) add(readEntry(rs)) } }
         }
 
+    /**
+     * Marks an entry as unfit to be shown, without removing anything.
+     *
+     * The entry keeps its row, its content address and its place in the search index, so it is
+     * still found and still returns its symbol and signature. What changes is that no rewrite may
+     * be produced or displayed for it.
+     *
+     * That asymmetry is the whole control. RAD-0021 rejected admission control at harvest and
+     * called silent discard a correctness hazard; dropping the entry, or dropping its retrieval
+     * key, would be a deletion wearing a safety control's costume - and an entry with no key
+     * cannot be found at all, which makes the safe outcome indistinguishable from the tool losing
+     * it. Reversible on purpose: a threshold is an operator's setting and a re-run under a
+     * different one has to be able to put an entry back.
+     *
+     * Returns whether the entry existed. A caller degrading something the store has never heard
+     * of is a bug in the caller, not a no-op worth swallowing.
+     */
+    fun setEntryState(id: String, state: EntryState): Boolean = transact {
+        db.prepareStatement("UPDATE entry SET state = ? WHERE id = ?").use { p ->
+            p.setString(1, state.name); p.setString(2, id)
+            p.executeUpdate() > 0
+        }
+    }
+
+    /** Entries in a given state. The review queue for anything the classifier degraded. */
+    fun entriesIn(state: EntryState): List<Entry> =
+        db.prepareStatement("""
+            SELECT id,symbol,signature,rewrite,lang,doc_format,state,extractor,summariser,encoder,pooling
+              FROM entry WHERE state = ? ORDER BY symbol
+        """.trimIndent()).use { p ->
+            p.setString(1, state.name)
+            p.executeQuery().use { rs -> buildList { while (rs.next()) add(readEntry(rs)) } }
+        }
+
+    /**
+     * The raw documentation for an entry, for something that must read it to decide about it.
+     *
+     * **Not part of the query path and deliberately awkward to reach.** The raw text is a
+     * retrieval key: the store searches on it and never hands it out, which is why [Entry] has no
+     * field for it. A classifier has to see it to judge it, and a rewriter has to see it to
+     * rewrite it, so the door exists - but it is a separate call with its own name, so nothing
+     * gets it by accident while reaching for something else.
+     */
+    fun rawDocumentation(id: String): String? =
+        db.prepareStatement("SELECT doc FROM entry WHERE id = ?").use { p ->
+            p.setString(1, id)
+            p.executeQuery().use { if (it.next()) it.getString(1) else null }
+        }
+
     fun entry(id: String): Entry? =
         db.prepareStatement("""
             SELECT id,symbol,signature,rewrite,lang,doc_format,state,extractor,summariser,encoder,pooling
