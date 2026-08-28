@@ -2,8 +2,18 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
+const port = Number(process.env.PORT) || 8312;
+
 // https://astro.build/config
 export default defineConfig({
+	// 8312 is this project's SSR slot in block 8310-8339 (see ~/Workspace/ports.txt).
+	// Astro defaults to 4321, which every Astro checkout on the machine wants at once —
+	// the block exists so two projects never do.
+	//
+	// PORT wins, because the block number is only the local default: anything that injects
+	// its own port and then health-checks it must not be argued with.
+	server: { port: port },
+	preview: { port: port },
 	// Custom domain (verified at the org level), served at the apex — so no `base`
 	// is needed and root-absolute asset paths are correct. `site` enables the
 	// sitemap and canonical links. The CNAME in public/ ships in the build output.
