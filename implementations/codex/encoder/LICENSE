@@ -12,8 +12,15 @@ statement and is cited here as such:
 
 The upstream repository publishes no LICENSE file and no copyright line, so
 none is reproduced here rather than inventing one. The terms the author has
-declared are the MIT terms, reproduced in full below. The weights are
-redistributed unmodified.
+declared are the MIT terms, reproduced in full below, and those terms permit
+modification and redistribution.
+
+The weights redistributed here are MODIFIED: converted from the author's
+`model.safetensors` to GGUF at F16. That is a container change and a
+float32-to-float16 cast; nothing is retrained, pruned or otherwise altered.
+The conversion is byte-reproducible and its recipe travels with the artifact at
+dependencyskills/encoder/RECIPE.md, so the derivation is checkable rather than
+asserted.
 
 ---
 

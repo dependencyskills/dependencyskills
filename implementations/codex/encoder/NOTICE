@@ -5,9 +5,15 @@ Artificial Intelligence).
   Source:  https://huggingface.co/BAAI/bge-small-en-v1.5
   Licence: MIT, as declared in the model card metadata at the address above
 
-The weights are unmodified. They are fetched from that address at build time and
-verified against pinned SHA-256 digests; this project neither re-exports nor
-re-quantises them.
+The weights are MODIFIED. This project converts the author's `model.safetensors`
+to GGUF at F16 - a container change and a float32-to-float16 cast - so that a
+single in-process runtime can serve both the encoder and the generator. Nothing
+is retrained, pruned or otherwise altered, and no claim of authorship is made.
+
+The conversion is byte-reproducible: the source digests, the converter commit and
+the exact command are recorded at dependencyskills/encoder/RECIPE.md inside this
+artifact, and re-running it yields an identical file. Anyone can therefore verify
+that what is shipped here is the author's model and nothing else.
 
 The upstream repository publishes no LICENSE file and no copyright line. The
 model card's licence declaration is cited as the authoritative statement, and

@@ -135,26 +135,32 @@ completed.
 
 ## The research
 
-Records live in [`docs/knowledge/research/`](docs/knowledge/research/). Each
-states what was asked, the trail including the dead ends, what was measured
-against what, and a recommendation that is explicitly not a commitment.
+Fifty-five records in [`docs/knowledge/research/`](docs/knowledge/research/),
+numbered 0001–0055 with no gaps. Each states what was asked, the trail including
+the dead ends, what was measured against what, and a recommendation that is
+explicitly *not* a commitment — that separation is the point, and it is why
+"do not adopt this" reads here as a result rather than a failure.
+[The index](docs/knowledge/research/README.md) lists every one with its finding
+in a line. If you are starting, these eight carry most of the weight:
 
 | | |
 |---|---|
-| **0001** | What a skill per dependency costs, measured across twelve public projects in four ecosystems |
-| **0002** | Existing documentation systems as transport and content — KDoc, DocC, godoc, docstrings |
-| **0003** | A capability server as a query front-end, local and central |
-| **0004** | External review of the proposal, and what it changed |
-| **0005** | A git-hosted codex reachable from published metadata |
-| **0006** | Development-time prompt injection |
-| **0007** | Choosing between overlapping libraries |
-| **0008** | The field as it stands — what others have built, what it corroborates, and where each pattern's limits are |
+| **0001** | What one skill per dependency costs, across twelve public projects in four ecosystems — the measurement that reshaped everything after it |
+| **0006** | Development-time prompt injection: the surface, and the measured model × payload × arm matrix |
+| **0019** | Retrieval at scale — where index recall stops being the problem and the agent loop starts |
+| **0029** | An agent wrote an injected instruction into its own doc comment, promoting a third-party payload to first-party |
+| **0037** | Where this project's own findings contradict each other, listed rather than quietly reconciled |
+| **0040** | The 29%→77% retrieval gap was measured against hand-written entries and does not reproduce |
+| **0046** | v1, shipped and superseded — a convention nothing could read |
+| **0049** | What lexical search alone retrieves, which is the number the vector index has to beat |
 
-Decisions that have actually been made are in
+Nine decisions that have actually been made are in
 [`docs/knowledge/decisions/`](docs/knowledge/decisions/); several are now older than the
 measurements and are flagged where that matters. What shipped and failed is in
 [`docs/knowledge/research/postmortems/`](docs/knowledge/research/postmortems/) — v1 is inside
-published artifacts on Maven Central and anyone can download one and look.
+published artifacts on Maven Central and anyone can download one and look. Four
+worked examples of the failure this project fixes, traced in real codebases, are
+in [`studies/`](docs/knowledge/research/studies/).
 
 ## Why Kotlin Multiplatform is the reference case
 
@@ -174,10 +180,10 @@ different in each ecosystem.
 | Path | What it holds |
 |---|---|
 | `docs/knowledge/` | Research records, decisions, postmortems and reference material |
-| `experiments/` | The measurements — the cost model and twenty-three numbered tests, plus the shared corpus, the summariser and the classifiers. Each self-contained: data plus a runnable harness |
+| `experiments/` | The measurements — the cost model and twenty-seven numbered tests, plus the shared corpus, the summariser and the classifiers. Each self-contained: data plus a runnable harness |
 | `site/` | The published site at [dependencyskills.org](https://dependencyskills.org) |
 | `spec/` | The convention. Normative, and currently ahead of what has been decided — `discovery.md`, the hard part, is unwritten |
-| `implementations/` | Per build system, plus the codex itself. The store, the harvester and the Gradle consumer plugin exist |
+| `implementations/` | Per build system, plus the codex itself — six modules: the store, the harvester, the classifier, the encoder, the in-process runtime and the vector index, alongside the Gradle consumer plugin |
 | `agent-skills/` | This project's own skills — **empty** |
 | `conformance/` | Runs an implementation against the fixtures — **empty** |
 | `fixtures/` | Sample skills, expected archives, malformed cases — **empty** |
@@ -194,8 +200,8 @@ that channel. See
 
 ## State
 
-Nothing is published and nothing is adoptable. What has changed is that the
-measuring is largely done and the building has started.
+Nothing is published and nothing is adoptable. The measuring is done; the
+building is most of the way through one ecosystem.
 
 **Settled.** Where library content comes from
 ([ADR-0009](docs/knowledge/decisions/ADR-0009-transport-is-sources-jar.md)), and the
@@ -206,17 +212,33 @@ per machine rather than once per project; declared dependencies by default with
 the transitive tail opt-in; and a boundary that decides what an agent is ever
 allowed to read.
 
-**Built.** The store, the sources-jar harvester, and the Gradle plugin a
-consuming project applies to learn which of its dependencies the store has
-never seen.
+**Built**, for Maven with Kotlin and Java sources:
 
-**Unwritten.** The index, the query layer and the summariser. The emit steps
-for npm and SPM, and both skills, do not exist.
+| | |
+|---|---|
+| the store | content-addressed entries, scoped per project, SQLite |
+| the harvester | a sources jar read in place, tree-sitter, each doc comment bound to the declaration it belongs to |
+| the Gradle plugin | reports which of a project's dependencies the store has never seen |
+| the query layer | a need in plain words, lexical, scoped to what this project resolved |
+| the classifier | degrades suspect prose without losing the entry — 0.170% flagged on real harvested documentation |
+| the runtime | llama.cpp in process, one native library per platform, generation and embedding from the same one |
+| the index | two vectors per entry, never concatenated, scope enforced inside the search rather than over its results |
+
+**Unwritten.** The summariser — the rewriter that is the quarantine, and the
+reason library prose would never reach an agent verbatim. The MCP server. The
+npm and SPM harvesters. Both skills.
 
 **Open.** Whether prose a filter misses is prose an agent would have obeyed —
-the gap between catching text and preventing harm. And retrieval at a corpus
-size a real dependency graph produces, which is an order of magnitude past
-anything measured so far.
+the gap between catching text and preventing harm.
+
+**And one that is no longer open, because it was measured and the answer is
+poor.** Retrieval at the size a real dependency graph produces: over 11,155
+entries harvested from one project's 59 dependencies, lexical search puts the
+right answer in the first ten for **2 of 17** needs and the two-faced vector
+index for **4**. Double, and nowhere near enough. The rewrite face helps
+sharply where it exists but covers 3.6% of entries until the summariser is
+written, so the number should move. Publishing it now is the point: a retrieval
+design with no baseline cannot tell an improvement from a change.
 
 ## If you are working on this too
 

@@ -96,7 +96,7 @@ The sharpest single case: a gold entry at rank **4,289** under ONNX and **4,297*
 
 ## Recommendation
 
-**Take the swap, for the shipped encoder only.** `bge-small-en-v1.5` through `libdscodex` reproduces the ONNX path closely enough that no entry moves, and it removes a second native dependency, ~160 MB of jars and half the model file. One library then serves both faces of the index — the encoder for [#6](https://github.com/dependencyskills/dependencyskills/issues/6) and the generator for [#7](https://github.com/dependencyskills/dependencyskills/issues/7).
+**Take the swap, for the shipped encoder only.** `bge-small-en-v1.5` through `libdscodex` reproduces the ONNX path closely enough that no entry moves, and it avoids a second native dependency and ~160 MB of jars, and takes 20 MB off the published encoder artifact. One library then serves both faces of the index — the encoder for [#6](https://github.com/dependencyskills/dependencyskills/issues/6) and the generator for [#7](https://github.com/dependencyskills/dependencyskills/issues/7).
 
 **Keep pooling a required argument, wherever this is wrapped.** The measured cost of the default is 0.930 against 0.99999. #6's acceptance criteria already ask that pooling be recorded per entry and that vectors under different pooling never mix; `dsc_encoder_pooling` makes that assertable rather than remembered, and the encoder jar's `Encoder-Pooling` manifest attribute is the value to assert against.
 
