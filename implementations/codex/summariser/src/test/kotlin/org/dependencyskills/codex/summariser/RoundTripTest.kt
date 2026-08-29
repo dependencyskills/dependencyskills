@@ -56,6 +56,39 @@ class RoundTripTest {
     }
 
     @Test
+    fun `a doc comment far longer than the context does not take the process down`() {
+        // The regression this exists for killed a fifteen-minute run. Handed more tokens than its
+        // context holds, llama.cpp calls abort() - SIGABRT, not an error code - so the JVM dies
+        // and no `runCatching` anywhere can help. Only a real model reproduces it, which is why
+        // this test is here and not beside the unit tests.
+        //
+        // Measured: 28 doc comments in a 14,899-entry corpus exceed a 2,048-token context, the
+        // largest at 17,721 characters. This is larger still.
+        openGenerator(model(), contextTokens = 2048).use { generator ->
+            val summariser = Summariser(generator, model = "gemma-3-270m-it-qat-Q4_0")
+            val enormous = "Writes bytes to the response body as they become available. " +
+                "The following example shows the pattern in detail. ".repeat(1_200)
+            assertTrue(enormous.length > 50_000)
+
+            // Reaching the assertion at all is the result: the process is still alive.
+            val result = summariser.summarise(symbol, signature, enormous)
+            println("survived ${enormous.length} characters: ${result::class.simpleName}")
+        }
+    }
+
+    @Test
+    fun `the shim clamps even when the caller forgets to`() {
+        // Belt and braces, deliberately. `Summariser` bounds the doc it reads, but the clamp that
+        // keeps the process alive is in the shim - because a contract of "never take the host
+        // down" cannot depend on every caller having remembered a constant. This goes around the
+        // summariser entirely and hands the generator a prompt no caller would build.
+        openGenerator(model(), contextTokens = 512).use { generator ->
+            val output = generator.generate("word ".repeat(20_000), maxTokens = 16)
+            println("clamped: produced ${output.length} characters from a 20,000-word prompt")
+        }
+    }
+
+    @Test
     fun `a planted instruction does not survive into the published sentence`() {
         // The quarantine claim, on the real path. `test7` measured the arm - a tool-less
         // paraphraser stopped a planted credential leaking 0 of 3 while the task still completed

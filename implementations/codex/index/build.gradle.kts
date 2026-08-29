@@ -1,3 +1,5 @@
+import java.time.Duration
+
 // The two-faced vector index: a DERIVED index, never the source of truth.
 //
 // The store (`core`) holds the entries; this holds vectors computed from them and can be thrown
@@ -29,6 +31,11 @@ dependencies {
     // Test-scope only, and one-directional: the harvester never depends on this. The comparison
     // against #4's lexical baseline needs a real harvested corpus and the vector index at once.
     testImplementation(project(":harvester"))
+    // Also test-scope only, and also one-directional. The end-to-end measurement needs the whole
+    // pipeline in one process - harvest, classify, summarise, index, query - and this is the
+    // module that already sees most of it.
+    testImplementation(project(":classifier"))
+    testImplementation(project(":summariser"))
     // A real JSON parser, test-scope only. The rewrites fixture has escaped quotes and braces
     // inside string values, which is exactly where a hand-rolled scan silently returns nothing -
     // and "no rewrites" would have read as "the second face does not help".
@@ -83,8 +90,9 @@ tasks.withType<Test>().configureEach {
     // at a realistic filter size (2,962 us -> 1,603 us across 500 coordinates).
     jvmArgs("--add-modules", "jdk.incubator.vector", "--enable-native-access=ALL-UNNAMED")
     // Forwarded explicitly: a -D on the command line reaches the Gradle daemon, not this fork.
-    providers.systemProperty("codex.encoder.model").orNull
-        ?.let { systemProperty("codex.encoder.model", it) }
+    listOf("codex.encoder.model", "codex.summariser.model").forEach { name ->
+        providers.systemProperty(name).orNull?.let { systemProperty(name, it) }
+    }
 
     // Lenient for the same reason the harvester is: a coordinate with no sources jar is a finding
     // the harvest reports, not a resolution failure.
@@ -111,7 +119,10 @@ tasks.withType<Test>().configureEach {
 
 // The structural suite: synthetic vectors, no model, seconds. This is what `./gradlew test` runs.
 tasks.test {
-    filter { excludeTestsMatching("*TwoFacedRetrievalTest") }
+    filter {
+        excludeTestsMatching("*TwoFacedRetrievalTest")
+        excludeTestsMatching("*SummarisedRetrievalTest")
+    }
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -130,5 +141,21 @@ val retrieval by tasks.registering(Test::class) {
     testClassesDirs = sourceSets["test"].output.classesDirs
     classpath = sourceSets["test"].runtimeClasspath
     filter { includeTestsMatching("*TwoFacedRetrievalTest") }
+    outputs.upToDateWhen { false }
+}
+
+// The end-to-end measurement: harvest, classify, summarise, index, query, in one pass over a real
+// dependency graph. Half an hour of compute, two models, and the number the whole design rests on.
+//
+//   ./gradlew :index:endToEnd \
+//     -Dcodex.encoder.model=/path/to/bge-small-en-v1.5-f16.gguf \
+//     -Dcodex.summariser.model=/path/to/gemma-3-270m-it-qat-Q4_0.gguf
+val endToEnd by tasks.registering(Test::class) {
+    description = "The whole pipeline over one project's dependencies. Needs both models."
+    group = "verification"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    filter { includeTestsMatching("*SummarisedRetrievalTest") }
+    timeout = Duration.ofHours(2)
     outputs.upToDateWhen { false }
 }
