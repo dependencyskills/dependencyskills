@@ -75,6 +75,18 @@ int dsc_generate(void *handle, const char *prompt, char *out, int out_len, int m
         return -2;
     }
 
+    // CLAMP, and it is not a nicety. Handed more tokens than the context holds, llama.cpp aborts
+    // the PROCESS - not an error code, not an exception, SIGABRT - so a caller that degrades
+    // gracefully on every other failure cannot degrade on this one. Measured: 28 doc comments in
+    // a 14,899-entry corpus exceed a 2,048-token context, and they killed a fifteen-minute run.
+    //
+    // The budget leaves room for what is generated as well as what is read; the head of the
+    // prompt is kept because a doc comment leads with the sentence that describes the capability
+    // and trails off into examples.
+    int budget = (int) llama_n_ctx(s->ctx) - max_tokens;
+    if (budget < 1) budget = (int) llama_n_ctx(s->ctx) / 2;
+    if (n_prompt > budget) n_prompt = budget;
+
     llama_memory_clear(llama_get_memory(s->ctx), true);
 
     struct llama_batch batch = llama_batch_get_one(tokens, n_prompt);

@@ -100,3 +100,27 @@ data class NewEntry(
         require(signature.isNotBlank()) { "signature must not be blank" }
     }
 }
+
+/**
+ * What became of a summariser's output when it reached the store.
+ *
+ * Four outcomes rather than a boolean, because three of them are indistinguishable from the
+ * outside and two of them are things a caller needs to act on. A summariser that reported
+ * "written" for all of these would hide the one case where its work was deliberately discarded.
+ */
+enum class SummaryOutcome {
+    /** A rewrite was produced, verified, and is now the entry's displayable prose. */
+    Stored,
+
+    /** Nothing survived verification. The entry keeps its retrieval key and shows its signature. */
+    Degraded,
+
+    /**
+     * A rewrite was produced and **not** stored, because the classifier had already degraded this
+     * entry. Paraphrasing suspect prose well does not make it less suspect.
+     */
+    Withheld,
+
+    /** No entry with that id. Reported rather than treated as a successful write of nothing. */
+    Unknown,
+}
