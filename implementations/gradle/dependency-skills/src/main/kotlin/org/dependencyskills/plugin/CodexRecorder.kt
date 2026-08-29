@@ -8,6 +8,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.logging.Logging
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
+import java.nio.file.Files
 import java.nio.file.Path
 
 /**
@@ -33,6 +34,20 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
          * wrote to it.
          */
         val storeDirectory: Property<String>
+
+        /**
+         * Where to write this project's scope — the coordinates it resolved.
+         *
+         * The store is machine-level and holds entries from every project on this machine; it
+         * deliberately records no project-to-coordinate edge, because scope belongs to the
+         * `(project, source set) → coordinate` relation rather than to a coordinate. **Only the
+         * build knows.** So the build writes it down, and the MCP server reads it.
+         *
+         * Text rather than a `DirectoryProperty`, for the same configuration-cache reason as
+         * [storeDirectory]: this build writes the file, so fingerprinting it would invalidate
+         * the cache on every build.
+         */
+        val scopeFile: Property<String>
     }
 
     private val logger = Logging.getLogger(CodexRecorder::class.java)
@@ -88,9 +103,39 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
 
     override fun close() {
         synchronized(lock) {
-            if (!broken) report()
+            if (!broken) {
+                writeScope()
+                report()
+            }
             runCatching { codex?.close() }
             codex = null
+        }
+    }
+
+    /**
+     * Writes the coordinates this build resolved, for the MCP server to read.
+     *
+     * **Written whole, every build, rather than appended.** A dependency removed from the build
+     * file has to leave the scope, and a scope that only grows would keep answering questions
+     * about a library the project no longer has — which is the containment boundary quietly
+     * widening rather than a stale cache.
+     *
+     * Nothing here may fail a build: a project whose scope cannot be written still compiles, and
+     * says so once.
+     */
+    private fun writeScope() {
+        val target = parameters.scopeFile.orNull?.let { Path.of(it) } ?: return
+        if (resolutions == 0) return   // nothing resolved; last build's scope is better than none
+        try {
+            Files.createDirectories(target.parent)
+            val lines = buildList {
+                add("# Written by the dependencyskills Gradle plugin. Do not edit.")
+                add("# The coordinates this project resolved, which is what its agent may search.")
+                addAll(seen.map { "${it.ecosystem}:${it.value}" }.sorted())
+            }
+            Files.write(target, lines)
+        } catch (t: Throwable) {
+            logger.warn("dependencyskills: could not write the agent scope to $target: ${t.message}")
         }
     }
 

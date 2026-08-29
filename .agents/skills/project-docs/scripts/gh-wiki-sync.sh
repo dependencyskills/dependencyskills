@@ -162,8 +162,17 @@ LINK = re.compile(r'(\]\()([^)\s]+)(\))')
 ESCAPED = []                 # real targets with no page - served by the repo
 UNRESOLVED = []              # link targets that name nothing at all
 
+IMG_EXT = ('.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.avif')
+
+BLOB_RE = re.compile(r'^https://github\.com/' + re.escape(REPO)
+                     + r'/blob/HEAD/([^)\s?#]+)(?:\?raw=1)?$')
+
 def _blob(rel):              # HEAD resolves to the repo's default branch
-    return f"https://github.com/{REPO}/blob/HEAD/{rel}"
+    url = f"https://github.com/{REPO}/blob/HEAD/{rel}"
+    # An embed needs the bytes, not the file's HTML page. '?raw=1' is served
+    # through github.com, so it carries the reader's session - a raw.github-
+    # usercontent URL would 404 for everyone on a private repo.
+    return url + '?raw=1' if rel.lower().endswith(IMG_EXT) else url
 
 def wikify(text, pth):       # repo-relative -> wiki page names
     d = os.path.dirname(pth)
@@ -206,6 +215,17 @@ def unwikify(text, pth):     # wiki page names -> repo-relative
     d = os.path.dirname(pth)
     def sub(mo):
         pre, t, post = mo.groups()
+        # A blob URL is what wikify emitted for a non-page target. Turning it
+        # back makes the pair a true inverse: without this, one round trip
+        # would leave an absolute URL sitting in the working tree.
+        m = BLOB_RE.match(t)
+        if m:
+            full = os.path.join(os.path.abspath('.'), m.group(1))
+            # only if it still names something: a dead blob URL turned into a
+            # dead relative path is harder to see, not easier
+            if os.path.exists(full):
+                return pre + os.path.relpath(full, os.path.join(KB, d)) + post
+            return mo.group(0)
         if re.match(r'^(https?:|mailto:|#)', t): return mo.group(0)
         body, sep, frag = t.partition('#')
         tgt = pairs_path(body)

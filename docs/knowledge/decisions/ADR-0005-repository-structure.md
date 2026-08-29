@@ -126,9 +126,13 @@ match the tree's spelled-out naming.
   Maven and Gradle never unpack a dependency and need a published sidecar;
   npm and SPM already expose files on disk and need an emit step. The
   asymmetry is the argument the project is making.
-- This project's own skills live at `agent-skills/` in the root, not inside
-  any implementation. They are spec-level — the skill teaches the
-  convention, and only its install template differs per build system. A copy
+- This project's own skills live at `implementations/agent-skills/`, a
+  **sibling** of `gradle/` and `codex/` rather than inside either. (Moved from
+  the repository root on 2026-08-29; the reasoning below is unchanged and was
+  the reason for the sibling placement rather than a per-implementation copy.
+  What changed is only that it now sits with the rest of the source.)
+
+  They are spec-level — the skill teaches the convention, and only its install template differs per build system. A copy
   per implementation would drift, which is what the monorepo exists to
   prevent. It also dogfoods the rule libraries are asked to follow: one
   authoring location, many publication channels.

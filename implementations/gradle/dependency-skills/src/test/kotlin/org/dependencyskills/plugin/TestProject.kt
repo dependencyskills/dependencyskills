@@ -24,6 +24,9 @@ internal class TestProject(
     private val repository: Path = root.resolve("repo")
     private val projectDirectory: Path = root.resolve("project")
 
+    /** Where the plugin writes this project's scope, for an MCP server started here to read. */
+    val scopeFile: Path = projectDirectory.resolve(DependencySkillsPlugin.DEFAULT_SCOPE)
+
     fun store(): Codex = Codex.open(storeDirectory.resolve(CodexLocation.FILENAME))
 
     /**

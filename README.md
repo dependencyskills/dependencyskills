@@ -183,8 +183,7 @@ different in each ecosystem.
 | `experiments/` | The measurements — the cost model and twenty-seven numbered tests, plus the shared corpus, the summariser and the classifiers. Each self-contained: data plus a runnable harness |
 | `site/` | The published site at [dependencyskills.org](https://dependencyskills.org) |
 | `spec/` | The convention. Normative, and currently ahead of what has been decided — `discovery.md`, the hard part, is unwritten |
-| `implementations/` | Per build system, plus the codex itself — six modules: the store, the harvester, the classifier, the encoder, the in-process runtime and the vector index, alongside the Gradle consumer plugin |
-| `agent-skills/` | This project's own skills — **empty** |
+| `implementations/` | Per build system, plus the codex itself and this project's own agent skills. Eight codex modules — the store, harvester, classifier, encoder, in-process runtime, vector index, summariser and MCP server — alongside the Gradle consumer plugin |
 | `conformance/` | Runs an implementation against the fixtures — **empty** |
 | `fixtures/` | Sample skills, expected archives, malformed cases — **empty** |
 

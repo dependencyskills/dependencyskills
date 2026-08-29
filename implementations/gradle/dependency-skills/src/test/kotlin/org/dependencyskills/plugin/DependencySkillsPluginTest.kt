@@ -2,6 +2,7 @@ package org.dependencyskills.plugin
 
 import org.dependencyskills.codex.core.Coordinate
 import org.dependencyskills.codex.core.HarvestState
+import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -118,6 +119,39 @@ class DependencySkillsPluginTest {
             assertEquals(HarvestState.Pending, record.state)
             assertNotNull(record.firstSeen)
         }
+    }
+
+    @Test
+    fun `the build writes down what this project may search`() {
+        // The store is machine-wide and records no project-to-coordinate edge, deliberately. So
+        // the only thing that knows a project's scope is the build that resolved it, and the MCP
+        // server that enforces the boundary has to be told. This is the telling.
+        val project = project()
+        project.build("""dependencies { api("com.example:alpha:1.0") }""")
+        project.run("classes")
+
+        val lines = Files.readAllLines(project.scopeFile)
+        assertTrue(lines.any { it == "maven:com.example:alpha:1.0" }, "scope was: $lines")
+        assertTrue(lines.first().startsWith("#"), "the file should say what wrote it")
+    }
+
+    @Test
+    fun `a removed dependency leaves the scope`() {
+        // Written whole rather than appended. A scope that only grew would keep answering
+        // questions about a library the project no longer has, which is the containment boundary
+        // widening quietly rather than a stale cache.
+        val project = project()
+        project.build("""dependencies { api("com.example:alpha:1.0")
+            api("com.example:beta:1.0") }""")
+        project.run("classes")
+        assertTrue(Files.readAllLines(project.scopeFile).any { it.endsWith("beta:1.0") })
+
+        project.build("""dependencies { api("com.example:alpha:1.0") }""")
+        project.run("classes", "--rerun-tasks")
+
+        val lines = Files.readAllLines(project.scopeFile)
+        assertTrue(lines.none { it.endsWith("beta:1.0") }, "a dropped dependency stayed in scope: $lines")
+        assertTrue(lines.any { it.endsWith("alpha:1.0") })
     }
 
     @Test

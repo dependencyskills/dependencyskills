@@ -41,6 +41,14 @@ class DependencySkillsPlugin : Plugin<Project> {
             // An operator pointing the store somewhere else — a scratch location in CI, a
             // shared volume. Unset is the ordinary case and means the default location.
             parameters.storeDirectory.set(providers.gradleProperty(STORE_PROPERTY))
+            // In the project, not beside the store. The store is machine-level and shared; a
+            // scope is one project's, and `.gradle/` is where a project keeps state that must
+            // survive `clean` - which this must, or an agent loses its scope the moment somebody
+            // cleans the build.
+            parameters.scopeFile.set(
+                providers.gradleProperty(SCOPE_PROPERTY)
+                    .orElse(layout.projectDirectory.file(DEFAULT_SCOPE).asFile.absolutePath),
+            )
         }
 
         // Instantiated now, not on first use. Gradle creates a build service lazily, so a build
@@ -79,6 +87,10 @@ class DependencySkillsPlugin : Plugin<Project> {
         const val SERVICE = "dependencySkillsCodex"
         const val ENABLED_PROPERTY = "dependencySkills.enabled"
         const val STORE_PROPERTY = "dependencySkills.codexDir"
+        const val SCOPE_PROPERTY = "dependencySkills.scopeFile"
+
+        /** Where an MCP server started in this project looks, without being told. */
+        const val DEFAULT_SCOPE = ".gradle/dscodex/scope.txt"
     }
 }
 
