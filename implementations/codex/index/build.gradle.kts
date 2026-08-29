@@ -122,6 +122,7 @@ tasks.test {
     filter {
         excludeTestsMatching("*TwoFacedRetrievalTest")
         excludeTestsMatching("*SummarisedRetrievalTest")
+        excludeTestsMatching("*WholeCommentClassificationTest")
     }
 }
 
@@ -157,5 +158,16 @@ val endToEnd by tasks.registering(Test::class) {
     classpath = sourceSets["test"].runtimeClasspath
     filter { includeTestsMatching("*SummarisedRetrievalTest") }
     timeout = Duration.ofHours(2)
+    outputs.upToDateWhen { false }
+}
+
+// Re-asks a settled question against the shipped classifier: whole comment or per sentence?
+// Needs the store :index:endToEnd leaves behind, and no model at all.
+val wholeComment by tasks.registering(Test::class) {
+    description = "Per-sentence against whole-comment classification, with planted payloads."
+    group = "verification"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    filter { includeTestsMatching("*WholeCommentClassificationTest") }
     outputs.upToDateWhen { false }
 }

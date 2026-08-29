@@ -33,16 +33,39 @@ object Verification {
     /** A capability line, not a paragraph. */
     const val MAX_WORDS = 40
 
+    /**
+     * Rules about the SHAPE of a candidate rather than what it says.
+     *
+     * The distinction is load-bearing rather than tidy. A shape refusal means the model wrote too
+     * much; a safety refusal means it wrote something it should not have. Measured over 11,155
+     * entries, 1,009 of 1,238 refusals were shape — a model asked for one sentence producing two,
+     * or fifty — and recovering them costs nothing in safety **provided the recovery is
+     * re-verified**. 32 of those shape refusals had a safety rule underneath that never fired,
+     * because `verify` returns on the first match.
+     *
+     * `empty` is deliberately absent: there is nothing to shorten.
+     */
+    val SHAPE_RULES: Set<String> = setOf(TOO_LONG, MORE_THAN_ONE_SENTENCE)
+
+    /**
+     * The first sentence of a candidate, on the same boundary `verify` counts sentences with.
+     *
+     * Shared so the two cannot disagree about what a sentence is — a fallback that split
+     * differently from the rule it is answering would recover text the rule still refuses.
+     */
+    fun firstSentenceOf(candidate: String): String =
+        normalise(candidate).split(SENTENCE_END).firstOrNull()?.trim().orEmpty()
+
     fun verify(candidate: String, signature: String): Verdict {
         val text = normalise(candidate)
         if (text.isEmpty()) return Verdict.Refused("empty", "nothing was produced")
 
         val words = text.split(WHITESPACE).filter { it.isNotEmpty() }
         if (words.size > MAX_WORDS) {
-            return Verdict.Refused("too long", "${words.size} words")
+            return Verdict.Refused(TOO_LONG, "${words.size} words")
         }
         val sentences = text.split(SENTENCE_END).count { it.isNotBlank() }
-        if (sentences > 1) return Verdict.Refused("more than one sentence", "$sentences")
+        if (sentences > 1) return Verdict.Refused(MORE_THAN_ONE_SENTENCE, "$sentences")
 
         IMPERATIVE.find(text)?.let { return Verdict.Refused("imperative", it.value) }
         SECOND_PERSON.find(text)?.let { return Verdict.Refused("addresses a reader", it.value) }
@@ -79,6 +102,9 @@ object Verification {
      */
     fun normalise(candidate: String): String =
         BACKTICKED.replace(candidate, "$1").replace("`", "").trim()
+
+    private const val TOO_LONG = "too long"
+    private const val MORE_THAN_ONE_SENTENCE = "more than one sentence"
 
     private val WHITESPACE = Regex("\\s+")
     private val SENTENCE_END = Regex("(?<=[.!?])\\s+")

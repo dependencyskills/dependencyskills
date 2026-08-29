@@ -74,9 +74,13 @@ class CodexSummariseTest {
             ))
 
             val report = codex.summarise(maven, Summariser(generator, "model-1.0"))
-            assertEquals(3, report.degraded)
+            // Two refusals, not three. The third reply is two sentences - a SHAPE refusal - and
+            // the summariser now retries it as its first sentence, which verifies and is stored.
+            // Only the two safety refusals are final.
+            assertEquals(2, report.degraded)
+            assertEquals(1, report.stored)
             assertEquals(
-                mapOf("imperative" to 1, "addresses a reader" to 1, "more than one sentence" to 1),
+                mapOf("imperative" to 1, "addresses a reader" to 1),
                 report.byRule,
             )
         }

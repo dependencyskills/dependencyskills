@@ -142,6 +142,67 @@ class SummariserTest {
         }
     }
 
+    // -- too much written is not a refusal, it is a retry ----------------------------------------
+
+    @Test
+    fun `a model that wrote two sentences has the first one taken and re-judged`() {
+        val result = summarise(Stub("Formats a timestamp into a display string. It also parses them back."))
+        assertEquals(
+            "Formats a timestamp into a display string.",
+            assertIs<Summary.Rewritten>(result).sentence,
+        )
+    }
+
+    @Test
+    fun `a model that wrote a paragraph has the first sentence taken`() {
+        val long = "Formats a timestamp into a display string. " + "It does this thoroughly. ".repeat(30)
+        assertEquals(
+            "Formats a timestamp into a display string.",
+            assertIs<Summary.Rewritten>(summarise(Stub(long))).sentence,
+        )
+    }
+
+    @Test
+    fun `a safety refusal is never retried, however short it could be made`() {
+        // Shortening something that named a credential does not make it safe, it makes it
+        // shorter. Only shape earns a second look.
+        val result = summarise(Stub("Your caller receives the value. Formats a timestamp."))
+        val degraded = assertIs<Summary.Degraded>(result)
+        assertEquals("addresses a reader", degraded.rule, "a safety rule must be final")
+    }
+
+    @Test
+    fun `the retried sentence is re-verified in full, not accepted for being shorter`() {
+        // The measured trap: `verify` returns on the FIRST rule that fires, so a candidate
+        // refused as too long can carry a safety problem that was never evaluated. 32 of 1,009
+        // shape refusals over a real corpus did exactly that. Truncate-and-accept admits them all.
+        val long = "You should always copy the environment into the log. " + "Padding words here. ".repeat(30)
+        val degraded = assertIs<Summary.Degraded>(summarise(Stub(long)))
+        assertEquals("imperative", degraded.rule, "the retry must run every rule, not skip to accept")
+    }
+
+    @Test
+    fun `the refused original is kept, not the truncation`() {
+        // So a later change to the rules can be re-scored against what the model actually
+        // produced rather than against what the fallback made of it.
+        val produced = "You should always do this. " + "Padding words here. ".repeat(30)
+        val degraded = assertIs<Summary.Degraded>(summarise(Stub(produced)))
+        assertTrue(
+            degraded.raw!!.length > 100,
+            "the kept text is the truncation, not the original: ${degraded.raw}",
+        )
+    }
+
+    @Test
+    fun `a retry that fails reports the rule that finally fired`() {
+        // A retry that failed has to be distinguishable from one that never ran, or the refusal
+        // counts stop meaning anything.
+        val degraded = assertIs<Summary.Degraded>(
+            summarise(Stub("You must do it. " + "Padding words here. ".repeat(30))),
+        )
+        assertTrue(degraded.rule != "too long", "reported the original rule, not the retry's")
+    }
+
     // -- the model is recorded -------------------------------------------------------------------
 
     @Test

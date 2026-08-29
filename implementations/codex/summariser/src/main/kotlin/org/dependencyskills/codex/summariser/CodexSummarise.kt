@@ -2,6 +2,7 @@ package org.dependencyskills.codex.summariser
 
 import org.dependencyskills.codex.core.Codex
 import org.dependencyskills.codex.core.Coordinate
+import org.dependencyskills.codex.core.Entry
 import org.dependencyskills.codex.core.SummaryOutcome
 
 /**
@@ -37,7 +38,23 @@ data class SummaryReport(
  * over a coordinate is therefore cheap and idempotent, which matters because the first one may
  * well be interrupted.
  */
-fun Codex.summarise(coordinate: Coordinate, summariser: Summariser): SummaryReport {
+fun Codex.summarise(
+    coordinate: Coordinate,
+    summariser: Summariser,
+    /**
+     * Called with every entry and what became of it, before the store sees it.
+     *
+     * The store keeps the sentence and the model, and deliberately not the text verification
+     * refused: that text is not part of the entry and must never be indexed or shown. But a pass
+     * over a real dependency graph is 24 minutes of model calls, and without somewhere to put the
+     * refusals, **every question about a rule costs another 24 minutes to ask** — which is the
+     * property the Python reference kept on purpose and this port had lost.
+     *
+     * So the refused text is offered here and to nobody else. What a caller does with it is a
+     * caller's business; an evaluation harness writes it down, and production passes ignore it.
+     */
+    observer: (Entry, Summary) -> Unit = { _, _ -> },
+): SummaryReport {
     var stored = 0
     var degraded = 0
     var withheld = 0
@@ -52,6 +69,7 @@ fun Codex.summarise(coordinate: Coordinate, summariser: Summariser): SummaryRepo
             return@forEach
         }
         val summary = summariser.summarise(entry.symbol, entry.signature, doc)
+        observer(entry, summary)
         val rewrite = (summary as? Summary.Rewritten)?.sentence
         if (summary is Summary.Degraded) byRule.merge(summary.rule, 1, Int::plus)
 

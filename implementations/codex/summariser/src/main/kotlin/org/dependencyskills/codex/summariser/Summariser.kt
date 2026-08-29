@@ -75,9 +75,26 @@ class Summariser(
             .getOrElse { return Summary.Degraded("generator failed", it.message ?: "", null, model) }
 
         val candidate = firstLine(withoutScratchpad(produced))
-        return when (val verdict = Verification.verify(candidate, signature)) {
-            is Verdict.Accepted -> Summary.Rewritten(verdict.sentence, model)
-            is Verdict.Refused -> Summary.Degraded(verdict.rule, verdict.detail, candidate, model)
+        val verdict = Verification.verify(candidate, signature)
+        if (verdict is Verdict.Accepted) return Summary.Rewritten(verdict.sentence, model)
+
+        val refusal = verdict as Verdict.Refused
+        // A SAFETY refusal is final. Only a shape refusal earns a second look, because shortening
+        // something that named a credential does not make it safe - it makes it shorter.
+        if (refusal.rule !in Verification.SHAPE_RULES) {
+            return Summary.Degraded(refusal.rule, refusal.detail, candidate, model)
+        }
+
+        // The model wrote too much. Take the sentence it was asked for and judge that instead -
+        // in FULL, by every rule. Never accepted for being shorter: 32 of 1,009 shape refusals
+        // measured over a real corpus had a safety rule underneath that never fired, because
+        // `verify` returns on the first match. Truncating and accepting would have admitted all
+        // of them.
+        return when (val retry = Verification.verify(Verification.firstSentenceOf(candidate), signature)) {
+            is Verdict.Accepted -> Summary.Rewritten(retry.sentence, model)
+            // The ORIGINAL candidate is kept, not the truncation, so a later change to the rules
+            // can be re-scored against what the model actually produced.
+            is Verdict.Refused -> Summary.Degraded(retry.rule, retry.detail, candidate, model)
         }
     }
 

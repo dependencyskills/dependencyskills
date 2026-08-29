@@ -11,6 +11,7 @@ import org.dependencyskills.codex.inference.Pooling
 import org.dependencyskills.codex.inference.openEncoder
 import org.dependencyskills.codex.inference.openGenerator
 import org.dependencyskills.codex.summariser.Summariser
+import org.dependencyskills.codex.summariser.Summary
 import org.dependencyskills.codex.summariser.summarise
 import java.io.File
 import java.nio.file.Files
@@ -110,12 +111,25 @@ class SummarisedRetrievalTest {
         var degraded = 0
         var withheld = 0
         val byRule = LinkedHashMap<String, Int>()
+        val refusals = StringBuilder("symbol\tsignature\trule\tdetail\trefused\n")
         val summariseMs = timed {
             openGenerator(summariserModel, contextTokens = 2048).use { generator ->
                 val summariser = Summariser(generator, model = File(summariserModel).name)
                 Codex.open(store).use { codex ->
                     scope.forEach { coordinate ->
-                        val report = codex.summarise(coordinate, summariser)
+                        val report = codex.summarise(coordinate, summariser) { entry, summary ->
+                            // Every refusal, written where a rule change can be re-scored against
+                            // it without paying for the model again. Tab-separated and escaped so
+                            // one refusal is one line whatever the model produced.
+                            if (summary is Summary.Degraded) {
+                                fun flat(text: String?) = (text ?: "")
+                                    .replace("\\", "\\\\").replace("\t", " ").replace("\n", "\\n")
+                                refusals.appendLine(
+                                    listOf(entry.symbol, entry.signature, summary.rule, summary.detail, summary.raw)
+                                        .joinToString("\t") { flat(it) },
+                                )
+                            }
+                        }
                         stored += report.stored
                         degraded += report.degraded
                         withheld += report.withheld
@@ -298,6 +312,7 @@ class SummarisedRetrievalTest {
         val directory = Path.of(System.getProperty("codex.reports") ?: ".")
         Files.createDirectories(directory)
         Files.writeString(directory.resolve("end-to-end.md"), report)
+        Files.writeString(directory.resolve("refusals.tsv"), refusals.toString())
         println(report)
 
         assertTrue(entries > 1_000, "expected a real corpus; indexed $entries")

@@ -44,13 +44,19 @@ tasks.withType<Test>().configureEach {
         CommandLineArgumentProvider { listOf("-Ddscodex.native.dir=" + nativeDir.absolutePath) }
     )
     // Forwarded explicitly: a -D on the command line reaches the Gradle daemon, not this fork.
-    providers.systemProperty("codex.summariser.model").orNull
-        ?.let { systemProperty("codex.summariser.model", it) }
+    listOf("codex.summariser.model", "codex.refusals", "codex.reports").forEach { name ->
+        providers.systemProperty(name).orNull?.let { systemProperty(name, it) }
+    }
 }
 
 // The verifier's self-test and every shape rule run here: no model, seconds. What needs a model
 // is the round trip, and that lives on its own task for the same reason the index's does.
-tasks.test { filter { excludeTestsMatching("*RoundTripTest") } }
+tasks.test {
+    filter {
+        excludeTestsMatching("*RoundTripTest")
+        excludeTestsMatching("*RefusalAnalysisTest")
+    }
+}
 
 val roundTrip by tasks.registering(Test::class) {
     description = "One real doc comment through a real model and back. Needs codex.summariser.model."
@@ -58,5 +64,18 @@ val roundTrip by tasks.registering(Test::class) {
     testClassesDirs = sourceSets["test"].output.classesDirs
     classpath = sourceSets["test"].runtimeClasspath
     filter { includeTestsMatching("*RoundTripTest") }
+    outputs.upToDateWhen { false }
+}
+
+// Re-scoring refused candidates against the rules, with no model involved. Its own task because it
+// needs a `refusals.tsv` from a real pass - which `:index:endToEnd` writes.
+//
+//   ./gradlew :summariser:refusals -Dcodex.refusals=.../refusals.tsv
+val refusals by tasks.registering(Test::class) {
+    description = "Re-judge captured refusals against the shipped rules. Needs codex.refusals."
+    group = "verification"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    filter { includeTestsMatching("*RefusalAnalysisTest") }
     outputs.upToDateWhen { false }
 }
