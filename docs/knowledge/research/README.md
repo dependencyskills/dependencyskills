@@ -68,6 +68,9 @@ overturned an earlier one.
 | [0048](RAD-0048-where-the-encoder-size-cutoff-is.md) | v2 | Where the Encoder Size Cutoff Is | The pooling nobody chose cost 2 of 17 at rank 1; fp16 is free; and at realistic corpus size a 33 MB encoder is not worse than a 2,267 MB one |
 | [0049](RAD-0049-the-lexical-baseline.md) | v1 | What Lexical Search Alone Retrieves | The number the vector index has to beat — FTS5 over raw documentation gets 2 of 17 at 11,156 entries, and lands next door rather than nowhere |
 | [0050](RAD-0050-porting-the-prose-classifier.md) | v1 | What Survived Porting the Prose Classifier | The port is exact to 1e-6, the operating point transferred to another ecosystem at 0.170%, and the attribution model's 100% is template recognition |
+| [0051](RAD-0051-a-jvm-generative-runtime.md) | v2 | What Can Actually Run the Summariser | In-process is 25 minutes against 21 hours on one dependency graph; both JVM bindings are frozen because one binds llama.cpp server internals; and one backtick in the verifier was the whole apparent size effect |
+| [0052](RAD-0052-distributing-a-precomputed-codex.md) | v1 | Who Computes the Codex, and How It Reaches a Developer | A public coordinate's summary is the same object everywhere, so it can be published as a dependency — which removes the local model from the common case and makes us the trust anchor |
+| [0053](RAD-0053-cpu-tuning-for-the-shipped-native.md) | v1 | Is Per-CPU Tuning Worth It for the Shipped Native? | ggml has no ARM runtime dispatch on macOS, the delta is one extension on the wrong side of the workload, and building on the oldest hardware beats auditing disassembly |
 
 Numbering is sequential, runs across the sub-groups, and does not imply order
 of reading. 0001 and 0002 carry the measurements the rest lean on.

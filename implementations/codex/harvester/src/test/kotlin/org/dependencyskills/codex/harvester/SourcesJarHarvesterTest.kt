@@ -33,8 +33,12 @@ class SourcesJarHarvesterTest {
         val result = harvested(Fixtures.kotlinSources)
         assertEquals(54, result.report.sourceFiles)
         assertEquals(1353, result.report.declarations)
-        assertEquals(324, result.report.documented)
-        assertEquals(324, result.entries.size)
+        // 323 and not 324: `internal/Caching.kt` documents a workaround as two bare tracker URLs
+        // and the words "Workaround of ... and ...". Dropping the addresses leaves three words
+        // that retrieve nothing, so it falls under the minimum. Re-pinned deliberately - the
+        // number moving is the whole signal that extraction changed.
+        assertEquals(323, result.report.documented)
+        assertEquals(323, result.entries.size)
         assertEquals(0, result.report.unreadable)
         assertTrue(result.entries.all { it.lang == "kotlin" && it.docFormat == "kdoc" })
     }

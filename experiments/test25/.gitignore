@@ -1,0 +1,8 @@
+# Resolved from Maven Central by run.sh and by jlama/build.gradle.kts. Derived, and large.
+lib/
+lib-jlama/
+classes/
+classes-jlama/
+jlama/.gradle/
+jlama/build/
+hs_err_pid*.log

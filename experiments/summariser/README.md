@@ -67,7 +67,7 @@ index.
 ## Verification, and why the self-test exists
 
 `--self-test` runs the verifier against 15 outputs that must be rejected — three of them `test9`'s
-real prose payloads — and 3 that must be accepted.
+real prose payloads — 7 that must be accepted, and 3 **known holes**.
 
 **A verifier that passes everything is indistinguishable from no verifier, and that exact failure
 has happened twice in this repository.** The self-test caught a live instance: a leading `\b` in the
@@ -76,6 +76,50 @@ dead. Nothing else would have found it.
 
 Model *failures* are counted separately from *degradations*. Conflating them would let a
 misconfigured model read as unsummarisable documentation.
+
+### The known holes are printed, not omitted
+
+Every must-reject case is an **instruction**, and every rule is a **shape** rule. So the thing none
+of them can see is prose that is well-formed, non-imperative and simply not about this symbol.
+
+That is not a hypothetical. A mis-templated run in `test25` emitted `import numpy as np` for all 20
+entries of a sample and scored **0% degraded** — verification had no objection, because nothing here
+asks whether the sentence has anything to do with the capability. Listing the holes in the
+self-test's own output is the cheapest defence against the failure this repository keeps
+re-learning: a check that only exercises what it catches reads as complete when it is not.
+
+Closing them needs a **relatedness** check rather than another regex, and that is a design decision
+for #7 rather than a patch here.
+
+## The backtick was a rule with a price and no return (2026-08-28)
+
+`CODEISH` used to contain a bare backtick, so any candidate that wrapped an identifier in markdown
+was rejected outright and the entry degraded to signature-only. A backtick is not an imperative and
+not code; it is how a model marks a name it was handed.
+
+The candidate is now **normalised before judgement** — backticks removed, and the normalised
+sentence is what gets published, so nothing reaches the index that verification did not see.
+
+What the rule actually cost, and the shape of it is the point:
+
+| model | size | degraded before | degraded after |
+|---|---|---|---|
+| `gemma-3-270m-it-qat` Q4_0 | 230 MB | 10 of 60 | 2 of 60 |
+| `Qwen2.5-0.5B-Instruct` | ~1 GB | 38 of 60 | 2 of 60 |
+| `Qwen3-Coder-30B`, the pinned one | 16 GB | 6 of 220 | 4 of 220 |
+
+**The cost tracked a writing habit, not a size.** Backticking identifiers is something a given
+instruct model does or does not do — Qwen2.5-0.5B does it constantly, gemma-3-270m barely, and the
+smaller of those two paid less. So the rule's price was unpredictable from anything about the
+model except its prose style.
+
+That is also why it survived: measured only on the pinned 30B, which does not have the habit, it
+looks nearly free at 2 entries. The models RAD-0051 recommends running in-process are the ones that
+paid for it, and none of them had been run through the component when the rule was written.
+
+The 30B row is a re-score of the stored output in `summaries.json`; no model was run for it. The
+four entries still rejected there are two imperatives, one 41-word sentence and one genuine markup
+leak — all correct.
 
 ---
 

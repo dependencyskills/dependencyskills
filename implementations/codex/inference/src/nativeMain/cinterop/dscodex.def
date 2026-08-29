@@ -1,0 +1,7 @@
+# cinterop's view of the shim. The same four symbols the JVM target binds through FFM.
+#
+# The static archive is linked INTO the consumer's binary, so a native executable carries
+# llama.cpp inside it and needs nothing beside it at runtime.
+headers = dscodex.h
+headerFilter = dscodex.h
+staticLibraries = libdscodex.a
