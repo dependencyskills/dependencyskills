@@ -26,6 +26,11 @@ LOGS="$HERE/build/$PLATFORM"       # not committed: cmake noise
 [ -f "$LLAMA_CPP/include/llama.h" ] || { echo "no llama.cpp at $LLAMA_CPP" >&2; exit 1; }
 mkdir -p "$SHARED_OUT" "$STATIC_OUT" "$LOGS"
 
+# cinterop reads a header from its own source set, so there are two copies of the ABI. The build
+# owns the second one rather than a person: a hand-maintained duplicate that drifts gives
+# Kotlin/Native a contract the library no longer honours, and it compiles.
+cp "$HERE/dscodex.h" "$HERE/../src/nativeMain/cinterop/dscodex.h"
+
 # GGML_NATIVE=OFF everywhere, not only when cross-compiling. On it, ggml tunes to the BUILD
 # machine's CPU - it picked `apple-m4` here and applied it to an x86_64 target - and a library
 # shipped in a jar must run on the oldest CPU of its architecture, not the newest one we own.

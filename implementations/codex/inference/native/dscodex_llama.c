@@ -99,10 +99,98 @@ int dsc_generate(void *handle, const char *prompt, char *out, int out_len, int m
     return written;
 }
 
+// ---- the encoder face --------------------------------------------------------------------
+//
+// The same library serves both faces of the index. An encoder here is a BERT-family model
+// (LLM_ARCH_BERT) loaded with `embeddings = true`; nothing about the generative path is reused
+// beyond the backend and the tokenizer plumbing.
+
+void *dsc_encoder_load(const char *path, int pooling) {
+    // Required, not defaulted. See the header: falling back to the GGUF's own pooling is how a
+    // wrong basis gets in without anything failing.
+    if (pooling == LLAMA_POOLING_TYPE_UNSPECIFIED) return NULL;
+    if (!dsc_initialised) { llama_backend_init(); dsc_initialised = 1; }
+
+    struct llama_model *model = llama_model_load_from_file(path, llama_model_default_params());
+    if (!model) return NULL;
+
+    int n_ctx = llama_model_n_ctx_train(model);
+    if (n_ctx <= 0) { llama_model_free(model); return NULL; }
+
+    struct llama_context_params cp = llama_context_default_params();
+    cp.n_ctx        = (unsigned) n_ctx;
+    // A non-causal model has to see the whole sequence in one micro-batch: every token attends to
+    // every other, so a split ubatch would pool over a fragment and still return a vector.
+    cp.n_batch      = (unsigned) n_ctx;
+    cp.n_ubatch     = (unsigned) n_ctx;
+    cp.embeddings   = true;
+    cp.pooling_type = (enum llama_pooling_type) pooling;
+
+    struct llama_context *ctx = llama_init_from_model(model, cp);
+    if (!ctx) { llama_model_free(model); return NULL; }
+
+    struct dsc_session *s = malloc(sizeof(struct dsc_session));
+    s->model = model; s->ctx = ctx; s->sampler = NULL;
+    s->vocab = llama_model_get_vocab(model);
+    return s;
+}
+
+int dsc_encoder_pooling(void *handle) {
+    struct dsc_session *s = handle;
+    return (int) llama_pooling_type(s->ctx);
+}
+
+int dsc_encoder_dim(void *handle) {
+    struct dsc_session *s = handle;
+    return llama_model_n_embd(s->model);
+}
+
+int dsc_embed(void *handle, const char *text, float *out, int out_len) {
+    struct dsc_session *s = handle;
+    const int len = (int) strlen(text);
+    const int n_ctx = (int) llama_n_ctx(s->ctx);
+
+    int n_tokens = -llama_tokenize(s->vocab, text, len, NULL, 0, true, false);
+    if (n_tokens <= 0) return -1;
+    llama_token *tokens = malloc(sizeof(llama_token) * (size_t) n_tokens);
+    if (llama_tokenize(s->vocab, text, len, tokens, n_tokens, true, false) < 0) {
+        free(tokens);
+        return -2;
+    }
+    // Truncate rather than refuse. The caller already truncates by characters; this is the
+    // backstop for a string whose tokens outnumber its budget anyway.
+    if (n_tokens > n_ctx) n_tokens = n_ctx;
+
+    struct llama_batch batch = llama_batch_init(n_tokens, 0, 1);
+    for (int i = 0; i < n_tokens; i++) {
+        batch.token[i]    = tokens[i];
+        batch.pos[i]      = i;
+        batch.n_seq_id[i] = 1;
+        batch.seq_id[i][0] = 0;
+        batch.logits[i]   = 1;
+    }
+    batch.n_tokens = n_tokens;
+    free(tokens);
+
+    llama_memory_clear(llama_get_memory(s->ctx), true);
+    // encode, not decode. A BERT-family model is non-causal and llama.cpp routes it here anyway,
+    // logging that it did; calling it directly says what this is instead of being corrected.
+    if (llama_encode(s->ctx, batch) < 0) { llama_batch_free(batch); return -3; }
+
+    const float *embd = llama_get_embeddings_seq(s->ctx, 0);
+    if (!embd) { llama_batch_free(batch); return -4; }
+
+    const int dim = llama_model_n_embd(s->model);
+    const int copy = dim < out_len ? dim : out_len;
+    memcpy(out, embd, sizeof(float) * (size_t) copy);
+    llama_batch_free(batch);
+    return dim;
+}
+
 void dsc_free(void *handle) {
     struct dsc_session *s = handle;
     if (!s) return;
-    llama_sampler_free(s->sampler);
+    if (s->sampler) llama_sampler_free(s->sampler);
     llama_free(s->ctx);
     llama_model_free(s->model);
     free(s);
