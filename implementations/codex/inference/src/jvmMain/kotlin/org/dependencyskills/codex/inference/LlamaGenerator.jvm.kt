@@ -94,7 +94,7 @@ private class LlamaGenerator(modelPath: String, contextTokens: Int, gpuLayers: I
  *
  * `dscodex.native.dir` overrides it, which is what a build that has just compiled the shim uses.
  */
-private object Native {
+internal object Native {
 
     /** `macos-aarch64`, `linux-x86_64`, `windows-x86_64` — the directory names in the jar. */
     internal val platform: String = run {
@@ -172,4 +172,10 @@ private object Native {
     val applyTemplate: MethodHandle = handle("dsc_apply_template", FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS, JAVA_INT))
     val generate: MethodHandle = handle("dsc_generate", FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS, JAVA_INT, JAVA_INT))
     val free: MethodHandle = handle("dsc_free", FunctionDescriptor.ofVoid(ADDRESS))
+
+    // The encoder face. Same library, same lookup - see RAD-0054.
+    val encoderLoad: MethodHandle = handle("dsc_encoder_load", FunctionDescriptor.of(ADDRESS, ADDRESS, JAVA_INT))
+    val encoderPooling: MethodHandle = handle("dsc_encoder_pooling", FunctionDescriptor.of(JAVA_INT, ADDRESS))
+    val encoderDim: MethodHandle = handle("dsc_encoder_dim", FunctionDescriptor.of(JAVA_INT, ADDRESS))
+    val embed: MethodHandle = handle("dsc_embed", FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS, JAVA_INT))
 }

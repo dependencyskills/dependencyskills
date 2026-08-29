@@ -72,6 +72,7 @@ overturned an earlier one.
 | [0052](RAD-0052-distributing-a-precomputed-codex.md) | v1 | Who Computes the Codex, and How It Reaches a Developer | A public coordinate's summary is the same object everywhere, so it can be published as a dependency — which removes the local model from the common case and makes us the trust anchor |
 | [0053](RAD-0053-cpu-tuning-for-the-shipped-native.md) | v1 | Is Per-CPU Tuning Worth It for the Shipped Native? | ggml has no ARM runtime dispatch on macOS, the delta is one extension on the wrong side of the workload, and building on the oldest hardware beats auditing disassembly |
 | [0054](RAD-0054-one-runtime-for-both-faces.md) | v1 | One Runtime for Both Faces of the Index | llama.cpp reproduces the shipped encoder at cosine 0.9999986 and 99.7% top-100 ranking agreement, so ONNX Runtime is a second native dependency earning nothing — and pooling has to be an argument, because the default costs 0.93 |
+| [0055](RAD-0055-optimisations-worth-testing.md) | v1 | Optimisations Worth Testing, When Speed Starts to Matter | Nothing measured yet, deliberately: seven candidates sized and ordered, threads first because every other baseline may be untuned, and the caching property may make the whole question smaller |
 
 Numbering is sequential, runs across the sub-groups, and does not imply order
 of reading. 0001 and 0002 carry the measurements the rest lean on.

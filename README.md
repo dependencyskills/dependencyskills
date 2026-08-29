@@ -9,12 +9,18 @@ and Python.
 > measurements behind it are published, but there is no release and no stable
 > spec. Do not publish anything against it yet.
 >
-> **The source tree is sparse on purpose, and the sparse part is the product.**
-> Twenty-three experiments and forty research records came first, because the
-> point was to find out whether this works before writing it. It does, with
-> limits we publish. So what exists today is the measurement, the decisions and
-> the site — the harvester, the index and the query layer are being written now.
-> If you came looking for something to install, there isn't one yet.
+> **The measuring came first, and it is still most of what is here.**
+> Twenty-seven experiments and fifty-five research records, because the point was
+> to find out whether this works before writing it. It does, with limits we
+> publish — several of which killed ideas this project had already committed to
+> in writing.
+>
+> The pipeline now runs end to end for Maven, Kotlin and Java: a sources jar goes
+> in, and a need written in plain words comes back with entries from your own
+> dependency graph, scoped to what your project actually resolved. What is
+> missing is the rewriter that makes library prose safe to show, and the server
+> an agent talks to. If you came looking for something to install, there still
+> isn't one.
 >
 > How it is shaped and why:
 > [ADR-0012](docs/knowledge/decisions/ADR-0012-a-shared-machine-level-index-store.md).
@@ -100,10 +106,15 @@ for a library, which exists to be read by someone who cannot read it.
 
 ## Where the design currently stands
 
-**Under review.** The original mechanism — a `-skills.zip` sidecar artifact
-published alongside a library — is recommended for abandonment in favour of
-the documentation systems each ecosystem already has. That recommendation is
-recorded, not decided.
+**Decided, and it was the biggest reversal.** The original mechanism — a
+`-skills.zip` sidecar artifact published alongside a library — is **abandoned**.
+Measurement showed the content it would have carried already ships in the
+`-sources.jar` that 93–98% of libraries publish, so the sidecar asked every
+publisher in the world to do new work for something already done
+([ADR-0009](docs/knowledge/decisions/ADR-0009-transport-is-sources-jar.md),
+superseding [ADR-0003](docs/knowledge/decisions/ADR-0003-library-skills-via-repository-artifacts.md)).
+Nothing a library author does changes; the indexing happens on the consumer's
+machine, from what they already downloaded.
 
 **Holding.** The two-layer design: a small always-resident entry whose only job
 is to fire at the right moment, and an on-demand index that maps a need to a
@@ -111,10 +122,16 @@ library. Knowing and finding. The measurements made this *more* load-bearing,
 not less — a query service cannot answer reinvention, because reinvention is a
 failure to ask.
 
-**Open.** Whether the index is a local tool, a central service, or both.
-Whether a library's guidance can be reached through the source repository the
-publishing metadata already names. What development-time prompt injection
-actually costs, which is the one objection with no answer yet.
+**Open.** How a local model reaches a developer's machine — smaller than it was
+now the encoder is 67 MB, and possibly removable altogether, since a public
+coordinate's summary is the same object on every machine and could simply be
+published ([RAD-0052](docs/knowledge/research/RAD-0052-distributing-a-precomputed-codex.md)).
+And what development-time prompt injection actually costs, still the deepest
+question here — though no longer the one with no answer at all: the quarantine is
+designed, the prose classifier is measured at a 0.170% flag rate on real
+harvested documentation, and a tool-less paraphraser placed in front of the agent
+stopped a planted credential leaking while the developer's task still
+completed.
 
 ## The research
 
