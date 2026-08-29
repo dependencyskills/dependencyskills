@@ -213,9 +213,21 @@ if pid:
                  '?fields=field(name),bundle(values(name,archived,released))')
     for f in fields:
         name = (f.get('field') or {}).get('name')
-        vals = [v for v in ((f.get('bundle') or {}).get('values') or [])
+        bundle = f.get('bundle')
+        vals = [v for v in ((bundle or {}).get('values') or [])
                 if not v.get('archived')]
-        if not (name and vals):
+        # A field WITH a bundle and no values still gets a heading. Empty is
+        # information - the dimension exists and nothing has been defined yet
+        # - and silence reads as "no such dimension", which is what sends an
+        # agent off to invent a value. Fields with no bundle at all (text,
+        # date, user) have no enumerable set and stay out.
+        if not name or bundle is None:
+            continue
+        if not vals:
+            lines.append(f'## {name}')
+            lines.append('- _(no values defined yet - adding one is a '
+                         'project-settings change, not something to invent)_')
+            lines.append('')
             continue
         # version bundles carry `released`: current/upcoming is what new
         # work targets, shipped ones are history and should not be picked

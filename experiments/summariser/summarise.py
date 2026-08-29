@@ -90,7 +90,15 @@ SPELLED = re.compile(r'\b\w+\s+(dot|slash)\s+\w+\b', re.I)
 # "Returns the class of the serializer" — an ordinary English sentence. RAD-0040 measured the cost:
 # 11 of 16 degradations came from this rule, and every degraded entry lost retrieval, so an
 # over-broad verifier is not a free safety margin. It now matches a *declaration*, not a word.
-CODEISH = re.compile(r'[`{}<>|]|=>|;|\bfun\s+\w+\s*\(|\bclass\s+[A-Z]\w*')
+#
+# NARROWED AGAIN 2026-08-28, and the backtick left with it. See `normalise` below: a backtick is
+# markdown a model added around a name it was handed, not code it emitted, and removing it changes
+# no other word in the sentence.
+CODEISH = re.compile(r'[{}<>|]|=>|;|\bfun\s+\w+\s*\(|\bclass\s+[A-Z]\w*')
+
+# Markdown emphasis a model wraps a symbol name in. Bounded and single-line so an unterminated
+# backtick cannot swallow a sentence; whatever is left over is stripped separately.
+BACKTICKED = re.compile(r'`([^`\n]{1,80})`')
 
 SYSTEM = (
     "You rewrite library API documentation into a single factual sentence describing what the "
@@ -113,6 +121,30 @@ def prompt_for(entry):
             f"--- BEGIN UNTRUSTED DOCUMENTATION ---\n{doc}\n"
             f"--- END UNTRUSTED DOCUMENTATION ---\n\n"
             f"One sentence describing the capability:")
+
+
+def normalise(text):
+    """Strip the markdown a model put around a name, before anything judges the sentence.
+
+    NOT the same act as rejecting it. Rejecting on a backtick cost **8 of 60** entries on
+    gemma-3-270m, **36 of 60** on Qwen2.5-0.5B and 2 of 220 on the pinned 30B — a spread that
+    tracks each model's prose style rather than its size, which is why measuring the rule only on
+    the pinned model made it look free. In every case the sentence inside the backticks was the
+    sentence outside them — the same words, the same shape, the same absence of
+    an imperative. A rule with that price and no safety return is not a margin, it is a leak in the
+    other direction: every rejection degrades an entry to signature-only, which RAD-0040 measured
+    as unfindable.
+
+    Normalising rather than rejecting also keeps verification honest about what it approved. The
+    normalised sentence is what gets published, so nothing reaches the index that verification did
+    not see.
+
+    A backtick almost never appears in the documentation being summarised either. It is Kotlin's
+    escaped-identifier syntax, and that is used essentially only in test names — not on the public
+    API surface a library publishes.
+    """
+    t = BACKTICKED.sub(r'\1', text or "")
+    return t.replace("`", "").strip()
 
 
 def verify(text, entry):
@@ -204,6 +236,7 @@ def first_line(out):
 def adjudicate(entry, text):
     """Verify one candidate sentence. Split out from `summarise` so the same decision can be
     replayed over stored output when `verify()` changes — see `summarise_corpus.py --reverify`."""
+    text = normalise(text)
     ok, reason = verify(text, entry)
     if not ok:
         return signature_only(entry, raw=text), reason
@@ -248,25 +281,50 @@ def self_test():
         # that cost: every rejection is a retrieval loss.
         ("the word 'class'", "Returns the class of the serializer used for this value."),
         ("the word 'fun'", "Provides a fun and readable representation of the duration."),
+        # Regression cases for the 2026-08-28 narrowing. The backtick is removed before judgement,
+        # so what verification sees - and what gets published - is the prose without it.
+        ("backticked symbol", "Formats an `epochMillis` value into a string using `pattern`."),
+        ("backticked, unpaired", "Formats an `epochMillis value into a display string."),
+    ]
+    # KNOWN HOLES. Cases verification lets through, listed because a self-test that only exercises
+    # what it catches reads as complete when it is not - the failure this repository keeps
+    # re-learning, one level up from the harvester's silent skips.
+    #
+    # Every must-reject case above is an INSTRUCTION, and the rules are all shape rules. So the
+    # thing none of them can see is prose that is well-formed, non-imperative and simply not about
+    # this symbol. That is not hypothetical: a mis-templated run emitted `import numpy as np` for
+    # all 20 entries of a sample and scored **0% degraded**, because nothing here asks whether the
+    # sentence has anything to do with the capability. Closing it needs a relatedness check, which
+    # is a design decision rather than another regex, and it is #7's to make.
+    holes = [
+        ("unrelated but well-formed", "Imports the numerical computing library into the module."),
+        ("fluent and about nothing", "Provides a general mechanism for handling the operation."),
+        ("plausible fabrication", "Formats a timestamp and caches the result for later reuse."),
     ]
 
     print("# verification self-test — a verifier that rejects nothing is not a verifier\n")
     fails = 0
     print("## must be REJECTED\n")
     for name, text in bad:
-        ok, reason = verify(text, entry)
+        ok, reason = verify(normalise(text), entry)
         mark = "LEAKED THROUGH" if ok else "rejected"
         if ok:
             fails += 1
         print(f"  {mark:<15} {name:<26} {reason if not ok else '(no reason - it passed)'}")
     print("\n## must be ACCEPTED\n")
     for name, text in good:
-        ok, reason = verify(text, entry)
+        ok, reason = verify(normalise(text), entry)
         mark = "accepted" if ok else "WRONGLY REJECTED"
         if not ok:
             fails += 1
         print(f"  {mark:<16} {name:<26} {reason}")
-    print(f"\n  {len(bad)} bad, {len(good)} good, {fails} wrong")
+    print("\n## KNOWN HOLES — these pass, and that is the finding\n")
+    for name, text in holes:
+        ok, _ = verify(normalise(text), entry)
+        # A hole that has closed is news too: it means a rule changed under this list.
+        print(f"  {'passes' if ok else 'NOW CAUGHT':<16} {name:<26} {text}")
+    print(f"\n  {len(bad)} bad, {len(good)} good, {fails} wrong, "
+          f"{len(holes)} known holes not counted")
     if fails:
         print("  ** verification is not fit for use **")
     return 1 if fails else 0

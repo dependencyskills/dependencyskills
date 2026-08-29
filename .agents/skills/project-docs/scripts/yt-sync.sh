@@ -212,27 +212,71 @@ def slug(text, maxlen=60):
     return t[:maxlen].rstrip('-') or 'untitled'
 
 # desired path per article: structure flows down from here.
-# Names are ID-prefixed like the stories snapshot: EVO-A-12_title-slug[.md]
+#
+# LEAVES are ID-prefixed - EVO-A-12_title-slug.md. The id is load-bearing
+# there: a story citing a KB article resolves it by globbing
+# docs/knowledge/**/EVO-A-12_*.md, with no API call and no sync state. It is
+# not recoverable from the body (measured on a 338-file KB: 1 file carried
+# its own id).
+#
+# DIRECTORIES are not. Nothing cites a section by id, and the prefix lands on
+# the most stable, most read part of the tree. A section's directory is the
+# plain word the taxonomy pairs with its title - "Architecture Decision
+# Records" is the article, `decisions/` is the folder - so the same tree
+# comes out whether a project syncs to YouTrack, to a wiki, or to nothing.
+# Anything with no taxonomy row (a pillar like "Product Development") is
+# slugged.
+#
+# The table mirrors project-docs/references/taxonomy.md. If a row is added
+# there, add it here - they are two copies on purpose, because the sync
+# cannot read the skill.
+SECTION_DIRS = {
+    'architecture-decision-records': 'decisions',
+    'architectural-decision-records': 'decisions',
+    'product-requirements': 'requirements',
+    'specifications': 'specifications',
+    'research': 'research',
+    'reference': 'reference',
+    'developer-guides': 'guides',
+    'quality-assurance': 'testing',
+    'mandates-compliance': 'compliance',
+    'mandates-and-compliance': 'compliance',
+    'support': 'support',
+    'documents': 'documents',
+}
+
+def dir_name(a):
+    return SECTION_DIRS.get(slug(a.get('summary')), slug(a.get('summary')))
+
 def art_name(a):
     return f"{a.get('idReadable') or a['id']}_{slug(a.get('summary'))}"
 
 paths = {}
-def assign(a, dirpath):
+def assign(a, dirpath, taken=None):
     kids = sorted(children.get(a['id'], []), key=lambda x: (x.get('summary') or '', x['id']))
     if kids:
-        d = os.path.join(dirpath, art_name(a))
+        n = dir_name(a)
+        # two sibling sections could share a title; disambiguate only then,
+        # rather than carrying an id on every directory for a rare case
+        if taken is not None:
+            if n in taken: n = f"{n}-{a.get('idReadable') or a['id']}"
+            taken.add(n)
+        d = os.path.join(dirpath, n)
         paths[a['id']] = os.path.join(d, 'README.md')
-        for c in kids: assign(c, d)
+        sub = set()
+        for c in kids: assign(c, d, sub)
     else:
         paths[a['id']] = os.path.join(dirpath, art_name(a) + '.md')
 
 if root_id:
     paths[root_id] = os.path.join(KB, 'README.md')
+    top = set()
     for c in sorted(children.get(root_id, []), key=lambda x: (x.get('summary') or '', x['id'])):
-        assign(c, KB)
+        assign(c, KB, top)
 else:
+    top = set()
     for a in sorted(children.get(None, []), key=lambda x: (x.get('summary') or '', x['id'])):
-        assign(a, KB)
+        assign(a, KB, top)
 
 # ---- local state ------------------------------------------------------------
 
@@ -258,6 +302,7 @@ if bootstrapping and os.path.isdir(KB) and local_md() and not FORCE:
              'pushed up on this first sync.')
 
 report = {k: [] for k in ('Pulled', 'Pushed', 'Merged', 'CONFLICTS', 'Moved', 'Deleted', 'New', 'Notes')}
+MOVES = {}          # normalised old path -> new path, for this run
 conflict_count = 0
 
 def base_path(aid): return os.path.join(BASE_DIR, aid + '.md')
@@ -313,6 +358,7 @@ for aid in sorted(paths):
             os.makedirs(os.path.dirname(desired) or '.', exist_ok=True)
             shutil.move(cur, desired)
         report['Moved'].append(f'{cur} -> {desired}')
+        MOVES[os.path.normpath(cur)] = os.path.normpath(desired)
         e['path'] = desired
     e['summary'] = a.get('summary'); e['idReadable'] = a.get('idReadable')
 
@@ -434,8 +480,26 @@ for nf in new_files:
     if PULL_ONLY or DRY:
         report['New'].append(f'{nf} -> article "{title_of(nf, content)}"' + (' (pending)' if PULL_ONLY else ''))
         continue
+    stalled = False
     for cd in reversed(chain):  # create stub section articles for new dirs
         rp = os.path.join(cd, 'README.md')
+        # A directory still wearing <ID>_<slug> is the sync's own naming
+        # mid-move, never a section someone created. Reachable from a normal
+        # run: a childless section is flattened to a leaf, its README moves
+        # out, the emptied directory looks new, and a section gets born
+        # titled from the slug - "Bc A 1 Business Development". The layout is
+        # computed from the server, so a document added locally in the same
+        # run does not exist yet to rescue it.
+        if re.match(r'^[A-Z][A-Z0-9]*-A-[0-9]+_', os.path.basename(cd)):
+            report['Notes'].append(
+                f'{nf} deferred: its ancestor {cd} looks like a directory '
+                'mid-move rather than a new section, so no further sections '
+                'and no document were created. A shallower new section above '
+                'it may already exist and stay empty until the next sync - '
+                'that is expected. Settle the move (or create the section in '
+                'the KB) and sync again.')
+            stalled = True
+            break
         stub_title = title_of(rp, read_file(rp))
         payload = {'summary': stub_title, 'content': to_remote(read_file(rp) or ''), 'project': {'id': pid}}
         if parent: payload['parentArticle'] = {'id': parent}
@@ -447,6 +511,12 @@ for nf in new_files:
         parent = made['id']
         created_ids.append(made['id'])
         report['New'].append(f'{rp} -> section "{stub_title}"')
+    if stalled:
+        # break only left the stub loop; without this the document would be
+        # created anyway, parented to the last resolved ancestor - one or
+        # more levels too high, silently, while Notes claimed nothing was
+        # created. Leave it for the next sync.
+        continue
     if os.path.basename(nf) == 'README.md' and d in dir_article:
         continue  # created above as the section article
     title = title_of(nf, content)
@@ -486,11 +556,62 @@ for aid in created_ids:  # shallow-first: section dirs precede their leaves
 
 # ---- finish -----------------------------------------------------------------
 
+# ---- follow the renames into every link ------------------------------------
+# Structure flows down, so the sync moves files whenever an article is
+# retitled or re-parented - and until now it left every reference to the old
+# path pointing at nothing, then printed a reminder asking a human to go and
+# fix them. Measured on one KB mid-migration: 511 dead against 37 working.
+# Two things shift at once and both are handled here: a link's TARGET may
+# have moved, and the file HOLDING the link may have moved, which changes
+# what its relative paths mean. Resolve against where the file was, remap
+# through the moves, re-relativise to where it now is.
+LINK_RE = re.compile(r'(\]\()([^)\s]+)(\))')
+
+def follow_moves():
+    if not MOVES: return
+    new2old = {v: k for k, v in MOVES.items()}
+    touched = 0
+    for aid, e in smap.items():
+        if e.get('orphaned'): continue
+        new = os.path.normpath(e['path'])
+        if not os.path.isfile(new): continue
+        old = new2old.get(new, new)
+        olddir, newdir = os.path.dirname(old), os.path.dirname(new)
+        text = read_file(new)
+        if text is None: continue
+        def sub(mo):
+            pre, t, post = mo.groups()
+            if re.match(r'^(https?:|mailto:|#)', t): return mo.group(0)
+            body, sep, frag = t.partition('#')
+            if not body: return mo.group(0)
+            tgt = os.path.normpath(os.path.join(olddir, body))
+            tgt = MOVES.get(tgt, tgt)
+            # only rewrite what actually resolves; a link that named nothing
+            # before is a defect in the document, not something to invent a
+            # new path for
+            if not os.path.exists(tgt): return mo.group(0)
+            return pre + os.path.relpath(tgt, newdir or '.') + sep + frag + post
+        out = LINK_RE.sub(sub, text)
+        if out != text:
+            touched += 1
+            if not DRY: write_file(new, out)
+    if touched:
+        report['Notes'].append(
+            f'links updated to follow the moves above, in {touched} file(s)')
+
+follow_moves()
+
 if not DRY:
-    # prune dirs emptied by moves/deletes
-    for dp, dns, fns in os.walk(KB, topdown=False):
-        if dp != KB and dp != SYNC and not dns and not fns:
-            os.rmdir(dp)
+    # Prune dirs emptied by moves/deletes. Ask the filesystem, do not trust
+    # os.walk's dns/fns: those are captured on the way DOWN, so a parent whose
+    # only child this very walk removed still lists it and survives. That left
+    # BC-A-2_product-development behind after its contents moved out.
+    for dp, _dns, _fns in os.walk(KB, topdown=False):
+        if dp in (KB, SYNC): continue
+        try:
+            if not os.listdir(dp): os.rmdir(dp)
+        except OSError:
+            pass
     os.makedirs(SYNC, exist_ok=True)
     with open(STATE_FILE, 'w', encoding='utf-8') as f:
         json.dump(state, f, indent=2, sort_keys=True)
@@ -505,6 +626,6 @@ else:
             print(f'{prefix}{section}:')
             for l in lines: print(f'  {l}')
     if report['Moved']:
-        print(f'{prefix}Reminder: entries Moved above - update any docs/ indexes or instruction files that reference old paths.')
+        print(f'{prefix}Links inside docs/knowledge followed the moves. References from OUTSIDE it - AGENTS.md, README, docs/ indexes - are not rewritten; check those.')
 sys.exit(2 if conflict_count else 0)
 EOF

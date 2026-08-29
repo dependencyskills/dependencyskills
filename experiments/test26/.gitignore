@@ -1,0 +1,6 @@
+# Model weights: fetched from their origin, verified against the digests pinned in
+# implementations/codex/encoder/build.gradle.kts. A repository that carries 200 MB of
+# third-party binary is a repository nobody can clone.
+model/
+model-src/
+*.gguf
