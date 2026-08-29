@@ -490,6 +490,48 @@ class Codex private constructor(private val db: Connection) : AutoCloseable {
         }
     }
 
+    /**
+     * Records what the summariser produced for one entry.
+     *
+     * A null [rewrite] is a degradation: the entry keeps its place and its retrieval key, loses
+     * the right to display prose, and shows its signature instead. That is a safe state rather
+     * than a failure — `test0` measured a signature alone as sufficient to *use* a capability
+     * (7 of 8) — and it is not free, because a signature-only entry carries no prose to retrieve
+     * on. Both halves are true at once.
+     *
+     * **A rewrite never un-degrades an entry.** Two independent things degrade one: the
+     * classifier finding the source prose suspect, and verification refusing the sentence
+     * produced from it. They are not interchangeable, and a good rewrite of prose the classifier
+     * already flagged does not answer the classifier's objection — the suspicion is about what
+     * the library wrote, not about how well it was paraphrased. So an entry that arrives here
+     * already [EntryState.Degraded] keeps that state and stores no rewrite, and the caller is
+     * told so with [SummaryOutcome.Withheld] rather than left to infer it from a silent no-op.
+     */
+    fun recordSummary(id: String, rewrite: String?, summariser: String): SummaryOutcome = transact {
+        val state = db.prepareStatement("SELECT state FROM entry WHERE id = ?").use { p ->
+            p.setString(1, id)
+            p.executeQuery().use { if (it.next()) EntryState.valueOf(it.getString(1)) else null }
+        } ?: return@transact SummaryOutcome.Unknown
+
+        val outcome = when {
+            state == EntryState.Degraded && rewrite != null -> SummaryOutcome.Withheld
+            rewrite == null -> SummaryOutcome.Degraded
+            else -> SummaryOutcome.Stored
+        }
+        db.prepareStatement("UPDATE entry SET rewrite = ?, summariser = ?, state = ? WHERE id = ?")
+            .use { p ->
+                // Only a Stored outcome puts prose in the displayable column. The other two leave
+                // it null, which is what makes "a degraded entry has no rewrite" a property of the
+                // schema rather than a rule every caller has to remember.
+                p.setString(1, if (outcome == SummaryOutcome.Stored) rewrite else null)
+                p.setString(2, summariser)
+                p.setString(3, if (outcome == SummaryOutcome.Stored) state.name else EntryState.Degraded.name)
+                p.setString(4, id)
+                p.executeUpdate()
+            }
+        outcome
+    }
+
     /** Entries in a given state. The review queue for anything the classifier degraded. */
     fun entriesIn(state: EntryState): List<Entry> =
         db.prepareStatement("""
