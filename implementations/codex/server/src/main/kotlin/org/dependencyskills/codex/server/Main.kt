@@ -1,33 +1,26 @@
 package org.dependencyskills.codex.server
 
-import io.modelcontextprotocol.kotlin.sdk.server.Server
-import io.modelcontextprotocol.kotlin.sdk.server.ServerOptions
 import io.modelcontextprotocol.kotlin.sdk.server.StdioServerTransport
-import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
-import io.modelcontextprotocol.kotlin.sdk.types.Implementation
-import io.modelcontextprotocol.kotlin.sdk.types.ServerCapabilities
-import io.modelcontextprotocol.kotlin.sdk.types.TextContent
-import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.asSink
 import kotlinx.io.asSource
 import kotlinx.io.buffered
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import org.dependencyskills.codex.core.Codex
 import org.dependencyskills.codex.core.CodexLocation
+import org.dependencyskills.codex.index.VectorSearch
 import java.nio.file.Path
 
 /**
  * The door, over stdio.
  *
- * **stdio because the store is local and machine-level.** An agent's client launches this as a
- * child process for the project it is working in, which is also how it comes to know its scope —
- * the process is per-project even though the store is not. A shared or remote deployment is a
- * different transport over the same [CodexQueries], and nothing above the transport would change;
- * that is why the query layer has no protocol in it.
+ * **The service in `Application.kt` is how this is meant to run.** This is kept beside it for the
+ * case a client can only launch a child process: same tools from [codexServer], same [CodexQueries]
+ * underneath, different transport. Nothing between here and the store knows which one it is.
+ *
+ * Scope comes from the working directory here, because the client launches one of these per
+ * project. The service cannot do that - it answers for every project on the machine - so it takes
+ * the project per request instead.
  *
  * Everything this prints on stdout is protocol. Diagnostics go to stderr, and there is a specific
  * reason to be careful about it: a stray `println` corrupts the JSON-RPC stream and presents as
@@ -56,56 +49,16 @@ fun main(args: Array<String>) = runBlocking {
     )
 
     val codex = Codex.open(storeFile)
-    val queries = CodexQueries(codex, scope)
-    val server = Server(
-        Implementation(name = "dependencyskills", version = "0.0.1"),
-        ServerOptions(capabilities = ServerCapabilities(tools = ServerCapabilities.Tools(listChanged = true))),
+    // Null when nothing has built an index yet, which is the ordinary state until the service
+    // exists. Said out loud on stderr, because "answers are worse than they should be" is not
+    // something a caller can see.
+    val vectors = VectorSearch.openIfBuilt(storeFile)
+    System.err.println(
+        if (vectors == null) "dependencyskills: no vector index; answering lexically"
+        else "dependencyskills: vector index open, encoder ${vectors.encoderName}",
     )
-
-    server.addTool(
-        name = "search",
-        description =
-            "Find a capability in this project's own dependencies, by describing what you need in " +
-                "plain words. Returns the libraries that already do it, so you can call one " +
-                "instead of writing it. Search before writing anything a library might already " +
-                "provide. Results are limited to what this project actually depends on.",
-        inputSchema = ToolSchema(
-            properties = buildJsonObject {
-                put("need", buildJsonObject {
-                    put("type", JsonPrimitive("string"))
-                    put("description", JsonPrimitive("What you need, in the words you would use to ask a colleague."))
-                })
-                put("limit", buildJsonObject {
-                    put("type", JsonPrimitive("integer"))
-                    put("description", JsonPrimitive("How many candidates to return. Default 10, maximum 50."))
-                })
-            },
-            required = listOf("need"),
-        ),
-    ) { request ->
-        val need = request.arguments?.get("need")?.jsonPrimitive?.content.orEmpty()
-        val limit = request.arguments?.get("limit")?.jsonPrimitive?.content?.toIntOrNull() ?: 10
-        CallToolResult(content = listOf(TextContent(Rendering.render(queries.search(need, limit)))))
-    }
-
-    server.addTool(
-        name = "get",
-        description =
-            "Look up one capability by its exact symbol, as returned by search. Use this when you " +
-                "already know the name and want its signature.",
-        inputSchema = ToolSchema(
-            properties = buildJsonObject {
-                put("symbol", buildJsonObject {
-                    put("type", JsonPrimitive("string"))
-                    put("description", JsonPrimitive("The fully qualified symbol, exactly as search returned it."))
-                })
-            },
-            required = listOf("symbol"),
-        ),
-    ) { request ->
-        val symbol = request.arguments?.get("symbol")?.jsonPrimitive?.content.orEmpty()
-        CallToolResult(content = listOf(TextContent(Rendering.render(queries.get(symbol)))))
-    }
+    val queries = CodexQueries(codex, scope, vectors)
+    val server = codexServer(queries)
 
     val transport = StdioServerTransport(
         System.`in`.asSource().buffered(),
@@ -122,5 +75,6 @@ fun main(args: Array<String>) = runBlocking {
     transport.onClose { done.complete() }
     server.createSession(transport)
     done.join()
+    vectors?.close()
     codex.close()
 }

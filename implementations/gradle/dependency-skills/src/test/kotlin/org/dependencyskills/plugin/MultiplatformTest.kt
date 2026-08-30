@@ -51,10 +51,8 @@ class MultiplatformTest {
         assertTrue(result.output.contains("BUILD SUCCESSFUL"), result.output)
         assertContains(result.output, "1 compile classpath")
 
-        project.store().use {
-            val recorded = it.recordedCoordinates()
-            assertContains(recorded, "com.example:shared-dependency:1.0")
-            assertContains(recorded, "com.example:jvm-only-dependency:1.0")
-        }
+        val recorded = project.recordedCoordinates()
+        assertContains(recorded, "com.example:shared-dependency:1.0")
+        assertContains(recorded, "com.example:jvm-only-dependency:1.0")
     }
 }

@@ -3,6 +3,7 @@ package org.dependencyskills.codex.server
 import org.dependencyskills.codex.core.Codex
 import org.dependencyskills.codex.core.Entry
 import org.dependencyskills.codex.core.EntryState
+import org.dependencyskills.codex.index.VectorSearch
 
 /**
  * What the two tools do, with no MCP anywhere in it.
@@ -24,7 +25,18 @@ import org.dependencyskills.codex.core.EntryState
  * place and its retrieval key and returns its signature. It is findable and it displays nothing,
  * which is the safe state rather than a failure.
  */
-class CodexQueries(private val codex: Codex, private val scope: ProjectScope) {
+class CodexQueries(
+    private val codex: Codex,
+    private val scope: ProjectScope,
+    /**
+     * The vector index, when one has been built.
+     *
+     * Null falls back to lexical search rather than returning nothing. A store that has been
+     * harvested but never embedded is an ordinary state — the two-faced index is derived, and
+     * something has to build it — and answering lexically is what this could always do.
+     */
+    private val vectors: VectorSearch? = null,
+) {
 
     /**
      * One candidate as a caller sees it.
@@ -67,9 +79,14 @@ class CodexQueries(private val codex: Codex, private val scope: ProjectScope) {
                     "this can answer anything.",
             )
         }
-        val results = codex.search(need, scope.coordinates, limit.coerceIn(1, MAX_LIMIT))
+        val bounded = limit.coerceIn(1, MAX_LIMIT)
+        val results = codex.search(need, scope.coordinates, bounded)
+        // The vector index ranks; the store still says what is in scope, what has not been
+        // harvested and what has no source. Those three are properties of the store and are the
+        // same answer either way, so only the candidate list changes.
+        val ranked = vectors?.let { search -> byVector(search, need, bounded) }
         return Answer(
-            candidates = results.hits.map { it.entry.toCandidate() },
+            candidates = ranked ?: results.hits.map { it.entry.toCandidate() },
             searched = results.searched.size,
             notHarvested = results.notHarvested.size,
             noSource = results.noSource.size,
@@ -100,6 +117,25 @@ class CodexQueries(private val codex: Codex, private val scope: ProjectScope) {
             .flatMap { codex.entriesOf(it).asSequence() }
             .firstOrNull { it.symbol == symbol }
             ?.toCandidate()
+    }
+
+    /**
+     * Ranked by the index, resolved back to entries through the store.
+     *
+     * Returns null rather than an empty list when the index cannot answer, so a caller falls back
+     * to lexical instead of reporting an absence the index never established. An index that is
+     * present but empty is indistinguishable from one that is broken, and neither is evidence
+     * that a project has nothing.
+     */
+    private fun byVector(search: VectorSearch, need: String, limit: Int): List<Candidate>? {
+        val ids = runCatching { search.search(need, scope.coordinates, limit) }.getOrNull()
+        if (ids.isNullOrEmpty()) return null
+        return ids.mapNotNull { codex.entry(it) }
+            // Scope again, on the way out. The index filters inside the kNN query and this is the
+            // belt to that brace: two independent checks on the boundary that matters most.
+            .filter { entry -> entry.coordinates.any { it in scope.coordinates } }
+            .map { it.toCandidate() }
+            .ifEmpty { null }
     }
 
     private fun empty(note: String) = Answer(emptyList(), 0, 0, 0, complete = false, note = note)

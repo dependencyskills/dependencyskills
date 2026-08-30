@@ -92,6 +92,16 @@ val encoderJar by tasks.registering(Jar::class) {
 // Deliberately NOT wired into `assemble`. A contributor who is not shipping a model should not
 // pay to build one; the publication below carries the dependency, so `publish` still builds it.
 
+// Consumable by a sibling module, so the index and the server can put the model on a classpath
+// and unpack it. A plain `project(":encoder")` would resolve nothing: this project builds a jar
+// with a task rather than through the java plugin's conventions.
+val encoderArtifact: Configuration by configurations.creating {
+    isCanBeConsumed = true
+    isCanBeResolved = false
+}
+
+artifacts { add(encoderArtifact.name, encoderJar) }
+
 publishing {
     publications.create<MavenPublication>("encoder") {
         artifactId = "encoder"

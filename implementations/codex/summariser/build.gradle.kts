@@ -13,7 +13,17 @@ plugins {
 // FFM through `inference` needs 22. Like the harvest and the index, this runs out of band and is
 // not held to the Gradle plugin's floor. A target rather than a toolchain, matching `inference`.
 kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_22) } }
-java { sourceCompatibility = JavaVersion.VERSION_22; targetCompatibility = JavaVersion.VERSION_22 }
+// A toolchain, not bare source/target compatibility. Those set what the compiler EMITS and say
+// nothing about what runs the tests, so the test JVM was whatever daemon happened to be alive -
+// and a daemon pinned to 21 cannot load the class files this emits. Matches `inference`.
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(26) }
+    // The toolchain says which JDK runs the build and the tests; these say what it EMITS. Both
+    // are needed: without the toolchain the tests ran on whatever daemon was alive, and without
+    // these the Java and Kotlin tasks disagree about the target and the build refuses to compile.
+    sourceCompatibility = JavaVersion.VERSION_22
+    targetCompatibility = JavaVersion.VERSION_22
+}
 
 dependencies {
     api(project(":core"))

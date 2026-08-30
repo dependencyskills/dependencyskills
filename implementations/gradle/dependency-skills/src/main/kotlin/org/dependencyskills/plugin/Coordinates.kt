@@ -1,6 +1,5 @@
 package org.dependencyskills.plugin
 
-import org.dependencyskills.codex.core.Coordinate
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.result.ResolutionResult
 import org.gradle.api.artifacts.result.ResolvedComponentResult

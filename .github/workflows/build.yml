@@ -1,0 +1,163 @@
+name: Build and test
+
+# Runs the builds on the platforms they target, because most of this cannot be verified anywhere
+# else.
+#
+# The inference module compiles llama.cpp into a Kotlin/Native binary per platform. A developer on
+# a Mac can CROSS-LINK those binaries but can never execute them - Gradle says so itself, "tests
+# can only run on linux_x64" - so until there was a runner for each, the Linux and Windows targets
+# were link-checked and nothing more. Both were broken for months behind that: the Linux archive
+# was missing llama_backend_init entirely and the Linux shared library failed at dlopen with an
+# undefined OpenMP symbol, and neither showed up as a failure anyone could see.
+#
+# So the matrix is not about breadth. Each runner is the only place its target's tests can run at
+# all.
+#
+# WINDOWS IS DELIBERATELY NOT HERE, and it is worth saying rather than leaving to be noticed. There
+# is no Windows runner yet, so nothing executes the mingwX64 target and nothing loads dscodex.dll.
+# Both are built and link-checked locally and that is all anyone should claim for them. Add a
+# `- { os: "['windows-latest']", name: windows-x86_64 }` line to the matrix below - or the labels
+# of a self-hosted Windows machine - before a release that says Windows is supported.
+#
+# One thing to know when reading a failure here: Kotlin/Native links Linux targets against a
+# sysroot it bundles itself - gcc 8.3.0, glibc 2.19 - on EVERY host, including Linux. An ubuntu
+# runner does not change what the link sees. Anything built against a newer glibc than that will
+# fail here exactly as it does locally, and the fix belongs in native/build.sh, not in this file.
+
+on:
+  push:
+    branches: [master]
+    paths-ignore:
+      - 'site/**'
+      - 'docs/**'
+      - '**.md'
+  pull_request:
+    paths-ignore:
+      - 'site/**'
+      - 'docs/**'
+      - '**.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A superseded push has nothing to tell us, and these runners are not cheap.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  codex:
+    name: codex (${{ matrix.name }})
+    runs-on: ${{ fromJSON(matrix.os) }}
+    strategy:
+      # Every platform reports, rather than the first failure hiding the rest. A Windows-only
+      # break is worth seeing on the same run as the Linux result.
+      fail-fast: false
+      matrix:
+        include:
+          - { os: "['ubuntu-latest']",    name: linux-x86_64 }
+          - { os: "['ubuntu-24.04-arm']", name: linux-aarch64 }
+          # A self-hosted Mac. These are the labels the runner application applies by itself -
+          # `self-hosted`, the OS, the architecture - so no custom label is needed, but if this
+          # machine carries one, put it here instead. A label that matches nothing does not fail:
+          # the job queues forever, looking pending rather than broken.
+          - { os: "['self-hosted', 'macOS', 'ARM64']", name: macos-aarch64 }
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # 26 because the codex modules pin `JavaLanguageVersion.of(26)`. It also has to be a build
+      # that ships jdk.incubator.vector: the index and server test tasks pass
+      # `--add-modules jdk.incubator.vector`, and a JDK without it fails at boot layer
+      # initialization with "Module jdk.incubator.vector not found" before a single test runs.
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '26'
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      # The generative tests need a model, and there is no model in this repository - it is not
+      # committed and it is not downloaded by the build. Set the DSCODEX_TEST_MODEL_URL repository
+      # variable to a .gguf a generator can load and they run; leave it unset and they do not.
+      #
+      # When they do not run, this says so in the job summary rather than passing quietly. A green
+      # check that silently covered eight fewer tests than the reader assumes is the failure this
+      # project keeps re-learning.
+      - name: Fetch the test model
+        id: model
+        if: vars.DSCODEX_TEST_MODEL_URL != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL "${{ vars.DSCODEX_TEST_MODEL_URL }}" -o "$RUNNER_TEMP/test-model.gguf"
+          # shasum, not sha256sum: the macOS runner has no sha256sum, and an unverified download
+          # that silently skipped its check is worse than no check at all.
+          if [ -n "${{ vars.DSCODEX_TEST_MODEL_SHA256 }}" ]; then
+            echo "${{ vars.DSCODEX_TEST_MODEL_SHA256 }}  $RUNNER_TEMP/test-model.gguf" | shasum -a 256 -c -
+          fi
+          echo "path=$RUNNER_TEMP/test-model.gguf" >> "$GITHUB_OUTPUT"
+
+      - name: Build and test the codex
+        working-directory: implementations/codex
+        shell: bash
+        env:
+          # Empty when no model was fetched, and the build treats blank as absent: the tests that
+          # need a generator report themselves skipped WITH THE REASON, and the ones that do not
+          # need it still run. Nothing is excluded from the command line, because which test tasks
+          # exist differs by host - `linuxX64Test` exists on a Mac and `linuxArm64Test` does not -
+          # and naming an absent task fails the build rather than being ignored.
+          DSCODEX_TEST_MODEL: ${{ steps.model.outputs.path }}
+        run: ./gradlew build
+
+      - name: Say that the generative tests did not run
+        if: steps.model.outcome == 'skipped'
+        shell: bash
+        run: |
+          {
+            echo "### Generative tests did not run on ${{ matrix.name }}"
+            echo
+            echo "No model was configured, so the tests that need a generator reported themselves"
+            echo "skipped. They are counted as skipped in the reports above, not as passes."
+            echo
+            echo "Set the \`DSCODEX_TEST_MODEL_URL\` repository variable to a \`.gguf\` to run them."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: codex-test-reports-${{ matrix.name }}
+          path: implementations/codex/*/build/reports/tests/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  plugin:
+    name: gradle plugin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '26'
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      # The plugin is a separate build and deliberately depends on nothing from the codex - it
+      # watches compile classpaths and writes a text file. Its tests run a real Gradle build in a
+      # temporary project, so they need no model and no natives.
+      - name: Build and test the plugin
+        working-directory: implementations/gradle
+        run: ./gradlew build
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: plugin-test-reports
+          path: implementations/gradle/*/build/reports/tests/
+          if-no-files-found: ignore
+          retention-days: 7

@@ -25,7 +25,8 @@ data class ProjectScope(val coordinates: Set<Coordinate>, val source: String) {
     val isEmpty: Boolean get() = coordinates.isEmpty()
 
     companion object {
-        const val FILE_NAME = "scope.txt"
+        /** Named for what reads it, not for what it is — a bare `scope.txt` says nothing. */
+        const val FILE_NAME = "codex-scope.txt"
 
         /**
          * Where the Gradle plugin writes it, relative to the project.

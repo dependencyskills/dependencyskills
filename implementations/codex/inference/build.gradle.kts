@@ -48,8 +48,15 @@ kotlin {
         target.binaries.all {
             when (target.name) {
                 "macosArm64", "macosX64" -> linkerOpts("-framework", "Accelerate", "-lc++")
-                "linuxX64", "linuxArm64" -> linkerOpts("-lstdc++", "-lm")
-                "mingwX64" -> linkerOpts("-lstdc++")
+                // -lstdc++fs is separate on the GCC 8.3 that Kotlin/Native bundles for Linux:
+                // std::filesystem only moved into libstdc++ proper in GCC 9. llama.cpp uses it,
+                // so without this the link fails on directory_iterator and friends.
+                "linuxX64", "linuxArm64" -> linkerOpts("-lstdc++", "-lstdc++fs", "-lm")
+                // No -lstdc++ on purpose. Kotlin/Native bundles msys2 mingw gcc 9.2.0, and the
+                // archive is built with a much newer one, so asking for both C++ runtimes put two
+                // in a single link and it failed on hundreds of duplicate std:: symbols. The
+                // archive carries its own instead - see the windows branch of native/build.sh.
+                "mingwX64" -> linkerOpts()
             }
         }
 
@@ -127,4 +134,31 @@ tasks.withType<Test>().configureEach {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
     // Forwarded explicitly: a -D on the command line reaches the Gradle daemon, not this fork.
     providers.systemProperty("dscodex.test.model").orNull?.let { systemProperty("dscodex.test.model", it) }
+}
+
+/**
+ * A generative model to test against, from either the property or the environment.
+ *
+ * Blank counts as absent. A CI step that sets `DSCODEX_TEST_MODEL` from a variable nobody
+ * configured exports an EMPTY string, not nothing, and an empty path would flip this gate on and
+ * fail every gated test on a file that was never named.
+ */
+val generativeModel: Provider<String> = providers.systemProperty("dscodex.test.model")
+    .orElse(providers.environmentVariable("DSCODEX_TEST_MODEL"))
+    .map { it.trim() }
+    .filter { it.isNotEmpty() }
+
+// The native generator tests need a real model and there is no way to say so from inside them:
+// kotlin.test on Kotlin/Native has no runtime assumption, only compile-time @Ignore. So the gate
+// is the task, and it carries its reason.
+//
+// The JVM side does this properly - the three tests that need a model report themselves SKIPPED
+// with the reason, and the two that do not need one run regardless. Here it is all or nothing,
+// which costs one test: "a file that is not a model is refused". Its JVM twin covers the same
+// binding, so what is lost is the native path over a case the shared C shim already handles.
+tasks.withType<org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest>().configureEach {
+    onlyIf("a generative model is configured (-Ddscodex.test.model or DSCODEX_TEST_MODEL)") {
+        generativeModel.isPresent
+    }
+    generativeModel.orNull?.let { environment("DSCODEX_TEST_MODEL", it) }
 }

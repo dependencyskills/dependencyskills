@@ -13,7 +13,7 @@ import kotlin.test.assertTrue
  * summariser's acceptance criteria.
  *
  * A criterion of that shape is usually met with a comment and a good intention. This meets it
- * with the classpath: the plugin depends on `core` and nothing else, so the summariser's classes
+ * with the classpath: the plugin depends on **nothing but Gradle**, so the summariser's classes
  * are not merely unused here — they are **absent**, and the JVM will say so. Somebody who wants
  * to call it has to add a dependency, which is a visible act in a reviewed file rather than an
  * import nobody notices.
@@ -43,11 +43,15 @@ class NothingGenerativeTest {
     }
 
     @Test
-    fun `the store IS on the classpath, so this test can tell absence from a broken loader`() {
+    fun `something IS on the classpath, so this test can tell absence from a broken loader`() {
         // Without this, every assertion above would pass just as happily if the class loader were
         // misconfigured and nothing at all resolved. A test that cannot fail for the right reason
         // is not evidence.
-        val store = Class.forName("org.dependencyskills.codex.core.Codex", false, javaClass.classLoader)
-        assertTrue(store.name.endsWith("Codex"))
+        //
+        // Gradle rather than a codex class, because the plugin now carries none: the store went
+        // the same way as the summariser, and for the same reason - a build watches a list and
+        // writes a file, and the service owns everything else.
+        val api = Class.forName("org.gradle.api.Project", false, javaClass.classLoader)
+        assertTrue(api.name.endsWith("Project"))
     }
 }

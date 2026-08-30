@@ -1,7 +1,5 @@
 package org.dependencyskills.plugin
 
-import org.dependencyskills.codex.core.Codex
-import org.dependencyskills.codex.core.CodexLocation
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import java.io.File
@@ -27,7 +25,19 @@ internal class TestProject(
     /** Where the plugin writes this project's scope, for an MCP server started here to read. */
     val scopeFile: Path = projectDirectory.resolve(DependencySkillsPlugin.DEFAULT_SCOPE)
 
-    fun store(): Codex = Codex.open(storeDirectory.resolve(CodexLocation.FILENAME))
+    /**
+     * The coordinates this build wrote, as `group:artifact:version`, sorted.
+     *
+     * Read from the scope file rather than from the store. The plugin no longer opens the store —
+     * asserting through it tested the store as much as the plugin, and now there is nothing there
+     * to assert against.
+     */
+    fun recordedCoordinates(): List<String> =
+        if (!Files.isRegularFile(scopeFile)) emptyList()
+        else Files.readAllLines(scopeFile)
+            .filterNot { it.startsWith("#") || it.isBlank() }
+            .map { it.substringAfter("maven:") }
+            .sorted()
 
     /**
      * Publishes a module into the local repository.
@@ -134,10 +144,4 @@ $plugins
     }
 }
 
-/** Coordinates in the store, as `group:artifact:version`, sorted. */
-internal fun Codex.recordedCoordinates(): List<String> =
-    org.dependencyskills.codex.core.HarvestState.entries
-        .flatMap { coordinatesIn(it) }
-        .map { it.coordinate.value }
-        .sorted()
 

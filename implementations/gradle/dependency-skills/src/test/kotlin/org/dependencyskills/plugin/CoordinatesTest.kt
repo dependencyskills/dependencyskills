@@ -1,6 +1,5 @@
 package org.dependencyskills.plugin
 
-import org.dependencyskills.codex.core.Coordinate
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue

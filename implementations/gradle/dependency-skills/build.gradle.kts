@@ -5,13 +5,19 @@
 plugins {
     `kotlin-dsl`
     `java-gradle-plugin`
+    // `java-gradle-plugin` configures the publications; it does not apply this, so without it
+    // there are no publish tasks at all and `publishToMavenLocal` silently publishes nothing
+    // from this project.
+    `maven-publish`
 }
 
 kotlin { jvmToolchain(17) }
 
 dependencies {
-    // The store, substituted from the sibling `codex` build root by the composite in settings.
-    implementation("org.dependencyskills.codex:core")
+    // NOTHING from the codex. This plugin watches compile classpaths and writes a text file;
+    // it used to open the store, which put 11.4 MB of SQLite on every consuming project's
+    // buildscript classpath and made every Gradle daemon a writer to one database. What the
+    // plugin and the codex share is the scope file's format, not a type.
 
     // Kotlin Multiplatform exposes each compilation's compile-dependency configuration through
     // KGP, and there is no other public way to ask for it. compileOnly because a consuming

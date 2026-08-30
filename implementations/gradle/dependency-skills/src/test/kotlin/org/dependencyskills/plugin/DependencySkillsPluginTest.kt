@@ -1,7 +1,5 @@
 package org.dependencyskills.plugin
 
-import org.dependencyskills.codex.core.Coordinate
-import org.dependencyskills.codex.core.HarvestState
 import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertContains
@@ -39,8 +37,8 @@ class DependencySkillsPluginTest {
         """.trimIndent())
         project.run("classes")
 
-        project.store().use {
-            val recorded = it.recordedCoordinates()
+        run {
+            val recorded = project.recordedCoordinates()
             assertContains(recorded, "com.example:alpha:1.0")
             assertContains(recorded, "com.example:only-compiled-against:1.0")
         }
@@ -59,8 +57,8 @@ class DependencySkillsPluginTest {
         """.trimIndent())
         project.run("classes")
 
-        project.store().use {
-            val recorded = it.recordedCoordinates()
+        run {
+            val recorded = project.recordedCoordinates()
             assertContains(recorded, "com.example:beta:1.0")
             assertFalse("com.example:gamma:1.0" in recorded, "a runtime-only transitive is not importable")
         }
@@ -71,8 +69,8 @@ class DependencySkillsPluginTest {
         val declaredOnly = project()
         declaredOnly.build("""dependencies { api("com.example:alpha:1.0") }""")
         declaredOnly.run("classes")
-        declaredOnly.store().use {
-            assertEquals(listOf("com.example:alpha:1.0"), it.recordedCoordinates())
+        run {
+            assertEquals(listOf("com.example:alpha:1.0"), declaredOnly.recordedCoordinates())
         }
 
         val widened = project()
@@ -81,8 +79,8 @@ class DependencySkillsPluginTest {
             dependencySkills { harvester { transitive = true } }
         """.trimIndent())
         widened.run("classes")
-        widened.store().use {
-            assertEquals(listOf("com.example:alpha:1.0", "com.example:beta:1.0"), it.recordedCoordinates())
+        run {
+            assertEquals(listOf("com.example:alpha:1.0", "com.example:beta:1.0"), widened.recordedCoordinates())
         }
     }
 
@@ -99,27 +97,14 @@ class DependencySkillsPluginTest {
         // anyway, and what the store holds must not depend on which target was assembled.
         project.run("classes", "testClasses")
 
-        project.store().use {
-            val recorded = it.recordedCoordinates()
+        run {
+            val recorded = project.recordedCoordinates()
             assertContains(recorded, "com.example:alpha:1.0")
             assertContains(recorded, "com.example:test-only:1.0")
         }
     }
 
     // -- what is stored ---------------------------------------------------------------------
-
-    @Test
-    fun `a new coordinate is recorded as pending, with a timestamp`() {
-        val project = project()
-        project.build("""dependencies { api("com.example:alpha:1.0") }""")
-        project.run("classes")
-
-        project.store().use { codex ->
-            val record = assertNotNull(codex.coordinate(Coordinate("maven", "com.example:alpha:1.0")))
-            assertEquals(HarvestState.Pending, record.state)
-            assertNotNull(record.firstSeen)
-        }
-    }
 
     @Test
     fun `the build writes down what this project may search`() {
@@ -155,45 +140,6 @@ class DependencySkillsPluginTest {
     }
 
     @Test
-    fun `scope is not stored anywhere`() {
-        // The same coordinate, declared at a different scope in each of two projects. The store
-        // is machine-wide and keyed by coordinate, so it cannot hold a truthful answer about
-        // scope - the same artifact is api in one project and implementation in another.
-        val first = project()
-        first.build("""dependencies { api("com.example:alpha:1.0") }""")
-        first.run("classes")
-
-        val second = TestProject(first.storeDirectory.parent).apply {
-            publish("com.example", "beta", "1.0")
-            publish("com.example", "alpha", "1.0", compile = listOf("com.example:beta:1.0"))
-        }
-        second.build("""dependencies { implementation("com.example:alpha:1.0") }""")
-        val result = second.run("classes")
-
-        second.store().use {
-            assertEquals(
-                1,
-                it.recordedCoordinates().count { c -> c == "com.example:alpha:1.0" },
-                "one coordinate, one record, whatever scope declared it",
-            )
-        }
-        assertContains(result.output, "0 new")
-    }
-
-    @Test
-    fun `a coordinate already in the store does not reappear`() {
-        val project = project()
-        project.build("""dependencies { api("com.example:alpha:1.0") }""")
-
-        val first = project.run("classes")
-        assertContains(first.output, "1 new")
-
-        val second = project.run("clean", "classes")
-        assertContains(second.output, "0 new")
-        project.store().use { assertEquals(listOf("com.example:alpha:1.0"), it.recordedCoordinates()) }
-    }
-
-    @Test
     fun `an ignored library is not recorded, whatever version it is at`() {
         val project = project()
         project.build("""
@@ -202,8 +148,8 @@ class DependencySkillsPluginTest {
         """.trimIndent())
         project.run("classes")
 
-        project.store().use {
-            assertEquals(listOf("com.example:alpha:1.0"), it.recordedCoordinates())
+        run {
+            assertEquals(listOf("com.example:alpha:1.0"), project.recordedCoordinates())
         }
     }
 
@@ -215,11 +161,13 @@ class DependencySkillsPluginTest {
         project.build("""dependencies { api("com.example:alpha:1.0") }""")
 
         val nothingResolved = project.run("help")
-        assertContains(nothingResolved.output, "no compile classpath resolved this build")
-        project.store().use { assertTrue(it.recordedCoordinates().isEmpty()) }
+        assertContains(nothingResolved.output, "no compile classpath resolved")
+        // Nothing written, rather than an empty scope written. An empty scope means "search
+        // nothing", so a build that learned nothing must not overwrite what the last one knew.
+        assertTrue(project.recordedCoordinates().isEmpty())
 
         val resolved = project.run("classes")
-        assertContains(resolved.output, "1 compile classpath, 1 coordinate, 1 new — 1 awaiting harvest")
+        assertContains(resolved.output, "1 compile classpath, 1 coordinate recorded")
     }
 
     @Test
@@ -229,25 +177,10 @@ class DependencySkillsPluginTest {
         val project = project()
         project.build("""dependencies { api("com.example:alpha:1.0") }""")
         project.run("help")
-        project.store().use { assertTrue(it.recordedCoordinates().isEmpty()) }
+        assertTrue(project.recordedCoordinates().isEmpty())
     }
 
     // -- staying out of the way ----------------------------------------------------------------
-
-    @Test
-    fun `a broken store does not break the build`() {
-        val project = project()
-        project.build("""dependencies { api("com.example:alpha:1.0") }""")
-        // A file where the database should be. Opening it is not going to go well, and the
-        // build must not care: the index is an aid, and a project whose index is unwell still
-        // has to compile.
-        java.nio.file.Files.createDirectories(project.storeDirectory)
-        java.nio.file.Files.writeString(project.storeDirectory.resolve("codex.db"), "not a database")
-
-        val result = project.run("classes")
-        assertContains(result.output, "the codex is unavailable")
-        assertTrue(result.output.contains("BUILD SUCCESSFUL"))
-    }
 
     @Test
     fun `switched off, it records nothing`() {
@@ -257,7 +190,7 @@ class DependencySkillsPluginTest {
             dependencySkills { enabled = false }
         """.trimIndent())
         project.run("classes")
-        project.store().use { assertTrue(it.recordedCoordinates().isEmpty()) }
+        assertTrue(project.recordedCoordinates().isEmpty())
     }
 
     @Test
@@ -265,7 +198,7 @@ class DependencySkillsPluginTest {
         val project = project()
         project.build("""dependencies { api("com.example:alpha:1.0") }""")
         project.run("classes", "-PdependencySkills.enabled=false")
-        project.store().use { assertTrue(it.recordedCoordinates().isEmpty()) }
+        assertTrue(project.recordedCoordinates().isEmpty())
     }
 
     @Test
@@ -279,8 +212,8 @@ class DependencySkillsPluginTest {
         // Resolving at configuration time is the classic way a plugin like this slows every
         // build down and breaks the cache. Gradle says so when it happens; it must not happen.
         assertFalse(miss.output.contains("was resolved during configuration time"))
-        assertContains(miss.output, "1 new")
-        project.store().use { assertEquals(listOf("com.example:alpha:1.0"), it.recordedCoordinates()) }
+        assertContains(miss.output, "1 compile classpath, 1 coordinate recorded")
+        assertEquals(listOf("com.example:alpha:1.0"), project.recordedCoordinates())
     }
 
     @Test
@@ -320,12 +253,10 @@ class DependencySkillsPluginTest {
         """.trimIndent())
         val after = project.run("classes", "--configuration-cache")
 
-        assertContains(after.output, "1 new")
-        project.store().use {
-            assertEquals(
-                listOf("com.example:alpha:1.0", "com.example:only-compiled-against:1.0"),
-                it.recordedCoordinates(),
-            )
-        }
+        assertContains(after.output, "2 coordinates recorded")
+        assertEquals(
+            listOf("com.example:alpha:1.0", "com.example:only-compiled-against:1.0"),
+            project.recordedCoordinates(),
+        )
     }
 }

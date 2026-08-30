@@ -8,7 +8,7 @@ thing that builds it: **what it costs**, and **what the agent is allowed to read
 
 <svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 680 554" role="img" aria-labelledby="hiwT hiwD" style="max-width:680px;height:auto;margin:1.5rem 0">
 <title id="hiwT">How the indexer works</title>
-<desc id="hiwD">A project resolves its dependencies and asks which coordinates are not yet indexed. A shared machine-level store, keyed by coordinate and version, runs harvest, parse, classify and summarise once per library version and holds a two-faced index. Queries are scoped to the coordinates this project resolved, and only the rewritten sentence crosses a trust boundary to the coding agent.</desc>
+<desc id="hiwD">A project resolves its dependencies and records them; a service on the machine works out which coordinates are not yet indexed. A shared machine-level store, keyed by coordinate and version, runs harvest, parse, classify and summarise once per library version and holds a two-faced index. Queries are scoped to the coordinates this project resolved, and only the rewritten sentence crosses a trust boundary to the coding agent.</desc>
 <style>
   .hiw text { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
   .hiw .t { font-size:14px; font-weight:500; }
@@ -128,8 +128,7 @@ be dropped.
 
 ## The per-project part is small, and it is a boundary
 
-A project resolves its dependencies, asks the store which of those it has not seen before, and
-indexes only those. Everything else is already there.
+A project resolves its dependencies and writes down what it resolved. That is the entire build-time cost: no database is opened, nothing is indexed, and nothing is fetched. A small service on the machine does the rest — it works out which of those coordinates it has never seen, and indexes only those. Everything else is already there. The build stays out of it deliberately: a store opened from the build would put a database on every consuming project's build classpath, and make every build daemon on the machine a writer to a single file.
 
 Queries are then **scoped to the coordinates that project actually resolved**. This is not a
 performance filter. A shared store holds entries from every library any project on the machine

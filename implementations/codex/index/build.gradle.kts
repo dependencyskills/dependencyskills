@@ -22,7 +22,17 @@ plugins {
 // JDK 22 on every machine that builds the repo, when what is actually required is that the
 // bytecode not claim to run on less.
 kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_22) } }
-java { sourceCompatibility = JavaVersion.VERSION_22; targetCompatibility = JavaVersion.VERSION_22 }
+// A toolchain, not bare source/target compatibility. Those set what the compiler EMITS and say
+// nothing about what runs the tests, so the test JVM was whatever daemon happened to be alive -
+// and a daemon pinned to 21 cannot load the class files this emits. Matches `inference`.
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(26) }
+    // The toolchain says which JDK runs the build and the tests; these say what it EMITS. Both
+    // are needed: without the toolchain the tests ran on whatever daemon was alive, and without
+    // these the Java and Kotlin tasks disagree about the target and the build refuses to compile.
+    sourceCompatibility = JavaVersion.VERSION_22
+    targetCompatibility = JavaVersion.VERSION_22
+}
 
 dependencies {
     api(project(":core"))
@@ -40,6 +50,9 @@ dependencies {
     // inside string values, which is exactly where a hand-rolled scan silently returns nothing -
     // and "no rewrites" would have read as "the second face does not help".
     testImplementation("com.google.code.gson:gson:2.11.0")
+    // The packaged model, on the test classpath only. A consumer chooses whether to carry 58 MB;
+    // the library must not decide that for them by depending on it.
+    testRuntimeOnly(project(mapOf("path" to ":encoder", "configuration" to "encoderArtifact")))
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
 }
