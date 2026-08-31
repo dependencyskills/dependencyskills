@@ -64,3 +64,4 @@ experiments/test22/evasions.json
 docs/stories/
 .agents/config/dimensions.md
 # END story-tools
+local.properties
