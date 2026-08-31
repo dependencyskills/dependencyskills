@@ -65,3 +65,7 @@ docs/stories/
 .agents/config/dimensions.md
 # END story-tools
 local.properties
+
+# JVM crash dumps: they carry absolute paths and full command lines.
+hs_err_pid*.log
+replay_pid*.log

@@ -67,11 +67,23 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # A self-hosted machine already has its JDKs, so downloading one is 200 MB and a signature
+      # check for a thing that is on disk. It is also the failure that stopped this job: verifying
+      # the Temurin download needs `gpg` AND Adoptium's public key in the runner's keyring, and a
+      # machine that has never imported it fails after a keyserver timeout, ten seconds in.
+      #
+      # macOS-specific by way of `java_home`. A self-hosted Linux runner would need its own line.
+      - name: Use the JDK this machine already has
+        if: runner.environment == 'self-hosted' && runner.os == 'macOS'
+        shell: bash
+        run: echo "JAVA_HOME=$(/usr/libexec/java_home -v 26)" >> "$GITHUB_ENV"
+
       # 26 because the codex modules pin `JavaLanguageVersion.of(26)`. It also has to be a build
       # that ships jdk.incubator.vector: the index and server test tasks pass
       # `--add-modules jdk.incubator.vector`, and a JDK without it fails at boot layer
       # initialization with "Module jdk.incubator.vector not found" before a single test runs.
       - uses: actions/setup-java@v6
+        if: runner.environment == 'github-hosted'
         with:
           distribution: temurin
           java-version: '26'

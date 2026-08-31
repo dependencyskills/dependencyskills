@@ -161,6 +161,19 @@ class Indexer(
         Codex.open(store).use { codex ->
             codex.harvest(coordinate, jar, SourcesJarHarvester())
             entries = codex.entriesOf(coordinate).size
+            // Back to Pending, deliberately, and this is not bookkeeping.
+            //
+            // `Codex.put` marks a coordinate Indexed as soon as its ENTRIES are written, which in
+            // the store's vocabulary means "harvested". This pipeline is not finished at that
+            // point - nothing has been classified, summarised or embedded - and a pass killed in
+            // the window between them left the coordinate marked complete while being anything
+            // but. Measured: a library interrupted mid-summarise sat at 195 of 4,176 entries
+            // rewritten, marked Indexed, and no later pass would ever look at it again.
+            //
+            // Pending until the whole pipeline finishes. Re-running is cheap by construction:
+            // entries are content-addressed so a re-harvest writes nothing new, and summarise is
+            // idempotent per model so the 195 are not paid for twice.
+            codex.harvestState(coordinate, HarvestState.Pending)
 
             // -- classify, BEFORE anything paraphrases ------------------------------------------
             val classifier = ProseClassifier()

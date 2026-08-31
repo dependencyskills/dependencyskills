@@ -71,14 +71,26 @@ class TwoFacedIndex private constructor(
     val dimensions: Int,
 ) : AutoCloseable {
 
-    private val writer = IndexWriter(directory, IndexWriterConfig())
-
-    init {
-        writer.setLiveCommitData(
-            mapOf(ENCODER to encoder, POOLING to pooling.name, DIMENSIONS to dimensions.toString())
-                .entries,
-        )
+    /**
+     * Created on first write, not on open.
+     *
+     * A Lucene `IndexWriter` takes an exclusive `write.lock` on the directory, and **searching does
+     * not need one** — [search] opens its own `DirectoryReader`. Creating it eagerly meant any
+     * process that merely opened the index to answer queries held the lock, so the indexer could
+     * never write again: the first pass on a machine succeeded because no index existed yet, and
+     * every pass after it failed with `LockObtainFailedException` from its own JVM.
+     *
+     * Lazily, a reader-only user never takes the lock and never notices there is one.
+     */
+    private val writerHandle = lazy {
+        IndexWriter(directory, IndexWriterConfig()).also {
+            it.setLiveCommitData(
+                mapOf(ENCODER to encoder, POOLING to pooling.name, DIMENSIONS to dimensions.toString())
+                    .entries,
+            )
+        }
     }
+    private val writer by writerHandle
 
     /**
      * Indexes one entry's faces, replacing whatever was there under the same id.
@@ -164,7 +176,9 @@ class TwoFacedIndex private constructor(
     }
 
     override fun close() {
-        writer.close()
+        // Only if something actually wrote. Touching it here would create the very lock this
+        // avoids, at the moment the index is being released.
+        if (writerHandle.isInitialized()) writer.close()
         directory.close()
     }
 

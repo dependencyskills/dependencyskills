@@ -84,6 +84,27 @@ class IndexerRoutingTest {
     }
 
     @Test
+    fun `NoSource coordinates can be found again, which is the handoff to bytecode indexing`() {
+        // #28 indexes these from bytecode. It needs to ask the store "which coordinates published
+        // no sources" and get an answer, rather than re-deriving the set by trying them all again.
+        // Nothing tested this, so a change to state handling could have broken the handoff with
+        // no failure anywhere until #28 was built and found nothing to work on.
+        val work = createTempDirectory("routing")
+        val store = work.resolve("codex.db")
+        val absent = Coordinate("maven", "com.example:absent:1.0")
+        Codex.open(store).use { it.seen(absent) }
+
+        indexer(work).run()
+
+        Codex.open(store).use { codex ->
+            val handoff = codex.coordinatesIn(HarvestState.NoSource).map { it.coordinate }
+            assertEquals(listOf(absent), handoff)
+            // And it is not in the queue any more, or it would be retried for ever.
+            assertTrue(codex.coordinatesIn(HarvestState.Pending).isEmpty())
+        }
+    }
+
+    @Test
     fun `nothing pending is not an error, and reports nothing`() {
         val work = createTempDirectory("routing")
         Codex.open(work.resolve("codex.db")).use { }
