@@ -1,8 +1,10 @@
 package org.dependencyskills.plugin
 
+import com.sun.net.httpserver.HttpServer
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import java.io.File
+import java.net.InetSocketAddress
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -13,6 +15,9 @@ import java.nio.file.Path
  * the story asks for: everything the plugin needs is already local, and every run below passes
  * `--offline`.
  */
+/** A loopback port nothing listens on, so "the service is down" is the default in tests. */
+private const val UNREACHABLE = "http://127.0.0.1:1"
+
 internal class TestProject(
     private val root: Path,
     private val extraPluginClasspath: List<File> = emptyList(),
@@ -22,22 +27,78 @@ internal class TestProject(
     private val repository: Path = root.resolve("repo")
     private val projectDirectory: Path = root.resolve("project")
 
-    /** Where the plugin writes this project's scope, for an MCP server started here to read. */
-    val scopeFile: Path = projectDirectory.resolve(DependencySkillsPlugin.DEFAULT_SCOPE)
+    /**
+     * A stand-in for the codex service, recording what the plugin actually sent it.
+     *
+     * A stub rather than the real service because these tests are about the plugin: what it
+     * reports, that it reports it once, and — most of it — that it does no harm when nobody is
+     * listening. Running the real service here would test the service.
+     */
+    private var stub: HttpServer? = null
+    private val registrations = mutableListOf<String>()
+
+    init {
+        // Running by default. "What did the plugin report" is what almost every test here asks,
+        // and a test that wants the service absent is making a point that deserves to be visible
+        // in the test body rather than assumed from its absence.
+        startService()
+    }
+
+    /** Starts the stub and returns its URL. Started for every project; see [stopService]. */
+    fun startService(status: Int = 200): String {
+        stub?.let { return serviceUrl!! }
+        val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
+        server.createContext("/projects") { exchange ->
+            synchronized(registrations) { registrations += exchange.requestBody.readBytes().decodeToString() }
+            exchange.sendResponseHeaders(status, -1)
+            exchange.close()
+        }
+        server.start()
+        stub = server
+        serviceUrl = "http://127.0.0.1:${server.address.port}"
+        return serviceUrl!!
+    }
 
     /**
-     * The coordinates this build wrote, as `group:artifact:version`, sorted.
+     * Replaces the stub with one that accepts a connection and never answers.
      *
-     * Read from the scope file rather than from the store. The plugin no longer opens the store —
-     * asserting through it tested the store as much as the plugin, and now there is nothing there
-     * to assert against.
+     * Refusing a connection is the easy failure; hanging is the one that would sit in the middle of
+     * somebody's build. This exists to prove the request timeout is real rather than nominal.
+     */
+    fun blackHoleService() {
+        stopService()
+        val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
+        // Long enough to outlast the request timeout, short enough that shutting the stub down
+        // does not sit waiting on a sleeping handler.
+        server.createContext("/projects") { Thread.sleep(8_000) }
+        server.start()
+        stub = server
+        serviceUrl = "http://127.0.0.1:${server.address.port}"
+    }
+
+    fun stopService() {
+        stub?.stop(0)
+        stub = null
+    }
+
+    /** Every registration body the plugin posted, in order. */
+    fun registrations(): List<String> = synchronized(registrations) { registrations.toList() }
+
+    /**
+     * The coordinates the last registration carried, as `group:artifact:version`, sorted.
+     *
+     * Read off the wire rather than out of a file or the store: what the plugin *sends* is now its
+     * entire output, so it is the only thing worth asserting against.
      */
     fun recordedCoordinates(): List<String> =
-        if (!Files.isRegularFile(scopeFile)) emptyList()
-        else Files.readAllLines(scopeFile)
-            .filterNot { it.startsWith("#") || it.isBlank() }
-            .map { it.substringAfter("maven:") }
-            .sorted()
+        registrations().lastOrNull()
+            ?.substringAfter(""""coordinates":[""")?.substringBefore(']')
+            ?.split(',')
+            ?.map { it.trim('"') }
+            ?.filter { it.isNotBlank() }
+            ?.map { it.substringAfter("maven:") }
+            ?.sorted()
+            ?: emptyList()
 
     /**
      * Publishes a module into the local repository.
@@ -113,6 +174,9 @@ $plugins
         Files.writeString(file, body)
     }
 
+    /** Null once [stopService] has been called, which is a test making a point about absence. */
+    private var serviceUrl: String? = null
+
     fun run(vararg arguments: String): BuildResult = runner(*arguments).build()
 
     private fun runner(vararg arguments: String): GradleRunner = GradleRunner.create()
@@ -127,6 +191,9 @@ $plugins
             "--offline",
             "--stacktrace",
             "-PdependencySkills.codexDir=${storeDirectory.toAbsolutePath()}",
+            // Pointed at the stub when one is running, and at a port nothing answers on when not.
+            // The second case is deliberate and is what most of these tests are about.
+            "-PdependencySkills.serviceUrl=${serviceUrl ?: UNREACHABLE}",
         )
         .forwardOutput()
 

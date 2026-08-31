@@ -37,21 +37,29 @@ class DependencySkillsPlugin : Plugin<Project> {
         }
 
         val recorder = gradle.sharedServices.registerIfAbsent(SERVICE, CodexRecorder::class.java) {
-            // In the project, not beside the store. The store is machine-level and shared; a
-            // scope is one project's, and `.gradle/` is where a project keeps state that must
-            // survive `clean` - which this must, or an agent loses its scope the moment somebody
-            // cleans the build.
-            parameters.scopeFile.set(
-                providers.gradleProperty(SCOPE_PROPERTY)
-                    .orElse(layout.projectDirectory.file(DEFAULT_SCOPE).asFile.absolutePath),
+            parameters.serviceUrl.set(
+                extension.serviceUrl
+                    .orElse(providers.gradleProperty(SERVICE_URL_PROPERTY))
+                    .orElse(DEFAULT_SERVICE_URL),
+            )
+            parameters.projectPath.set(layout.projectDirectory.asFile.absolutePath)
+            // The path, not the project's name. A name groups several checkouts into one scope, so
+            // a default anyone could collide with would merge unrelated projects silently.
+            parameters.projectName.set(
+                extension.projectName.orElse(layout.projectDirectory.asFile.absolutePath),
             )
         }
 
-        // Instantiated now, not on first use. Gradle creates a build service lazily, so a build
-        // that resolves nothing would never create this one - and never close it, and never say
-        // that it saw nothing. That silence is the exact thing the report exists to break.
-        // The constructor is free: the store is not opened until something is recorded.
-        recorder.get()
+        // Instantiated for every build, but only once the build script has been evaluated.
+        //
+        // Both halves matter. Gradle creates a build service lazily, so a build that resolves
+        // nothing would never create this one - and never close it, and never say that it saw
+        // nothing, which is the silence the report exists to break. But instantiating a service
+        // resolves its PARAMETERS, and `dependencySkills { }` has not run yet at apply time, so
+        // doing it here read an unconfigured extension and every project reported the default
+        // name. Nothing about that failure was visible: the build passed and the scope was simply
+        // filed under the wrong one.
+        afterEvaluate { recorder.get() }
 
         val observer = Observer(
             recorder = recorder,
@@ -82,10 +90,10 @@ class DependencySkillsPlugin : Plugin<Project> {
         const val EXTENSION = "dependencySkills"
         const val SERVICE = "dependencySkillsCodex"
         const val ENABLED_PROPERTY = "dependencySkills.enabled"
-        const val SCOPE_PROPERTY = "dependencySkills.scopeFile"
+        const val SERVICE_URL_PROPERTY = "dependencySkills.serviceUrl"
 
-        /** Where an MCP server started in this project looks, without being told. */
-        const val DEFAULT_SCOPE = ".gradle/dscodex/codex-scope.txt"
+        /** Loopback, because the service holds one machine's dependency graph and stays on it. */
+        const val DEFAULT_SERVICE_URL = "http://127.0.0.1:8310"
     }
 }
 

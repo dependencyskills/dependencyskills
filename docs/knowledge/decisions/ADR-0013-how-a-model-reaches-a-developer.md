@@ -19,7 +19,7 @@ Two questions therefore had to be settled together: what we are willing to redis
 
 **Producing the encoder artifact is a release step, and must stop being part of `assemble`.** It changes when the model version changes and at no other time, so the cost of producing it belongs to whoever publishes it. Today `assemble` already depends on `encoderJar`, which means an ordinary `./gradlew build` downloads 133 MB from Hugging Face; converting to GGUF would add Python and torch to that. Both are a tax on contributors who are not shipping a model, and the second makes the first untenable. The conversion is reproducible, the recipe is published, and a clean clone builds everything else without it.
 
-**Anything too large to publish is installed by the developer**, at `<store>/models/` — `~/.gradle/dscodex/models/` by default, inheriting the store's override chain and adding its own. `ModelLocation` resolves it, and when a model is absent it prints the exact file, the exact directory and both overrides.
+**Anything too large to publish is installed by the developer**, at `<store>/models/` — `~/.dscodex/models/` by default, inheriting the store's override chain and adding its own. `ModelLocation` resolves it, and when a model is absent it prints the exact file, the exact directory and both overrides.
 
 **Nothing downloads a model during a build.** Not the default (it arrives as a dependency), and not an alternate (the developer installs it). A build that quietly pulls 2.3 GB the first time somebody runs it has done something surprising, and doing it silently is worse than not doing it at all.
 

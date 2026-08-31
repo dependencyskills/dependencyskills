@@ -4,25 +4,25 @@ import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Property
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
-import java.nio.file.Files
-import java.nio.file.Path
+import java.net.URI
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
+import java.time.Duration
 
 /**
  * Writes down what this build resolved. That is the whole job.
  *
- * **The plugin does not touch the store.** It used to: it opened the SQLite database, diffed the
- * resolved set against it, and recorded new coordinates as pending. That was written when the
- * build was the only thing that could do it, and it cost two things worth more than the
- * convenience.
+ * **The plugin does not touch the store, and does not know where it is.** It used to open the
+ * SQLite database directly, which put 11.4 MB of SQLite on every consuming project's buildscript
+ * classpath and made every Gradle daemon on the machine a writer to one file. Then it wrote a text
+ * file at a path the service had to know how to find, which left the service — the one component
+ * meant to be ecosystem-agnostic — knowing where Gradle keeps a project's directory.
  *
- * It put **11.4 MB of SQLite on every consuming project's buildscript classpath**, for a job that
- * is watching a list and writing a file. And it made every Gradle daemon on the machine a writer
- * to one database — N projects times M daemons, concurrently, against a store the service is
- * meant to own. A single writer is worth more than a shortcut.
- *
- * So this writes the coordinates and stops. **The service has the rest of the information** —
- * what is harvested, what has no sources, what failed, how far behind the index is — and it is
- * the thing that should say so.
+ * Now it reports over HTTP. The build knows its own coordinates and the service's address; the
+ * service knows the store. Neither knows anything about the other's layout, which is what lets the
+ * store move, and what lets a Maven or npm plugin use the same endpoint without teaching the
+ * service anything new.
  *
  * **Nothing here may fail a build.** The index is an aid; a project whose scope cannot be written
  * still compiles, says so once, and stops trying.
@@ -30,18 +30,20 @@ import java.nio.file.Path
 abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable {
 
     interface Params : BuildServiceParameters {
+        /** Where the codex service is listening. */
+        val serviceUrl: Property<String>
+
+        /** This project's directory — the identity the service files its scope under. */
+        val projectPath: Property<String>
+
         /**
-         * Where to write this project's scope — the coordinates it resolved.
+         * The name the scope is grouped by. Defaults to [projectPath], which cannot collide.
          *
-         * The store is machine-level and records no project-to-coordinate edge, because scope
-         * belongs to the `(project, source set) → coordinate` relation rather than to a
-         * coordinate: the same artifact is `api` in one project and `implementation` in another.
-         * **Only the build knows.** So the build writes it down and the service reads it.
-         *
-         * Text rather than a `RegularFileProperty`: this build writes the file, so fingerprinting
-         * it as an input would invalidate the configuration cache on every build.
+         * Scope belongs to the `(project, source set) → coordinate` relation rather than to a
+         * coordinate — the same artifact is `api` in one project and `implementation` in another —
+         * so only the build knows it. The build reports it and the service keeps it.
          */
-        val scopeFile: Property<String>
+        val projectName: Property<String>
     }
 
     private val logger = Logging.getLogger(CodexRecorder::class.java)
@@ -56,6 +58,7 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
     private val resolved = LinkedHashSet<Coordinate>()
     private var resolutions = 0
     private var broken = false
+    private var unreachable: String? = null
 
     /** Called once per compile-dependency configuration that resolved. */
     fun record(coordinates: Collection<Coordinate>) {
@@ -68,38 +71,77 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
 
     override fun close() {
         synchronized(lock) {
-            writeScope()
+            reportToService()
             report()
         }
     }
 
     /**
-     * Writes the coordinates this build resolved, for the service to read.
+     * Tells the service what this build resolved.
      *
-     * **Written whole, every build, rather than appended.** A dependency removed from the build
-     * file has to leave the scope; a scope that only grew would keep answering questions about a
-     * library the project no longer has, which is the containment boundary widening quietly
-     * rather than a cache going stale.
+     * **Sent whole, every build, rather than as a difference.** A dependency removed from the build
+     * file has to leave the scope; a report that only added would keep answering questions about a
+     * library the project no longer has, which is the containment boundary widening quietly rather
+     * than a cache going stale.
+     *
+     * **Nothing here may fail or delay a build.** The timeouts are short and every outcome is
+     * swallowed, because a developer who has not started the service — or has stopped it, or is on
+     * a machine that never had it — must not have their build fail, hang, or slow down for an
+     * index that is an aid. The cost of the service being down is that it learns about this build
+     * on the next one, and it says so rather than answering as though it knew.
      */
-    private fun writeScope() {
-        val target = parameters.scopeFile.orNull?.let { Path.of(it) } ?: return
-        // Nothing resolved, so this build learned nothing. The previous scope is better than an
-        // empty one - and an empty scope means "search nothing", not "search everything".
+    private fun reportToService() {
+        // Nothing resolved, so this build learned nothing. Reporting an empty set would erase what
+        // the last real build reported - and an empty scope means "search nothing".
         if (resolutions == 0) return
+        val url = parameters.serviceUrl.orNull?.trimEnd('/') ?: return
+        val path = parameters.projectPath.orNull ?: return
+        val name = parameters.projectName.orNull?.takeIf { it.isNotBlank() } ?: path
         try {
-            Files.createDirectories(target.parent)
-            Files.write(
-                target,
-                buildList {
-                    add("# Written by the dependencyskills Gradle plugin. Do not edit.")
-                    add("# The coordinates this project resolved, which is what its agent may search.")
-                    addAll(resolved.map { it.toString() }.sorted())
-                },
-            )
+            val body = buildString {
+                append("""{"path":""").append(quote(path))
+                append(""","name":""").append(quote(name))
+                append(""","ecosystem":"maven","coordinates":[""")
+                resolved.map { it.toString() }.sorted().forEachIndexed { i, c ->
+                    if (i > 0) append(',')
+                    append(quote(c))
+                }
+                append("]}")
+            }
+            val response = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofMillis(CONNECT_TIMEOUT_MS))
+                .build()
+                .send(
+                    HttpRequest.newBuilder(URI.create("$url/projects"))
+                        .header("Content-Type", "application/json")
+                        .timeout(Duration.ofMillis(REQUEST_TIMEOUT_MS))
+                        .POST(HttpRequest.BodyPublishers.ofString(body))
+                        .build(),
+                    HttpResponse.BodyHandlers.discarding(),
+                )
+            if (response.statusCode() !in 200..299) {
+                broken = true
+                logger.warn("dependencyskills: the codex service refused this project (HTTP ${response.statusCode()})")
+            }
         } catch (t: Throwable) {
+            // Including the service simply not being there, which is an ordinary state.
             broken = true
-            logger.warn("dependencyskills: could not write the agent scope to $target: ${t.message}")
+            unreachable = url
         }
+    }
+
+    /** Minimal JSON string escaping. A coordinate is not arbitrary text, but it is not ours either. */
+    private fun quote(value: String): String = buildString {
+        append('"')
+        value.forEach { c ->
+            when {
+                c == '"' -> append("\\\"")
+                c == '\\' -> append("\\\\")
+                c < ' ' -> append("\\u%04x".format(c.code))
+                else -> append(c)
+            }
+        }
+        append('"')
     }
 
     /**
@@ -113,6 +155,15 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
      * the service, which is the only thing that knows.
      */
     private fun report() {
+        // Not silence. Saying "recorded" would be a lie and saying nothing leaves a developer
+        // wondering why their agent knows nothing, so it says what it saw and what became of it.
+        unreachable?.let {
+            logger.lifecycle(
+                "dependencyskills: no codex service at $it, so ${resolved.size} " +
+                    "${plural(resolved.size, "coordinate was", "coordinates were")} not recorded",
+            )
+            return
+        }
         if (broken) return
         if (resolutions == 0) {
             logger.lifecycle(
@@ -129,4 +180,11 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
     }
 
     private fun plural(n: Int, one: String, many: String) = if (n == 1) one else many
+
+    private companion object {
+        // Short on purpose. A build waiting on a local service that is not running should notice
+        // in the time it takes to fail a connection, not in the time it takes a request to expire.
+        const val CONNECT_TIMEOUT_MS = 500L
+        const val REQUEST_TIMEOUT_MS = 2000L
+    }
 }

@@ -107,17 +107,97 @@ class DependencySkillsPluginTest {
     // -- what is stored ---------------------------------------------------------------------
 
     @Test
-    fun `the build writes down what this project may search`() {
-        // The store is machine-wide and records no project-to-coordinate edge, deliberately. So
-        // the only thing that knows a project's scope is the build that resolved it, and the MCP
-        // server that enforces the boundary has to be told. This is the telling.
+    fun `the build reports what this project may search`() {
+        // The store records no project-to-coordinate edge, deliberately. So the only thing that
+        // knows a project's scope is the build that resolved it, and the service that enforces the
+        // boundary has to be told. This is the telling.
         val project = project()
-        project.build("""dependencies { api("com.example:alpha:1.0") }""")
-        project.run("classes")
+        project.startService()
+        try {
+            project.build("""dependencies { api("com.example:alpha:1.0") }""")
+            project.run("classes")
 
-        val lines = Files.readAllLines(project.scopeFile)
-        assertTrue(lines.any { it == "maven:com.example:alpha:1.0" }, "scope was: $lines")
-        assertTrue(lines.first().startsWith("#"), "the file should say what wrote it")
+            val sent = project.registrations()
+            assertEquals(1, sent.size, "expected one registration, got: $sent")
+            assertTrue(""""maven:com.example:alpha:1.0"""" in sent.single(), sent.single())
+            assertTrue(""""path":"""" in sent.single(), "the service is told which project this is")
+        } finally {
+            project.stopService()
+        }
+    }
+
+    @Test
+    fun `with no service running the build still succeeds, and says what became of the coordinates`() {
+        // The one that matters most. The index is an aid; a developer who has not started the
+        // service - or stopped it, or is on a machine that never had it - must not have their build
+        // fail. And it must not pass in silence either, or they are left wondering why their agent
+        // knows nothing about a project that builds perfectly well.
+        val project = project()
+        project.stopService()
+        project.build("""dependencies { api("com.example:alpha:1.0") }""")
+
+        val result = project.run("classes")
+        assertContains(result.output, "no codex service")
+        assertContains(result.output, "not recorded")
+    }
+
+    @Test
+    fun `a service that hangs does not hang the build`() {
+        // Connection refused is the easy case. A service that accepts the connection and never
+        // answers is the one that would sit in the middle of somebody's build, so the timeout has
+        // to be real rather than nominal.
+        val project = project()
+        project.blackHoleService()
+        try {
+            project.build("""dependencies { api("com.example:alpha:1.0") }""")
+            val started = System.nanoTime()
+            val result = project.run("classes")
+            val seconds = (System.nanoTime() - started) / 1_000_000_000.0
+            assertContains(result.output, "no codex service")
+            assertTrue(seconds < 30, "the build waited ${seconds}s on an unresponsive service")
+        } finally {
+            project.stopService()
+        }
+    }
+
+    @Test
+    fun `the reported name defaults to the project path, so unrelated projects never merge`() {
+        // A name groups several checkouts into one scope. Anything derivable - a root project
+        // name, a directory name - would merge two unrelated projects that happen to share it,
+        // making one project's entries reachable from another that never depended on them.
+        val project = project()
+        project.startService()
+        try {
+            project.build("""dependencies { api("com.example:alpha:1.0") }""")
+            project.run("classes")
+            val sent = project.registrations().single()
+            val path = sent.substringAfter(""""path":"""").substringBefore('"')
+            val name = sent.substringAfter(""""name":"""").substringBefore('"')
+            assertEquals(path, name, "the default name must be the path: $sent")
+        } finally {
+            project.stopService()
+        }
+    }
+
+    @Test
+    fun `a configured name is what gets reported`() {
+        val project = project()
+        project.startService()
+        try {
+            project.build(
+                """
+                dependencySkills { projectName = "acme-platform" }
+                dependencies { api("com.example:alpha:1.0") }
+                """.trimIndent(),
+            )
+            project.run("classes")
+            assertTrue(
+                """"name":"acme-platform"""" in project.registrations().single(),
+                "registration was: ${project.registrations()}",
+            )
+        } finally {
+            project.stopService()
+        }
     }
 
     @Test
@@ -128,15 +208,20 @@ class DependencySkillsPluginTest {
         val project = project()
         project.build("""dependencies { api("com.example:alpha:1.0")
             api("com.example:beta:1.0") }""")
-        project.run("classes")
-        assertTrue(Files.readAllLines(project.scopeFile).any { it.endsWith("beta:1.0") })
+        project.startService()
+        try {
+            project.run("classes")
+            assertTrue(project.recordedCoordinates().any { it.endsWith("beta:1.0") })
 
-        project.build("""dependencies { api("com.example:alpha:1.0") }""")
-        project.run("classes", "--rerun-tasks")
+            project.build("""dependencies { api("com.example:alpha:1.0") }""")
+            project.run("classes", "--rerun-tasks")
 
-        val lines = Files.readAllLines(project.scopeFile)
-        assertTrue(lines.none { it.endsWith("beta:1.0") }, "a dropped dependency stayed in scope: $lines")
-        assertTrue(lines.any { it.endsWith("alpha:1.0") })
+            val sent = project.recordedCoordinates()
+            assertTrue(sent.none { it.endsWith("beta:1.0") }, "a dropped dependency stayed in scope: $sent")
+            assertTrue(sent.any { it.endsWith("alpha:1.0") })
+        } finally {
+            project.stopService()
+        }
     }
 
     @Test

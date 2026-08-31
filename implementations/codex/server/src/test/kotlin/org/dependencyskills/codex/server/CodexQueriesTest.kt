@@ -216,31 +216,51 @@ class CodexQueriesTest {
         }
     }
 
-    // -- reading a scope file -----------------------------------------------------------------------
+    // -- where the scope comes from ------------------------------------------------------------
 
     @Test
-    fun `a scope file is read, and comments and blanks ignored`() {
-        val file = createTempDirectory("scope").resolve(ProjectScope.FILE_NAME)
-        file.toFile().writeText(
-            """
-            # this project's resolved dependencies
-            maven:com.example.acme:acme-core:1.0.0
-
-            maven:com.example.other:other-core:1.0.0   # trailing comment
-            not-a-coordinate
-            """.trimIndent(),
-        )
-        val scope = ProjectScope.read(file)
-        assertEquals(2, scope.coordinates.size, "expected two, got ${scope.coordinates}")
-        assertTrue(acme in scope.coordinates)
-        assertTrue(other in scope.coordinates)
+    fun `a registered project gets what its build reported`() {
+        store().use { codex ->
+            codex.recordProject("/work/acme", "/work/acme", "maven", listOf(acme))
+            val scope = ProjectScope.read(codex, "/work/acme")
+            assertEquals(setOf(acme), scope.coordinates)
+        }
     }
 
     @Test
-    fun `an absent scope file is empty and names itself`() {
-        val missing = Path.of("/nowhere/that/exists").resolve(ProjectScope.FILE_NAME)
-        val scope = ProjectScope.read(missing)
-        assertTrue(scope.isEmpty)
-        assertTrue("no scope file" in scope.source)
+    fun `a project nobody has registered is empty, and says that is why`() {
+        // Not "no results". A developer whose build has never reached the service needs to be told
+        // to run one; a developer whose build did needs to know the library genuinely is not there.
+        // Rendering both as an empty answer makes the first look like the second.
+        store().use { codex ->
+            val scope = ProjectScope.read(codex, "/work/never-built")
+            assertTrue(scope.isEmpty)
+            assertTrue("registered" in scope.source, scope.source)
+        }
+    }
+
+    @Test
+    fun `projects sharing a name see one scope, and it says so`() {
+        store().use { codex ->
+            codex.recordProject("/work/server", "acme", "maven", listOf(acme))
+            codex.recordProject("/work/client", "acme", "maven", listOf(other))
+            val scope = ProjectScope.read(codex, "/work/client")
+            assertEquals(setOf(acme, other), scope.coordinates)
+            assertTrue("2 projects" in scope.source, scope.source)
+        }
+    }
+
+    @Test
+    fun `an unregistered project is not answered from another project's scope`() {
+        // The containment boundary, at the point it is most likely to be lost: the caller names a
+        // project the service has never heard of, and the safe answer is nothing rather than
+        // everything the store happens to hold.
+        store().use { codex ->
+            codex.put(other, listOf(entry("theirs", doc = "Runs the documented thing.")))
+            codex.recordProject("/work/theirs", "/work/theirs", "maven", listOf(other))
+            val queries = CodexQueries(codex, ProjectScope.read(codex, "/work/mine"))
+            assertTrue(queries.search("run the documented thing").candidates.isEmpty())
+            assertNull(queries.get("com.example.acme.theirs"))
+        }
     }
 }

@@ -28,7 +28,7 @@ class SchemaVersionException(found: Int, supported: Int) : RuntimeException(
 class Codex private constructor(private val db: Connection) : AutoCloseable {
 
     companion object {
-        const val SCHEMA_VERSION = 2
+        const val SCHEMA_VERSION = 3
 
         /**
          * How `bm25` weighs the two indexed columns.
@@ -143,6 +143,7 @@ class Codex private constructor(private val db: Connection) : AutoCloseable {
             }
         }
         if (found == null || found < 2) transact { addSearchIndex(fresh = found == null) }
+        if (found == null || found < 3) transact { addProjectRegistry() }
         transact {
             db.createStatement().use {
                 it.executeUpdate("REPLACE INTO meta(key,value) VALUES('schema_version','$SCHEMA_VERSION')")
@@ -162,6 +163,103 @@ class Codex private constructor(private val db: Connection) : AutoCloseable {
      * - splitting the symbol into words is what makes an identifier searchable at all, and it
      * has to happen before the text is indexed.
      */
+    /**
+     * Which projects exist on this machine and what each one resolved.
+     *
+     * The scope used to arrive as a file the build wrote and the service read from a path it had to
+     * guess. It arrives over HTTP now, so it has to be kept somewhere: a service restart must not
+     * lose what a build told it, or every project would look unregistered until its next build.
+     *
+     * **Keyed by path, grouped by name.** A developer with several checkouts belonging to one
+     * product can give them a shared name, and a query from any of them sees the union. The path is
+     * still the row key, because scope is written whole per build — a dependency removed from a
+     * build file has to leave — and keying on the name alone would make each member's build erase
+     * the others, so the scope would flap between them on alternating builds.
+     */
+    private fun addProjectRegistry() {
+        db.createStatement().use { s ->
+            s.executeUpdate("""
+                CREATE TABLE project (
+                  path        TEXT PRIMARY KEY,
+                  name        TEXT NOT NULL,
+                  ecosystem   TEXT NOT NULL,
+                  recorded_at INTEGER NOT NULL
+                )""".trimIndent())
+            s.executeUpdate("""
+                CREATE TABLE project_coordinate (
+                  project_path TEXT NOT NULL REFERENCES project(path) ON DELETE CASCADE,
+                  ecosystem    TEXT NOT NULL,
+                  value        TEXT NOT NULL,
+                  PRIMARY KEY (project_path, ecosystem, value)
+                )""".trimIndent())
+            s.executeUpdate("CREATE INDEX idx_project_name ON project(name)")
+        }
+    }
+
+    /**
+     * Records what one project resolved, replacing whatever it reported last time.
+     *
+     * Whole, never appended: a dependency removed from a build file has to leave the scope, or the
+     * containment boundary widens quietly rather than a cache going stale.
+     */
+    fun recordProject(
+        path: String,
+        name: String,
+        ecosystem: String,
+        coordinates: Collection<Coordinate>,
+    ) = transact {
+        db.prepareStatement("REPLACE INTO project(path,name,ecosystem,recorded_at) VALUES(?,?,?,?)").use {
+            it.setString(1, path); it.setString(2, name); it.setString(3, ecosystem)
+            it.setLong(4, Instant.now().epochSecond)
+            it.executeUpdate()
+        }
+        db.prepareStatement("DELETE FROM project_coordinate WHERE project_path=?").use {
+            it.setString(1, path); it.executeUpdate()
+        }
+        db.prepareStatement(
+            "INSERT OR IGNORE INTO project_coordinate(project_path,ecosystem,value) VALUES(?,?,?)",
+        ).use { st ->
+            coordinates.forEach { c ->
+                st.setString(1, path); st.setString(2, c.ecosystem); st.setString(3, c.value)
+                st.addBatch()
+            }
+            st.executeBatch()
+        }
+    }
+
+    /**
+     * What the project at [path] may search, or null when no build has ever reported it.
+     *
+     * Null is not the same as an empty set, and the difference is the whole point of storing this:
+     * "no build has told me about this project" and "this project resolved nothing" are different
+     * facts, and answering both with an empty result is how a broken setup looks like a working one.
+     */
+    fun projectScope(path: String): ProjectRegistration? {
+        val name = db.prepareStatement("SELECT name FROM project WHERE path=?").use { p ->
+            p.setString(1, path)
+            p.executeQuery().use { if (it.next()) it.getString(1) else null }
+        } ?: return null
+        val coordinates = LinkedHashSet<Coordinate>()
+        var contributors = 0
+        db.prepareStatement(
+            """SELECT p.path, pc.ecosystem, pc.value
+               FROM project p LEFT JOIN project_coordinate pc ON pc.project_path = p.path
+               WHERE p.name = ? ORDER BY p.path""",
+        ).use { p ->
+            p.setString(1, name)
+            val paths = HashSet<String>()
+            p.executeQuery().use { rs ->
+                while (rs.next()) {
+                    paths += rs.getString(1)
+                    val eco = rs.getString(2)
+                    if (eco != null) coordinates += Coordinate(eco, rs.getString(3))
+                }
+            }
+            contributors = paths.size
+        }
+        return ProjectRegistration(name, coordinates, contributors)
+    }
+
     private fun addSearchIndex(fresh: Boolean) {
         db.createStatement().use { s ->
             s.executeUpdate("ALTER TABLE entry ADD COLUMN symbol_text TEXT NOT NULL DEFAULT ''")
@@ -607,6 +705,19 @@ class Codex private constructor(private val db: Connection) : AutoCloseable {
 
     override fun close() = db.close()
 }
+
+/**
+ * What one project is allowed to search, and how many builds contributed to it.
+ *
+ * [contributors] is worth carrying rather than deriving: it is how an answer can say "this is the
+ * union of three projects sharing a name" instead of leaving a developer wondering why a library
+ * they never declared is in scope.
+ */
+data class ProjectRegistration(
+    val name: String,
+    val coordinates: Set<Coordinate>,
+    val contributors: Int,
+)
 
 data class CoordinateRecord(
     val coordinate: Coordinate,

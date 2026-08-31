@@ -57,7 +57,7 @@ class MigrationTest {
         writeVersionOne(file)
 
         Codex.open(file).use { codex ->
-            assertEquals(2, codex.schemaVersion)
+            assertEquals(Codex.SCHEMA_VERSION, codex.schemaVersion)
             val ktor = Coordinate("maven", "io.ktor:ktor-server-core:3.5.2")
             assertEquals(1, codex.entriesOf(ktor).size)
 
@@ -89,7 +89,7 @@ class MigrationTest {
         writeVersionOne(file)
         Codex.open(file).use { }
         Codex.open(file).use { codex ->
-            assertEquals(2, codex.schemaVersion)
+            assertEquals(Codex.SCHEMA_VERSION, codex.schemaVersion)
             val ktor = Coordinate("maven", "io.ktor:ktor-server-core:3.5.2")
             assertEquals(1, codex.search("redirect", setOf(ktor)).hits.size)
         }

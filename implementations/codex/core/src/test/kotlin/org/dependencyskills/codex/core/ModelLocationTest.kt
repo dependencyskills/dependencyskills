@@ -14,7 +14,7 @@ class ModelLocationTest {
     @Test
     fun `models sit beside the store, not inside it`() {
         assertEquals(
-            "/home/dev/.gradle/dscodex/models",
+            "/home/dev/.dscodex/models",
             ModelLocation.directory(emptyMap(), home).toString(),
         )
     }
@@ -90,7 +90,7 @@ class ModelLocationTest {
         // The message is the documentation. Somebody meeting this has not read the README and
         // should not have to: everything needed to act is in front of them.
         val text = ModelLocation.instructionsFor("bge-m3-f16.gguf", emptyMap(), home)
-        assertTrue(text.contains("/home/dev/.gradle/dscodex/models/bge-m3-f16.gguf"), text)
+        assertTrue(text.contains("/home/dev/.dscodex/models/bge-m3-f16.gguf"), text)
         assertTrue(text.contains(ModelLocation.OVERRIDE_PROPERTY), text)
         assertTrue(text.contains(ModelLocation.OVERRIDE_ENV), text)
         assertTrue(text.contains("Nothing downloads it for you"), text)

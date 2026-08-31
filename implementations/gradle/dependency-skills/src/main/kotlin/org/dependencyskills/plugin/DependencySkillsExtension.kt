@@ -11,6 +11,8 @@ import javax.inject.Inject
  *
  * ```kotlin
  * dependencySkills {
+ *     projectName = "acme-platform"          // optional; several checkouts can share one
+ *     serviceUrl = "http://127.0.0.1:8310"   // where the codex service is
  *     harvester {
  *         transitive = true
  *         ignore("com.example:noisy-library")
@@ -36,6 +38,35 @@ abstract class DependencySkillsExtension @Inject constructor(objects: ObjectFact
      * ```
      */
     abstract val enabled: Property<Boolean>
+
+    /**
+     * The name this project's scope is filed under.
+     *
+     * **Defaults to the project directory**, and that default is load-bearing rather than lazy. A
+     * name is what groups several checkouts into one scope, so anything derivable — the root
+     * project's name, the directory's name — would silently merge two unrelated projects that
+     * happen to share it, making one project's entries reachable from another that never depended
+     * on them. A path cannot collide, so grouping stays something a developer asks for.
+     *
+     * Set it where several repositories are one product and an agent in any of them should see
+     * what all of them depend on:
+     *
+     * ```kotlin
+     * dependencySkills { projectName = "acme-platform" }
+     * ```
+     */
+    abstract val projectName: Property<String>
+
+    /**
+     * Where the codex service is listening.
+     *
+     * A URL rather than a path to the store, deliberately: the build says what it resolved and the
+     * service decides what to do about it. Nothing here knows where the store lives, which is what
+     * lets the store move without touching a build script.
+     *
+     * Defaults to the `dependencySkills.serviceUrl` Gradle property when set.
+     */
+    abstract val serviceUrl: Property<String>
 
     /** What the out-of-band harvester is fed. */
     val harvester: HarvesterSpec = objects.newInstance(HarvesterSpec::class.java)

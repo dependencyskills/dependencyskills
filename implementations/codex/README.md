@@ -21,7 +21,7 @@ When a plugin needs it, its build declares `includeBuild("../codex")` and depend
 
 ## `core`
 
-A store keyed by resolved coordinate and shared across every project on the machine, so a library is indexed once rather than once per project ([ADR-0012](../../docs/knowledge/decisions/ADR-0012-a-shared-machine-level-index-store.md)). It lives at `~/.gradle/dscodex/`, beside Gradle's caches rather than inside them — Gradle collects `caches/` and does not collect its root.
+A store keyed by resolved coordinate and shared across every project on the machine, so a library is indexed once rather than once per project ([ADR-0012](../../docs/knowledge/decisions/ADR-0012-a-shared-machine-level-index-store.md)). It lives at `~/.dscodex/`, the way developer tools do. It used to sit under `~/.gradle/`, on the reasoning that the store belonged to whatever resolved the dependencies; the plugin no longer touches it, so it no longer lives in a build system's directory.
 
 Three things in its shape are decisions rather than details:
 

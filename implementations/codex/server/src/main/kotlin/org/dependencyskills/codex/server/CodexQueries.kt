@@ -73,10 +73,13 @@ class CodexQueries(
             return empty("a search needs something to search for")
         }
         if (scope.isEmpty) {
+            // The source reads as its own sentence, because the two reasons a scope is empty call
+            // for different actions: a project no build has reported needs one run, and a project
+            // that reported nothing needs its dependencies looked at. Folding them into one
+            // sentence about "where the scope was read from" described neither.
             return empty(
-                "No dependencies are in scope for this project, so there is nothing to search. " +
-                    "The scope is read from ${scope.source}, and a build has to record it before " +
-                    "this can answer anything.",
+                "No dependencies are in scope for this project, so there is nothing to search: " +
+                    "${scope.source}. A build has to report them before this can answer anything.",
             )
         }
         val bounded = limit.coerceIn(1, MAX_LIMIT)

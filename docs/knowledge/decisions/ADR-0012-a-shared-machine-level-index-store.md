@@ -1,7 +1,26 @@
 # The index is a shared machine-level store, keyed by coordinate
 
-ADR-0012 · 2026-08-26 · Status: accepted · v3
-Keywords: where does the index live; one index per project or one per machine; ~/.gradle/dscodex; why not put it in Gradle's cache; content-addressed entries; why not deduplicate at harvest; one store per build system; scoped queries as a containment boundary; schema versioning; is the store reproducible and disposable.
+ADR-0012 · 2026-08-26 · Status: accepted · v4
+Keywords: where does the index live; one index per project or one per machine; ~/.dscodex; why the store left ~/.gradle; why not ~/.codex; one store per build system withdrawn; content-addressed entries; why not deduplicate at harvest; how a build tells the service its scope; naming a scope across several checkouts; why the default scope name is a path; scoped queries as a containment boundary; schema versioning; is the store reproducible and disposable.
+
+**v4 (2026-08-30) — the store is at `~/.dscodex/`, one per machine, and scope arrives over HTTP.** v2 put the store under `~/.gradle/` and made it one per build system, on a stated premise: *"the store belongs to the tool that resolved the dependencies."* That premise expired. The Gradle plugin no longer depends on this module at all — it watches compile classpaths and reports what it resolved — and the service owns the store. Nothing about the store is Gradle's business, so it no longer lives in Gradle's directory.
+
+**The path is `~/.dscodex/`.** Developer tools live at `~/.<name>`; this is one of those, and the name is the prefix the codebase already uses everywhere else. `~/.codex` was rejected rather than overlooked: an unrelated CLI already claims it, and the collision is real on machines this will be installed on. The service takes `--store <path>` so an operator can put it elsewhere, and the property and environment overrides are unchanged.
+
+**`GRADLE_USER_HOME` is no longer consulted.** It was, and honouring it became a hazard the moment the store stopped being read from a build: the service is a long-lived process started from a shell or a launch agent and never sees the per-build or per-CI value, so the two would resolve different stores and neither would notice — the store would simply look empty. A store left at the old location is reported at startup, naming both paths. Nothing is migrated: the store is reproducible, and moving somebody's database for them is a bigger promise than saying where it is.
+
+**One store per machine, not per build system.** v2's rule is withdrawn. Coordinates carry their ecosystem, so one store holds every ecosystem without collision, and a library resolved by both a Gradle and a Maven project is harvested and summarised once rather than twice — summarising being the expensive half.
+
+**Scope arrives over HTTP and is persisted.** It used to be a file the build wrote and the service read from `<project>/.gradle/dscodex/codex-scope.txt`, which left the one component meant to be ecosystem-agnostic knowing where Gradle keeps a project directory. A build now POSTs `{path, name, ecosystem, coordinates}` to the service, which writes it down; the same endpoint serves a Maven or npm plugin without teaching the service anything new. The build must never fail, block, or slow down when the service is absent — that is a constraint on the plugin, not an aspiration, and the cost of the service being down is that it learns about the build on the next one and says so meanwhile.
+
+Persisting it supersedes the criterion on #3 that scope is stored nowhere. That held while a file was the handshake; over HTTP, not storing it would mean a service restart lost every project until each was built again.
+
+**A scope may be named, and a name may be shared — but the default is the project path.** A developer with several checkouts belonging to one product can group them, and a query from any member sees the union. Two rules make that safe, and both are load-bearing:
+
+- **Rows are keyed by path and grouped by name.** Scope is written whole per build, so keying on the name alone would make each member's build erase the others and the scope would flap between them on alternating builds — presenting as intermittently missing libraries rather than as a bug.
+- **The default name is the project path, never anything derivable.** A root project name or a directory name would silently merge two unrelated projects that happen to be called `app`, making one project's poisoned entry reachable from another that never depended on it — the exact laundering route the scope exists to close. A path cannot collide, so grouping stays something a developer asks for.
+
+Clients still identify themselves by path; the service resolves path to name to union. An agent working in one member gets the group's scope without being configured, and a project no build has reported is answered as *never registered* — distinct from registered-but-unindexed, and from a genuine miss.
 
 **v3 (2026-08-27) — entries are content-addressed, and harvesting is demand-driven.** Two refinements that [RAD-0041](../research/RAD-0041-deduplication-under-an-incremental-store.md) forced, after this record made the store incremental and scoped without re-checking the deduplication rule inherited from the batch experiments.
 

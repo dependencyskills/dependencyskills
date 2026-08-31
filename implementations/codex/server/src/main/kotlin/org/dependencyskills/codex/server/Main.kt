@@ -1,80 +1,91 @@
 package org.dependencyskills.codex.server
 
-import io.modelcontextprotocol.kotlin.sdk.server.StdioServerTransport
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.runBlocking
-import kotlinx.io.asSink
-import kotlinx.io.asSource
-import kotlinx.io.buffered
-import org.dependencyskills.codex.core.Codex
-import org.dependencyskills.codex.core.CodexLocation
-import org.dependencyskills.codex.index.VectorSearch
+import java.net.URI
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
 import java.nio.file.Path
+import java.time.Duration
+import kotlin.system.exitProcess
 
 /**
- * The door, over stdio.
+ * The door, over stdio — as a relay to the service, not as a second implementation of it.
  *
- * **The service in `Application.kt` is how this is meant to run.** This is kept beside it for the
- * case a client can only launch a child process: same tools from [codexServer], same [CodexQueries]
- * underneath, different transport. Nothing between here and the store knows which one it is.
+ * **This opens no store and answers no question.** It reads a JSON-RPC message from stdin, hands it
+ * to the service over HTTP, and writes the reply to stdout. That is the whole program.
  *
- * Scope comes from the working directory here, because the client launches one of these per
- * project. The service cannot do that - it answers for every project on the machine - so it takes
- * the project per request instead.
+ * It exists because some clients can only launch a child process. What it must not become is a
+ * second way to reach the codex: when this held its own [Codex] and its own scope, there were two
+ * components that knew where the store lived and two that knew how a project's scope was found, and
+ * they could disagree without anything noticing. Now exactly one does.
+ *
+ * The cost is real and was accepted deliberately: **stdio stops working when the service is down.**
+ * It used to work regardless, because it read the store itself. If that matters more than having
+ * one source of truth, the answer is to drop this transport rather than to give it back its own
+ * copy of everything.
+ *
+ * Scope comes from the working directory the client launched this in, sent as [PROJECT_HEADER] on
+ * every forwarded request — the same header an HTTP client sends for itself. The service resolves
+ * it the same way either way.
  *
  * Everything this prints on stdout is protocol. Diagnostics go to stderr, and there is a specific
- * reason to be careful about it: a stray `println` corrupts the JSON-RPC stream and presents as
- * the client failing to start the server, with nothing in the message pointing here.
+ * reason to be careful: a stray `println` corrupts the JSON-RPC stream and presents as the client
+ * failing to start the server, with nothing in the message pointing here.
  */
-fun main(args: Array<String>) = runBlocking {
-    val options = args.toList()
+fun main(args: Array<String>) {
     fun option(name: String): String? =
-        options.indexOf("--$name").takeIf { it >= 0 && it + 1 < options.size }?.let { options[it + 1] }
+        args.indexOf("--$name").takeIf { it >= 0 && it + 1 < args.size }?.let { args[it + 1] }
 
-    val storeFile = option("store")?.let { Path.of(it) } ?: CodexLocation.databaseFile()
-    // Beside the PROJECT, not the store. The store is machine-level and shared across every
-    // project on it; a scope belongs to one project, so looking for it next to the store would
-    // find one project's scope and serve it to all of them. A client launches this with the
-    // project as its working directory, which is how it comes to be in the right place.
-    val scopeFile = option("scope")?.let { Path.of(it) }
-        ?: Path.of("").toAbsolutePath().resolve(ProjectScope.DEFAULT_PATH)
+    val service = option("service")
+        ?: System.getenv("DSCODEX_SERVICE")
+        ?: "http://127.0.0.1:$SERVER_PORT"
+    val project = option("project")
+        ?: Path.of("").toAbsolutePath().toString()
 
-    val scope = ProjectScope.read(scopeFile)
-    // stderr, not stdout. Said at all because a server that starts silently with nothing in scope
-    // looks identical to one that is working.
-    System.err.println("dependencyskills: store $storeFile")
-    System.err.println(
-        if (scope.isEmpty) "dependencyskills: NOTHING IN SCOPE (${scope.source}) — every answer will be empty"
-        else "dependencyskills: ${scope.coordinates.size} coordinates in scope, from ${scope.source}",
-    )
+    val http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()
 
-    val codex = Codex.open(storeFile)
-    // Null when nothing has built an index yet, which is the ordinary state until the service
-    // exists. Said out loud on stderr, because "answers are worse than they should be" is not
-    // something a caller can see.
-    val vectors = VectorSearch.openIfBuilt(storeFile)
-    System.err.println(
-        if (vectors == null) "dependencyskills: no vector index; answering lexically"
-        else "dependencyskills: vector index open, encoder ${vectors.encoderName}",
-    )
-    val queries = CodexQueries(codex, scope, vectors)
-    val server = codexServer(queries)
+    // Checked before a client is told the server started. A relay that accepts a session and only
+    // then discovers it has nothing to relay to reports the failure as a broken tool call, which
+    // says nothing about the actual problem.
+    val health = runCatching {
+        http.send(
+            HttpRequest.newBuilder(URI.create("$service/health")).GET()
+                .timeout(Duration.ofSeconds(5)).build(),
+            HttpResponse.BodyHandlers.ofString(),
+        ).statusCode()
+    }.getOrNull()
+    if (health != 200) {
+        System.err.println("dependencyskills: no codex service at $service")
+        System.err.println("dependencyskills: start it, or pass --service <url>")
+        exitProcess(1)
+    }
+    System.err.println("dependencyskills: relaying to $service, as project $project")
 
-    val transport = StdioServerTransport(
-        System.`in`.asSource().buffered(),
-        System.out.asSink().buffered(),
-    )
-    // Wait on the TRANSPORT closing, which is what happens when the client's stdin reaches EOF.
-    //
-    // Neither `Server.onClose` nor `ServerSession.onClose` fires here - `Server` outlives any
-    // session, and the session's callback did not run on a closed stream either. Measured by
-    // hand: with those, the process sat forever after its client went away, which is how a
-    // machine collects a dozen orphaned servers nobody can account for. The transport is the
-    // thing that actually notices, so it is the thing to wait on.
-    val done = Job()
-    transport.onClose { done.complete() }
-    server.createSession(transport)
-    done.join()
-    vectors?.close()
-    codex.close()
+    val out = System.out.bufferedWriter()
+    System.`in`.bufferedReader().forEachLine { line ->
+        if (line.isBlank()) return@forEachLine
+        val reply = runCatching {
+            http.send(
+                HttpRequest.newBuilder(URI.create("$service/mcp"))
+                    .header("Content-Type", "application/json")
+                    .header("Accept", "application/json, text/event-stream")
+                    .header(PROJECT_HEADER, project)
+                    .timeout(Duration.ofSeconds(60))
+                    .POST(HttpRequest.BodyPublishers.ofString(line))
+                    .build(),
+                HttpResponse.BodyHandlers.ofString(),
+            ).body()
+        }.getOrElse { failure ->
+            System.err.println("dependencyskills: ${failure.message}")
+            // A notification has no id and expects no reply; inventing one would corrupt the
+            // stream. Anything else gets an error it can act on rather than silence.
+            if ("\"id\"" !in line) "" else
+                """{"jsonrpc":"2.0","id":null,"error":{"code":-32603,"message":"the codex service is unreachable"}}"""
+        }
+        if (reply.isNotBlank()) {
+            out.write(reply)
+            out.newLine()
+            out.flush()
+        }
+    }
 }

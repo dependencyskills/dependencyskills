@@ -13,18 +13,26 @@ import io.ktor.server.plugins.compression.gzip
 import io.ktor.server.plugins.compression.minimumSize
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.request.header
+import io.ktor.server.request.receiveText
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
+import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import io.modelcontextprotocol.kotlin.sdk.server.mcpStatelessStreamableHttp
 import org.dependencyskills.codex.core.Codex
+import org.dependencyskills.codex.core.CodexLocation
+import org.dependencyskills.codex.core.Coordinate
 import org.dependencyskills.codex.index.VectorSearch
 import org.koin.core.logger.Level
 import org.koin.core.parameter.parametersOf
 import org.koin.ktor.ext.getKoin
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
+import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.system.exitProcess
 
@@ -55,8 +63,13 @@ private val logger = LoggerFactory.getLogger("org.dependencyskills.codex.server.
  * containment boundary: treating a missing scope as "search the machine" would hand one project's
  * dependency graph to another and look exactly like the tool working.
  */
-fun main() {
+fun main(args: Array<String>) {
     System.setProperty("java.awt.headless", "true")
+
+    // `--store` ahead of the environment ahead of the default, so an operator can put the store
+    // wherever they keep data without touching a build or exporting anything.
+    val store = option(args, "store")?.let { Path.of(it) } ?: storeFile()
+    reportLegacyStore(store)
 
     val port = System.getenv("PORT")?.toIntOrNull() ?: SERVER_PORT
     // Loopback unless told otherwise. This answers questions about one machine's dependency
@@ -71,7 +84,7 @@ fun main() {
             factory = Netty,
             port = port,
             host = host,
-            module = Application::codexModule,
+            module = { codexModule(store) },
         ).start(wait = true)
     } catch (e: Throwable) {
         // Loudly, and with a non-zero exit. A service that fails to start and lingers is worse
@@ -85,10 +98,10 @@ fun main() {
  * Everything the service installs, separate from starting it so a test can run the same
  * application without binding a port.
  */
-fun Application.codexModule() {
+fun Application.codexModule(store: Path = storeFile()) {
     install(Koin) {
         slf4jLogger(level = Level.ERROR)
-        modules(codexRuntimeModule())
+        modules(codexRuntimeModule(store))
     }
 
     // Resolved here rather than per request. `createdAtStart` already opened them; this is what
@@ -97,7 +110,7 @@ fun Application.codexModule() {
     // one that is working.
     val codex = getKoin().get<Codex>()
     val vectors = getKoin().getOrNull<VectorSearch>()
-    logger.info("store {}", storeFile())
+    logger.info("store {}", store)
     logger.info(
         if (vectors == null) "no vector index; answering lexically"
         else "vector index open, encoder ${vectors.encoderName}",
@@ -137,6 +150,34 @@ fun Application.codexModule() {
         get("/health") {
             call.respondText("ok ${if (vectors == null) "lexical" else "vector"}")
         }
+
+        // Where a build says what it resolved. The build knows its own coordinates and nothing
+        // else; this knows the store and nothing about build systems. That is the whole contract,
+        // and it is the same one a Maven or npm plugin would use without changing anything here.
+        post("/projects") {
+            val body = runCatching { Json.decodeFromString<Registration>(call.receiveText()) }
+                .getOrElse {
+                    // A build must never be failed by this, but it must also never be told a
+                    // malformed report was accepted.
+                    logger.warn("rejected a malformed project registration: {}", it.message)
+                    call.respondText("400: malformed registration", status = HttpStatusCode.BadRequest)
+                    return@post
+                }
+            if (body.path.isBlank()) {
+                call.respondText("400: path is required", status = HttpStatusCode.BadRequest)
+                return@post
+            }
+            // The name defaults to the path, which cannot collide. Anything else - a root project
+            // name, a directory name - would merge two unrelated projects that happen to share it,
+            // making one project's entries reachable from another that never depended on them.
+            val name = body.name?.trim()?.takeIf { it.isNotEmpty() } ?: body.path
+            val coordinates = body.coordinates.mapNotNull { it.toCoordinate() }
+            codex.recordProject(body.path, name, body.ecosystem, coordinates)
+            logger.info(
+                "registered {} as '{}' with {} coordinates", body.path, name, coordinates.size,
+            )
+            call.respondText("ok ${coordinates.size}")
+        }
     }
 
     // Stateless: every request carries its own scope, so there is no session worth keeping. It
@@ -145,25 +186,66 @@ fun Application.codexModule() {
     mcpStatelessStreamableHttp(path = "/mcp") {
         // A fresh CodexQueries from the container for this request, carrying this caller's scope
         // and nobody else's.
-        val scope = scopeFor(call.request.header(PROJECT_HEADER))
+        val scope = scopeFor(codex, call.request.header(PROJECT_HEADER))
         codexServer(getKoin().get<CodexQueries> { parametersOf(scope) })
     }
 }
 
+/** `--name value`, or null. */
+private fun option(args: Array<String>, name: String): String? =
+    args.indexOf("--$name").takeIf { it >= 0 && it + 1 < args.size }?.let { args[it + 1] }
+
+/**
+ * Says so when a store exists where the old one used to live.
+ *
+ * The store moved out of `~/.gradle/` when the plugin stopped owning it. Nothing is migrated —
+ * the store is reproducible, and moving somebody's database for them is a bigger promise than
+ * saying where it is. But starting silently against an empty store when a populated one is sitting
+ * a directory away is indistinguishable from working, which is the failure this project keeps
+ * re-learning.
+ */
+private fun reportLegacyStore(store: Path) {
+    if (Files.exists(store)) return
+    val legacy = runCatching { CodexLocation.legacyDatabaseFile() }.getOrNull() ?: return
+    if (!Files.exists(legacy)) return
+    logger.warn("a store exists at the old location and is NOT being used: {}", legacy)
+    logger.warn("this service is using {} - move the old one there, or delete it", store)
+}
+
+/** What a build reports. The plugin sends this and nothing else. */
+@Serializable
+internal data class Registration(
+    @SerialName("path") val path: String,
+    @SerialName("name") val name: String? = null,
+    @SerialName("ecosystem") val ecosystem: String = "maven",
+    @SerialName("coordinates") val coordinates: List<String> = emptyList(),
+) {
+    companion object {
+        /** `maven:group:artifact:version` — the ecosystem, then the coordinate as that ecosystem writes it. */
+        internal fun String.toCoordinate(): Coordinate? {
+            val ecosystem = substringBefore(':', "")
+            val value = substringAfter(':', "")
+            return if (ecosystem.isBlank() || value.isBlank()) null else Coordinate(ecosystem, value)
+        }
+    }
+}
+
+private fun String.toCoordinate(): Coordinate? = with(Registration) { this@toCoordinate.toCoordinate() }
+
 /**
  * The scope for one request, from the project the caller named.
  *
- * Absent or unreadable is an **empty** scope rather than an open one, and it says which it was so
- * the answer can explain itself instead of looking like a genuine miss.
+ * A caller that names no project gets an **empty** scope rather than an open one, and it says which
+ * it was so the answer can explain itself instead of looking like a genuine miss.
  *
  * This trusts the caller to name its own project. That is worth stating plainly rather than
  * implying: a local agent that names another project's directory gets that project's scope. It is
  * a boundary against accident and misconfiguration, not against a hostile process on this machine
- * — which could read the same file directly.
+ * — which could ask this service the same question directly.
  */
-internal fun scopeFor(project: String?): ProjectScope {
+internal fun scopeFor(codex: Codex, project: String?): ProjectScope {
     if (project.isNullOrBlank()) {
         return ProjectScope(emptySet(), "no $PROJECT_HEADER header on the request")
     }
-    return ProjectScope.read(Path.of(project).resolve(ProjectScope.DEFAULT_PATH))
+    return ProjectScope.read(codex, project)
 }
