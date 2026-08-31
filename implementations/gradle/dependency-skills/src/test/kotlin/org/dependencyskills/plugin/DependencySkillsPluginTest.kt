@@ -127,6 +127,27 @@ class DependencySkillsPluginTest {
     }
 
     @Test
+    fun `configuring signals the service, so a model load can overlap the download`() {
+        // At the start of configuration rather than the end of the build. On a cold project the
+        // dependency download is minutes and loading a generative model is not instant either, so
+        // the two should overlap rather than queue.
+        val project = project()
+        project.startService()
+        try {
+            project.build("""dependencies { api("com.example:alpha:1.0") }""")
+            project.run("classes")
+
+            assertEquals(1, project.warmings().size, "expected one sync signal: ${project.warmings()}")
+            // It carries the project and nothing else: no coordinates, and nothing is recorded by
+            // it. The registration at the end of the build is what reports.
+            assertTrue(""""path":"""" in project.warmings().single())
+            assertTrue("coordinates" !in project.warmings().single(), project.warmings().single())
+        } finally {
+            project.stopService()
+        }
+    }
+
+    @Test
     fun `with no service running the build still succeeds, and says what became of the coordinates`() {
         // The one that matters most. The index is an aid; a developer who has not started the
         // service - or stopped it, or is on a machine that never had it - must not have their build

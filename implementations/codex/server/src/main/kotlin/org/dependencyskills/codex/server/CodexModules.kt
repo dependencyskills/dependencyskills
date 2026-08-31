@@ -2,7 +2,6 @@ package org.dependencyskills.codex.server
 
 import org.dependencyskills.codex.core.Codex
 import org.dependencyskills.codex.core.CodexLocation
-import org.dependencyskills.codex.index.VectorSearch
 import org.koin.core.module.Module
 import org.koin.dsl.module
 import java.nio.file.Path
@@ -36,13 +35,12 @@ fun storeFile(): Path =
 fun codexRuntimeModule(store: Path = storeFile()): Module = module {
     single<Codex>(createdAtStart = true) { Codex.open(store) }
 
-    // Registered only when one exists, and injected with `getOrNull`. A store that has been
-    // harvested but not embedded is an ordinary state, not a missing dependency - answering
-    // lexically is what the query layer already does when this is absent.
-    VectorSearch.openIfBuilt(store)?.let { index ->
-        single<VectorSearch>(createdAtStart = true) { index }
-    }
+    // Always registered, even when there is no index yet: a store that has been harvested but not
+    // embedded is an ordinary state, and this is the thing that notices when that changes. A
+    // snapshot taken at startup would leave the service answering lexically for ever on a machine
+    // that indexed something five minutes later.
+    single(createdAtStart = true) { VectorIndex(store) }
 
     // A new one every time it is asked for, over the singletons above.
-    factory { (scope: ProjectScope) -> CodexQueries(get(), scope, getOrNull()) }
+    factory { (scope: ProjectScope) -> CodexQueries(get(), scope, get<VectorIndex>().get()) }
 }

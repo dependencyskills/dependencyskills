@@ -29,6 +29,8 @@ dependencies {
     // The index is optional at runtime: a store with no vectors still answers lexically, which is
     // what a machine that has harvested but not yet embedded has.
     implementation(project(":index"))
+    // The pipeline. The server decides WHEN to index; the indexer knows how.
+    implementation(project(":indexer"))
     implementation("io.modelcontextprotocol:kotlin-sdk:0.15.0")
 
     // The service. Netty and the plugins the host installs; the MCP SDK brings its own Ktor
@@ -43,14 +45,21 @@ dependencies {
     implementation("io.insert-koin:koin-ktor:4.2.2")
     implementation("io.insert-koin:koin-logger-slf4j:4.2.2")
 
+    // Configuration, from a file beside the store. 2.9.0 rather than 3.0.0.RC3: a release
+    // candidate is not a release, and this decides how much of a developer's machine gets used.
+    implementation("com.sksamuel.hoplite:hoplite-core:2.9.0")
+    implementation("com.sksamuel.hoplite:hoplite-toml:2.9.0")
+
     // slf4j-simple, not slf4j-nop. A service that logs nothing cannot be told from one that is
     // working, which is the failure this project keeps re-learning. It writes to stderr, so the
     // stdio transport's stdout stays pure protocol.
     implementation("org.slf4j:slf4j-simple:2.0.17")
 
-    // The packaged model, test-scope only, so the vector path can actually be exercised rather
-    // than only its fallback.
-    testRuntimeOnly(project(mapOf("path" to ":encoder", "configuration" to "encoderArtifact")))
+    // The packaged encoder, at RUNTIME and not only in tests. `index` keeps it test-scope so a
+    // library does not force 58 MB on whoever depends on it - that is the consumer's call. This
+    // is the application making that call: the service is the thing that embeds, and without the
+    // encoder on its own classpath it starts, accepts registrations, and silently indexes nothing.
+    runtimeOnly(project(mapOf("path" to ":encoder", "configuration" to "encoderArtifact")))
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
 }

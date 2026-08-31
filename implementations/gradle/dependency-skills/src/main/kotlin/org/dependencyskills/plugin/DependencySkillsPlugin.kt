@@ -59,7 +59,17 @@ class DependencySkillsPlugin : Plugin<Project> {
         // doing it here read an unconfigured extension and every project reported the default
         // name. Nothing about that failure was visible: the build passed and the scope was simply
         // filed under the wrong one.
-        afterEvaluate { recorder.get() }
+        afterEvaluate {
+            val service = recorder.get()
+            // As early as the extension can be trusted, and still well before anything resolves or
+            // downloads - the service loads its model while Gradle fetches rather than afterwards.
+            //
+            // NOT before `afterEvaluate`, however tempting. Instantiating a build service realises
+            // its PARAMETERS, and `dependencySkills { }` has not run at apply time, so warming from
+            // there would read an unconfigured extension and send the wrong service the wrong
+            // project - silently, with a passing build.
+            if (extension.enabled.getOrElse(true)) service.signalSyncing()
+        }
 
         val observer = Observer(
             recorder = recorder,

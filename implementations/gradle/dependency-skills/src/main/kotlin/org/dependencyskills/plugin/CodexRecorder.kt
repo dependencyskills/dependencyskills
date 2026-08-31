@@ -60,6 +60,38 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
     private var broken = false
     private var unreachable: String? = null
 
+    /**
+     * Tells the service a build has started, so it can load its model while Gradle downloads.
+     *
+     * Fired at the start of configuration rather than at the end of the build, which is the whole
+     * point: on a cold project the dependency download is minutes and loading a generative model is
+     * not instant either, so the two should overlap rather than queue.
+     *
+     * Nothing is reported here and no pass starts — the service decides whether there is anything
+     * worth warming for, and a machine with nothing pending loads nothing.
+     *
+     * Same rule as everything else in this class: it cannot fail, block or slow a build. It runs on
+     * a daemon thread with a short timeout and every outcome is swallowed, so a service that is not
+     * running costs a connection refusal on a thread nobody is waiting for.
+     */
+    fun signalSyncing() {
+        val url = parameters.serviceUrl.orNull?.trimEnd('/') ?: return
+        val path = parameters.projectPath.orNull ?: return
+        Thread {
+            runCatching {
+                HttpClient.newBuilder().connectTimeout(Duration.ofMillis(CONNECT_TIMEOUT_MS)).build()
+                    .send(
+                        HttpRequest.newBuilder(URI.create("$url/projects/syncing"))
+                            .header("Content-Type", "application/json")
+                            .timeout(Duration.ofMillis(REQUEST_TIMEOUT_MS))
+                            .POST(HttpRequest.BodyPublishers.ofString("""{"path":${quote(path)}}"""))
+                            .build(),
+                        HttpResponse.BodyHandlers.discarding(),
+                    )
+            }
+        }.apply { isDaemon = true; name = "dependencyskills-warm" }.start()
+    }
+
     /** Called once per compile-dependency configuration that resolved. */
     fun record(coordinates: Collection<Coordinate>) {
         synchronized(lock) {

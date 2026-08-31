@@ -36,6 +36,7 @@ internal class TestProject(
      */
     private var stub: HttpServer? = null
     private val registrations = mutableListOf<String>()
+    private val warmings = mutableListOf<String>()
 
     init {
         // Running by default. "What did the plugin report" is what almost every test here asks,
@@ -49,7 +50,16 @@ internal class TestProject(
         stub?.let { return serviceUrl!! }
         val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
         server.createContext("/projects") { exchange ->
-            synchronized(registrations) { registrations += exchange.requestBody.readBytes().decodeToString() }
+            // Exactly `/projects`, because `createContext` matches by PREFIX and the warm-up
+            // signal is `/projects/syncing`. Without this the stub counts a sync as a
+            // registration, which reads as the plugin reporting twice. Ktor routes the two
+            // separately; only this double had to be told.
+            val body = exchange.requestBody.readBytes().decodeToString()
+            if (exchange.requestURI.path == "/projects") {
+                synchronized(registrations) { registrations += body }
+            } else {
+                synchronized(warmings) { warmings += body }
+            }
             exchange.sendResponseHeaders(status, -1)
             exchange.close()
         }
@@ -83,6 +93,9 @@ internal class TestProject(
 
     /** Every registration body the plugin posted, in order. */
     fun registrations(): List<String> = synchronized(registrations) { registrations.toList() }
+
+    /** Every start-of-sync signal, which carries no coordinates and records nothing. */
+    fun warmings(): List<String> = synchronized(warmings) { warmings.toList() }
 
     /**
      * The coordinates the last registration carried, as `group:artifact:version`, sorted.

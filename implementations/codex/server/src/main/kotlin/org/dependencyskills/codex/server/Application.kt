@@ -22,7 +22,7 @@ import io.modelcontextprotocol.kotlin.sdk.server.mcpStatelessStreamableHttp
 import org.dependencyskills.codex.core.Codex
 import org.dependencyskills.codex.core.CodexLocation
 import org.dependencyskills.codex.core.Coordinate
-import org.dependencyskills.codex.index.VectorSearch
+import io.ktor.server.application.ApplicationStarted
 import org.koin.core.logger.Level
 import org.koin.core.parameter.parametersOf
 import org.koin.ktor.ext.getKoin
@@ -71,20 +71,35 @@ fun main(args: Array<String>) {
     val store = option(args, "store")?.let { Path.of(it) } ?: storeFile()
     reportLegacyStore(store)
 
-    val port = System.getenv("PORT")?.toIntOrNull() ?: SERVER_PORT
-    // Loopback unless told otherwise. This answers questions about one machine's dependency
-    // graph, and 0.0.0.0 would put that on whatever network the laptop is joined to - a coffee
-    // shop as readily as an office. A container deployment sets HOST explicitly, which is a
-    // visible act in a compose file rather than a default nobody chose.
-    val host = System.getenv("HOST") ?: "127.0.0.1"
+    // An argument beats the environment beats the file beats the default. The file is where the
+    // decisions about this machine live; the rest are for one invocation.
+    val config = try {
+        CodexConfig.load(store)
+    } catch (e: Exception) {
+        // Exception, not Throwable. A bad setting is a config problem and this is the message for
+        // it; a NoClassDefFoundError is not, and saying "your config could not be read" when the
+        // real fault is a broken classpath sends whoever reads it to the wrong file. Errors carry
+        // on to the outer handler, which claims nothing about the cause.
+        logger.error("CRITICAL: ${CodexConfig.file(store)} is not valid: ${e.message}")
+        logger.error("fix it or remove it; the service will not start on a configuration it cannot apply")
+        exitProcess(1)
+    }
+    val port = System.getenv("PORT")?.toIntOrNull() ?: config.server.port
+    val host = System.getenv("HOST") ?: config.server.host
 
     try {
         logger.info("listening on {}:{}", host, port)
+        logger.info(
+            "indexing: {} at a time, model {}",
+            config.indexing.concurrency,
+            if (config.indexing.keepModelResident) "held resident"
+            else "unloaded after ${config.indexing.unloadAfterIdleSeconds}s idle",
+        )
         embeddedServer(
             factory = Netty,
             port = port,
             host = host,
-            module = { codexModule(store) },
+            module = { codexModule(store, config) },
         ).start(wait = true)
     } catch (e: Throwable) {
         // Loudly, and with a non-zero exit. A service that fails to start and lingers is worse
@@ -98,7 +113,10 @@ fun main(args: Array<String>) {
  * Everything the service installs, separate from starting it so a test can run the same
  * application without binding a port.
  */
-fun Application.codexModule(store: Path = storeFile()) {
+fun Application.codexModule(
+    store: Path = storeFile(),
+    config: CodexConfig = CodexConfig.load(store),
+) {
     install(Koin) {
         slf4jLogger(level = Level.ERROR)
         modules(codexRuntimeModule(store))
@@ -109,18 +127,30 @@ fun Application.codexModule(store: Path = storeFile()) {
     // says what it came up with - a server that starts silently with no index looks exactly like
     // one that is working.
     val codex = getKoin().get<Codex>()
-    val vectors = getKoin().getOrNull<VectorSearch>()
+    val vectors = getKoin().get<VectorIndex>()
     logger.info("store {}", store)
     logger.info(
-        if (vectors == null) "no vector index; answering lexically"
+        if (vectors.get() == null) "no vector index yet; answering lexically until one is built"
         else "vector index open, encoder ${vectors.encoderName}",
     )
+
+    // Told to look again after every pass. Without this the service builds an index and never
+    // uses it, which fails silently and only shows up as worse answers.
+    val indexing = IndexingService(store, config.indexing, onIndexed = vectors::refresh)
 
     // Released when the server stops, rather than in a JVM shutdown hook. A hook fires on the way
     // out of the process and says nothing about whether this application is still serving.
     monitor.subscribe(ApplicationStopped) {
-        runCatching { vectors?.close() }
+        runCatching { indexing.close() }
+        runCatching { vectors.close() }
         runCatching { codex.close() }
+    }
+
+    // Anything left Pending by a previous run, picked up once the service is actually listening.
+    // A pass started before that would make the first caller wait on a model load for work that
+    // was already queued when nobody was asking.
+    monitor.subscribe(ApplicationStarted) {
+        if (indexing.request()) logger.info("resuming indexing left from a previous run")
     }
 
     install(Compression) {
@@ -148,7 +178,38 @@ fun Application.codexModule(store: Path = storeFile()) {
         // Enough to tell a supervisor the process is up and the store is open, and nothing about
         // what is in it.
         get("/health") {
-            call.respondText("ok ${if (vectors == null) "lexical" else "vector"}")
+            // Queue depth and whether a pass is running, without reading the log.
+            call.respondText(
+                "ok ${if (vectors.get() == null) "lexical" else "vector"} " +
+                    "pending=${indexing.pending()} indexing=${indexing.isRunning}" +
+                        if (indexing.isPaused) " paused" else "",
+            )
+        }
+
+        // Queue depth, whether a pass is running, and whether it has been paused — enough for an
+        // operator to know what the machine is doing without reading a log.
+        get("/indexing") {
+            call.respondText(
+                "pending=${indexing.pending()} running=${indexing.isRunning} paused=${indexing.isPaused}",
+            )
+        }
+
+        // A build says it has started configuring. Nothing is recorded and no pass begins; this
+        // only lets the model load overlap the dependency download that is about to happen.
+        post("/projects/syncing") {
+            call.respondText(if (indexing.warm()) "warming" else "nothing to warm")
+        }
+
+        // Deliberate operator actions, not something an agent reaches. Pausing lets someone take
+        // their laptop back without stopping the service and losing the queue.
+        post("/indexing/pause") {
+            indexing.pause()
+            call.respondText("paused")
+        }
+
+        post("/indexing/resume") {
+            indexing.resume()
+            call.respondText("resumed")
         }
 
         // Where a build says what it resolved. The build knows its own coordinates and nothing
@@ -173,9 +234,15 @@ fun Application.codexModule(store: Path = storeFile()) {
             val name = body.name?.trim()?.takeIf { it.isNotEmpty() } ?: body.path
             val coordinates = body.coordinates.mapNotNull { it.toCoordinate() }
             codex.recordProject(body.path, name, body.ecosystem, coordinates)
+            // Recorded as Pending, so the pass below has something to find. A coordinate the store
+            // already knows keeps whatever state it reached.
+            coordinates.forEach { codex.seen(it) }
             logger.info(
                 "registered {} as '{}' with {} coordinates", body.path, name, coordinates.size,
             )
+            // A build has just told us what it resolved, which is the moment to index it. Returns
+            // immediately: the build is waiting on this response and must not wait on a model.
+            indexing.request()
             call.respondText("ok ${coordinates.size}")
         }
     }
