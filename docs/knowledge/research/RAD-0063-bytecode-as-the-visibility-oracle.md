@@ -1,8 +1,8 @@
 # Bytecode as the Visibility Oracle
 
-RAD-0063 · 2026-08-31
-Keywords: should private members be indexed; should lambdas be skipped; do Kotlin lambdas belong to the public API; why does a private field outrank the class; can the parser tell package-private from implicitly public; access flags as ground truth; scan bytecode first to decide what to index; is the main jar on disk; aar and klib packaging; what fraction of a corpus is not callable.
-Measured against: `commons-text:1.12.0` indexed end to end through the service — 1,447 entries, `gemma-3-270m-it-qat-Q4_0` as summariser, `bge-small-en-v1.5` as encoder — `kotlin-stdlib:2.3.21` harvested (6,414 entries, no model needed), and one real `~/.gradle/caches/modules-2/files-2.1` of 3,836 cached sources jars, macOS arm64, 2026-08-31.
+RAD-0063 · 2026-08-31 · v2
+Keywords: should private members be indexed; how do you match a source symbol to a class file; what does a dollar mean in a Kotlin binary name; name$default and access$ and value-class mangling; InnerClasses and nested names; why a dollar in a binary name is ambiguous; should lambdas be skipped; do Kotlin lambdas belong to the public API; why does a private field outrank the class; can the parser tell package-private from implicitly public; access flags as ground truth; scan bytecode first to decide what to index; is the main jar on disk; aar and klib packaging; what fraction of a corpus is not callable.
+Measured against: a six-library store built by the service — 2,185 entries — compared against the same six libraries' class files via the JDK 26 `java.lang.classfile` API; `commons-text:1.12.0` indexed end to end through the service — 1,447 entries, `gemma-3-270m-it-qat-Q4_0` as summariser, `bge-small-en-v1.5` as encoder — `kotlin-stdlib:2.3.21` harvested (6,414 entries, no model needed), one real Gradle module cache of 3,836 sources jars, and the gson source tree at 2.14.1-SNAPSHOT together with its released 2.10.1 and 2.11.0 jars; macOS arm64, 2026-08-31.
 
 ## Question
 
@@ -102,11 +102,63 @@ So the criterion is not whether a lambda is present. It is **whether the enclosi
 - Access flags are the authoritative answer because they are what a consumer links against.
 - Dropping a third of the corpus shortens a pass by roughly a third, since cost is per entry. Not measured; the pass measured here was 195 seconds for 1,447 entries.
 
+### What the oracle actually says, measured
+
+v1 recommended measuring this before building anything. Done: the six-library store from a real pass, 2,185 entries, compared against those libraries' own class files.
+
+| bytecode verdict | entries | share |
+|---|---|---|
+| `PUBLIC` | 1,530 | 70.0% |
+| `PROTECTED` | 47 | 2.2% |
+| `PRIVATE` | 293 | 13.4% |
+| `PACKAGE` | 170 | 7.8% |
+| unmatched | 145 | 6.6% |
+
+**21.2% is not callable** — private or package-private — which is close to the 32% the source keywords suggested, and better founded.
+
+**The oracle resolves what the parser cannot, and that was the claim worth testing.** 199 entries — 9.1% — carried no visibility keyword in source and got a definitive answer from bytecode: 151 package-private, 37 public, 11 private. Those are exactly the `T build()` versus `final class StrBuilderReader` cases v1 argued were indistinguishable, and they are distinguished.
+
+Agreement where both can speak is 80.9%: `public → PUBLIC` 1,464, `private → PRIVATE` 268, `protected → PROTECTED` 35.
+
+### Two limits of this measurement, both in the matcher rather than the idea
+
+**Symbols were matched by name.** `Class.member`, with overloads collapsed to the most visible. That is too coarse and it shows: 71 entries (3.2%) contradict outright — `private → PUBLIC` 27, `private → PACKAGE` 19, `public → PRIVATE` 12 — which is far more likely a private field and a public method sharing a name than a real disagreement. **A real implementation must match on descriptors, not names.** Until it does, those 71 are unexplained rather than evidence.
+
+**6.6% stayed unmatched**, down from 16% once constructors were translated — `<init>` in bytecode is the class's simple name in source, and missing that made every constructor look absent.
+
+What remains is nesting, and it is the same mistake in a second costume. A `$` in a binary name usually marks a nested class — `Outer$Inner`, written `Outer.Inner` in source, and far more common in Kotlin than in Java — which is what the naive `$`-to-`.` substitution was for. But it is sometimes part of the simple name, and gson is the case worth reading from its own source rather than inferring. `com.google.gson.internal.$Gson$Types` is a **top-level** class in its own file, named that way deliberately — it began as `$Types`, was renamed to `$Gson$Types` in 2011, and the dollars were the marker for "internal, do not touch". The three classes it contains — `ParameterizedTypeImpl`, `GenericArrayTypeImpl`, `WildcardTypeImpl` — are `private static final` and genuinely nested, so they ship as `$Gson$Types$ParameterizedTypeImpl`.
+
+**Both cases therefore occur in one file**, which is the whole difficulty: four class entries in every released jar through 2.11, one of which is a literal name and three of which are nesting, indistinguishable by any rule applied to the string. Only `InnerClasses` separates them — and once it does, the flags drop all three inner ones as private, which is the correct outcome and unreachable by string surgery.
+
+Gson removed the name in 2.14 (`GsonTypes`), and the stated reason is the finding here in the library's own words: there were reasons for the weird names once, but "they cause problems". A tool cannot rely on that fix, because every jar already published keeps the old name forever.
+
+**The string cannot distinguish them**, and no amount of care with delimiters will. The class file already knows: the `InnerClasses` attribute says whether a class is nested and what its simple name is, and `NestHost` / `NestMembers` say it again. Reading that is the correct fix, and it is the same argument this record makes about access flags — the metadata is authoritative and parsing the name is guesswork that works until it does not.
+
+So both of this measurement's matching faults have one cause: symbols were reconstructed from strings when the class file carried the answer. Descriptors for members, `InnerClasses` for types.
+
+**Measured on `kotlin-stdlib` (949 classes), because Kotlin is where this gets worse.** Every `$` in a class simple name there is nesting — 322 classes are nested per the `InnerClasses` attribute and **zero** carry a `$` without being nested. So the literal-name case is a Java idiosyncrasy — a deliberate one, now being retired — while for Kotlin the attribute settles every case on its own.
+
+Method names are the harder half. 698 of them contain a `$`, in families:
+
+| form | count | what it is |
+|---|---|---|
+| `name$default` | 247 | a bridge for default arguments |
+| `access$…` | 114 | synthetic accessor |
+| `$values` | 21 | enum machinery |
+| `getX$annotations` | ~40 | property annotation holders |
+| `…$lambda…` | 6 | lambda body |
+
+**None of these is something a developer writes**, and most carry `ACC_SYNTHETIC` — so the access flags already reject them, and a matcher does not need to understand each family so much as avoid being confused by it. A source `fun foo(a: Int = 1)` emits both a real `foo` and a synthetic `foo$default`; the source symbol matches the real one, and the flags drop the other.
+
+One form does defeat name matching outright, and it has nothing to do with `$`: **Kotlin mangles names that touch inline value classes**, as in `getDays-UwyO8pc$annotations`. The source symbol is `days`; no string transformation recovers that hash. Anything using value classes — `Duration` in the standard library, and increasingly ordinary domain code — needs the Kotlin metadata to be matched at all, which is a third authoritative source alongside descriptors and `InnerClasses`.
+
+So the oracle is sound and the plumbing is not yet. Anyone building this should expect the matching, not the flags, to be the work.
+
 ## Recommendation
 
 **Not a commitment.** Two things should be measured before this is built, and the second could overturn it.
 
-1. **Which entries a bytecode pre-scan would actually drop**, run over the same library, compared against the visibility keywords already in the store. That validates the oracle against a case where the answer is known.
+1. ~~**Which entries a bytecode pre-scan would actually drop**~~ — **done, above.** 21.2% not callable, 9.1% resolved that source could not, and the matcher rather than the oracle is where the difficulty is.
 2. **What dropping them does to retrieval.** Every retrieval number this project rests on was measured over a corpus that included these entries. Removing a third of it changes the denominator and possibly the ranking, and "the results got better" has to be shown rather than assumed. It is plausible that a private member's prose is sometimes the best description of a capability its public wrapper documents poorly.
 
 If both hold, the shape is: read the main artefact where it exists, treat its access flags as the filter, and index only what a consumer could call — with the same rule applied on the sources path and the bytecode path, per #28.

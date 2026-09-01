@@ -202,9 +202,20 @@ class IndexingService(
                         HarvestState.Indexed -> {
                             indexed++
                             logger.info(
-                                "indexed {} — {} entries, {} degraded", outcome.coordinate,
-                                outcome.entries, outcome.degraded,
+                                "indexed {} — {} entries, {} degraded, {} not reachable",
+                                outcome.coordinate, outcome.entries, outcome.degraded,
+                                outcome.notReachable,
                             )
+                            // Said only when it happens, and it means the visibility rule did not
+                            // run for this coordinate: the classes jar is not on this machine, so
+                            // everything documented was kept. A library that is genuinely all
+                            // public and one nothing judged look identical without this line.
+                            if (outcome.visibilityUnknown > 0) {
+                                logger.info(
+                                    "no compiled artifact for {}, so {} entries were kept unjudged",
+                                    outcome.coordinate, outcome.visibilityUnknown,
+                                )
+                            }
                         }
                         HarvestState.NoSource -> {
                             noSource++

@@ -89,8 +89,7 @@ SKILLS=("$REPO_DIR/skills/stories/story-workflow" "$REPO_DIR/skills/stories/stor
 # drift, and it is now in RETIRED_SKILLS so existing copies are pruned on
 # refresh. Retired ahead of the replacement being installable on purpose:
 # the version here teaches a packaging convention that has since been
-# abandoned, and a stale copy of that is worse than none. See
-# docs/outbox/to-library-skill-move-brief.md.
+# abandoned, and a stale copy of that is worse than none.
 # Skills THIS SUITE authored and has since retired. They are pruned from
 # projects on refresh - otherwise a retired skill lingers in every repo
 # until someone notices.
@@ -151,6 +150,33 @@ choice()      { printf '    %s%s%s  %s%-12s%s %s%s%s\n' "$C_C" "$1" "$C_0" "$C_B
 choice_cont() { printf '       %12s %s%s%s\n' "" "$C_D" "$1" "$C_0"; }
 # Aligned settings, so values line up down the page.
 kv()    { printf '  %s%-24s%s %s\n' "$C_D" "$1" "$C_0" "$2"; }
+
+# A retired skill must not survive in the source tree. RETIRED_SKILLS is
+# what prunes it from bound projects, but a directory left behind under
+# skills/ or budget-skills/ is still readable, still copyable, and is what
+# anyone assembling a set from what is on disk will copy. That is not
+# hypothetical: to-research was retired here, left in place, and then
+# copied wholesale into budget-skills by someone reading the tree rather
+# than this list. Only checked from the source clone - a shipped bundle
+# has no skills tree to police.
+if [[ $SHIPPED -eq 0 ]]; then
+  _stale=''
+  for _r in "${RETIRED_SKILLS[@]}"; do
+    for _root in "$REPO_DIR/skills" "$REPO_DIR/budget-skills"; do
+      [[ -d "$_root" ]] || continue
+      while IFS= read -r _d; do
+        [[ -n "$_d" ]] || continue
+        _stale="$_stale${_stale:+ }${_d#"$REPO_DIR"/}"
+      done < <(find "$_root" -maxdepth 2 -type d -name "$_r" 2>/dev/null)
+    done
+  done
+  if [[ -n "$_stale" ]]; then
+    warn "retired skill(s) still in the source tree: $_stale"
+    say  "    They are pruned from projects but remain here to be copied by mistake."
+    say  "    Delete them, or take them off RETIRED_SKILLS if they are not retired."
+  fi
+  unset _stale _r _root _d
+fi
 
 # one-time migration from older layouts
 for old in "$HOME/.config/story-tools" "$CONF_DIR/profiles"; do
@@ -1434,6 +1460,7 @@ attach_project_github() {  # $1 dir, $2 owner/repo, $3 project number|"", $4 rea
   migrate_kb_dirs "$dir"
   ask_roles "$dir"
   write_updates_config "$dir"
+  write_topical_tags "$dir" github
   ship_setup "$dir"
   # seed .agents/config/dimensions.md right away so triage can prompt real values
   # before any snapshot pull has ever run (best-effort, needs the token)
@@ -1500,6 +1527,7 @@ attach_project() {  # $1 dir, $2 yt_project, $3 readonly(true|""), $4 mode
     fi
   fi
   write_updates_config "$dir"
+  write_topical_tags "$dir" youtrack
   ship_setup "$dir"
 }
 
@@ -1649,6 +1677,7 @@ attach_project_none() {  # $1 dir, $2 mode (link|copy)
   # the doc has always had a tracker-less variant; it was simply never called
   write_workflow_doc "$dir" none ""
   write_updates_config "$dir"
+  write_topical_tags "$dir" none
   write_pages_config "$dir"
   set_snapshot_mode "$dir"
   migrate_docs_layout "$dir"
@@ -1818,6 +1847,44 @@ update_skills_from_repo() {  # $1 dir, $2 owner/repo, $3 branch
   say ""
   say "  Skills updated from $repo. These are tracked files - review the diff"
   say "  and commit them, or 'git checkout .agents .claude .github' to undo."
+}
+
+
+# The agents' topical-tag list. Seeded, never overwritten - the content
+# belongs to them. A missing file degrades cleanly, but then the reuse rule
+# lives only in the skill, and the header is where someone about to add a
+# tag actually reads it.
+write_topical_tags() {  # $1 dir, $2 tracker type (github|youtrack|none)
+  local f="$1/.agents/config/topical-tags.md"
+  [[ -f "$f" ]] && return 0
+  local puller="yt-pull.sh"
+  [[ "${2:-}" == "github" ]] && puller="gh-pull.sh"
+  mkdir -p "$(dirname "$f")"
+  cat > "$f" <<'TTEOF'
+# Topical tags
+
+Groupings this project uses to collect related work - the subcomponent or
+concern a piece of work is about. One per line; blank lines and `#` lines
+are ignored.
+
+**Read the list before adding.** Reuse an existing tag if it fits; a near
+duplicate splits a grouping in two and leaves neither half complete.
+Nothing here dictates what a tag looks like - name it so it groups the work
+usefully for this project.
+
+Adding one is a normal part of working. Append it here, then
+`.agents/skills/story-reconcile/scripts/PULLER --dimensions-only --push-tags`
+carries it into the tracker so it becomes filterable. Values are never
+removed automatically - issues already carry them.
+
+---
+
+TTEOF
+  # substituted rather than interpolated: the heredoc stays quoted, so the
+  # markdown above can hold backticks and $ without the shell touching it
+  sed -i.bak "s/PULLER/$puller/" "$f" 2>/dev/null || true
+  rm -f "$f.bak"
+  ok "topical-tags.md seeded (the agents' list - theirs to add to)"
 }
 
 write_updates_config() {  # $1 dir - ask once, preserve thereafter

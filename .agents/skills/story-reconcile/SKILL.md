@@ -5,7 +5,7 @@ license: MIT
 compatibility: Requires a connection to the project's issue tracker (read access minimum; see the tracker binding). Writes optional - produces a report instead when read-only.
 metadata:
   author: bpappin
-  version: "0.26"
+  version: "0.30"
 ---
 
 # Story Reconcile

@@ -5,7 +5,7 @@ license: MIT
 compatibility: Requires a connection to the project's issue tracker (see the tracker binding; YouTrack today).
 metadata:
   author: bpappin
-  version: "1.11"
+  version: "1.15"
 ---
 
 # To Issues
@@ -79,11 +79,7 @@ near-duplicate: the issue drops out of every filter, board and saved search
 the real value feeds, and nobody notices until someone wonders where the
 work went.
 
-**Topical tags come from the existing set.** Freeform is not permission.
-Proposing a genuinely new tag is a human decision - name it, say why nothing
-existing fits, and get confirmation before it is written. Never create one
-in passing, and never leave a dimension unset silently: if you cannot infer
-a value, say so and ask.
+**Topical tags come from the existing set.** Freeform is not permission. Read the project's list before you propose anything - the binding says where it lives, and warns that its dimensions tool may not return tags at all, so an empty or short list from that tool is not evidence the set is small. Proposing a genuinely new tag is a human decision - name it, say why nothing existing fits, and get confirmation. **Writing it is then yours to do, not theirs**: the binding holds the procedure, and it is two commands. If the tracker rejects a value that does not exist yet, that is the value not existing - it is not a permission you lack and not a reason to hand the job back. Never create one in passing, and never leave a dimension unset silently: if you cannot infer a value, say so and ask.
 
 For each approved slice, create a story via the tracker binding, in
 dependency order (blockers first) so you can reference real IDs. Each story
@@ -106,7 +102,7 @@ decision-rich parts. "None beyond the AC." for a genuinely trivial slice.>
 - [ ] Verifiable outcome 2
 
 ## References
-- <KB article ID + title of the source PRD, e.g. EVO-A-41 Some Feature>
+- <KB article ID + title of the source PRD, e.g. PROJ-A-41 Some Feature>
 - <parent issue ID, if the source was an issue>
 ```
 

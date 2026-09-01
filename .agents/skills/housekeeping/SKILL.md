@@ -4,7 +4,7 @@ description: Perform workspace housekeeping, cleanup audits, and prepare handoff
 license: MIT
 metadata:
   author: bpappin
-  version: "1.4"
+  version: "1.5"
 ---
 
 # Housekeeping
@@ -66,7 +66,8 @@ the conversation is lost. File per the project-docs taxonomy:
 
 - [ ] Design decisions → the Architecture Decision Records section of
       `docs/knowledge/`; investigations that led to them → the Research
-      section (the to-research skill for audit-grade RAD records). Run
+      section (the to-rad skill; its audit template where the record has
+      to be defensible later). Run
       the project-docs sync after filing.
 - [ ] Update `AGENTS.md` if project setup steps changed.
 - [ ] If transitioning to another agent/session, use the `handoff` skill

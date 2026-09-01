@@ -17,9 +17,9 @@ Two purposes:
 
 ```
 docs/knowledge/<Reference>/<Out of Scope>/
-├── EVO-A-51_dark-mode.md
-├── EVO-A-52_plugin-system.md
-└── EVO-A-53_graphql-api.md
+├── PROJ-A-51_dark-mode.md
+├── PROJ-A-52_plugin-system.md
+└── PROJ-A-53_graphql-api.md
 ```
 
 Concept-named titles, recognizable at a glance (the sync adds the
@@ -41,8 +41,8 @@ align with the project's focus. Theming is a downstream-consumer concern.
 
 ## Prior requests
 
-- EVO-42 — "Add dark mode support"
-- EVO-87 — "Night theme for accessibility"
+- PROJ-42 — "Add dark mode support"
+- PROJ-87 — "Night theme for accessibility"
 ```
 
 Reasons must be substantive and durable: project scope/philosophy,

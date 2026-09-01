@@ -11,8 +11,9 @@ scripts/yt-sync.sh [KB_DIR] [--project KEY] [--root "Title"]
   knowledge base (`--root "Title"` scopes to one top-level article's
   subtree; its body becomes `KB_DIR/README.md`).
 - Layout: an article with children is a directory (its body is the
-  directory's `README.md`); a leaf article is a file. Names are
-  ID-prefixed: `EVO-A-12_title-slug.md`, dirs `EVO-A-7_section-name/`.
+  directory's `README.md`); a leaf article is a file. A leaf is named
+  `<ID>_title-slug.md`; a directory is named for its section
+  (`decisions/`, `research/`) with no ID - the ID is in its `README.md`.
 - Per-article three-way merge against the base recorded in
   `KB_DIR/.yt-sync/` (commit it; never hand-edit). Local-only change →
   push; KB-only change → pull; both → merge, conflicts get git markers
@@ -61,5 +62,22 @@ scripts/yt-sync.sh [KB_DIR] [--project KEY] [--root "Title"]
   ask for or accept tokens in conversation - if authentication fails,
   point the user at `.agents/setup.sh` (or the installer, on older
   binds).
+- **Images.** Put the file beside the document and embed it by filename
+  alone - `![Flow](checkout-flow.png)`. YouTrack resolves an embed against
+  that article's own attachments, by name, so a path (`images/x.png`)
+  renders in the repo and breaks in the KB. Push uploads any referenced
+  file the article does not already have; a name present on both sides is
+  left alone, so syncs stay cheap and repeat runs do nothing.
+  **To change an image, give it a new filename.** Re-uploading a name adds
+  a *second* attachment rather than replacing the first, and YouTrack then
+  picks between them unpredictably (JT-83227, JT-62753) - so the sync will
+  not do it. Deleting the old attachment by hand breaks the embed in any
+  older revision that referenced it; leaving it costs nothing. Sweep unused
+  attachments in the YouTrack UI when someone cares.
+  Pull fetches the other way: an image referenced by the body but missing
+  from the repo is downloaded from the article's attachments and written
+  where the reference points - so an image added in the browser lands in
+  the working tree on the next sync. An attachment nothing references is
+  left where it is.
 - Requires `git` on PATH (three-way merges use `git merge-file`).
 - YouTrack renders the same markdown the repo holds, task lists included.

@@ -8,19 +8,19 @@ lost, silently, at the next run.
 
 | Skill | Version |
 |---|---|
-| story-workflow | 1.23 |
-| story-reconcile | 0.26 |
-| to-issues | 1.11 |
-| triage | 1.24 |
-| project-docs | 1.20 |
+| story-workflow | 1.24 |
+| story-reconcile | 0.30 |
+| to-issues | 1.15 |
+| triage | 1.27 |
+| project-docs | 1.24 |
 | to-prd | 1.5 |
-| to-adr | 1.2 |
+| to-adr | 1.3 |
 | to-rad | 1.4 |
 | grill-with-docs | 2.1 |
 | regulatory-compliance | 1.2 |
 | to-wiring | 1.2 |
 | handoff | 1.1 |
-| housekeeping | 1.4 |
+| housekeeping | 1.5 |
 | zoom-out | 1.0 |
 | tdd | 1.0 |
 | improve-codebase-architecture | 1.1 |

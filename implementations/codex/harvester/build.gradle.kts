@@ -18,6 +18,20 @@ dependencies {
     implementation("io.github.bonede:tree-sitter-java:0.23.5")
     implementation("io.github.bonede:tree-sitter-kotlin:0.3.8.1")
 
+    // Reading the compiled artifact to answer what a consumer can reach (#30). Source cannot
+    // answer it: an entry with no visibility keyword may be an implicitly-public interface
+    // member or a package-private class, and the two are identical in source.
+    //
+    // ASM rather than `java.lang.classfile`, which would be the obvious choice on a recent JDK
+    // and is what the measurement behind RAD-0063 used — this module targets 17 deliberately so
+    // that a Maven plugin or a CLI can embed it, and the platform API arrived in 24.
+    implementation("org.ow2.asm:asm:9.10.1")
+    implementation("org.ow2.asm:asm-tree:9.10.1")
+
+    // Kotlin `internal` compiles to public with the module name appended, so it looks reachable
+    // in both source and bytecode. Nothing but the metadata says otherwise.
+    implementation("org.jetbrains.kotlin:kotlin-metadata-jvm:2.4.10")
+
     // Test-scope only, and one-directional: the classifier depends on `core`, never on this.
     // The operating-characteristics measurement needs a real harvested corpus and the shipped
     // classifier at once, and this is the module that can see both.
@@ -42,8 +56,12 @@ dependencies {
     fixtures("org.slf4j:slf4j-api:2.0.17:sources@jar")
     // Kotlin, source-set-rooted (commonMain + jvmMain) — a multiplatform publication.
     fixtures("org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:1.11.0:sources@jar")
-    // The same library's CLASSES jar: a real archive with no source in it at all.
+    // The same library's CLASSES jar: a real archive with no source in it at all, and the
+    // artifact the visibility oracle reads for #30.
     fixtures("org.slf4j:slf4j-api:2.0.17@jar")
+    // A Kotlin library's classes, which is where `internal` and the compiler-generated forms
+    // are. Nothing in a Java jar exercises them.
+    fixtures("org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:1.11.0@jar")
 }
 
 tasks.test {

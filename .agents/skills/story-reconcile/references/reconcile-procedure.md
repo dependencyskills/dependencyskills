@@ -26,7 +26,7 @@ reference, or gitignore it - team's choice, ask once.
 
 | # | Local item | Source | Disposition | Target / Draft | Notes |
 |---|---|---|---|---|---|
-| 1 | "Offline queue drains on reconnect" | prd/offline.md | MATCH | EVO-112 | server AC missing the 30s bound - propose add |
+| 1 | "Offline queue drains on reconnect" | prd/offline.md | MATCH | PROJ-112 | server AC missing the 30s bound - propose add |
 | 2 | "Achievement scoring model" | gap/scoring.md | NEW (prose-only) | - | source is prose + open questions, no verifiable AC extractable - needs-triage, AC authored at triage |
 | 2 | "Conflict merge dialog" | gap/GAP-07.md | NEW | draft below | |
 | 3 | "Migrate to SDK 34" | TODO.md | OBSOLETE | - | shipped in v2.1 (git log) |
@@ -54,7 +54,7 @@ recommends - the user decides. Never assume the newer one wins.
 
   | Story | Covers |
   |---|---|
-  | EVO-112 | R1, R2 |
+  | PROJ-112 | R1, R2 |
   ```
 
 - Archive, don't delete: `git mv docs/gap docs/_archive/gap` (history stays).

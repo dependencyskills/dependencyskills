@@ -33,6 +33,12 @@ internal object Fixtures {
     /** A real archive holding no source at all - the same library's classes. */
     val noSources: Path get() = named("slf4j-api-2.0.17.jar")
 
+    /** The compiled counterpart of [javaSources], which the visibility oracle reads. */
+    val javaClasses: Path get() = named("slf4j-api-2.0.17.jar")
+
+    /** The compiled counterpart of [kotlinSources] - `internal` lives only in here. */
+    val kotlinClasses: Path get() = named("kotlinx-serialization-core-jvm-1.11.0.jar")
+
     val all: List<Path> get() = paths
 
     private fun named(name: String): Path =

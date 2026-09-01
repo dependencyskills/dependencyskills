@@ -6,7 +6,9 @@ import org.dependencyskills.codex.core.Codex
 import org.dependencyskills.codex.core.Coordinate
 import org.dependencyskills.codex.core.EntryState
 import org.dependencyskills.codex.core.HarvestState
+import org.dependencyskills.codex.harvester.ClassFileVisibility
 import org.dependencyskills.codex.harvester.SourcesJarHarvester
+import org.dependencyskills.codex.harvester.VisibilityOracle
 import org.dependencyskills.codex.harvester.harvest
 import org.dependencyskills.codex.index.TwoFacedIndex
 import org.dependencyskills.codex.inference.TextEncoder
@@ -80,6 +82,15 @@ class Indexer(
         val degraded: Int = 0,
         val indexed: Int = 0,
         val detail: String? = null,
+        /** Declarations the compiled artifact said no consumer can reach, and which were dropped. */
+        val notReachable: Int = 0,
+        /**
+         * Declarations kept because no compiled artifact was on this machine to judge them.
+         *
+         * Reported rather than logged once: a pass where this is large did not apply the
+         * visibility rule at all, and that looks exactly like a library that is entirely public.
+         */
+        val visibilityUnknown: Int = 0,
     )
 
     /**
@@ -157,9 +168,25 @@ class Indexer(
         var entries = 0
         var degraded = 0
         var indexed = 0
+        var notReachable = 0
+        var visibilityUnknown = 0
+
+        // #30: what a consumer can reach is read from the compiled artifact, which source cannot
+        // answer — an entry with no visibility keyword is an implicitly-public interface member
+        // or a package-private class, and in source those are identical.
+        //
+        // Absent on this machine is ordinary rather than an error: a coordinate whose sources
+        // were fetched without its classes harvests everything, and the report says so. Silently
+        // treating that as "index it all" is how the defect would return unnoticed.
+        val classes = SourcesInCache.classes(coordinate)
+        val visibility = classes?.let { ClassFileVisibility.of(it) } ?: VisibilityOracle.Blind
 
         Codex.open(store).use { codex ->
-            codex.harvest(coordinate, jar, SourcesJarHarvester())
+            val harvested = codex.harvest(coordinate, jar, SourcesJarHarvester(visibility = visibility))
+            (harvested as? org.dependencyskills.codex.harvester.HarvestResult.Harvested)?.report?.let {
+                notReachable = it.notReachable
+                visibilityUnknown = it.visibilityUnknown
+            }
             entries = codex.entriesOf(coordinate).size
             // Back to Pending, deliberately, and this is not bookkeeping.
             //
@@ -206,7 +233,8 @@ class Indexer(
         index.commit()
 
         Codex.open(store).use { it.harvestState(coordinate, HarvestState.Indexed) }
-        return Outcome(coordinate, HarvestState.Indexed, entries, degraded, indexed)
+        return Outcome(coordinate, HarvestState.Indexed, entries, degraded, indexed,
+            notReachable = notReachable, visibilityUnknown = visibilityUnknown)
     }
 
     companion object {

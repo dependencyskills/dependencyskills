@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # Pull GitHub issues into a local markdown snapshot.
 #
-# Usage: gh-pull.sh [owner/repo] [OUT_DIR] [--dimensions-only]
+# Usage: gh-pull.sh [owner/repo] [OUT_DIR] [--dimensions-only] [--push-tags]
 #   owner/repo  defaults to tracker.repo from .agents/config/story-tools.json
 #   OUT_DIR     defaults to ./docs/stories
 #   --dimensions-only   refresh .agents/config/dimensions.md only (no issue snapshot)
+#   --push-tags         create a topic: label for each entry in
+#                       .agents/config/topical-tags.md that has none
 #
 # Output: one .md per issue (OC-0123_title-slug.md; prefix from
 # tracker.prefix, blocks OC-A-0001 past 9999) + INDEX.md; a
@@ -18,8 +20,19 @@
 # github.env connection.
 set -euo pipefail
 
-DIMONLY=0; ARGS=()
-for a in "$@"; do [[ "$a" == "--dimensions-only" ]] && DIMONLY=1 || ARGS+=("$a"); done
+DIMONLY=0; PUSH_TAGS=0; ARGS=()
+for a in "$@"; do
+  case "$a" in
+    --dimensions-only) DIMONLY=1;;
+    --push-tags)       PUSH_TAGS=1;;
+    *)                 ARGS+=("$a");;
+  esac
+done
+# Labels are one flat namespace, so the project's own groupings carry a
+# prefix to keep them apart from the workflow machinery.
+TAGS_FILE="${TOPICAL_TAGS_FILE:-.agents/config/topical-tags.md}"
+TOPIC_PREFIX="${TOPICAL_LABEL_PREFIX:-topic:}"
+export PUSH_TAGS TAGS_FILE TOPIC_PREFIX
 set -- "${ARGS[@]:-}"
 REPO="${1:-}"; OUT="${2:-./docs/stories}"
 read_pointer() {
@@ -71,6 +84,36 @@ def rest(path):
     req = urllib.request.Request('https://api.github.com' + path, headers=HDRS)
     with urllib.request.urlopen(req) as r:
         return json.loads(r.read())
+
+def rest_post(path, payload):
+    req = urllib.request.Request('https://api.github.com' + path,
+                                 data=json.dumps(payload).encode(),
+                                 headers={**HDRS, 'Content-Type': 'application/json'},
+                                 method='POST')
+    with urllib.request.urlopen(req) as r:
+        return json.loads(r.read())
+
+PUSH_TAGS = os.environ.get('PUSH_TAGS') == '1'
+TAGS_FILE = os.environ.get('TAGS_FILE') or '.agents/config/topical-tags.md'
+TOPIC_PREFIX = os.environ.get('TOPIC_PREFIX') or 'topic:'
+
+def wanted_tags():
+    # Prose above a `---` rule is the header; tags live below it. Without a
+    # rule the whole file is read, so a hand-made bare list works too.
+    try:
+        with open(TAGS_FILE, encoding='utf-8') as fh:
+            raw = fh.read()
+    except OSError:
+        return []
+    body = raw.split('\n---', 1)
+    out = []
+    for line in (body[1] if len(body) > 1 else body[0]).splitlines():
+        t = line.strip().lstrip('-').strip()
+        if not t or t.startswith('#'):
+            continue
+        if t not in out:
+            out.append(t)
+    return out
 
 def gql(query, variables=None):
     req = urllib.request.Request('https://api.github.com/graphql',
@@ -236,6 +279,33 @@ WORKFLOW = [
     ('needs-gherkin',   'completion requires a QA section'),
 ]
 labels_all = rest(f'/repos/{REPO}/labels?per_page=100')
+
+# ---- topical labels: the agents' own vocabulary -----------------------------
+# Same list file as the YouTrack side; the push target differs. Labels are
+# one flat namespace shared with the workflow machinery, so the project's
+# groupings carry TOPIC_PREFIX to stay distinguishable. Additive only -
+# deleting a label strips it from every issue that carries it. Reading is
+# free, writing is explicit: a plain run reports what is pending.
+tags_pending, tags_added, tags_note = [], [], None
+want = wanted_tags()
+if want:
+    have = {l['name'].lower() for l in labels_all}
+    tags_missing = [t for t in want
+                    if (TOPIC_PREFIX + t).lower() not in have]
+    if tags_missing and PUSH_TAGS:
+        for t in tags_missing:
+            try:
+                rest_post(f'/repos/{REPO}/labels',
+                          {'name': TOPIC_PREFIX + t, 'color': 'ededed'})
+                tags_added.append(TOPIC_PREFIX + t)
+            except Exception as e:                            # noqa: BLE001
+                tags_note = f'could not create "{TOPIC_PREFIX}{t}": {e}'
+                break
+        if tags_added:
+            labels_all = rest(f'/repos/{REPO}/labels?per_page=100')
+    elif tags_missing:
+        tags_pending = tags_missing
+
 present = {l['name'].lower() for l in labels_all}
 reserved_lower = {r.lower() for r in RESERVED}
 
@@ -252,9 +322,22 @@ if missing:
                   + ', '.join(f'`{m}`' for m in missing)]
 lines += ['', 'These are never topical and never inherited by discovered work.', '']
 
-topical = sorted({l['name'] for l in labels_all if l['name'].lower() not in reserved_lower})
-lines.append('## Topical labels (reuse before inventing)')
-lines += ([f'- {t}' for t in topical] or ['_(none yet)_']) + ['']
+rest_labels = [l['name'] for l in labels_all
+               if l['name'].lower() not in reserved_lower]
+topical = sorted(t for t in rest_labels if t.lower().startswith(TOPIC_PREFIX.lower()))
+other = sorted(t for t in rest_labels if not t.lower().startswith(TOPIC_PREFIX.lower()))
+
+lines.append(f'## Topical labels ({TOPIC_PREFIX}...) - this project\'s groupings')
+lines += ([f'- {t}' for t in topical] or
+          [f'_(none yet - add a line to {TAGS_FILE}, then '
+           f'gh-pull.sh --dimensions-only --push-tags)_']) + ['']
+if other:
+    lines.append('## Other repo labels')
+    lines.append('')
+    lines.append('Not machinery and not project groupings. Reuse one if it fits;')
+    lines.append(f'new groupings go in {TAGS_FILE}, not here.')
+    lines.append('')
+    lines += [f'- {t}' for t in other] + ['']
 
 miles = rest(f'/repos/{REPO}/milestones?state=all&per_page=100')
 openm = [m['title'] for m in miles if m.get('state') == 'open']
@@ -275,4 +358,14 @@ if DIMONLY:
     print(f'Wrote dimensions.md at {DIM_DIR}/ ({mode})')
 else:
     print(f'{len(issues)} issues; {written} file(s) changed + INDEX.md in {OUT}; dimensions.md at {DIM_DIR}/ ({mode})')
+
+if tags_added:
+    print(f'  topical labels: created {len(tags_added)} from {TAGS_FILE}: '
+          + ', '.join(tags_added))
+if tags_pending:
+    print(f'  topical labels: {len(tags_pending)} in {TAGS_FILE} not on the repo '
+          'yet: ' + ', '.join(TOPIC_PREFIX + t for t in tags_pending))
+    print('  Create them with: gh-pull.sh --dimensions-only --push-tags')
+if tags_note:
+    print(f'  topical labels: {tags_note}')
 EOF

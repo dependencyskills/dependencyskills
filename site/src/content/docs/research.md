@@ -543,3 +543,95 @@ scope, ignoring libraries without a deliberate skill would cut clutter and
 reward adoption, but it excludes exactly the obscure libraries where a skill
 helps most — so the reconciliation is to index everything and treat a
 deliberate skill as a preferred, higher-ranked tier rather than a hard gate.
+
+## What a skill actually contains
+
+The store indexes and summarises every entry in a library. The specification for
+what a skill contains asks for five paragraphs of orientation — what it solves in
+the caller's words, how it is meant to be used, the traps, what moved and was
+renamed, what it is *not* for. Which of those two is the thing being built?
+
+**Findings.** The specification ranks signature-derived content **lowest**, saying
+the most valuable paragraph is the one carrying what a caller *cannot* learn from
+a signature — and the pipeline had been generating almost nothing else. The
+clearest case is a rename: one library's internal type was renamed in a recent
+version, and its maintainers' own reason was that the old name caused problems.
+That single sentence is worth more to an agent than the four class entries of that
+file indexed separately. The general form is that **the high-value content is
+about the library, not about its members** — a rename is a relation between two
+versions, a trap between what compiles and what works, a boundary between
+siblings, and no single entry contains any of them. So the overview is the
+product and the per-entry index is *substrate*: how an overview gets written, and
+drill-down for libraries a model has never seen. What nobody has measured is
+whether any of it is used, which is why a local record of what agents ask for now
+precedes further generation work.
+
+## What library authors already ship
+
+Some libraries publish a hand-written skill inside their own artifact. Before
+generating skills against a specification derived by argument, what did authors
+with a free hand actually choose to tell other agents?
+
+**Findings.** Eleven skills across nine sibling libraries, **15 to 103 lines,
+median about 52** — every one an overview, not one an API listing. One covering a
+library with over a hundred public members names roughly **twenty API shapes**,
+collapsing a dozen numeric overloads into a single line, because the shape is the
+knowledge and the instantiations are noise. Authors converged on three fields per
+capability: the API, a **preference** — reach for this rather than that — and a
+contract of defaults no signature carries. Preference is the field a per-entry
+summariser structurally cannot produce, being a comparison between members.
+Stale-prior corrections appeared unprompted: an import collision stated in
+capitals, a behaviour change pinned to a version, a section of eight deprecated
+renames. Meanwhile the standard governing them made exactly **one** body section
+mandatory — instructions for installing the skill system, which five of eleven
+copied verbatim and the smallest consists of entirely. What was mandated had no
+value to a caller; what had value was not mandated. And the transport failed
+silently: placed in shared resources, the skill reaches only the JVM artifact —
+**17 of 34 JVM jars carry one, 0 of 120 other targets, and 0 of 82 sources jars.**
+
+## Compressing what the summariser writes
+
+Generation is the dominant cost in the pipeline and its output is stored,
+embedded, and eventually paged into an agent's context. Terser summaries would be
+cheaper on every axis — but would they still retrieve, and would compression
+blunt an instruction hidden in the prose?
+
+**Findings.** On retrieval, **vector search is unchanged** — identical at rank 1,
+3, 5 and 10 across 26 queries against a 220-entry corpus after compression removed
+12.2% of words. The encoder is indifferent to the articles, filler and hedging the
+transform deletes; they contribute almost nothing to a pooled embedding. Lexical
+and hybrid moved within noise in both directions. The gate does not veto, though
+it is a weaker pass than it appears: the corpus was already terse, so a 12%
+perturbation cannot answer for prose that would compress far more. On injection
+the answer looks the other way, and reading the transform's rules is what settles
+it: what it removes — articles, filler, hedging, connectives — is the **inert**
+part of an instruction, while its preserve-exactly list is commands, code, URLs,
+paths and API names, which is the **payload**. Stripping hedging makes prose more
+imperative, not less. Compression is a cost measure; the defensive idea nearby is
+not terseness but **structure** — emitting into a typed, bounded schema where a
+fluent imperative has nowhere to sit.
+
+## Whether a library's own documentation can be used
+
+A library already has documentation and its POM says where. A README explains what
+a library is for and shows how to use it — the specification's first two fields.
+Can that be the source, rather than generating one?
+
+**Findings.** The pointer is well populated: of 756 POMs in a real cache, **95%
+carry an absolute URL** and 62% resolve to a repository host. The POM's own
+description is not a candidate — present 96% of the time with a **median of seven
+words**, it is a label, not a summary. The problem is the unit. Those artifacts
+point at **72 distinct repositories, and 94% of artifacts share a README** with
+another artifact — one repository is named by 267 separate POMs. A README
+describes a *project*; a dependency is an *artifact*, and two modules from one
+repository resolve to a document describing neither specifically. Sampled READMEs
+run 187–1,058 words with real code examples, so they are good on what a library
+solves and how to use it — and close to silent on the two fields the specification
+ranks highest, scoring 0–1 for negative boundary and 0–2 for version movement.
+That content exists, in changelogs and migration guides, which is a different
+file. The sharper hazard is **version skew**: a README fetched from a branch and
+attached to a pinned version produces confident, well-sourced, wrong answers,
+which is the failure the specification's version-matched provenance exists to
+prevent. So fetched documentation is a supplement, fetched by matching tag or not
+at all — and a library's own published artifact, which carries its documentation
+version-matched and checksummed, is the better place to look first.

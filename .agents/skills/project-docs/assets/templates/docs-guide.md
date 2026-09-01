@@ -27,7 +27,7 @@ A sync keeps the two together:
   `# Title` heading in the right section folder (each section's
   `README.md` says what belongs there) and sync. From the tracker side:
   just create the article where it belongs.
-- Files are named by article ID (`EVO-A-12_title.md`) so they survive
+- Files are named by article ID (`PROJ-A-12_title.md`) so they survive
   renames and are easy to cite.
 - `docs/knowledge/.yt-sync/` is the sync's memory. Commit it; never
   edit it.

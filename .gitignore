@@ -60,12 +60,12 @@ experiments/test21/bytecode-identifiers.json
 # the same rule as the corpus DB and the packed transcripts.
 experiments/test22/evasions.json
 
-# BEGIN story-tools (generated - do not edit between markers)
-docs/stories/
-.agents/config/dimensions.md
-# END story-tools
 local.properties
 
 # JVM crash dumps: they carry absolute paths and full command lines.
 hs_err_pid*.log
 replay_pid*.log
+# BEGIN story-tools (generated - do not edit between markers)
+docs/stories/
+.agents/config/dimensions.md
+# END story-tools

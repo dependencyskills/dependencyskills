@@ -5,7 +5,7 @@ license: MIT
 compatibility: Requires a connection to the project's issue tracker (see the tracker binding; YouTrack today).
 metadata:
   author: bpappin
-  version: "1.24"
+  version: "1.27"
 ---
 
 # Triage
@@ -59,7 +59,7 @@ inherited by discovered work.
 ## Invocation
 
 The maintainer describes what they want in natural language: "show me
-anything that needs my attention", "let's look at EVO-42", "move EVO-42 to
+anything that needs my attention", "let's look at PROJ-42", "move PROJ-42 to
 ready-for-agent", "what's ready for agents to pick up?"
 
 ## Quick capture
@@ -198,7 +198,7 @@ a value, say so and ask.
 
 ## Quick state override
 
-"Move EVO-42 to ready-for-agent" — trust the maintainer and apply
+"Move PROJ-42 to ready-for-agent" — trust the maintainer and apply
 directly. Confirm what you're about to do (role changes, comment, close),
 then act. Skip grilling. If moving to `ready-for-agent` without a session,
 ask whether they want an agent brief (and ensure the description has its

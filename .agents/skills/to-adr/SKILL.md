@@ -5,7 +5,7 @@ license: MIT
 compatibility: Standalone for authoring. The project-docs skill owns where docs live and the tracker KB sync; run its sync after writing if the project has one.
 metadata:
   author: bpappin
-  version: "1.2"
+  version: "1.3"
 ---
 
 # Architecture Decision Records (to-adr)
@@ -27,7 +27,7 @@ project-docs owns the conventions, the section, and the KB sync.
 Write one when a choice is **hard to reverse** and someone could reasonably
 have chosen otherwise. A decision with no alternatives was not a decision.
 
-- **ADR** - why a choice was made. Append-only; never edited once accepted.
+- **ADR** - why a choice was made. The decision is frozen once accepted; new knowledge means a new ADR that supersedes it, not a rewrite.
 - **Spec** - how a thing IS. Updated in place. If you are describing current
   behaviour, that is a spec, not an ADR.
 - **Code comment** - why this line is odd. Local, no alternatives weighed.
@@ -90,9 +90,20 @@ better than false confidence, and tells a reader exactly what to re-check.
 
 ## After writing
 
-- **Never edit an accepted ADR** except to mark it superseded. Write a new
-  one and cross-link: the old gets `Status: superseded by 0012`, the new
-  records what changed and why the earlier reasoning expired.
+- **Context and Decision are frozen once accepted; everything else
+  accrues.** A changed decision is a new ADR, never an edit to the old
+  one - write it, cross-link both ways, and the old gets
+  `Status: superseded by ADR-0012`. Editing the original instead leaves a
+  record of reasoning nobody ever applied, and quietly repoints every code
+  comment and story that cites the old ID at a different decision.
+- **Consequences are the exception, and they are the part worth having.**
+  What a decision actually cost is learned months later, not on the day it
+  was made. Add to Consequences as it becomes known, dated, and leave what
+  was already there - a cost that was predicted and a cost that arrived are
+  two different facts, and the distance between them is how anyone
+  calibrates the next decision. Correcting a broken link, a typo or a
+  mis-stated fact is fine on the same grounds: the *decision* is frozen,
+  the document is not.
 - Point at it from the work it governs - the PRD, the spec, the story's
   `## References`.
 - Where a decision constrains a library's public surface, summarise the rule

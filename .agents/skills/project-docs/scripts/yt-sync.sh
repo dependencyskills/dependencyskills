@@ -8,7 +8,7 @@
 # location chooses its parent article at birth.
 #
 # Files and section directories are ID-prefixed like the stories snapshot
-# (EVO-A-12_title-slug.md); new local files are renamed to match once their
+# (PROJ-A-12_title-slug.md); new local files are renamed to match once their
 # article exists.
 #
 # Usage: yt-sync.sh [KB_DIR] [options]
@@ -133,6 +133,27 @@ def to_local(summary, content):
     title = (summary or '').strip() or (m.group(1).strip() if m else 'Untitled')
     return canon(f'# {title}\n\n{body}') if body else canon(f'# {title}')
 
+def api_upload(path, filepath):
+    # urllib has no multipart, and YouTrack wants one uniquely-named field
+    # per file. Small enough to build by hand; avoids a dependency in a
+    # script that has to run wherever the developer is.
+    import uuid, mimetypes
+    boundary = uuid.uuid4().hex
+    name = os.path.basename(filepath)
+    ctype = mimetypes.guess_type(name)[0] or 'application/octet-stream'
+    with open(filepath, 'rb') as fh:
+        data = fh.read()
+    body = (f'--{boundary}\r\n'
+            f'Content-Disposition: form-data; name="upload"; filename="{name}"\r\n'
+            f'Content-Type: {ctype}\r\n\r\n').encode() + data + \
+           f'\r\n--{boundary}--\r\n'.encode()
+    req = urllib.request.Request(
+        URL + path, data=body, method='POST',
+        headers={'Authorization': 'Bearer ' + TOKEN,
+                 'Content-Type': f'multipart/form-data; boundary={boundary}'})
+    with urllib.request.urlopen(req) as r:
+        return json.loads(r.read())
+
 def to_remote(content):
     """Body as YouTrack stores it: no leading H1."""
     body = canon(content)
@@ -213,9 +234,9 @@ def slug(text, maxlen=60):
 
 # desired path per article: structure flows down from here.
 #
-# LEAVES are ID-prefixed - EVO-A-12_title-slug.md. The id is load-bearing
+# LEAVES are ID-prefixed - PROJ-A-12_title-slug.md. The id is load-bearing
 # there: a story citing a KB article resolves it by globbing
-# docs/knowledge/**/EVO-A-12_*.md, with no API call and no sync state. It is
+# docs/knowledge/**/PROJ-A-12_*.md, with no API call and no sync state. It is
 # not recoverable from the body (measured on a 338-file KB: 1 file carried
 # its own id).
 #
@@ -528,7 +549,7 @@ for nf in new_files:
     created_ids.append(made['id'])
     report['New'].append(f'{nf} -> article "{title}" ({made.get("idReadable")})')
 
-# newborn articles get their ID stamped into the file/dir name (EVO-A-12_...)
+# newborn articles get their ID stamped into the file/dir name (PROJ-A-12_...)
 def settle_name(aid):
     e = smap.get(aid)
     if not e: return
@@ -555,6 +576,129 @@ for aid in created_ids:  # shallow-first: section dirs precede their leaves
     settle_name(aid)
 
 # ---- finish -----------------------------------------------------------------
+
+# ---- images referenced by an article become its attachments ----------------
+# YouTrack resolves ![](name.png) in an article body against that article's
+# own attachments, so the local markdown and the remote body carry the
+# identical string - no notation transform, unlike the wiki.
+#
+# Upload only what is absent BY NAME, and never replace: re-uploading a name
+# creates a SECOND attachment rather than replacing the first (JT-83227,
+# JT-62753), and deleting the old one breaks the embed. So a changed image
+# gets a new filename - that rule lives in the skill, and this code simply
+# never touches a name that already exists. Stale attachments accumulate and
+# are harmless; clearing them is a manual job.
+IMG_RE = re.compile(r'!\[[^\]]*\]\(([^)\s]+)\)')
+
+def refs_of(text):
+    return [r for r in IMG_RE.findall(text)
+            if not re.match(r'^(https?:|data:|#)', r)]
+
+def api_download(url, dest):
+    req = urllib.request.Request(
+        url if url.startswith('http') else URL + url,
+        headers={'Authorization': 'Bearer ' + TOKEN})
+    with urllib.request.urlopen(req) as r:
+        data = r.read()
+    os.makedirs(os.path.dirname(dest) or '.', exist_ok=True)
+    with open(dest, 'wb') as fh:
+        fh.write(data)
+    return len(data)
+
+def pull_attachments():
+    """An image added in the browser has no local file. Structure flows down,
+    so fetch it - otherwise the document renders in the KB and is broken in
+    the repo, and the next push reports it missing forever."""
+    down, notes = [], []
+    for aid, e in smap.items():
+        if e.get('orphaned'):
+            continue
+        path = e.get('path') or ''
+        text = read_file(path)
+        if not text or '![' not in text:
+            continue                       # no API call for the common case
+        want = {}
+        for r in refs_of(text):
+            tgt = os.path.normpath(os.path.join(os.path.dirname(path),
+                                                r.split('#')[0]))
+            if not os.path.exists(tgt):
+                want.setdefault(os.path.basename(r.split('#')[0]), tgt)
+        if not want:
+            continue                       # everything referenced is on disk
+        try:
+            atts = api(f'/api/articles/{aid}/attachments?fields=name,url')
+        except Exception as ex:                                # noqa: BLE001
+            notes.append(f'{path}: could not list attachments ({ex})')
+            continue
+        for a in atts:
+            dest = want.get(a.get('name'))
+            if not dest or not a.get('url'):
+                continue
+            if DRY:
+                down.append(f'{a["name"]} -> {dest}')
+                continue
+            try:
+                api_download(a['url'], dest)
+                down.append(f'{a["name"]} -> {dest}')
+            except Exception as ex:                            # noqa: BLE001
+                notes.append(f'could not fetch {a.get("name")}: {ex}')
+    if down:
+        report['Pulled'].append(f'attachments ({len(down)}): ' + ', '.join(down))
+    for n in notes:
+        report['Notes'].append(n)
+
+def push_attachments():
+    if PULL_ONLY:
+        return
+    up, notes = [], []
+    for aid, e in smap.items():
+        if e.get('orphaned'):
+            continue
+        path = e.get('path') or ''
+        text = read_file(path)
+        if not text or '![' not in text:
+            continue                       # no API call for the common case
+        refs = refs_of(text)
+        if not refs:
+            continue
+        try:
+            have = {a.get('name') for a in
+                    api(f'/api/articles/{aid}/attachments?fields=name')}
+        except Exception as ex:                                # noqa: BLE001
+            notes.append(f'{path}: could not list attachments ({ex})')
+            continue
+        for r in refs:
+            name = os.path.basename(r.split('#')[0])
+            if '/' in r.split('#')[0]:
+                # YouTrack resolves an embed against the article's own
+                # attachments, by filename. A path renders in the repo and
+                # breaks in the KB, so uploading it would not be enough.
+                notes.append(f'{path} references {r} by path - '
+                             'YouTrack matches attachments by filename; '
+                             'keep the image beside the document')
+                continue
+            if name in have:
+                continue                   # present on both sides - leave it
+            src = os.path.normpath(os.path.join(os.path.dirname(path), r))
+            if not os.path.isfile(src):
+                notes.append(f'{path} references {r} - not found locally')
+                continue
+            if DRY:
+                up.append(f'{name} -> {e.get("idReadable") or aid}')
+                continue
+            try:
+                api_upload(f'/api/articles/{aid}/attachments?fields=id,name', src)
+                up.append(f'{name} -> {e.get("idReadable") or aid}')
+                have.add(name)
+            except Exception as ex:                            # noqa: BLE001
+                notes.append(f'could not upload {name}: {ex}')
+    if up:
+        report['Notes'].append(f'attachments uploaded ({len(up)}): ' + ', '.join(up))
+    for n in notes:
+        report['Notes'].append(n)
+
+pull_attachments()
+push_attachments()
 
 # ---- follow the renames into every link ------------------------------------
 # Structure flows down, so the sync moves files whenever an article is

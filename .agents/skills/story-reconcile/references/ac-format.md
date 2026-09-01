@@ -16,8 +16,8 @@ states, the boundaries.
 - [x] Verifiable outcome two (done)
 
 ## References
-- EVO-A-41 Some Feature (KB article; mirror file docs/knowledge/**/EVO-A-41_*.md)
-- EVO-A-17 ADR-0007 Conflict Strategy
+- PROJ-A-41 Some Feature (KB article; mirror file docs/knowledge/**/PROJ-A-41_*.md)
+- PROJ-A-17 ADR-0007 Conflict Strategy
 
 ## QA
 Feature: <name>

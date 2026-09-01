@@ -48,14 +48,48 @@ object SourcesInCache {
         val (group, artifact, version) = parts
         if (group.isBlank() || artifact.isBlank() || version.isBlank()) return null
 
+        // Named exactly, rather than "any jar with sources in the name", so a
+        // `-sources-shaded.jar` or similar cannot be mistaken for the real one.
+        return inCache(group, artifact, version, "$artifact-$version-sources.jar", env, sysProps)
+    }
+
+    /**
+     * The COMPILED artifact for [coordinate], which is what says who can reach what (#30).
+     *
+     * A different file in the same version directory, and a different hash directory under it —
+     * the classes jar and the sources jar are separate artifacts and Gradle stores each under its
+     * own checksum. Null when this machine has only the sources, which is ordinary: the harvest
+     * then runs without a visibility rule and reports that it did.
+     */
+    fun classes(
+        coordinate: Coordinate,
+        env: Map<String, String> = System.getenv(),
+        sysProps: Map<String, String> = System.getProperties()
+            .entries.associate { (k, v) -> k.toString() to v.toString() },
+    ): Path? {
+        if (!coordinate.ecosystem.equals("maven", ignoreCase = true)) return null
+        val parts = coordinate.value.split(':')
+        if (parts.size != 3) return null
+        val (group, artifact, version) = parts
+        if (group.isBlank() || artifact.isBlank() || version.isBlank()) return null
+        return inCache(group, artifact, version, "$artifact-$version.jar", env, sysProps)
+    }
+
+    /**
+     * One directory per artifact hash, so the file is one level down and the hash is not
+     * something we can predict — hence the scan rather than a resolve.
+     */
+    private fun inCache(
+        group: String,
+        artifact: String,
+        version: String,
+        wanted: String,
+        env: Map<String, String>,
+        sysProps: Map<String, String>,
+    ): Path? {
         val versionDirectory = gradleHome(env, sysProps)
             .resolve(GRADLE_ARTIFACTS).resolve(group).resolve(artifact).resolve(version)
         if (!Files.isDirectory(versionDirectory)) return null
-
-        // One directory per artifact hash, so the file is one level down and the hash is not
-        // something we can predict. Named exactly, rather than "any jar with sources in the name",
-        // so a `-sources-shaded.jar` or similar cannot be mistaken for the real one.
-        val wanted = "$artifact-$version-sources.jar"
         return Files.newDirectoryStream(versionDirectory).use { hashes ->
             hashes.mapNotNull { it.resolve(wanted).takeIf(Path::isRegularFile) }.firstOrNull()
         }

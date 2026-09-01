@@ -26,6 +26,10 @@ that is a public wiki page or a KB article, on the next sync, without
 anyone approving it. Nothing else under `docs/` is - that distinction is
 what the directory is for.
 
+An image a document needs lives **beside that document**, and is embedded by filename (`![Flow](checkout-flow.png)`). Both bindings carry it; how differs enough to matter, so read the binding before replacing one.
+
+**An image must paint its own opaque background.** It will be read on a theme its author did not choose - both targets have a dark mode, and a diagram drawn on an assumed white page renders its dark text on a dark ground, so the labels vanish with nothing left to suggest they were ever there. This covers SVG and any PNG with an alpha channel. Do not reach for a `prefers-color-scheme` media query instead: an embed renders in an `<img>`, which cannot see the host page, so the query follows the reader's operating system while the page follows a theme they set separately - that replaces a predictable failure with an unpredictable one.
+
 **Sections belong to the taxonomy; sub-groups are free.** Subdivide a
 section you are already filing into when the section has grown enough to
 need it - which is uncommon, and never on the first document of a kind. A
@@ -63,8 +67,9 @@ restarted sequence collides.
 
 `docs/design/` is a **companion tree to `docs/knowledge/`**, not a section
 inside it: design records plus the images that make them worth reading.
-It stays git-native because the sync carries `.md` only - a record pushed
-to the KB would publish its prose and drop every sample as a dead link.
+It stays git-native because it is mostly not prose - mockups, exports, a
+directory per iteration - and the KB holds what someone looks up, not the
+working pile it came out of.
 
     docs/knowledge/   synced knowledge, text
     docs/design/      design records + samples, git-native
@@ -117,9 +122,8 @@ is knowledge:
   format. It sits beside `AGENTS.md` because it is agent-facing wiring, and
   root files are the ones reliably read.
 - `docs/design/` - design *records*: a decision about a particular screen
-  or flow, with the mockups attached. Git-native and never synced, because
-  the sync carries `.md` only and would publish the prose while dropping
-  every image.
+  or flow, with the mockups attached. Git-native and never synced - working
+  material for a screen, not something a reader looks up.
 - Accessibility - the legal floor (WCAG level, AODA, EN 301 549) belongs in
   `compliance/` with the other rules the work must satisfy; the practical
   rules (contrast, focus order, target sizes) belong in DESIGN.md's do's

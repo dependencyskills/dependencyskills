@@ -21,7 +21,21 @@ import java.util.zip.ZipFile
  * found that deciding it here makes the store depend on which build ran first, and leaves a
  * project that depends only on the artifact which lost unable to see the entry at all.
  */
-class SourcesJarHarvester(private val extractor: String = EXTRACTOR) {
+class SourcesJarHarvester(
+    private val extractor: String = EXTRACTOR,
+    /**
+     * What a consumer of the library can reach, read from the compiled artifact (#30).
+     *
+     * Passed in rather than resolved here, which is what keeps the class above's promise: the
+     * harvest stays a pure function of its inputs, and the decision about which classes jar
+     * belongs to which sources jar stays with the caller that resolved them both.
+     *
+     * The default answers [Reach.Unknown] to everything, so a caller that has no compiled
+     * artifact gets the previous behaviour — every documented declaration — and a report saying
+     * that is what happened.
+     */
+    private val visibility: VisibilityOracle = VisibilityOracle.Blind,
+) {
 
     fun harvest(jar: Path): HarvestResult {
         if (!Files.isRegularFile(jar)) {
@@ -54,6 +68,8 @@ class SourcesJarHarvester(private val extractor: String = EXTRACTOR) {
         var tooShort = 0
         var withParseErrors = 0
         var unreadable = 0
+        var notReachable = 0
+        var visibilityUnknown = 0
 
         // One extractor per language per archive: a TSParser holds native state and is not safe
         // across threads, and creating one per file costs a grammar load each time.
@@ -73,14 +89,24 @@ class SourcesJarHarvester(private val extractor: String = EXTRACTOR) {
                 unclaimedDocs += fileYield.unclaimedDocs
                 tooShort += fileYield.tooShort
                 if (fileYield.hadParseError) withParseErrors++
-                fileYield.extracted.mapTo(entries) {
-                    NewEntry(
-                        symbol = it.symbol,
-                        signature = it.signature,
-                        doc = it.doc,
-                        lang = language.lang,
-                        docFormat = language.docFormat,
-                        provenance = Provenance(extractor = extractor),
+                for (item in fileYield.extracted) {
+                    // #30: a capability a developer cannot invoke is not a capability. The
+                    // enclosing declaration decides — the oracle has already resolved a member
+                    // of an unreachable type to unreachable, so this is a single lookup.
+                    when (visibility.reach(item.symbol)) {
+                        Reach.Unreachable -> { notReachable++; continue }
+                        Reach.Unknown -> visibilityUnknown++
+                        Reach.Reachable -> Unit
+                    }
+                    entries.add(
+                        NewEntry(
+                            symbol = item.symbol,
+                            signature = item.signature,
+                            doc = item.doc,
+                            lang = language.lang,
+                            docFormat = language.docFormat,
+                            provenance = Provenance(extractor = extractor),
+                        )
                     )
                 }
             }
@@ -98,6 +124,8 @@ class SourcesJarHarvester(private val extractor: String = EXTRACTOR) {
                 tooShort = tooShort,
                 withParseErrors = withParseErrors,
                 unreadable = unreadable,
+                notReachable = notReachable,
+                visibilityUnknown = visibilityUnknown,
                 sourceSets = sourceSetsOf(names),
             ),
         )

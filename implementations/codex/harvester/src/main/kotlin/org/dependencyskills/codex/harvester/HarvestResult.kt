@@ -58,6 +58,22 @@ data class HarvestReport(
     /** Files in the archive that could not be read at all. */
     val unreadable: Int,
     /**
+     * Documented declarations dropped because a consumer of the library cannot reach them (#30).
+     *
+     * Private and package-private members, and everything inside a type that is itself out of
+     * reach. Zero when no compiled artifact was available — see [visibilityUnknown], which is
+     * the number that tells the two zeroes apart.
+     */
+    val notReachable: Int,
+    /**
+     * Declarations kept because nothing could be established about them.
+     *
+     * A missing or unreadable classes jar puts every declaration here, and the entries are kept
+     * rather than guessed at. This being large is the signal that the visibility rule is not
+     * actually running, which otherwise looks exactly like a library that is all public.
+     */
+    val visibilityUnknown: Int,
+    /**
      * Kotlin source-set roots found at the top of the archive — `commonMain`, `jvmMain`,
      * `appleMain`. Empty for a package-rooted jar, which is what a plain JVM library publishes.
      * This is what distinguishes a multiplatform publication, and it costs nothing: the archive

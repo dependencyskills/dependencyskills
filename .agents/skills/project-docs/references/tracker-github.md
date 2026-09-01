@@ -47,7 +47,17 @@ scripts/gh-wiki-sync.sh [KB_DIR] [--repo owner/repo]
   authentication fails, point the user at `.agents/setup.sh` (or the
   installer, on older binds).
 - Requires `git` and `python3` on PATH.
-- Limitations: relative links between docs files break on the wiki (the
-  namespace is flat) - link by page name (`[ADR 1](Architecture-Decisions-Foo)`)
-  when the wiki rendering matters; images follow the project's
-  attachment policy (tracker-native, no repo asset store).
+- **Links are rewritten, both ways.** Write ordinary repo-relative links
+  (`[Scope](../requirements/PRD-0002-scope.md)`); push converts them to the
+  wiki's flat page names and pull converts them back, so the working tree
+  is the only place paths exist. A target that is not a synced document -
+  a directory, a source file, anything outside `docs/knowledge/` - becomes
+  a repo link instead. A link that resolves to nothing is left untouched
+  and reported, so a typo stays visibly broken rather than becoming a
+  plausible URL that 404s.
+- **Images.** The wiki has no attachment store, so an embed is served from
+  the repo: keep the image beside the document, embed it by relative path
+  (`![Flow](checkout-flow.png)`), and push rewrites it to a `?raw=1` repo
+  URL that carries the reader's session - so it renders on a private repo
+  too. Nothing is uploaded and nothing needs a new name to change: replace
+  the file in the repo and the wiki follows.

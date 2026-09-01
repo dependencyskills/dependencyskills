@@ -5,7 +5,7 @@ license: MIT
 compatibility: Standalone for filing/creating docs. Syncing requires git on PATH plus the binding's connection - YouTrack REST (story-tools connection or YOUTRACK_URL/TOKEN env), or a GitHub token with Contents RW and an initialized wiki.
 metadata:
   author: bpappin
-  version: "1.20"
+  version: "1.24"
 ---
 
 # Project Docs
@@ -19,9 +19,9 @@ Everything lives in exactly one of four kinds of place:
    two-way into `docs/knowledge/`.
 3. **Visual work** (design records and the samples that go with them) →
    `docs/design/`, a **companion tree to `docs/knowledge/`**. Git-native
-   and never synced: the sync moves `.md` only, so a design record pushed
-   to the KB would publish its prose and leave every image behind as a
-   dead link. The to-ux skill owns it.
+   and never synced: it is mostly not prose - mockups, exports, a
+   directory per iteration - and what a reader looks up is the direction
+   it settled on, not the pile it came from. The to-ux skill owns it.
 4. **Machinery** (agent instructions, wiring rules, indexes, tooling
    state) → plain git files. `AGENTS.md` and `WIRING.md` at the repo
    root; doc-system notes and indexes at the `docs/` root. Never synced.
@@ -102,7 +102,7 @@ next sync pushes the resolution.
   Never `git mv` inside `docs/knowledge/` to reorganize - the sync moves
   files back and says so. The one exception: a NEW file's location
   chooses its parent section at birth. Names are ID-prefixed like
-  stories: `EVO-A-12_title-slug.md`, section dirs `EVO-A-7_section-name/`.
+  stories: `PROJ-A-12_title-slug.md`, section dirs `PROJ-A-7_section-name/`.
 - **GitHub: structure flows up.** The wiki has no hierarchy UI, so the
   local tree owns the layout - reorganize by moving files locally and
   the wiki's page names and generated sidebar follow. Wiki UI edits are
@@ -178,7 +178,7 @@ in the file, tasks become stories; propose the split first.
 Start from the matching template in `assets/templates/`. Keep
 frontmatter to title/date only - never status/id fields; lifecycle
 state is the tracker's job. PRDs list their stories as tracker IDs
-(`EVO-123`, `#123`) and never contain acceptance criteria.
+(`PROJ-123`, `#123`) and never contain acceptance criteria.
 
 **`docs/README.md` is the front door** - a git-native guide to the
 whole system (template: `assets/templates/docs-guide.md`; create it
