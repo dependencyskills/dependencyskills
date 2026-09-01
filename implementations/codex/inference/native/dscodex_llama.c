@@ -37,6 +37,20 @@ void *dsc_load(const char *path, int n_ctx, int n_gpu_layers) {
     struct llama_context_params cp = llama_context_default_params();
     cp.n_ctx   = (unsigned) n_ctx;
     cp.n_batch = (unsigned) n_ctx;
+    // Flash attention OFF, deliberately. The default is AUTO, which enables it wherever the
+    // backend supports it, and a SIGSEGV inside `ggml_compute_forward_flash_attn_ext` killed a
+    // pass mid-summarise (#32). Three attempts failed to reproduce it - not a poison input, not
+    // the encoder sharing the process, not the context being used from another thread - so this
+    // removes the faulting kernel from the path rather than explaining it.
+    //
+    // Measured free: 300 summaries took 40.4s median with it disabled against 40.7s with it on,
+    // three runs each, where run-to-run variance was ten times the difference. That holds for a
+    // 270M model at a 2,048-token context; a larger model or a longer context is not measured,
+    // and is the thing to re-check if either changes.
+    //
+    // The encoder below is untouched and still opens with AUTO: the fault was in the generative
+    // path, and changing what has not been measured is how a second unexplained thing appears.
+    cp.flash_attn_type = LLAMA_FLASH_ATTN_TYPE_DISABLED;
 
     struct llama_context *ctx = llama_init_from_model(model, cp);
     if (!ctx) { llama_model_free(model); return NULL; }
