@@ -119,7 +119,7 @@ fun Application.codexModule(
 ) {
     install(Koin) {
         slf4jLogger(level = Level.ERROR)
-        modules(codexRuntimeModule(store))
+        modules(codexRuntimeModule(store, recordUse = config.usage.record))
     }
 
     // Resolved here rather than per request. `createdAtStart` already opened them; this is what
@@ -183,6 +183,36 @@ fun Application.codexModule(
                 "ok ${if (vectors.get() == null) "lexical" else "vector"} " +
                     "pending=${indexing.pending()} indexing=${indexing.isRunning}" +
                         if (indexing.isPaused) " paused" else "",
+            )
+        }
+
+        // What has actually been asked of this codex (#33), for the person whose machine it is.
+        //
+        // A SUMMARY, never the queries themselves. The need text is the most revealing thing the
+        // service holds — it describes what somebody is building, in their own words — so it is
+        // counted here and never rendered. The two questions this answers are the ones RAD-0064
+        // says decide how much of the index is worth generating: which libraries are ever asked
+        // about, and how often a query comes back with nothing.
+        get("/usage") {
+            val record = getKoin().getOrNull<UseRecord>()
+            if (record == null) {
+                call.respondText("recording is off — set [usage] record = true in config.toml\n")
+                return@get
+            }
+            val s = record.summary()
+            call.respondText(
+                buildString {
+                    appendLine("searches            ${s.searches}")
+                    appendLine("  matched nothing   ${s.answeredNothing}   (the corpus had nothing)")
+                    appendLine("  nothing indexed   ${s.nothingIndexed}   (says nothing about the corpus)")
+                    appendLine("  answered lexically ${s.lexicalFallback}  (no vector index ranked these)")
+                    appendLine("gets                ${s.gets}")
+                    appendLine("  after a search    ${s.getsAfterSearch}   (a proxy for a result being used)")
+                    appendLine()
+                    appendLine("libraries an answer came from, most asked first:")
+                    if (s.askedAbout.isEmpty()) appendLine("  (none yet)")
+                    s.askedAbout.forEach { (coordinate, n) -> appendLine("  %-6d %s".format(n, coordinate)) }
+                },
             )
         }
 

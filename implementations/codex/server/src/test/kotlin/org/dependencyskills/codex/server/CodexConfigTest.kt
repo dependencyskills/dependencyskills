@@ -88,4 +88,24 @@ class CodexConfigTest {
         assertEquals(store.parent, CodexConfig.file(store).parent)
         assertTrue(CodexConfig.file(store).fileName.toString() == CodexConfig.FILE_NAME)
     }
+
+    @Test
+    fun `recording what was asked is on by default, and can be turned off`() {
+        // On by default is a deliberate call: the record never leaves the machine, and a default
+        // of off would mean the questions it exists to answer stay unanswered everywhere nobody
+        // went looking for a setting. Turning it off must still be one line.
+        assertTrue(CodexConfig.load(store()).usage.record, "recording is on unless asked otherwise")
+
+        val store = store()
+        CodexConfig.file(store).writeText(
+            """
+            [usage]
+            record = false
+            """.trimIndent(),
+        )
+        assertFalse(CodexConfig.load(store).usage.record)
+        // And nothing else moves with it.
+        assertEquals(1, CodexConfig.load(store).indexing.concurrency)
+        assertEquals("127.0.0.1", CodexConfig.load(store).server.host)
+    }
 }

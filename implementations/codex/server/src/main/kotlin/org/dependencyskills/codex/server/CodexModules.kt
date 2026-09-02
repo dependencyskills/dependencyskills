@@ -32,7 +32,14 @@ fun storeFile(): Path =
  * Closing is not the container's job here. It happens on Ktor's `ApplicationStopped`, so the store
  * is released exactly when the server that was serving from it stops.
  */
-fun codexRuntimeModule(store: Path = storeFile()): Module = module {
+fun codexRuntimeModule(
+    store: Path = storeFile(),
+    /**
+     * Whether queries are recorded (#33). Off leaves the record unregistered rather than
+     * registering one that does nothing, so nothing can accidentally write to it.
+     */
+    recordUse: Boolean = true,
+): Module = module {
     single<Codex>(createdAtStart = true) { Codex.open(store) }
 
     // Always registered, even when there is no index yet: a store that has been harvested but not
@@ -41,6 +48,13 @@ fun codexRuntimeModule(store: Path = storeFile()): Module = module {
     // that indexed something five minutes later.
     single(createdAtStart = true) { VectorIndex(store) }
 
+    // The usage record, when it is on. Registered as nullable and injected with `getOrNull`, so
+    // a machine with recording off — or one where the file could not be opened — runs the same
+    // code path with no record rather than a second branch through the query door.
+    if (recordUse) {
+        single<UseRecord?>(createdAtStart = true) { UseRecord.open(store) }
+    }
+
     // A new one every time it is asked for, over the singletons above.
-    factory { (scope: ProjectScope) -> CodexQueries(get(), scope, get<VectorIndex>().get()) }
+    factory { (scope: ProjectScope) -> CodexQueries(get(), scope, get<VectorIndex>().get(), getOrNull()) }
 }

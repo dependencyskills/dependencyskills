@@ -36,6 +36,14 @@ class CodexQueries(
      * something has to build it — and answering lexically is what this could always do.
      */
     private val vectors: VectorSearch? = null,
+    /**
+     * What was asked, recorded locally (#33).
+     *
+     * Null when recording is off or the file could not be opened, and every call site treats that
+     * as ordinary — a codex that cannot write a usage file must still answer, because the answers
+     * are the product and the record is a measurement about them.
+     */
+    private val use: UseRecord? = null,
 ) {
 
     /**
@@ -88,8 +96,25 @@ class CodexQueries(
         // harvested and what has no source. Those three are properties of the store and are the
         // same answer either way, so only the candidate list changes.
         val ranked = vectors?.let { search -> byVector(search, need, bounded) }
+        val candidates = ranked ?: results.hits.map { it.entry.toCandidate() }
+        // Recorded here rather than at the route, so every caller of this door is counted and a
+        // new transport cannot quietly skip it.
+        use?.search(
+            project = scope.source,
+            need = need,
+            scopeSize = scope.coordinates.size,
+            candidates = candidates.size,
+            notHarvested = results.notHarvested.size,
+            // Lexical covers both reasons the vector index did not rank: there is no index, and
+            // there is one that could not answer. Worth knowing as one number — a store answering
+            // lexically is answering worse, whichever of the two put it there.
+            ranking = if (ranked != null) UseRecord.Ranking.Vector else UseRecord.Ranking.Lexical,
+            coordinates = candidates.flatMap { c -> c.libraries }
+                .mapNotNull { l -> scope.coordinates.firstOrNull { it.value == l } }
+                .toSet(),
+        )
         return Answer(
-            candidates = ranked ?: results.hits.map { it.entry.toCandidate() },
+            candidates = candidates,
             searched = results.searched.size,
             notHarvested = results.notHarvested.size,
             noSource = results.noSource.size,
@@ -116,10 +141,19 @@ class CodexQueries(
      */
     fun get(symbol: String): Candidate? {
         if (symbol.isBlank() || scope.isEmpty) return null
-        return scope.coordinates.asSequence()
+        val found = scope.coordinates.asSequence()
             .flatMap { codex.entriesOf(it).asSequence() }
             .firstOrNull { it.symbol == symbol }
             ?.toCandidate()
+        use?.get(
+            project = scope.source,
+            symbol = symbol,
+            found = found != null,
+            coordinates = found?.libraries.orEmpty()
+                .mapNotNull { l -> scope.coordinates.firstOrNull { it.value == l } }
+                .toSet(),
+        )
+        return found
     }
 
     /**

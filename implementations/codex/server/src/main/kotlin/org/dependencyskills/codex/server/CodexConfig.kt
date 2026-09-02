@@ -28,6 +28,7 @@ import java.nio.file.Path
 data class CodexConfig(
     val server: ServerSettings = ServerSettings(),
     val indexing: IndexingSettings = IndexingSettings(),
+    val usage: UsageSettings = UsageSettings(),
 ) {
     companion object {
         const val FILE_NAME = "config.toml"
@@ -60,6 +61,22 @@ data class CodexConfig(
         }
     }
 }
+
+/**
+ * Whether to record what was asked (#33).
+ *
+ * **On by default, and that is a deliberate call rather than an oversight.** The record never
+ * leaves the machine — it is a file beside the store that no tool serves and no code path sends
+ * anywhere — and without it nobody can answer which libraries are ever asked about or which
+ * queries come back with nothing. A default of off would mean the questions stay unanswered on
+ * every machine that did not go looking for a setting.
+ *
+ * Set `record = false` under `[usage]` in `config.toml` to turn it off. Nothing else changes: the
+ * queries answer exactly the same.
+ */
+data class UsageSettings(
+    val record: Boolean = true,
+)
 
 data class ServerSettings(
     /**
