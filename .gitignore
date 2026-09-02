@@ -60,6 +60,14 @@ experiments/test21/bytecode-identifiers.json
 # the same rule as the corpus DB and the packed transcripts.
 experiments/test22/evasions.json
 
+# test28 — raw scores and, more to the point, ninety model outputs that quote the payload
+# identifiers back. Same rule as test0: the payload DEFINITIONS are committed because a result
+# nobody can reproduce is not a result, and everything a run produced is packed or left out.
+# A tarball is not secrecy; it stops a file of working payloads being the plainest text in a
+# public repository that agents read.
+experiments/test28/results-*.json
+experiments/test28/__pycache__/
+
 local.properties
 
 # JVM crash dumps: they carry absolute paths and full command lines.
