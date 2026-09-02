@@ -40,7 +40,14 @@ import java.util.concurrent.TimeUnit
  */
 class Indexer(
     private val store: Path,
-    private val generator: TextGenerator,
+    /**
+     * The summariser, or null when this machine has no generative model configured.
+     *
+     * Nullable because #28's bytecode path never summarises anything: a library that publishes no
+     * sources yields a signature and no prose, so it can be indexed with no model at all. Making
+     * this required left that path unreachable on exactly the machine it exists for.
+     */
+    private val generator: TextGenerator?,
     private val generatorName: String,
     private val encoder: TextEncoder,
     private val encoderName: String,
@@ -125,7 +132,7 @@ class Indexer(
         // directory lock, so a writer per coordinate would both cost more and make concurrency
         // impossible. Committed after each coordinate, so a pass killed half way keeps what it did.
         return TwoFacedIndex.open(vectors, encoderName, encoder.pooling, encoder.dimensions).use { index ->
-            val serialised = Serialised(generator)
+            val serialised = generator?.let { Serialised(it) }
             val results = java.util.Collections.synchronizedList(mutableListOf<Outcome>())
             val pool = Executors.newFixedThreadPool(concurrency.coerceAtLeast(1)) { r ->
                 Thread(r, "dscodex-index").apply { isDaemon = true }
@@ -157,12 +164,23 @@ class Indexer(
     }
 
     /** One coordinate, all the way through, into an index the pass owns. */
-    private fun index(coordinate: Coordinate, index: TwoFacedIndex, generator: TextGenerator): Outcome {
+    private fun index(coordinate: Coordinate, index: TwoFacedIndex, generator: TextGenerator?): Outcome {
         // No sources anywhere: fall through to the compiled jar rather than giving up on the
         // library for good (#28). This is the set that has nothing else to offer — a private
         // repository's artifacts most of all, which a build resolves with its own credentials and
         // which very often publish no sources at all.
         val jar = sources.acquire(coordinate) ?: return fromBytecode(coordinate, index)
+
+        // Sources exist but nothing can summarise them. Left PENDING rather than Failed or
+        // NoSource: both of those are terminal in their own way, and this coordinate is neither
+        // broken nor sourceless — it is waiting for a model that may be configured tomorrow.
+        if (generator == null) {
+            sources.release(jar)
+            return Outcome(
+                coordinate, HarvestState.Pending,
+                detail = "waiting for a generative model to summarise its prose",
+            )
+        }
 
         return try {
             pipeline(coordinate, jar.path, index, generator)
