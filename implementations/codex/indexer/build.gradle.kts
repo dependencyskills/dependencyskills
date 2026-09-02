@@ -35,4 +35,29 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
 }
 
-tasks.withType<Test>().configureEach { useJUnitPlatform() }
+// A real published CLASSES jar, for the bytecode fallback of #28. Resolved into the ordinary
+// Gradle cache and read from there — a hand-built jar would test the routing against bytecode
+// this repository wrote, which is the one input guaranteed not to surprise it.
+val fixtures: Configuration by configurations.creating {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+    isTransitive = false
+}
+
+dependencies {
+    fixtures("org.slf4j:slf4j-api:2.0.17@jar")
+    // Its sources too, so the routing test can prove a library that HAS sources never falls
+    // through to the bytecode path.
+    fixtures("org.slf4j:slf4j-api:2.0.17:sources@jar")
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+    val fixtureFiles = fixtures.incoming.files
+    inputs.files(fixtureFiles).withPropertyName("fixtures")
+    jvmArgumentProviders.add(
+        CommandLineArgumentProvider {
+            listOf("-Dcodex.indexer.fixtures=" + fixtureFiles.joinToString(File.pathSeparator))
+        }
+    )
+}

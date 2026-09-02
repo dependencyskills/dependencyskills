@@ -263,4 +263,44 @@ class CodexQueriesTest {
             assertNull(queries.get("com.example.acme.theirs"))
         }
     }
+
+    // -- entries with no prose (#28) ------------------------------------------------------------
+
+    @Test
+    fun `a bytecode entry is findable and returns its signature, with no prose invented`() {
+        // A library that publishes no sources is indexed from its compiled jar, producing a
+        // symbol and a signature and nothing else. The whole value is that a caller can still
+        // find it and read the declaration — a signature with no prose is worth far more than
+        // no entry at all, and it is what answers "does this library already do this".
+        store().use { codex ->
+            codex.put(acme, listOf(
+                NewEntry(
+                    symbol = "com.example.acme.Parser.parse",
+                    signature = "public java.time.Instant parse(java.lang.String)",
+                    doc = "",
+                    lang = "jvm-bytecode",
+                    docFormat = "none",
+                    provenance = Provenance(extractor = "asm-classes-jar/1"),
+                    rewrite = null,
+                    state = EntryState.Degraded,
+                )
+            ))
+            val queries = CodexQueries(codex, ProjectScope.of(acme))
+
+            val got = assertNotNull(queries.get("com.example.acme.Parser.parse"))
+            assertEquals("public java.time.Instant parse(java.lang.String)", got.signature)
+            // No prose exists, and none is substituted from anywhere. The absence IS the state,
+            // and it is reported rather than papered over — a caller can see it is a signature
+            // only, instead of mistaking silence for a library that does nothing interesting.
+            assertNull(got.capability, "a degraded entry has no prose to return")
+            assertTrue(got.degraded, "and it says so")
+
+            // And it is reachable by need, not only by exact symbol.
+            val found = queries.search("parse")
+            assertTrue(
+                found.candidates.any { it.symbol == "com.example.acme.Parser.parse" },
+                "a degraded entry must remain findable",
+            )
+        }
+    }
 }

@@ -74,6 +74,14 @@ data class HarvestReport(
      */
     val visibilityUnknown: Int,
     /**
+     * Declarations refused because the identifier itself reads as prose (#28).
+     *
+     * Separate from every other discard count, and reported, because a library attacking this
+     * must not be recorded as merely empty. A jar whose names were rejected and a jar with
+     * nothing to index are different facts about different libraries.
+     */
+    val refusedNames: Int = 0,
+    /**
      * Kotlin source-set roots found at the top of the archive — `commonMain`, `jvmMain`,
      * `appleMain`. Empty for a package-rooted jar, which is what a plain JVM library publishes.
      * This is what distinguishes a multiplatform publication, and it costs nothing: the archive

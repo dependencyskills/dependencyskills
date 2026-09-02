@@ -27,6 +27,10 @@ dependencies {
     // that a Maven plugin or a CLI can embed it, and the platform API arrived in 24.
     implementation("org.ow2.asm:asm:9.10.1")
     implementation("org.ow2.asm:asm-tree:9.10.1")
+    // TraceSignatureVisitor renders a generic signature attribute back into declaration text,
+    // so `List<String>` does not come out as `List`. Writing that visitor by hand is the kind of
+    // thing that looks small and then meets wildcards and bounded type parameters.
+    implementation("org.ow2.asm:asm-util:9.10.1")
 
     // Kotlin `internal` compiles to public with the module name appended, so it looks reachable
     // in both source and bytecode. Nothing but the metadata says otherwise.

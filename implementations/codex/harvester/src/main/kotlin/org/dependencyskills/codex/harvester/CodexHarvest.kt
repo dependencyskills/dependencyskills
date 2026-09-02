@@ -33,6 +33,31 @@ fun Codex.harvest(
 }
 
 /**
+ * Harvests one *compiled* jar into the store, for a coordinate that publishes no sources (#28).
+ *
+ * The same seam as [harvest] above and for the same reason. What differs is only which harvester
+ * reads which artifact: the entries this writes are [org.dependencyskills.codex.core.EntryState]
+ * `Degraded` — a symbol and a signature, with no prose and nothing summarised.
+ *
+ * **A fallback, never a supplement.** The caller reaches this only when there are no sources, so
+ * one coordinate can never carry both a summarised entry and a bare signature for one symbol.
+ */
+fun Codex.harvestBytecode(
+    coordinate: Coordinate,
+    jar: Path,
+    harvester: BytecodeHarvester = BytecodeHarvester(),
+): HarvestResult {
+    seen(coordinate)
+    val result = harvester.harvest(jar)
+    when (result) {
+        is HarvestResult.Harvested -> put(coordinate, result.entries)
+        is HarvestResult.NoSource -> harvestState(coordinate, HarvestState.NoSource)
+        is HarvestResult.Failed -> harvestState(coordinate, HarvestState.Failed)
+    }
+    return result
+}
+
+/**
  * Records that a coordinate publishes no sources artifact at all, so nothing was read.
  *
  * The caller that resolves coordinates to files needs this: "the repository has no

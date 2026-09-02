@@ -6,7 +6,10 @@ import org.dependencyskills.codex.core.Codex
 import org.dependencyskills.codex.core.Coordinate
 import org.dependencyskills.codex.core.EntryState
 import org.dependencyskills.codex.core.HarvestState
+import org.dependencyskills.codex.harvester.BytecodeHarvester
 import org.dependencyskills.codex.harvester.ClassFileVisibility
+import org.dependencyskills.codex.harvester.HarvestResult
+import org.dependencyskills.codex.harvester.harvestBytecode
 import org.dependencyskills.codex.harvester.SourcesJarHarvester
 import org.dependencyskills.codex.harvester.VisibilityOracle
 import org.dependencyskills.codex.harvester.harvest
@@ -50,6 +53,14 @@ class Indexer(
      */
     private val sources: SourcesSupplier,
     /**
+     * Where the COMPILED jar is, for a coordinate that publishes no sources (#28).
+     *
+     * Injected for the same reason [sources] is: it is the other thing that reaches outside, and
+     * a test needs to route a coordinate down the bytecode path without a populated cache.
+     * Returning null is ordinary — this machine simply has neither artifact.
+     */
+    private val classes: (Coordinate) -> Path? = SourcesInCache::classes,
+    /**
      * How many coordinates are in flight. **Not** how many model loads.
      *
      * Above one this does not make summarising parallel — a generator holds a llama.cpp context
@@ -84,6 +95,12 @@ class Indexer(
         val detail: String? = null,
         /** Declarations the compiled artifact said no consumer can reach, and which were dropped. */
         val notReachable: Int = 0,
+        /**
+         * Identifiers refused because the name itself read as prose (#28).
+         *
+         * Reported so a library attacking this is distinguishable from one that was merely empty.
+         */
+        val refusedNames: Int = 0,
         /**
          * Declarations kept because no compiled artifact was on this machine to judge them.
          *
@@ -141,14 +158,11 @@ class Indexer(
 
     /** One coordinate, all the way through, into an index the pass owns. */
     private fun index(coordinate: Coordinate, index: TwoFacedIndex, generator: TextGenerator): Outcome {
-        val jar = sources.acquire(coordinate)
-            ?: return Codex.open(store).use {
-                // Nothing on this machine has downloaded them. Recorded so it is not re-attempted
-                // on every pass, and so #28 can find these coordinates when bytecode indexing
-                // exists — it is exactly this set that has nothing else to offer.
-                it.harvestState(coordinate, HarvestState.NoSource)
-                Outcome(coordinate, HarvestState.NoSource, detail = "no sources jar in the cache or on Central")
-            }
+        // No sources anywhere: fall through to the compiled jar rather than giving up on the
+        // library for good (#28). This is the set that has nothing else to offer — a private
+        // repository's artifacts most of all, which a build resolves with its own credentials and
+        // which very often publish no sources at all.
+        val jar = sources.acquire(coordinate) ?: return fromBytecode(coordinate, index)
 
         return try {
             pipeline(coordinate, jar.path, index, generator)
@@ -156,6 +170,66 @@ class Indexer(
             // Only what we fetched. A jar found in the build's cache is left exactly where it was.
             sources.release(jar)
         }
+    }
+
+    /**
+     * Indexes a coordinate from its compiled classes, because it publishes no sources (#28).
+     *
+     * **Nothing is fetched.** The jar is read from the build's own cache, where it must already be
+     * for the project to have compiled — which is exactly why this works for a private repository
+     * whose credentials live in the build and not here.
+     *
+     * **The summariser is never called.** There is no prose to rewrite, and pointing a generative
+     * model at a signature would hand it attacker-controlled text with nothing to paraphrase. The
+     * classifier is skipped for the same reason: it scores documentation, and there is none.
+     */
+    private fun fromBytecode(coordinate: Coordinate, index: TwoFacedIndex): Outcome {
+        val compiled = classes(coordinate)
+            ?: return Codex.open(store).use {
+                it.harvestState(coordinate, HarvestState.NoSource)
+                Outcome(coordinate, HarvestState.NoSource, detail = "no sources and no classes on this machine")
+            }
+
+        var entries = 0
+        var indexed = 0
+        var refused = 0
+        val result = Codex.open(store).use { codex ->
+            codex.harvestBytecode(coordinate, compiled, BytecodeHarvester())
+        }
+        when (result) {
+            is HarvestResult.Failed ->
+                return Outcome(coordinate, HarvestState.Failed, detail = result.reason)
+            is HarvestResult.NoSource ->
+                return Outcome(coordinate, HarvestState.NoSource, detail = result.reason)
+            is HarvestResult.Harvested -> {
+                entries = result.entries.size
+                refused = result.report.refusedNames
+            }
+        }
+
+        // Embedded on the SIGNATURE, which is all a degraded entry has. The documentation face of
+        // a summarised entry carries its prose; here that face carries the declaration itself, so
+        // the entry is still findable rather than being an unreachable row in the store.
+        Codex.open(store).use { codex ->
+            codex.entriesOf(coordinate).forEach { entry ->
+                if (entry.state != EntryState.Degraded) return@forEach
+                index.add(
+                    entry.id,
+                    entry.coordinates,
+                    encoder.embed(keyText(entry.symbol, entry.signature)),
+                    null,          // no rewrite exists, and none is invented
+                )
+                indexed++
+            }
+        }
+        index.commit()
+
+        Codex.open(store).use { it.harvestState(coordinate, HarvestState.Indexed) }
+        return Outcome(
+            coordinate, HarvestState.Indexed, entries = entries, indexed = indexed,
+            refusedNames = refused,
+            detail = "from bytecode: no sources published",
+        )
     }
 
     private fun pipeline(

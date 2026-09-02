@@ -216,6 +216,15 @@ class IndexingService(
                                     outcome.coordinate, outcome.visibilityUnknown,
                                 )
                             }
+                            // A library whose identifiers were refused must not read as a library
+                            // that merely had nothing in it. Said at WARN because a name long
+                            // enough to be refused is either generated code or an attempt.
+                            if (outcome.refusedNames > 0) {
+                                logger.warn(
+                                    "{} identifiers in {} were refused as too long to be names",
+                                    outcome.refusedNames, outcome.coordinate,
+                                )
+                            }
                         }
                         HarvestState.NoSource -> {
                             noSource++

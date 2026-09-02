@@ -68,20 +68,20 @@ class ClassFileVisibility private constructor(
             } catch (e: java.io.IOException) {
                 return null
             }
-            return zip.use { build(it) }
+            return zip.use { from(classesIn(it)) }
         }
 
-        private fun build(zip: ZipFile): ClassFileVisibility? {
-            val classes = LinkedHashMap<String, Compiled>()
-            // The InnerClasses attribute of ANY class may describe a nesting relation, so these
-            // are collected across the whole archive before anything is resolved. A nested class
-            // does not reliably carry its own outer name; the outer one names it.
-            val outerOf = HashMap<String, String>()
-            val nestedAccess = HashMap<String, Int>()
-
-            for (entry in zip.entries()) {
-                if (entry.isDirectory || !entry.name.endsWith(".class")) continue
-                val node = try {
+        /**
+         * Every readable class in the archive, parsed once.
+         *
+         * Exposed so a caller that also needs the classes — the bytecode harvest of #28 reads the
+         * same jar for its content — can share this pass instead of parsing every class file a
+         * second time to ask a different question of it.
+         */
+        fun classesIn(zip: ZipFile): List<ClassNode> = zip.entries().asSequence()
+            .filter { !it.isDirectory && it.name.endsWith(".class") }
+            .mapNotNull { entry ->
+                try {
                     ClassNode().also {
                         zip.getInputStream(entry).use { input ->
                             ClassReader(input).accept(
@@ -93,8 +93,41 @@ class ClassFileVisibility private constructor(
                 } catch (e: Exception) {                                   // noqa: BLE001
                     // A class file this ASM cannot read is one declaration unaccounted for, not
                     // a reason to abandon the artifact and lose every other answer in it.
-                    continue
+                    null
                 }
+            }
+            .toList()
+
+        /**
+         * Which class encloses which, from the `InnerClasses` attributes across the whole archive.
+         *
+         * Collected from every class rather than from each class about itself: a nested class does
+         * not reliably carry its own outer name, but the outer one names it.
+         */
+        internal fun outerNames(nodes: List<ClassNode>): Map<String, String> {
+            val outerOf = HashMap<String, String>()
+            for (node in nodes) {
+                for (inner in node.innerClasses.orEmpty()) {
+                    // outerName is null for local and anonymous classes, which no source symbol
+                    // names and which are therefore left out entirely.
+                    if (inner.outerName != null && inner.innerName != null) {
+                        outerOf[inner.name] = inner.outerName
+                    }
+                }
+            }
+            return outerOf
+        }
+
+        /** Builds the oracle from an already-parsed archive. */
+        fun from(nodes: List<ClassNode>): ClassFileVisibility? {
+            val classes = LinkedHashMap<String, Compiled>()
+            // The InnerClasses attribute of ANY class may describe a nesting relation, so these
+            // are collected across the whole archive before anything is resolved. A nested class
+            // does not reliably carry its own outer name; the outer one names it.
+            val outerOf = HashMap<String, String>()
+            val nestedAccess = HashMap<String, Int>()
+
+            for (node in nodes) {
                 classes[node.name] = Compiled(node)
                 for (inner in node.innerClasses.orEmpty()) {
                     // outerName is null for local and anonymous classes: they are nested, and
@@ -173,7 +206,7 @@ class ClassFileVisibility private constructor(
          *
          * Returns null for a local or anonymous class, which no source symbol names.
          */
-        private fun dottedName(binary: String, outerOf: Map<String, String>): String? {
+        internal fun dottedName(binary: String, outerOf: Map<String, String>): String? {
             var current = binary
             val parts = ArrayDeque<String>()
             val seen = HashSet<String>()
