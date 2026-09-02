@@ -152,6 +152,67 @@ class BytecodeFallbackTest {
     }
 
     @Test
+    fun `bytecode is indexed with no generative model at all, and sources wait for one`() {
+        // Found by running the real service rather than by reading the code. The pass used to
+        // refuse to start without a generative model, which left this whole path unreachable on
+        // exactly the machine it exists for — one with no model set up, where a signature with no
+        // prose is the only thing on offer. Nothing here summarises, so nothing here needs a model.
+        val work = createTempDirectory("nomodel")
+        val models = NeverSummarises()
+        Codex.open(work.resolve("codex.db")).use { it.seen(acme) }
+
+        val outcomes = mutableListOf<Indexer.Outcome>()
+        Indexer(
+            store = work.resolve("codex.db"),
+            generator = null, generatorName = "none",          // no model configured
+            encoder = models, encoderName = "test-encoder",
+            vectors = work.resolve("vectors"),
+            sources = SourcesSupplier(
+                staging = work.resolve("staging"),
+                cache = { null }, download = { _, _ -> false },
+            ),
+            classes = { classesJar },
+        ).run { outcomes.add(it) }
+
+        val outcome = assertNotNull(outcomes.firstOrNull { it.coordinate == acme })
+        assertEquals(HarvestState.Indexed, outcome.state, "bytecode needs no summariser")
+        assertTrue(outcome.entries > 0)
+    }
+
+    @Test
+    fun `a sources library waits for a model rather than failing or being written off`() {
+        // Pending, not Failed and not NoSource. Both of those are terminal in their own way, and
+        // this coordinate is neither broken nor sourceless — it is waiting for a model somebody
+        // may configure tomorrow, and a terminal state would mean no later pass ever looks again.
+        val work = createTempDirectory("waiting")
+        val models = NeverSummarises()
+        Codex.open(work.resolve("codex.db")).use { it.seen(acme) }
+
+        val outcomes = mutableListOf<Indexer.Outcome>()
+        Indexer(
+            store = work.resolve("codex.db"),
+            generator = null, generatorName = "none",
+            encoder = models, encoderName = "test-encoder",
+            vectors = work.resolve("vectors"),
+            sources = SourcesSupplier(
+                staging = work.resolve("staging"),
+                cache = { sourcesJar }, download = { _, _ -> false },
+            ),
+            classes = { classesJar },
+        ).run { outcomes.add(it) }
+
+        val outcome = assertNotNull(outcomes.firstOrNull { it.coordinate == acme })
+        assertEquals(HarvestState.Pending, outcome.state)
+        assertEquals(0, models.embedded, "nothing was indexed, so nothing was embedded")
+        Codex.open(work.resolve("codex.db")).use { codex ->
+            assertTrue(
+                codex.entriesOf(acme).none { it.provenance.extractor == "asm-classes-jar/1" },
+                "a library with sources must not be quietly downgraded to bytecode",
+            )
+        }
+    }
+
+    @Test
     fun `no sources and no classes stays NoSource, so it is not retried for ever`() {
         val work = createTempDirectory("neither")
         val models = NeverSummarises()

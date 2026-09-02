@@ -62,6 +62,10 @@ dependencies {
     runtimeOnly(project(mapOf("path" to ":encoder", "configuration" to "encoderArtifact")))
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
+    // The HTTP surface had no test at all — every route was a thin render nobody exercised, which
+    // is how /usage nearly shipped unverified. testApplication runs the real module in-process,
+    // so what is asserted is the routes as installed rather than a rehearsal of them.
+    testImplementation("io.ktor:ktor-server-test-host:3.5.2")
 }
 
 // The service is the entry point. The stdio transport is still built and still runnable - see

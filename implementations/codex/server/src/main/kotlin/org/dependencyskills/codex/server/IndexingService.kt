@@ -163,16 +163,22 @@ class IndexingService(
             logger.warn("no packaged encoder on the classpath; nothing can be indexed")
             return
         }
+        // No generative model is NOT a reason to skip the pass, and treating it as one was a
+        // real defect: #28 indexes a library that publishes no sources straight from its
+        // bytecode, and that path never summarises anything. Bailing out here left the fallback
+        // unreachable on exactly the machine it exists for — one with no model set up, where a
+        // signature with no prose is the only thing on offer.
+        //
+        // Still said plainly, because a service that quietly indexes nothing looks exactly like
+        // one that is working.
         val generativeModel = config.model
         if (generativeModel == null) {
-            // Said once, plainly. A service that quietly indexes nothing looks exactly like one
-            // that is working, and this is the single most likely reason for it.
             logger.warn(
-                "no generative model configured, so {} coordinates cannot be summarised — " +
-                    "set indexing.model in the config to index them",
+                "no generative model configured — {} coordinates cannot be summarised; any that " +
+                    "publish no sources will still be indexed from bytecode. Set indexing.model " +
+                    "in the config to summarise the rest",
                 pending(),
             )
-            return
         }
 
         val started = System.nanoTime()
@@ -191,7 +197,7 @@ class IndexingService(
                 Indexer(
                     store = store,
                     generator = generator,
-                    generatorName = Path.of(generativeModel).fileName.toString(),
+                    generatorName = generativeModel?.let { Path.of(it).fileName.toString() } ?: "none",
                     encoder = encoder,
                     encoderName = packaged.name,
                     vectors = store.resolveSibling(VECTORS),
@@ -252,9 +258,11 @@ class IndexingService(
     }
 
     /** Opens the models, or returns the ones already held. */
-    private fun models(generativeModel: String, encoderModel: String, pooling: org.dependencyskills.codex.inference.Pooling):
-        Pair<TextGenerator, TextEncoder> = synchronized(models) {
-        val generator = heldGenerator ?: openGenerator(generativeModel, contextTokens = 2048)
+    private fun models(generativeModel: String?, encoderModel: String, pooling: org.dependencyskills.codex.inference.Pooling):
+        Pair<TextGenerator?, TextEncoder> = synchronized(models) {
+        // Null when nothing is configured. The encoder is always opened — embedding is what makes
+        // an entry findable, and a degraded entry needs it just as much as a summarised one.
+        val generator = heldGenerator ?: generativeModel?.let { openGenerator(it, contextTokens = 2048) }
         val encoder = heldEncoder ?: openEncoder(encoderModel, pooling)
         // Always held once open. What differs is when they are let go: the idle sweeper releases
         // them unless `keepModelResident`, and nothing else does. One owner, one policy.
