@@ -130,6 +130,41 @@ class VisibilityTest {
         assertTrue(kept.signature.contains("->"), "the fixture should be a lambda-taking function")
     }
 
+    // -- one rule, both paths (#28) -------------------------------------------------------------
+
+    @Test
+    fun `the sources path and the bytecode path never disagree about what is reachable`() {
+        // #30's Notes opened on this risk: two paths deciding visibility separately would make a
+        // library's API depend on which artifact happened to be indexed. They share one oracle, and
+        // this is what says so.
+        //
+        // The entry SETS are deliberately not compared. The sources path keeps only declarations
+        // that carry a doc comment — 229 of them here — while the bytecode path keeps everything a
+        // consumer can reach, 658. That difference is by design. What must never differ is the
+        // reachability verdict on a symbol both paths saw.
+        val oracle = assertNotNull(ClassFileVisibility.of(Fixtures.javaClasses))
+        val fromSources = harvestOf(Fixtures.javaSources, Fixtures.javaClasses).entries.map { it.symbol }.toSet()
+        val fromBytecode = assertIs<HarvestResult.Harvested>(BytecodeHarvester().harvest(Fixtures.javaClasses))
+            .entries.map { it.symbol }.toSet()
+
+        // Everything the sources path kept, the bytecode path also considers reachable. Symbols the
+        // oracle has no opinion about are excluded: those are declarations with no compiled
+        // counterpart, which is a fact about the artifacts rather than a disagreement — see #35.
+        val judged = fromSources.filter { oracle.reach(it) != Reach.Unknown }
+        assertTrue(judged.isNotEmpty(), "the fixture should have symbols both paths can see")
+        judged.forEach {
+            assertTrue(it in fromBytecode, "$it survived the sources path but not the bytecode path")
+        }
+
+        // And nothing the sources path refused as unreachable may appear from the bytecode path.
+        // This is the direction that would actually leak: a private member reappearing because the
+        // other extractor applied its own rule.
+        val blind = harvestOf(Fixtures.javaSources, null).entries.map { it.symbol }.toSet()
+        (blind - fromSources).forEach {
+            assertTrue(it !in fromBytecode, "$it is not callable, yet the bytecode path indexed it")
+        }
+    }
+
     // -- no artifact ---------------------------------------------------------------------------
 
     @Test
