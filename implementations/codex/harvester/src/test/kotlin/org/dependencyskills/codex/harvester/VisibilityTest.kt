@@ -174,7 +174,11 @@ class VisibilityTest {
         // an operator the rule is not running.
         val blind = harvestOf(Fixtures.javaSources, null)
         val filtered = harvestOf(Fixtures.javaSources, Fixtures.javaClasses)
-        assertEquals(0, blind.report.notReachable)
+        // Six, not zero: what a blind harvest keeps is everything the source does not mark in a
+        // word. These six say `private` outright, and no artifact was needed to know it. The
+        // point of the test is unchanged — nothing is GUESSED at, and the count still reports
+        // every entry that went unjudged.
+        assertEquals(6, blind.report.notReachable)
         assertEquals(blind.entries.size, blind.report.visibilityUnknown)
         assertTrue(
             filtered.entries.size < blind.entries.size,
@@ -185,5 +189,66 @@ class VisibilityTest {
     @Test
     fun `an artifact that is not a readable archive answers null rather than throwing`() {
         assertEquals(null, ClassFileVisibility.of(Fixtures.javaSources.resolveSibling("absent.jar")))
+    }
+
+    // -- the keyword, read only where no artifact can speak ------------------------------------
+
+    @Test
+    fun `an explicit keyword is believed`() {
+        listOf(
+            "private fun findSegmentSend(id: Long): ChannelSegment<E>?",
+            "internal interface HashFunction",
+            "internal abstract class DataProcessor : Closeable",
+            // No bytecode exists for either of these, in any artifact, by definition.
+            "internal expect class ValueTimeMarkReading",
+            "internal class FileSink( private val file: CPointer<FILE>, ) : Sink",
+            "private static final String API_COMPATIBILITY_LIST",
+        ).forEach {
+            assertTrue(SourcesJarHarvester.declaresNonPublic(it), "should be screened: $it")
+        }
+    }
+
+    @Test
+    fun `a public declaration is kept however its innards are marked`() {
+        // The trap. Each of these contains the word `private` or `internal` somewhere, and every
+        // one of them is public API. A rule that searched the string, or allowed any word before
+        // the keyword, deletes the class.
+        listOf(
+            "public class Uuid private constructor( internal val bits: Long, ) : Comparable<Uuid>",
+            "var backing: Int private set",
+            "public final override fun <T> decodeFromString(deserializer: Deserializer<T>): T",
+            "@Deprecated(\"use the private overload\") public fun format(value: Int): String",
+            "protected open fun onAttach(): Unit",
+            "static void register(Handler h)",
+            "public fun buildClassSerialDescriptor(builder: ClassSerialDescriptorBuilder.() -> Unit)",
+        ).forEach {
+            assertTrue(!SourcesJarHarvester.declaresNonPublic(it), "should be kept: $it")
+        }
+    }
+
+    @Test
+    fun `the keyword is read before the oracle, because a family shares one verdict`() {
+        // A symbol carries no parameter types, so every overload of a name shares one — and one
+        // verdict. `kotlin.text.split` is five declarations, four public and one `private`, and
+        // the family resolves to Reachable; a screen consulted only after the oracle never sees
+        // the private one. That is #42 surfacing as a visibility leak, and the ordering closes it.
+        assertTrue(SourcesJarHarvester.declaresNonPublic(
+            "private fun CharSequence.split(delimiter: String, ignoreCase: Boolean, limit: Int): List<String>"
+        ))
+        // And the public members of that same family are untouched.
+        listOf(
+            "public fun CharSequence.split(vararg delimiters: String, ignoreCase: Boolean = false): List<String>",
+            "@kotlin.internal.InlineOnly public inline fun CharSequence.split(regex: Regex): List<String>",
+        ).forEach { assertTrue(!SourcesJarHarvester.declaresNonPublic(it), "should be kept: $it") }
+    }
+
+    @Test
+    fun `a judged harvest still keeps the public API`() {
+        val judged = harvestOf(Fixtures.kotlinSources, Fixtures.kotlinClasses)
+        assertEquals(0, judged.report.visibilityUnknown, "the oracle answered for everything here")
+        assertTrue(
+            "kotlinx.serialization.descriptors.buildClassSerialDescriptor" in judged.entries.map { it.symbol },
+            "public API must survive a judged harvest",
+        )
     }
 }

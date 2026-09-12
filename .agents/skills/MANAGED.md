@@ -10,9 +10,9 @@ lost, silently, at the next run.
 |---|---|
 | story-workflow | 1.24 |
 | story-reconcile | 0.30 |
-| to-issues | 1.15 |
+| to-issues | 1.16 |
 | triage | 1.27 |
-| project-docs | 1.24 |
+| project-docs | 1.31 |
 | to-prd | 1.5 |
 | to-adr | 1.3 |
 | to-rad | 1.4 |

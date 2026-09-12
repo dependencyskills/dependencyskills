@@ -69,6 +69,29 @@ A report and a statistic are the same shape: *asked X, got Y, Y was wrong*. One 
 
 But a report endpoint is a **write path from an agent into the store**, and this project deliberately holds a trust boundary there — see RAD-0062 on identifiers that cannot be rewritten. Reports must land quarantined as claims, attributed and never merged into served content without review. Anything less makes the report endpoint the cleanest way to poison the codex, arriving through the mechanism meant to improve it.
 
+### Correction, 2026-09-04: the enumeration was never the thing to remove
+
+This RAD framed the choice as overview *versus* index, and recommended that generation draw on the harvested entries "as source material rather than emitting them". That opposition is wrong, and the counter-evidence is in [RAD-0065](RAD-0065-what-v1-skill-authors-wrote-unprompted.md), which this RAD cites without reading it this way.
+
+A hand-written skill does enumerate. It enumerates a **collapsed** surface. The formatting library in that corpus has well over a hundred public members; its skill names the shape once, as `T.formatReadable(locale: Locale, precision: Int): String`. Several skills in the corpus carry a section called *Key Functions* or *Key Components* outright. "Not one is an API listing" is true of the exhaustive form, and was allowed to stand for the broader claim that a skill does not enumerate its surface at all. It does.
+
+So the axis is not prose against symbols. It is **collapsed against instanced**. A per-entry index emits an instanced surface — one row per member, overloads included. A skill carries a collapsed one. The five body fields still hold; what was missed is that a capability section written well *is* an enumeration, and the specification's silence about listings is not a prohibition on naming the surface.
+
+### Collapse is mechanical where it matters most
+
+The recommendation below implies collapse waits on generation, and therefore on a capable model. For the largest and most wasteful case it does not.
+
+The bytecode path already carries the structure. `BytecodeSignatures.ofMethod` holds the owning `ClassNode`, `method.name` and `method.desc`, and `Type.getArgumentTypes` yields exact parameter types from the descriptor. An overload family is *same owner, same name* — a grouping, not an inference, and no model is involved in finding it.
+
+It is already more collapsed than that. `BytecodeHarvester` builds its symbol as the dotted owner plus the method name, with no parameter types, so **every member of an overload family produces the same symbol string**, differing only in `signature`. The family is not something to detect; it is a duplicate key already in the store.
+
+Two consequences follow, and one of them is a defect.
+
+- Collapsing an overload family in a search result is a group-by on a field that exists today. The four `debug()` rows behind #37 are one symbol repeated four times, spending four of ten result slots on a single shape.
+- `CodexQueries.get` resolves with `firstOrNull { it.symbol == symbol }`. So `get("org.slf4j.Logger.debug")` returns one arbitrary member of the family and never reports that the others exist — the same collapse arriving from the other side, unhandled.
+
+**What descriptor grouping does not buy.** #37 contains two failures that look like one. The four overloads are the mechanical half. The absent `isDebugEnabled` is not an overload — it is a guard idiom, a relationship between two differently-named members, and nothing in a descriptor implies it. That half is the relational content this RAD was actually about: the `kotlinx.serialization` default-value rule assembled from four symbols, the gson rename that is a relationship between two versions. Those need generation. Compressing an overload family does not, and the two should not be costed together.
+
 ## Findings
 
 **Measured.**
@@ -76,6 +99,8 @@ But a report endpoint is a **write path from an agent into the store**, and this
 - A single library runs to thousands of entries — 1,447 and 6,414 for the two indexed end to end — and summarization is the dominant cost in the pipeline.
 - The specification's five body fields contain no per-entry listing, and explicitly rank the non-signature content highest.
 - A published library's own authored skill, where one exists, is in the binary jar and never in the sources jar — see RAD-0065. The current transport cannot see it.
+- The bytecode path carries owner, method name and parameter types, and the harvested symbol omits the parameter types — so an overload family is a duplicate symbol already in the store, not something that must be inferred.
+- `CodexQueries.get` resolves a symbol with `firstOrNull`, and therefore answers for an overloaded method with one arbitrary member of the family, silently.
 
 **Asserted, not yet measured.**
 
@@ -84,7 +109,9 @@ But a report endpoint is a **write path from an agent into the store**, and this
 
 ## Recommendation
 
-**The overview is the product. The index is substrate.** Concretely: generation should produce a skill body against the five fields in `spec/content.md`, drawing on the harvested entries as source material rather than emitting them; search and get remain, serving drill-down rather than context.
+**The overview is the product. The index is substrate.** Concretely: generation should produce a skill body against the five fields in `spec/content.md`, drawing on the harvested entries as source material; search and get remain, serving drill-down rather than context.
+
+**Emit the surface, collapsed.** Amended 2026-09-04 — the first version of this recommendation said generation should draw on entries *rather than emitting them*, which overshot. A skill names its surface; it names it once per shape instead of once per member. Collapse by descriptor — same owner, same name — is mechanical, costs no model, and is the cheapest correction available on the bytecode path. Reserve generation for the relational content no single entry holds.
 
 **Two mechanisms, in this order.**
 

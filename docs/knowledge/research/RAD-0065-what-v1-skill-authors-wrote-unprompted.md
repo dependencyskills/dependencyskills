@@ -18,7 +18,7 @@ The project has a written specification for what a dependency skill should conta
 
 Eleven skill files, one per published module, each at `META-INF/ai-skills/<group>.<artifact>.ai-skill.md` inside `commonMain/resources` — so the skill travels inside the library's own artifact, keyed by its Maven coordinate. YAML frontmatter carries the coordinate as identity plus a spec version, a scope, and a compatibility range.
 
-They run 15 to 103 lines, median around 52. **Every one of them is an overview.** Not one is an API listing, and nothing in the standard told them not to be.
+They run 15 to 103 lines, median around 52. **Every one of them is an overview.** Not one is an *exhaustive* API listing, and nothing in the standard told them not to be — but several name a curated surface under a heading like *Key Functions*, so the contrast is collapsed against instanced rather than prose against symbols. See the correction of 2026-09-04 below.
 
 ### The collapse an index cannot do
 
@@ -94,11 +94,21 @@ Placed in `commonMain/resources`, the skill reaches one artifact and no others. 
 
 One further note: the skills are still present in the newest published versions, including the current release, although the working tree has moved them to a directory pending deletion. **A published artifact is permanent in a way a source tree is not** — whatever a skill transport ships, it ships forever.
 
+### Correction, 2026-09-04: which of these findings travels
+
+Most of this RAD needs no revision. Recommendation 1 below already says *name the shape, not the instantiations*, and the measured bullet — a skill covering over a hundred public members names roughly twenty API shapes — is the evidence for it. Both stand.
+
+What travels badly is the summary bullet, *All overviews; none an API listing*. Quoted on its own it reads as **skills do not enumerate**, and it was used that way in [RAD-0064](RAD-0064-the-skill-is-the-overview.md). The corpus does not support that reading. The section names recorded under *Drift, for want of a schema* include *The AI Toolbox (Key Functions)* and *(Key Components)*, and twenty named shapes covering a hundred members is an enumeration by any ordinary use of the word. The accurate contrast is **collapsed against instanced**, not prose against symbols. A skill enumerates; it enumerates once per shape.
+
+One thing this RAD assigned to the wrong place. Recommendation 1 says generation "should be able to emit one entry covering a family of overloads", which puts collapse behind a generative model. For overload families it is mechanical. The bytecode harvest holds the owning class, the method name and the descriptor, and the harvested symbol already omits parameter types — so an overload family arrives in the store as a duplicate symbol, and grouping it needs no generation at all. RAD-0064's correction of the same date records the detail.
+
+The ceiling is higher than the floor, though. The twenty shapes in the hand-written skill are not all overload families: collapsing extensions across six primitive receivers into one `T.formatReadable` is a judgement about which receivers are interchangeable, and same-owner-same-name grouping will not reach it. Descriptor collapse is the cheap majority of the win, not the whole of it.
+
 ## Findings
 
 **Measured.**
 
-- Eleven skills, 15 to 103 lines, median about 52. All overviews; none an API listing.
+- Eleven skills, 15 to 103 lines, median about 52. All overviews; none an *exhaustive* API listing, though several name a curated surface under a *Key Functions* or *Key Components* heading.
 - A skill covering over a hundred public members names roughly twenty API shapes.
 - Five of eleven contain install boilerplate that the standard mandated; one consists of nothing else.
 - Section headings for the same concept vary four ways across eleven files.
@@ -114,7 +124,7 @@ One further note: the skills are still present in the newest published versions,
 
 **Not a commitment; input to the specification and to generation.**
 
-1. **Name the shape, not the instantiations.** Generation should be able to emit one entry covering a family of overloads. This is the concrete requirement RAD-0064's reframe implies, and the corpus shows an author doing it by hand every time.
+1. **Name the shape, not the instantiations.** One entry should cover a family of overloads. This is the concrete requirement RAD-0064's reframe implies, and the corpus shows an author doing it by hand every time. Amended 2026-09-04: for overload families this is mechanical, not generative — same owner, same name, off the descriptor — and the harvested symbol already collapses them into a duplicate key. Generation is needed for the shapes that span receivers or versions, not for these.
 2. **Adopt *Preference* explicitly** as part of *how it is meant to be used* — comparative, "reach for this rather than that", including against other libraries in the graph. It is the field authors converge on and the one per-entry summarization cannot reach.
 3. **Consider a conformance field.** Standards a library adheres to are compact, checkable, and answer a class of questions nothing else in the five fields does.
 4. **Mandate nothing about installation.** The v1 outcome is a clean demonstration that a mandatory section with a copyable template gets copied, and that mandating the wrong thing is worse than mandating nothing.

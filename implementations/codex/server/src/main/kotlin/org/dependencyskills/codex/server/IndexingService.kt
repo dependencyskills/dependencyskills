@@ -212,14 +212,20 @@ class IndexingService(
                                 outcome.coordinate, outcome.entries, outcome.degraded,
                                 outcome.notReachable,
                             )
-                            // Said only when it happens, and it means the visibility rule did not
-                            // run for this coordinate: the classes jar is not on this machine, so
-                            // everything documented was kept. A library that is genuinely all
-                            // public and one nothing judged look identical without this line.
+                            // Said only when it happens. A library that is genuinely all public
+                            // and one nothing judged look identical without this line.
+                            //
+                            // It used to name a missing classes jar as the reason, and that is
+                            // now the less common half of it: with the artifact found, entries
+                            // still go unjudged when the oracle cannot resolve their symbol —
+                            // 1,410 of kotlin-stdlib's 6,303 on one real pass, mostly members
+                            // nested inside another type. Two causes, one count, so the line
+                            // reports the count and does not claim to know which.
                             if (outcome.visibilityUnknown > 0) {
                                 logger.info(
-                                    "no compiled artifact for {}, so {} entries were kept unjudged",
-                                    outcome.coordinate, outcome.visibilityUnknown,
+                                    "{} entries of {} went unjudged — no compiled artifact, or a " +
+                                        "symbol the oracle could not resolve in it",
+                                    outcome.visibilityUnknown, outcome.coordinate,
                                 )
                             }
                             // A library whose identifiers were refused must not read as a library
