@@ -4,7 +4,7 @@ RAD-0073 · 2026-09-13
 
 Keywords: package-info.java for skills; a source file that is only documentation; doc.go as a skill carrier; ship a skill without a resource mechanism; source travels where resources do not; crate-level docs; module docstring; packageDocumentation; does kotlin have a package doc file; skill in the sources jar; will the toolchain accept a file with no code; does skill content pollute the rendered docs.
 
-Measured against: tests 1 and 2 — nine toolchains, a nine-target Kotlin Multiplatform publication, and the ordinary publishing tool of seven ecosystems; versions under each test's results. Tests 3 to 5 are unmeasured, and what this record says about them is argument.
+Measured against: tests 1 and 2 — nine toolchains, a nine-target Kotlin Multiplatform publication, and the ordinary publishing tools of seven ecosystems, Maven and Gradle both; versions under each test's results. Tests 3 to 5 are unmeasured, and what this record says about them is argument.
 
 ## Question
 
@@ -74,7 +74,7 @@ So this is half of the problem. It gets the skill onto the machine, version-matc
 
 ### Test 1: survival
 
-Measured against: Gradle 9.7.1 with Kotlin 2.4.20 and AGP 9.3.2 · npm 11.13.0 and TypeScript 7.0.2 on Node 24.15.0 · Bun 1.4.2 · uv 0.12.5 with the setuptools, hatchling and uv_build backends · Go 1.27.1 with `golang.org/x/mod/zip` · Cargo 1.98.1 · Swift 6.3.3. Harnesses: `experiments/skill-as-source/survival/run.sh` and `experiments/skill-as-source/kmp/`, raw output beside each; both still run. Maven itself is not installed; the Maven-layout artifacts here were published by Gradle.
+Measured against: Gradle 9.7.1 with Kotlin 2.4.20 and AGP 9.3.2 · npm 11.13.0 and TypeScript 7.0.2 on Node 24.15.0 · Bun 1.4.2 · uv 0.12.5 with the setuptools, hatchling and uv_build backends · Go 1.27.1 with `golang.org/x/mod/zip` · Cargo 1.98.1 · Swift 6.3.3 · Maven 3.9.16 with maven-source-plugin 3.4.0, maven-javadoc-plugin 3.12.0 and kotlin-maven-plugin 2.4.20. Harnesses: `experiments/skill-as-source/survival/run.sh` and `experiments/skill-as-source/kmp/`, raw output beside each; both still run.
 
 Each case is a minimal library with one real function and a `skill-info` file, packaged by the ecosystem's ordinary publishing tool with **no configuration added for the skill**.
 
@@ -82,7 +82,11 @@ Each case is a minimal library with one real function and a `skill-info` file, p
 |---|---|---|
 | Java | Gradle `java-library` sources jar | **yes** — beside the class it documents |
 | | binary jar, javadoc jar | no — nothing compiled from it, and javadoc ignores it |
+| | Maven, `maven-source-plugin` and `maven-javadoc-plugin` as a Central release configures them | **yes** in the sources jar; not in the binary or javadoc jar |
 | Kotlin/JVM | Gradle sources jar | **yes** |
+| | Maven, Kotlin source declared as `<sourceDirectory>` | **yes** |
+| | Maven, `kotlin-maven-plugin` with `<extensions>true</extensions>` | **yes** |
+| | Maven, Kotlin source declared only in the Kotlin plugin's `<sourceDirs>` | **no sources jar at all** — see below |
 | Kotlin Multiplatform | all nine `-sources.jar` files, root and per target | **yes**, under `commonMain/` in every one |
 | | JVM jar, Android AAR, metadata jars, klibs | no text; a klib records an empty file entry |
 | TypeScript | `npm pack`, no `files` field | **yes** — `src/skill-info.ts` and `dist/skill-info.d.ts` |
@@ -96,9 +100,10 @@ Each case is a minimal library with one real function and a `skill-info` file, p
 | Swift | `swift package archive-source` | **yes** |
 
 - **Every ecosystem's source distribution carries the file with no configuration.** Nothing had to be told the file exists; nothing dropped it for having no code or a hyphenated name.
-- **The one loss is a JavaScript bundle**, and it is total: a bundler keeps only what the entry point reaches, and a documentation-only module contributes nothing. A package that ships only a bundle ships no skill. The common alternative — `tsc` output under `files: ["dist"]` — keeps it, but only in the declaration file.
+- **One Maven layout publishes no source whatsoever.** When a Kotlin project names its source directory only in `kotlin-maven-plugin`'s `<sourceDirs>`, the class compiles but `maven-source-plugin` sees no source roots, reports "No sources in project. Archive not created.", and the library ships no `-sources.jar`. The skill is lost with every other source file. That is not a fault in the skill-as-source idea — no source-based carrier, including ADR-0009's, reaches such a library — but it is a real configuration that exists, and the fix is a one-line `<sourceDirectory>` or `<extensions>true</extensions>`, both of which were measured to work.
+- **The other loss is a JavaScript bundle**, and it is total: a bundler keeps only what the entry point reaches, and a documentation-only module contributes nothing. A package that ships only a bundle ships no skill. The common alternative — `tsc` output under `files: ["dist"]` — keeps it, but only in the declaration file.
 - **Go carries a file the toolchain ignores.** A leading-underscore Go file was shipped in the module zip and copied by `go mod vendor`, while being invisible to `go build` and `go doc`. It is not needed — `skill-info.go` compiles to nothing and ships — but it means Go has a way to carry a file its toolchain never reads.
-- **Not measured:** Maven's own `maven-source-plugin`, an Android library published by the classic AGP plugin rather than the KMP one, npm packages built by other bundlers or by `tsup`'s declaration bundling, and binary-only distributions — an XCFramework, a wheel built without source — where by construction there is no source to carry anything.
+- **Not measured:** an Android library published by the classic AGP plugin rather than the KMP one, npm packages built by other bundlers or by `tsup`'s declaration bundling, and binary-only distributions — an XCFramework, a wheel built without source — where by construction there is no source to carry anything.
 
 ### Test 2: toolchain tolerance
 
@@ -145,7 +150,7 @@ Each case is a package holding one real type plus a skill file containing only t
 
 **Place it in the package, not at the root.** Every precedent is per-package, and a library of several packages has several things to say.
 
-**What would change the answer.** Test 1 found no ecosystem that strips the file from its source distribution; if the unmeasured paths above — Maven's own source plugin, other JavaScript build tools — turn out to drop it, the convention narrows to the ecosystems where it was measured. If test 4 shows skill content makes the human docs worse, reuse is off and only the dedicated file survives.
+**What would change the answer.** Test 1 found no ecosystem that strips the file from its source distribution; if the unmeasured paths above — the classic Android plugin, other JavaScript build tools — turn out to drop it, the convention narrows to the ecosystems where it was measured. If test 4 shows skill content makes the human docs worse, reuse is off and only the dedicated file survives.
 
 ## Connections
 

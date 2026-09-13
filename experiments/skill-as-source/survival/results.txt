@@ -1,4 +1,5 @@
 gradle: Gradle 9.7.1
+maven:  Apache Maven 3.9.16 (2bdd9fddda4b155ebf8000e807eb73fd829a51d5)
 node:   v24.15.0 · npm 11.13.0 · bun 1.4.2
 uv:     uv 0.12.5 (Homebrew 2026-08-14 aarch64-apple-darwin)
 go:     go version go1.27.1 darwin/arm64
@@ -12,6 +13,21 @@ swift:  swift-driver version: 1.148.6 Apple Swift version 6.3.3 (swiftlang-6.3.3
 --- Kotlin/JVM · Gradle kotlin(jvm), maven-publish · exit 0
     acme-text-0.1.0-sources.jar                  file: com/example/acme/text/skill-info.kt   · files carrying text: 1
     acme-text-0.1.0.jar                          file: ABSENT  · files carrying text: 0
+--- Java · Maven with maven-source-plugin and maven-javadoc-plugin · exit 0
+    acme-text-0.1.0-javadoc.jar                  file: ABSENT  · files carrying text: 0
+    acme-text-0.1.0-sources.jar                  file: com/example/acme/text/skill-info.java   · files carrying text: 1
+    acme-text-0.1.0.jar                          file: ABSENT  · files carrying text: 0
+--- Kotlin/JVM · Maven, kotlin-maven-plugin, Kotlin source declared by sourceDirectory · exit 0
+    acme-text-0.1.0-sources.jar                  file: com/example/acme/text/skill-info.kt   · files carrying text: 1
+    acme-text-0.1.0.jar                          file: ABSENT  · files carrying text: 0
+    Normalizer.kt in the sources jar: 1
+--- Kotlin/JVM · Maven, kotlin-maven-plugin, Kotlin source declared by sourceDirs · exit 0
+    acme-text-0.1.0.jar                          file: ABSENT  · files carrying text: 0
+    Normalizer.kt in the sources jar: 0
+--- Kotlin/JVM · Maven, kotlin-maven-plugin, Kotlin source declared by extensions · exit 0
+    acme-text-0.1.0-sources.jar                  file: com/example/acme/text/skill-info.kt   · files carrying text: 1
+    acme-text-0.1.0.jar                          file: ABSENT  · files carrying text: 0
+    Normalizer.kt in the sources jar: 1
 --- TypeScript · tsc then npm pack · exit 0
     no files field (everything)                  file: package/dist/skill-info.d.ts package/dist/skill-info.js package/src/skill-info.ts   · files carrying text: 2
     files: [dist] (the common shape)             file: package/dist/skill-info.d.ts package/dist/skill-info.js   · files carrying text: 1

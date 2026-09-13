@@ -44,6 +44,7 @@ inspect() {
 
 versions() {
   say "gradle: $("$GRADLE" --version 2>/dev/null | grep '^Gradle')"
+  say "maven:  $(mvn -v 2>/dev/null | head -1)"
   say "node:   $(node --version) · npm $(npm --version) · bun $(bun --version)"
   say "uv:     $(uv --version)"
   say "go:     $(go version)"
@@ -92,6 +93,68 @@ EOF
   (cd "$d" && "$GRADLE" -q --no-configuration-cache publishAllPublicationsToLocalRepository) > "$d/log" 2>&1
   say "--- Kotlin/JVM · Gradle kotlin(jvm), maven-publish · exit $?"
   for a in "$d"/build/repo/com/example/acme/acme-text/0.1.0/*.jar; do inspect "$(basename "$a")" "$a"; done
+}
+
+# ---------------------------------------------------------------- Maven, the plugins a Central release uses
+maven_pom() { # artifactId extra-plugins
+  cat <<EOF
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.example.acme</groupId>
+  <artifactId>$1</artifactId>
+  <version>0.1.0</version>
+  <properties>
+    <maven.compiler.release>21</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+  $3
+  <build>
+    $4
+    <plugins>
+      <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><version>3.16.0</version></plugin>
+      <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-source-plugin</artifactId><version>3.4.0</version>
+        <executions><execution><id>attach-sources</id><goals><goal>jar-no-fork</goal></goals></execution></executions></plugin>
+      <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-javadoc-plugin</artifactId><version>3.12.0</version>
+        <executions><execution><id>attach-javadocs</id><goals><goal>jar</goal></goals></execution></executions></plugin>
+      $2
+    </plugins>
+  </build>
+</project>
+EOF
+}
+
+maven_java() {
+  local d="$WORK/maven-java"; mkdir -p "$d/src/main/java/com/example/acme/text"
+  maven_pom acme-text "" "" "" > "$d/pom.xml"
+  printf 'package com.example.acme.text;\n\n/** Normalizes text. */\npublic final class Normalizer {\n  private Normalizer() {}\n  /** @param s input @return normalized */\n  public static String normalize(String s) { return s; }\n}\n' > "$d/src/main/java/com/example/acme/text/Normalizer.java"
+  { echo 'package com.example.acme.text;'; echo; echo '/**'; block ' * '; echo ' */'; } > "$d/src/main/java/com/example/acme/text/skill-info.java"
+  (cd "$d" && mvn -q -B package) > "$d/log" 2>&1
+  say "--- Java · Maven with maven-source-plugin and maven-javadoc-plugin · exit $?"
+  for a in "$d"/target/*.jar; do inspect "$(basename "$a")" "$a"; done
+}
+
+maven_kotlin() { # layout: sourceDirectory | sourceDirs (declared only on the Kotlin plugin) | extensions (plugin registers src/main/kotlin itself)
+  local d="$WORK/maven-kotlin-$1"; mkdir -p "$d/src/main/kotlin/com/example/acme/text"
+  local cfg="" build=""
+  local kplugin
+  case "$1" in
+    sourceDirs) cfg='<configuration><sourceDirs><sourceDir>src/main/kotlin</sourceDir></sourceDirs></configuration>' ;;
+    sourceDirectory) build='<sourceDirectory>src/main/kotlin</sourceDirectory>' ;;
+  esac
+  if [ "$1" = extensions ]; then
+    kplugin="<plugin><groupId>org.jetbrains.kotlin</groupId><artifactId>kotlin-maven-plugin</artifactId><version>2.4.20</version><extensions>true</extensions></plugin>"
+  else
+    kplugin="<plugin><groupId>org.jetbrains.kotlin</groupId><artifactId>kotlin-maven-plugin</artifactId><version>2.4.20</version>
+        <executions><execution><id>compile</id><goals><goal>compile</goal></goals>$cfg</execution></executions></plugin>"
+  fi
+  local deps='<dependencies><dependency><groupId>org.jetbrains.kotlin</groupId><artifactId>kotlin-stdlib</artifactId><version>2.4.20</version></dependency></dependencies>'
+  maven_pom acme-text "$kplugin" "$deps" "$build" > "$d/pom.xml"
+  printf 'package com.example.acme.text\n\n/** Returns [s] normalized. */\nfun normalize(s: String): String = s\n' > "$d/src/main/kotlin/com/example/acme/text/Normalizer.kt"
+  { echo '/**'; block ' * '; echo ' */'; echo 'package com.example.acme.text'; } > "$d/src/main/kotlin/com/example/acme/text/skill-info.kt"
+  (cd "$d" && mvn -q -B package) > "$d/log" 2>&1
+  say "--- Kotlin/JVM · Maven, kotlin-maven-plugin, Kotlin source declared by $1 · exit $?"
+  for a in "$d"/target/*.jar; do inspect "$(basename "$a")" "$a"; done
+  say "    Normalizer.kt in the sources jar: $(unzip -l "$d"/target/*-sources.jar 2>/dev/null | grep -c Normalizer.kt)"
 }
 
 # ---------------------------------------------------------------- TypeScript, npm
@@ -203,6 +266,10 @@ swift_case() {
 versions
 java_gradle
 kotlin_jvm_gradle
+maven_java
+maven_kotlin sourceDirectory
+maven_kotlin sourceDirs
+maven_kotlin extensions
 npm_case
 for b in setuptools hatchling uv_build; do python_case $b; done
 go_case
