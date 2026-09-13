@@ -4,7 +4,7 @@ RAD-0074 · 2026-09-13
 
 Keywords: the library ships no skill; generate a skill from doc comments; synthesise a package skill; fallback when skill-info is missing; can a model write the traps section; what doc comments never say; Deprecated ReplaceWith as a source of what moved; hallucinated guidance; is a generated skill worse than none; per-package summary instead of per-member; the middle rung of the ladder; lightweight codex without the quarantine.
 
-Measured against: nothing new. Every figure below is cited from the record that measured it; this record frames an experiment.
+Measured against: nothing new. Every figure below is cited from the record that measured it; this record framed an experiment that has since been parked — see the amendment under Recommendation.
 
 ## Question
 
@@ -13,6 +13,8 @@ Measured against: nothing new. Every figure below is cited from the record that 
 **When a dependency's package has no `skill-info`, can a usable skill be built from the source documentation the codex already harvests — and is it better than serving that documentation as it is?**
 
 This is scoped to the **lightweight codex** ([RAD-0070](Research-RAD-0070-The-Smallest-Thing-That-Works)), deliberately without injection protection, so that how the thing should work can be settled before the product's trust model is brought to bear on it.
+
+**Amended the same day: this question is parked.** See the amendment under Recommendation.
 
 ## Trail
 
@@ -82,6 +84,16 @@ In the product, a synthesised skill runs straight into the conflict #43's triage
 - How often generated traps and boundaries are invented rather than grounded.
 
 ## Recommendation
+
+### Amendment, 2026-09-13: delivered as written, and synthesis parked
+
+The recommendation below was set aside before any of it was built. **The lightweight codex delivers skills without pre-processing.** An authored `skill-info` reaches the agent exactly as the library wrote it, and where there is none, the documentation reaches it as harvested, with no model in between.
+
+The reasoning is sequencing, not a verdict on synthesis. Generating a skill is pre-processing, and so is any rewrite that protects the caller. Both are questions about what to do *to* the text on its way to the agent, and neither can be judged until it is known whether delivering the text at all changes what an agent does. So the order is: make verbatim delivery work — the package as the unit, the authored file served as written, and a trigger that puts it in front of the agent — then decide how the calling agent is protected, and only then whether a built skill earns its place over the raw documentation.
+
+What this record found stays useful when that point is reached: the field-by-field gap between what documentation holds and what a skill needs, invention as the risk to measure first, and deprecation structure as a model-free source of what moved. None of it is a plan now.
+
+### The original recommendation, parked
 
 **Not a commitment.** Build it as an experiment in the lightweight codex, and measure it against the baseline before anything else.
 

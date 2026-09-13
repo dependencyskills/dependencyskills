@@ -11,6 +11,7 @@ sources: the POM <description>, and the doc comments of the library's public
 TYPES (not its members). Standard library only.
 """
 
+import os
 import re
 import sqlite3
 import sys
@@ -19,7 +20,7 @@ from pathlib import Path
 
 import codex  # the member-level harvester, reused for its extractor
 
-CACHE = Path.home() / ".gradle/caches/modules-2/files-2.1"
+CACHE = Path(os.environ.get("GRADLE_USER_HOME") or Path.home() / ".gradle") / "caches/modules-2/files-2.1"
 DB = Path.home() / ".minicodex/libraries.db"
 
 DESC = re.compile(r"<description>(.*?)</description>", re.S)
