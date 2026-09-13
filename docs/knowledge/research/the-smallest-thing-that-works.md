@@ -43,6 +43,27 @@ So the minimal version indexes the raw doc comment. It is cheaper, it is simpler
 
 **What is genuinely lost:** RAD-0040 also found that an index carrying *both* faces beats either alone — 15 of 17 within ten, against raw's 13 — because the two fail on different questions and the failure sets barely overlap. The minimal version gives that up. Two of seventeen is the price, and it is a real price.
 
+### Correction, 2026-09-12: at a real corpus size the summary beats the raw comment
+
+The section above is wrong at scale, and the measurement that corrects it was run on this machine against RAD-0040's own seventeen needs — but over **13,866 entries** rather than its 220-entry slice, with the same encoder (`bge-m3-mlx-fp16`) and the same summariser (`Qwen3-Coder-30B-A3B-Instruct-MLX-4bit`).
+
+| | raw doc comment | machine summary |
+|---|---|---|
+| median best rank of the target | 548 | **96** |
+| within 1 | 1 of 15 | **3 of 15** |
+| within 10 | 2 of 15 | **3 of 15** |
+| within 100 | 5 of 15 | **8 of 15** |
+
+**The summary wins on every cut, and by 5.7× on median rank.** RAD-0040's result — raw neutral at the head and better in the tail — does not generalise past the slice it was measured on. It inverts.
+
+**Both faces collapse, though, and that is the larger finding.** RAD-0040's combined arm scored 15 of 17 within ten on 220 entries; here nothing reaches 3 of 17. Lexical did the same thing — 38% at 220 entries in RAD-0019, 1 of 17 at 11,156 in RAD-0049. **Corpus size is the dominant variable in this system, and it has now beaten vector and lexical retrieval independently.** Neither method is failing for a reason peculiar to itself.
+
+**The losses concentrate where RAD-0040 predicted.** It observed them "concentrated on configuration types", and that reproduces exactly: `HttpTimeoutConfig` ranks 10,930, `DefaultHeadersConfig` 4,440, `CachingOptions` 2,511. A configuration class is named for what it *is* and asked for by what it *does*, and nothing in either face bridges that.
+
+**Caveats, all of which bite.** The corpus came from the naive extractor in `experiments/minimal-codex/`, so two gold targets are absent and every arm is capped at 15 of 17. Pooling is mean, because that is what `mlx_embeddings` exposes; CLS was measured and scored *worse*, though BGE-M3 is nominally a CLS model, so the encoder configuration is not fully settled. The `doc` text has `@param` and friends stripped where the pipeline indexes them. And two earlier versions of this measurement were wrong before this one — `mx.eval()` returns `None`, which silently collapsed every matrix to one row, and a symbol-to-row lookup took one arbitrary duplicate where any entry sharing the symbol should count.
+
+**What this changes.** The recommendation below to drop the summariser was argued from RAD-0040 and does not survive. If the pipeline keeps a quarantine, the summary face is also carrying retrieval at realistic size, and the pinned 270M is the wrong model for it. **It does not, however, argue for keeping the summariser in the light version** — that version has no quarantine to justify a model at all, and its retrieval problem is upstream of this comparison.
+
 ### Embeddings cannot go, and this is what bounds how small it gets
 
 The tempting next step is to drop the vector index too and lean on SQLite's full-text search, which would leave a tool with no model dependency at all. [RAD-0049](RAD-0049-the-lexical-baseline.md) measured exactly that, over real harvested documentation:
