@@ -1,0 +1,119 @@
+javac:   javac 26.0.2.1
+kotlinc: info: kotlinc-jvm 2.4.10 (JRE 26.0.2.1)
+python:  Python 3.14.7
+node:    v24.15.0
+swift:   swift-driver version: 1.148.6 Apple Swift version 6.3.3 (swiftlang-6.3.3.1.3 clang-2100.1.1.101)
+go:      go version go1.27.1 darwin/arm64
+rustc:   rustc 1.98.1 (48a229cea 2026-09-01) (Homebrew) · clippy 0.1.98
+tsc:     Version 7.0.2
+
+work dir: kept under $WORK for inspection
+
+--- java | skill.java, doc before package | exit 0
+    (no warnings)
+    emitted: nothing
+--- java | skill.java, doc after package | exit 0
+    (no warnings)
+    emitted: nothing
+--- java | skill-info.java, doc before package | exit 0
+    (no warnings)
+    emitted: nothing
+--- java | skill-info.java, doc after package | exit 0
+    (no warnings)
+    emitted: nothing
+--- java | package-info.java, doc before package | exit 0
+    (no warnings)
+    emitted: nothing
+--- java | package-info.java, doc after package | exit 0
+    (no warnings)
+    emitted: nothing
+--- kotlin | skill.kt, doc before package | exit 0
+    (no warnings)
+    emitted: nothing
+--- kotlin | skill.kt, doc after package | exit 0
+    (no warnings)
+    emitted: nothing
+--- kotlin | skill-info.kt, doc before package | exit 0
+    (no warnings)
+    emitted: nothing
+--- kotlin | skill-info.kt, doc after package | exit 0
+    (no warnings)
+    emitted: nothing
+--- python | skill.py | exit 0
+    (no warnings)
+    emitted: import ok, docstring 215 chars
+./acme_text/__pycache__/skill.cpython-314.pyc 
+--- python | skill-info.py | exit 0
+    (no warnings)
+    emitted: import ok, docstring 215 chars
+./acme_text/__pycache__/skill-info.cpython-314.pyc 
+--- python | _skill.py | exit 0
+    (no warnings)
+    emitted: import ok, docstring 215 chars
+./acme_text/__pycache__/_skill.cpython-314.pyc 
+--- ts (node strip, no tsc) | skill.ts | exit 0
+    (no warnings)
+    emitted: import ok
+--- ts (node strip, no tsc) | skill-info.ts | exit 0
+    (no warnings)
+    emitted: import ok
+--- tsc | skill.ts, module (comment plus export {}) | exit 0
+    (no warnings)
+    emitted: skill.js(skill text 0) skill.d.ts(skill text 1) 
+--- tsc | skill.ts, script (comment only) | exit 0
+    (no warnings)
+    emitted: skill.js(skill text 1) skill.d.ts(skill text 1) 
+--- tsc | skill-info.ts, module (comment plus export {}) | exit 0
+    (no warnings)
+    emitted: skill-info.js(skill text 0) skill-info.d.ts(skill text 1) 
+--- tsc | skill-info.ts, script (comment only) | exit 0
+    (no warnings)
+    emitted: skill-info.js(skill text 1) skill-info.d.ts(skill text 1) 
+--- swift | skill.swift | exit 0
+    (no warnings)
+    emitted: ./arm64-apple-macosx/debug/AcmeText.build/skill.swift.o 
+--- swift | skill-info.swift | exit 0
+    (no warnings)
+    emitted: ./arm64-apple-macosx/debug/AcmeText.build/skill-info.swift.o 
+--- go | skill.go, comment before package clause | exit 0
+    (no warnings)
+    emitted: compiled=[normalize.go skill.go] ignored=[] · skill text in 'go doc' package output: 1
+--- go | skill.go, comment after package clause | exit 0
+    (no warnings)
+    emitted: compiled=[normalize.go skill.go] ignored=[] · skill text in 'go doc' package output: 0
+--- go | skill-info.go, comment before package clause | exit 0
+    (no warnings)
+    emitted: compiled=[normalize.go skill-info.go] ignored=[] · skill text in 'go doc' package output: 1
+--- go | skill-info.go, comment after package clause | exit 0
+    (no warnings)
+    emitted: compiled=[normalize.go skill-info.go] ignored=[] · skill text in 'go doc' package output: 0
+--- go | skillinfo.go, comment before package clause | exit 0
+    (no warnings)
+    emitted: compiled=[normalize.go skillinfo.go] ignored=[] · skill text in 'go doc' package output: 1
+--- go | skillinfo.go, comment after package clause | exit 0
+    (no warnings)
+    emitted: compiled=[normalize.go skillinfo.go] ignored=[] · skill text in 'go doc' package output: 0
+--- go | skill_info.go, comment before package clause | exit 0
+    (no warnings)
+    emitted: compiled=[normalize.go skill_info.go] ignored=[] · skill text in 'go doc' package output: 1
+--- go | skill_info.go, comment after package clause | exit 0
+    (no warnings)
+    emitted: compiled=[normalize.go skill_info.go] ignored=[] · skill text in 'go doc' package output: 0
+--- go | _skill.go, comment before package clause | exit 0
+    (no warnings)
+    emitted: compiled=[normalize.go] ignored=[] · skill text in 'go doc' package output: 0
+--- go | _skill.go, comment after package clause | exit 0
+    (no warnings)
+    emitted: compiled=[normalize.go] ignored=[] · skill text in 'go doc' package output: 0
+--- rust | src/skill_info.rs, reached by mod skill_info; | exit 0
+    warning: item in documentation is missing backticks
+    warning: item in documentation is missing backticks
+    emitted: in cargo package --list: 1
+--- rust | src/skill_info.rs, no mod declaration | exit 0
+    (no warnings)
+    emitted: in cargo package --list: 1
+--- rust | src/skill-info.rs, no mod declaration | exit 0
+    (no warnings)
+    emitted: in cargo package --list: 1
+--- filesystem | Skill.kt then skill.kt in one directory
+    files present: Skill.kt · Skill.kt now holds: doc

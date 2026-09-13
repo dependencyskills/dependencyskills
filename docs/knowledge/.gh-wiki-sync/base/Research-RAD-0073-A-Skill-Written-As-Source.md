@@ -4,7 +4,7 @@ RAD-0073 · 2026-09-13
 
 Keywords: package-info.java for skills; a source file that is only documentation; doc.go as a skill carrier; ship a skill without a resource mechanism; source travels where resources do not; crate-level docs; module docstring; packageDocumentation; does kotlin have a package doc file; skill in the sources jar; will the toolchain accept a file with no code; does skill content pollute the rendered docs.
 
-Measured against: nothing yet. This record frames an experiment; its findings are precedent and argument, and every claim about toolchain or packaging behaviour below is listed as something to test rather than something known.
+Measured against: test 2 only, in nine toolchains including a nine-target Kotlin Multiplatform publication — versions under its results. Everything else here is precedent and argument, and every other claim about toolchain or packaging behaviour is listed as something to test rather than something known.
 
 ## Question
 
@@ -67,10 +67,42 @@ So this is half of the problem. It gets the skill onto the machine, version-matc
 **To test — nothing below is known.**
 
 1. **Survival.** Does a documentation-only source file reach the published artifact unchanged — a Maven sources jar, each target of a Kotlin Multiplatform publication (does a `commonMain` file appear where a consumer resolves it?), an npm tarball, a Go module, a Rust crate, a PyPI sdist and wheel, a Swift package?
-2. **Toolchain tolerance.** Does a source file holding only a package declaration and a doc comment compile cleanly, emit no class file, and raise no warning — in Kotlin particularly, where there is no sanctioned form, and in Java under a name other than `package-info.java`?
+2. **Toolchain tolerance.** Does a source file holding only a package declaration and a doc comment compile cleanly, emit no class file, and raise no warning — in Kotlin particularly, where there is no sanctioned form, and in Java under a name other than `package-info.java`? **Measured 2026-09-13; results below.**
 3. **Harvestability.** Can a harvester find it by filename convention alone, without a parser?
 4. **Collision with human documentation.** `package-info.java` Javadoc *becomes* the package summary page a person reads. Does skill-shaped content — severity-graded mistakes, Wrong/Correct pairs — degrade that page, or does it read acceptably to both audiences?
 5. **Uptake.** With the file present versus absent, on a misuse task shaped like the guiding case, does an agent's use of the library change? This only means something combined with a trigger; measured alone it will reproduce the not-looking.
+
+### Test 2: toolchain tolerance
+
+Measured against: javac 26.0.2.1 · kotlinc-jvm 2.4.10 · Kotlin Multiplatform 2.4.20 with AGP 9.3.2 on Gradle 9.7.1 · Python 3.14.7 · Node 24.15.0 · TypeScript 7.0.2 · Swift 6.3.3 (SwiftPM) · Go 1.27.1 · Rust 1.98.1 with clippy · macOS on APFS, case-insensitive. Harnesses: `experiments/skill-as-source/naming/run.sh` and `experiments/skill-as-source/kmp/`, raw output beside each; both still run.
+
+Each case is a package holding one real type plus a skill file containing only the package declaration (where the language has one) and a doc comment of skill-shaped content, built at the strictest warning level the toolchain offers — `javac -Xlint:all`, `kotlinc -Wextra`, Kotlin Multiplatform with `allWarningsAsErrors` and `extraWarnings`, `python -W error`, `tsc` in strict mode with `noUnusedLocals`, `swift build -warnings-as-errors`, `go vet`, `clippy::pedantic`. A planted warning was confirmed visible in javac, kotlinc, Swift and clippy, so "no warnings" there is a result and not a blind harness.
+
+| toolchain | `skill` | `skill-info` | what the skill file emits |
+|---|---|---|---|
+| javac | ok, no warnings | ok, no warnings | nothing; doc comment accepted before or after the package line |
+| kotlinc (JVM) | ok, no warnings | ok, no warnings | nothing — no `SkillKt` facade without a declaration |
+| Kotlin Multiplatform, 9 targets | — | ok, no warnings on any target | see below |
+| Python | ok, imports | ok via `importlib`; an `import` statement is a syntax error | a `.pyc` holding the docstring |
+| tsc | ok, no warnings | ok, no warnings | a `.d.ts` carrying the text; the `.js` carries it only if the file is not a module |
+| SwiftPM | ok, no warnings | ok, no warnings | a 4 KB object with no public symbols |
+| Go | ok, no vet findings | ok, no vet findings | compiled into the package; `skillinfo.go` and `skill_info.go` behave the same, `_skill.go` is ignored entirely |
+| Rust | ok if reached by `mod skill_info;` | ok, never compiled — a plain `mod` cannot name it | nothing; shipped by `cargo package` either way |
+
+**Kotlin Multiplatform — the case this project builds for.** One `skill-info.kt` in `commonMain`, published to a local Maven repository for JVM, Android, JS, Wasm, iOS arm64, iOS simulator, macOS arm64 and Linux x64:
+
+- **It is in every one of the nine `-sources.jar` files**, the root publication's and each target's, under `commonMain/com/example/acme/text/skill-info.kt`, text intact. A consumer resolving any single platform gets it.
+- **It is in no binary.** The JVM jar, the Android AAR and every `-metadata.jar` contain neither the file nor its text. Each klib records an empty file entry naming its source path, as it does for every source file, with no declarations and no doc text.
+- **No target warned**, with every warning an error.
+
+**Across all of them:**
+
+- **Every toolchain accepts a documentation-only file, silently.** Neither Kotlin nor Java needs a sanctioned slot for the file to be legal.
+- **The hyphen is accepted by all nine**, which is the opposite of what this record said before it was measured. Rust accepts it only in the sense that it never compiles the file — `cargo package` still ships it, which is all a skill needs.
+- **The plain name has a real hazard the hyphen does not:** on a case-insensitive filesystem, writing `skill.kt` into a directory holding `Skill.kt` overwrote it. Measured directly.
+- **Placement decides whether the skill lands on a human's page**, differently per tool. `javadoc` ignores a doc comment in any file but `package-info.java`, so a dedicated Java file stays off the package page. `go doc` does the reverse: a comment directly above the package clause of *any* file becomes package documentation, merged with the real one, while a comment after the clause does not. In Rust, a reached file's `//!` doc is linted as documentation — clippy pedantic flagged unquoted code in it.
+- **Where the text survives into compiled output is uneven, and it matters for npm**, which usually publishes `dist/` rather than source: `tsc` keeps a leading comment in `.d.ts` but drops it from the `.js` of a module.
+- **Not tested here:** whether a packager drops the file — test 1, though the KMP and Cargo results above already answer it for those two.
 
 ## Recommendation
 
@@ -81,7 +113,7 @@ So this is half of the problem. It gets the skill onto the machine, version-matc
 - **Reusing the existing slot** — writing skill content into `package-info.java`, `doc.go` or `//!` — needs no new convention and is picked up by every existing tool. But it makes the skill the page a human reads, which is test 4, and in Kotlin there is no slot to reuse.
 - **A dedicated file** — a `skill` source file in the package — keeps the two audiences apart and gives Kotlin a home. It is a new convention, and a new convention has to be adopted.
 
-**The naming cannot be one rule across languages.** `package-info.java` uses a hyphen because Java requires a public type to live in a file named after it; a hyphen is illegal in an identifier, so that file can never collide with a real class. That collision only exists where filename is coupled to type name. In Kotlin, Go, TypeScript, Swift and C# the coupling is absent, so a hyphen is permitted and buys nothing. In **Rust** and **Python** it actively breaks things — a module file must be a valid identifier, so `mod skill-info;` does not parse and a hyphenated `.py` cannot be imported. And some ecosystems have rules that matter more than the hyphen: Go ignores files beginning with `_` or `.` and treats `_test.go` and `_linux.go` suffixes as build constraints; Rust does not compile a file no `mod` declaration reaches, though `cargo package` may still ship it. So the filename is a per-language decision, and test 2 has to settle it language by language rather than borrow Java's. *(Recalled, not yet tested; toolchains available locally are `javac`, `kotlinc`, `python3`, `node` and `swiftc` — Go and Rust would need installing.)*
+**The hyphen is the one rule that works everywhere tested.** An earlier draft of this record argued from recall that the hyphen was a Java-only trick that buys nothing elsewhere and breaks Python. Test 2 contradicts both halves. Every toolchain tested accepted `skill-info`, and the hyphen buys something everywhere: **on a case-insensitive filesystem — the default on macOS and Windows — `skill.kt` and `Skill.kt` are the same file**, so a plain `skill` name collides with any type called `Skill` in that package, and a hyphen cannot appear in a type name in Java, Kotlin, Swift, TypeScript or C#. In Python the hyphen that stops an `import` statement is harmless — nothing needs to import a skill — and the file cannot shadow a module name. In Rust it keeps the file out of compilation while `cargo package` still ships it. Go accepts it, though `skillinfo.go` is the more idiomatic spelling there and behaves identically; the one Go name to avoid is a leading `_`, which hides the file from the toolchain.
 
 **Place it in the package, not at the root.** Every precedent is per-package, and a library of several packages has several things to say.
 
