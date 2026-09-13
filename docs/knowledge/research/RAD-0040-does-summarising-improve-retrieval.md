@@ -163,7 +163,7 @@ Re-run on **13,866 entries** — the same seventeen needs, the same encoder, the
 
 The 220-entry slice is doing the work. Both faces also collapse in absolute terms: the combined arm measured here at 15 of 17 within ten does not reach 3 of 17 at the larger size. The observation about losses concentrating on configuration types, by contrast, reproduces exactly.
 
-See the correction of the same date in [RAD-0070](the-smallest-thing-that-works.md) for the full table and its caveats.
+See the correction of the same date in [RAD-0070](RAD-0070-the-smallest-thing-that-works.md) for the full table and its caveats.
 
 ## Findings
 

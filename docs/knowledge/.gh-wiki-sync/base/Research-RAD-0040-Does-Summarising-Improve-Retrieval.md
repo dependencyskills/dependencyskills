@@ -157,6 +157,14 @@ relative to each other. What it does is stop losing badly — `DefaultHeadersCon
 single-face index fails a different set of questions catastrophically, the sets barely overlap, and
 the two-faced index inherits the better face's ballpark on nearly all of them.
 
+### Correction, 2026-09-12: this does not generalise past the slice
+
+Re-run on **13,866 entries** — the same seventeen needs, the same encoder, the same summariser — the central finding inverts. The machine summary beats the raw comment on every cut, with a median best rank of 96 against raw's 548, where this record measured them level at the head and raw ahead in the tail.
+
+The 220-entry slice is doing the work. Both faces also collapse in absolute terms: the combined arm measured here at 15 of 17 within ten does not reach 3 of 17 at the larger size. The observation about losses concentrating on configuration types, by contrast, reproduces exactly.
+
+See the correction of the same date in [RAD-0070](Research-RAD-0070-The-Smallest-Thing-That-Works) for the full table and its caveats.
+
 ## Findings
 
 **Measured.**

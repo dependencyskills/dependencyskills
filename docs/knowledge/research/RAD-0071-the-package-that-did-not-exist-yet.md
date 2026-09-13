@@ -8,7 +8,7 @@ Measured against: nothing measured here. This record is an assessment of externa
 
 ## Question
 
-Reported research describes agents at large companies fetching an `llms.txt` guidance file, following its installation instructions, and executing attacker-controlled code. **Does this change this project's threat model, and does it argue against the deliberately unguarded minimal version explored in [RAD-0070](the-smallest-thing-that-works.md)?**
+Reported research describes agents at large companies fetching an `llms.txt` guidance file, following its installation instructions, and executing attacker-controlled code. **Does this change this project's threat model, and does it argue against the deliberately unguarded minimal version explored in [RAD-0070](RAD-0070-the-smallest-thing-that-works.md)?**
 
 ## Trail
 
@@ -100,6 +100,6 @@ The reported victims are **company agents fetching published `llms.txt` files ov
 ## Connections
 
 - [RAD-0006](RAD-0006-development-time-prompt-injection.md) — the injection surface, which names `llms.txt` as a carrier and whose general conclusion holds here.
-- [RAD-0070](the-smallest-thing-that-works.md) — the unguarded minimal version this was assessed against.
+- [RAD-0070](RAD-0070-the-smallest-thing-that-works.md) — the unguarded minimal version this was assessed against.
 - [RAD-0065](RAD-0065-what-v1-skill-authors-wrote-unprompted.md) — shipped skills, the nearest dormant equivalent of an `llms.txt`.
 - [RAD-0067](RAD-0067-the-pom-points-at-documentation.md) — the pointers that would import the problem wholesale.

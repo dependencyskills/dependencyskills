@@ -44,7 +44,7 @@ This is not a new kind of artifact. Nearly every ecosystem already reserves a so
 
 ### The slot exists and is empty
 
-[RAD-0070](the-smallest-thing-that-works.md) checked two of the most-used Kotlin libraries and found neither `kotlin-stdlib` nor `kotlinx-coroutines-core` carrying a `package-info`, a `package.html` or a `module-info` in its sources jar. That is no obstacle to a new convention — it means there is no existing corpus to harvest, and every skill would have to be written deliberately.
+[RAD-0070](RAD-0070-the-smallest-thing-that-works.md) checked two of the most-used Kotlin libraries and found neither `kotlin-stdlib` nor `kotlinx-coroutines-core` carrying a `package-info`, a `package.html` or a `module-info` in its sources jar. That is no obstacle to a new convention — it means there is no existing corpus to harvest, and every skill would have to be written deliberately.
 
 ### What this solves, and what it does not
 
@@ -92,6 +92,6 @@ So this is half of the problem. It gets the skill onto the machine, version-matc
 - [ADR-0009](../decisions/ADR-0009-transport-is-sources-jar.md) — the sources jar as the carrier; this puts the skill inside what ADR-0009 already chose.
 - [RAD-0065](RAD-0065-what-v1-skill-authors-wrote-unprompted.md) — why skills as resources did not reach the sources jar.
 - [RAD-0011](RAD-0011-existing-documentation-systems-as-skill-content.md) — package docs as existing content, including the `doc.go` measurement.
-- [RAD-0072](the-one-thing-we-are-not-doing.md) — the shipped-skill field, where the in-artifact route has no standard.
+- [RAD-0072](RAD-0072-the-one-thing-we-are-not-doing.md) — the shipped-skill field, where the in-artifact route has no standard.
 - `docs/knowledge/reference/doc-comment-systems.md` — the per-ecosystem doc conventions this relies on.
 - `README.md` — the misuse case, which shows why distribution alone is not enough.
