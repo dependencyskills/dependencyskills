@@ -57,9 +57,44 @@ This is not a new kind of artifact. Nearly every ecosystem already reserves a so
 
 **It does not solve the trigger, and the case that leads the README's failure list shows why that matters.** In that case the dependency's sources were in the local build cache throughout, and the agent never opened them — it was confident it already knew the type, so it never felt a gap to look into. A skill file sitting in that same sources jar would have been exactly as unread. Asked afterwards, the agent said a search it had to invoke would not have helped either.
 
-So this is half of the problem. It gets the skill onto the machine, version-matched, in every ecosystem. Something else still has to put it in front of the agent at the moment it first names a type from that library — a routine step, a load-on-import, or a nudge when code matches a known hand-rolled pattern. That is a separate question and this record does not answer it.
+So this is half of the problem. It gets the skill onto the machine, version-matched, in every ecosystem. Something else still has to put it in front of the agent at the moment it first names a type from that library — a routine step, a load-on-import, or a nudge when code matches a known hand-rolled pattern. The section below works through it by argument and a prototype; nothing about it is measured.
 
 **But the placement narrows that question sharply.** A skill that lives in a package is scoped by the same thing that scopes the code: an import. An agent never has to choose among every skill on the classpath — only the skills of the packages the file in front of it actually imports, and a declared dependency that nothing imports contributes none. The unit of lookup is already in the source being edited. What remains hard is the timing and the budget: getting the agent to read the right skill at the moment it needs it, without loading so many that the context cost defeats the point.
+
+### Putting it in front of the agent
+
+Distribution and harvesting are measured below; the trigger is not. Two things bear on it before any measurement: how an agent actually decides to look something up, and a design that fits that behaviour rather than fighting it.
+
+**How an agent decides to look — a self-report, not a measurement.** Asked what it does when writing code it believes it understands, or when an error appears, the agent working on this record described roughly this:
+
+- *Writing code it thinks it knows:* read the request, read the code already open — its imports, how the library is already used nearby — and write from memory. A dependency's documentation is consulted only when a name is unfamiliar, when the surrounding code contradicts what it expected, or when told to.
+- *On an error:* read the message, go to the line, form a hypothesis, fix. Searching the codebase comes next; the dependency's own source or documentation comes last, usually after a fix has already failed.
+- *What reliably changes that:* text that is already in context when the decision is made — instruction files, the descriptions of available skills, the file being edited — and output it is obliged to read, such as a compiler error, a failing test or a lint finding. A tool it has to choose to call is the weakest of these, because choosing to call it requires already suspecting a gap.
+
+That matches the guiding misuse case exactly: the code compiled and the tests passed, so no error fired, and the agent was confident, so it called nothing. **Only something already in its context at the moment of writing would have reached it.**
+
+**A generated pointer skill.** A build plugin knows the resolved dependencies. It can write one ordinary Agent Skill into the project whose job is not to teach any library but to say *these dependencies ship skills, and here is where each one is*. The Agent Skills specification's progressive disclosure makes that nearly free:
+
+1. **At startup** an agent loads only each skill's `name` and `description` — about a hundred tokens, however many dependencies ship skills.
+2. **When a task matches the description** it loads the pointer's body: a table of packages, the dependency each came from, and a relative link to one file per package.
+3. **Only when a package is in play** does it read that package's file from the skill's `references/` directory — the specification's own place for documentation loaded on demand — which holds the library author's `skill-info` text as written.
+
+It answers the budget problem outright: nothing is loaded for a package the code does not use, and the pointer reads a file rather than calling a tool, so it works in any harness that loads skills. It also carries almost no attacker text of its own. The pointer is built from coordinates and package names the build resolved; the library's prose stays in `references/`, untouched. Package names are still identifiers a library chose, so the surface is small rather than zero.
+
+**Prototyped** as `pkgindex.py pointer <dir> [coordinate...]` in the lightweight codex, over the Kotlin Multiplatform fixture as a Gradle consumer resolved it. Measured against: `skills-ref` (the `agentskills` validator) 0.1.1, 2026-09-13.
+
+- The generated `dependency-skills/SKILL.md` **validates**, and its `references/com.example.acme.text.md` is the skill text byte for byte as the library wrote it, with the identical copies from the root and `-jvm` sources jars shown once with both coordinates.
+- **The validator caught a real defect on the first run**: a colon in the generated description broke the YAML frontmatter. The description is now written as a quoted scalar.
+- **The description limit is the constraint that bites.** It is 1,024 characters; a synthetic project of 80 packages produced a 1,017-character description ending *"and more; the full list is in this skill"*. Past a few dozen packages the description can name libraries but not every package, so the body carries the complete list.
+
+**What it does not solve.** An agent still chooses a skill by matching its *task* against descriptions, not by reading the imports in the file. A confident agent with a task phrased in its own terms may never match "code that uses acme-text". The description is written to catch that — it names the libraries and packages plainly and says to read the skill *even when the API seems familiar* — but whether it does is test 5, not something argued here.
+
+**Other ways in, not yet built.**
+
+- **An index in the project's build output**, which the agent can read like any file. The pointer is one form of this; the open part is still what makes the agent open it.
+- **A harness hook.** A hook that runs after an edit, sees that the edited file imports a package with a skill, and adds that package's skill to the tool result. That is push rather than pull: the text lands in output the agent must read, at the moment it has just written code against the package. It is the one design here that would have reached the guiding case, and it is specific to harnesses that support hooks.
+- **A line in the project's agent instructions** — "before using a dependency, check `dependency-skills`" — which is in context from the first turn in every harness that reads such files.
+- **A lint rule** that matches a known hand-rolled pattern and names the skill in its finding, so an obligatory output carries the pointer.
 
 ## Findings
 
@@ -70,6 +105,7 @@ So this is half of the problem. It gets the skill onto the machine, version-matc
 - **Source is the artifact every ecosystem distributes**, and ADR-0009 already relies on the sources jar being tied to the resolved version.
 - **The slot is empty in practice** in at least two widely-used Kotlin libraries.
 - **A skill in source addresses distribution only.** It does not make an agent read it.
+- **A generated pointer skill is buildable today and validates against the Agent Skills specification**, loading one description at startup and one package's skill on demand. Whether an agent uses it is untested.
 
 **The tests.** Tests 1 to 4 are measured, with results below; 5 is not.
 
@@ -77,7 +113,7 @@ So this is half of the problem. It gets the skill onto the machine, version-matc
 2. **Toolchain tolerance.** Does a source file holding only a package declaration and a doc comment compile cleanly, emit no class file, and raise no warning — in Kotlin particularly, where there is no sanctioned form, and in Java under a name other than `package-info.java`? **Measured 2026-09-13; results below.**
 3. **Harvestability.** Can a harvester find it by filename convention alone, without a parser? **Measured 2026-09-13; results below.**
 4. **Collision with human documentation.** `package-info.java` Javadoc *becomes* the package summary page a person reads. Does skill-shaped content — severity-graded mistakes, Wrong/Correct pairs — degrade that page, or does it read acceptably to both audiences? **Measured 2026-09-13 for whether it reaches the page at all; results below.**
-5. **Uptake.** With the file present versus absent, on a misuse task shaped like the guiding case, does an agent's use of the library change? This only means something combined with a trigger; measured alone it will reproduce the not-looking.
+5. **Uptake.** With the file present versus absent, on a misuse task shaped like the guiding case, does an agent's use of the library change? This only means something combined with a trigger; measured alone it will reproduce the not-looking. The arms that now exist to compare: nothing, the generated pointer skill, the pointer plus a line in the agent instructions, and a post-edit hook.
 
 ### Test 1: survival
 
