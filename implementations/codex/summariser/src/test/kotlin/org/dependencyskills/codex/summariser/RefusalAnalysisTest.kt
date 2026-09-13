@@ -52,6 +52,23 @@ class RefusalAnalysisTest {
         }
         val shapeTotal = refusals.count { it.rule in shape }
 
+        // -- 2b. what the narrowed imperative rule now admits, and what it still refuses --------
+        // #22: the rule matched a modal ANYWHERE in a sentence, and modals are ordinary in
+        // descriptive prose. This re-judges every candidate the old rule refused, against the
+        // rule that ships now, and separates two very different outcomes: one that now passes is
+        // a false positive recovered, one still refused by ANOTHER rule was never this rule's to
+        // claim in the first place.
+        val wasImperative = refusals.filter { it.rule == "imperative" }
+        val nowVerdicts = wasImperative.map { it to Verification.verify(it.raw, it.signature) }
+        val recoveredImperative = nowVerdicts.count { it.second is Verdict.Accepted }
+        val stillRefused = nowVerdicts.mapNotNull { (_, v) -> (v as? Verdict.Refused)?.rule }
+            .groupingBy { it }.eachCount()
+
+        // -- 2c. which rule would have caught it if `imperative` did not exist at all? ----------
+        // The open question in #22: is another rule already doing this work? Answered by rule
+        // rather than by argument.
+        val coveredElsewhere = stillRefused.filterKeys { it != "imperative" }.values.sum()
+
         // -- 3. what would a different word bound cost or buy? -----------------------------------
         val atBound = listOf(30, 40, 50, 60, 80, 100).associateWith { bound ->
             refusals.count { it.rule == "too long" && wordsIn(it.raw) <= bound }
@@ -80,6 +97,43 @@ class RefusalAnalysisTest {
             appendLine("| shape refusals | $shapeTotal |")
             appendLine("| **accepted once truncated to the first sentence** | **$recovered** |")
             appendLine("| still refused | ${shapeTotal - recovered} |")
+            appendLine()
+            appendLine("## What the narrowed `imperative` rule changes (#22)")
+            appendLine()
+            appendLine("Every candidate the OLD word-matching rule refused, re-judged by the rule that ships now.")
+            appendLine()
+            appendLine("| | |")
+            appendLine("|---|---:|")
+            appendLine("| refused as `imperative` by the old rule | ${wasImperative.size} |")
+            appendLine("| **now accepted — false positives recovered** | **$recoveredImperative** |")
+            appendLine("| still refused, by any rule | ${wasImperative.size - recoveredImperative} |")
+            appendLine("| of those, refused by a rule that is *not* `imperative` | $coveredElsewhere |")
+            appendLine()
+            appendLine("Which rule now names them:")
+            appendLine()
+            appendLine("| rule | count |")
+            appendLine("|---|---:|")
+            stillRefused.entries.sortedByDescending { it.value }
+                .forEach { (rule, n) -> appendLine("| `$rule` | $n |") }
+            appendLine()
+            appendLine("A candidate refused by a rule other than `imperative` was never this rule's")
+            appendLine("to claim: something else was already covering it, which is the question #22 asked.")
+            appendLine()
+            appendLine("## The refusal rate, restated")
+            appendLine()
+            val total = refusals.size
+            val corrected = total - recoveredImperative
+            appendLine("| | count | of ${total} refusals |")
+            appendLine("|---|---:|---:|")
+            appendLine("| refusals as measured with the old rule | $total | 100% |")
+            appendLine("| refusals under the rule that ships now | $corrected | " +
+                "${"%.1f".format(100.0 * corrected / total)}% |")
+            appendLine("| entries handed back to retrieval | $recoveredImperative | " +
+                "${"%.1f".format(100.0 * recoveredImperative / total)}% |")
+            appendLine()
+            appendLine("Every recovered entry was degraded to signature-only, which RAD-0040 measured")
+            appendLine("as unfindable. Any claim of the form \"the verifier refuses X% of unsafe output\"")
+            appendLine("has to be restated against the corrected number, not the original one.")
             appendLine()
             appendLine("## What a different word bound would admit")
             appendLine()

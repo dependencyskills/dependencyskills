@@ -10,8 +10,9 @@
 #   ./install.sh --github     per-developer GitHub setup: PAT -> connection,
 #                             register the 'github' MCP server in agent configs
 #   ./install.sh --register [--connection <name>]   re-push the connection's
-#                             token into every agent's MCP config (run after
-#                             rotating a token - registrations embed it)
+#                             token into every agent's MCP config - YouTrack
+#                             or GitHub, whichever the connection is (run
+#                             after rotating a token - registrations embed it)
 #   ./install.sh --list | --show | --help
 #
 # Everything lives under one well-known root:
@@ -258,6 +259,18 @@ load_github() {  # $1 = connection name (optional); sets GITHUB_TOKEN + GH_LOGIN
   [[ -n "$GH_LOGIN" ]]
 }
 
+# The MCP server name is derived from the connection name, and the connection
+# arrives in two shapes: a project bind builds it as `github-<dir>`, while a
+# refresh derives it bare from the directory. Strip before prefixing so both
+# land on the same server. Two of the four call sites used to defend against
+# this and two did not, which is how a connection already called
+# `github-<name>` registered as `github-github-<name>`. The connection name
+# still names the credential file; only the server name is derived here.
+gh_server_name() {  # $1 = connection name -> MCP server name
+  local conn="${1:-github}"
+  if [[ "$conn" == "github" ]]; then printf 'github'; else printf 'github-%s' "${conn#github-}"; fi
+}
+
 setup_github() {  # $1 = connection name (default github): token -> <name>.env, verify, register
   GH_CONN="${1:-github}"
   step "GitHub connection '$GH_CONN' (your own PAT - one per developer, never shared)"
@@ -288,7 +301,7 @@ setup_github() {  # $1 = connection name (default github): token -> <name>.env, 
   register_agents_github "$GH_CONN"
   say ""
   say "Done. Restart your agent sessions (Claude Code, Gemini CLI, VS Code)"
-  say "so they pick up the 'github-$GH_CONN' MCP server."
+  say "so they pick up the '$(gh_server_name "$GH_CONN")' MCP server."
 }
 
 register_agents_github() {  # $1 = connection name; GitHub hosted MCP server, PAT header, per agent
@@ -296,8 +309,8 @@ register_agents_github() {  # $1 = connection name; GitHub hosted MCP server, PA
   if [[ ! -f "$CONN_DIR/$conn.env" && ! -f "$CONN_DIR/github.env" ]]; then
     say "  (no stored PAT - skipping MCP registration; scripts will use gh auth)"; return 0
   fi
-  local server="github-$conn" mcp_url="https://api.githubcopilot.com/mcp/"
-  [[ "$conn" == "github" ]] && server="github"   # legacy shared credential keeps the old name
+  local server mcp_url="https://api.githubcopilot.com/mcp/"
+  server="$(gh_server_name "$conn")"   # 'github' stays 'github' - legacy shared credential
   local auth="Bearer $GITHUB_TOKEN"
   if command -v claude >/dev/null; then
     claude mcp remove --scope user "$server" >/dev/null 2>&1 || true
@@ -1439,9 +1452,15 @@ verify_bind() {  # $1 dir - post-condition: did the bind actually land?
 attach_project_github() {  # $1 dir, $2 owner/repo, $3 project number|"", $4 readonly, $5 mode
   local dir="$1" gh_repo="$2" gh_proj="$3" readonly_flag="$4" mode="${5:-link}"
   local conn="${GH_CONN:-github}" srv
-  srv="github-${conn#github-}"; [[ "$conn" == "github" ]] && srv="github"
+  srv="$(gh_server_name "$conn")"
   copy_skills "$dir" "$mode"
   warn_user_level_overlap
+  # Read the prior choice BEFORE the pointer is deleted below. write_updates_config
+  # says it preserves what was chosen, and could not: every attach path regenerates
+  # the pointer from scratch, so by the time it reads, there is nothing to read.
+  # Harmless while the default matched the common value; silently flips everyone
+  # the moment it does not.
+  PRIOR_UPDATES_CHECK="$(read_pointer "$dir" check)"
   rm -f "$dir/.agents/youtrack.json" "$dir/.agents/config/youtrack.json" "$dir/.agents/config/story-tools.json"
   merge_json "$dir/.agents/config/story-tools.json" "tracker" '{
     "type": "github",
@@ -1498,6 +1517,12 @@ attach_project() {  # $1 dir, $2 yt_project, $3 readonly(true|""), $4 mode
   copy_skills "$dir" "$mode"
   warn_user_level_overlap
 
+  # Read the prior choice BEFORE the pointer is deleted below. write_updates_config
+  # says it preserves what was chosen, and could not: every attach path regenerates
+  # the pointer from scratch, so by the time it reads, there is nothing to read.
+  # Harmless while the default matched the common value; silently flips everyone
+  # the moment it does not.
+  PRIOR_UPDATES_CHECK="$(read_pointer "$dir" check)"
   rm -f "$dir/.agents/youtrack.json" "$dir/.agents/config/youtrack.json" "$dir/.agents/config/story-tools.json"   # regenerate cleanly
   merge_json "$dir/.agents/config/story-tools.json" "tracker" '{
     "type": "youtrack",
@@ -1671,6 +1696,12 @@ attach_project_none() {  # $1 dir, $2 mode (link|copy)
   # legacy pointers from before story-tools.json existed. The pointer itself
   # is merged, not replaced: it also carries snapshot, updates and roles, and
   # a refresh must not throw those away.
+  # Read the prior choice BEFORE the pointer is deleted below. write_updates_config
+  # says it preserves what was chosen, and could not: every attach path regenerates
+  # the pointer from scratch, so by the time it reads, there is nothing to read.
+  # Harmless while the default matched the common value; silently flips everyone
+  # the moment it does not.
+  PRIOR_UPDATES_CHECK="$(read_pointer "$dir" check)"
   rm -f "$dir/.agents/youtrack.json" "$dir/.agents/config/youtrack.json"
   merge_json "$dir/.agents/config/story-tools.json" "tracker" '{"type":"none"}'
   ok "pointer: tracker type 'none' - skills run tracker-less (offline mode)"
@@ -1745,7 +1776,7 @@ wizard() {
 
 check_github_drift() {  # $1 = connection; stale PAT in agent configs
   local conn="${1:-github}" srv
-  srv="github-${conn#github-}"; [[ "$conn" == "github" ]] && srv="github"
+  srv="$(gh_server_name "$conn")"
   [[ -n "${GITHUB_TOKEN:-}" ]] || return 0
   [[ -f "$CONN_DIR/$conn.env" || -f "$CONN_DIR/github.env" ]] || return 0
   local stale="" vsc=""
@@ -1816,9 +1847,32 @@ check_skill_updates() {  # $1 dir; honours the project's updates.check setting
   warn "newer skills published in $repo:"
   printf '%s\n' "$behind"
   [[ -t 0 ]] || { say "  run interactively to update"; return 0; }
-  local yn; read -rp "  Update this project's skills from $repo? [y/N] " yn
-  [[ "$yn" =~ ^[Yy] ]] || { say "  left as-is."; return 0; }
-  update_skills_from_repo "$dir" "$repo" "$branch"
+  # Turning the check off is offered HERE, as a keypress, because this is the
+  # moment somebody decides they do not want it - and the alternative was
+  # telling them to go and hand-edit a JSON file, which nobody does. A plain
+  # yes/no only defers: answer no and the same prompt returns next time.
+  blank
+  note "On a team, updating on each developer's own schedule puts different"
+  note "revisions in the tracked .agents/ tree and they conflict. One person"
+  note "updating for the repo avoids that."
+  blank
+  choice y "update now" "take these versions into this project"
+  choice n "not now"    "leave them; ask again next time"
+  choice d "disable"    "stop checking for this project"
+  blank
+  local yn; read -rp "  [y/n/d] " yn
+  case "${yn:-n}" in
+    [Yy]*) update_skills_from_repo "$dir" "$repo" "$branch";;
+    [Dd]*)
+      merge_json "$dir/.agents/config/story-tools.json" "updates" '{
+        "check": false,
+        "skillsRepo": "'"$repo"'",
+        "skillsBranch": "'"$branch"'"
+      }'
+      ok "update check: off for this project (set updates.check true to re-enable)"
+      ;;
+    *) say "  left as-is.";;
+  esac
 }
 
 update_skills_from_repo() {  # $1 dir, $2 owner/repo, $3 branch
@@ -1890,13 +1944,26 @@ TTEOF
 write_updates_config() {  # $1 dir - ask once, preserve thereafter
   local dir="$1" cur want
   cur="$(read_pointer "$dir" check)"
+  [[ -z "$cur" ]] && cur="${PRIOR_UPDATES_CHECK:-}"   # pointer already regenerated
   if [[ -n "$cur" ]]; then
     want="$cur"                                  # already decided; keep it
   elif [[ -t 0 ]]; then
-    local yn; read -rp "  Check for skill updates from $SKILLS_REPO on setup? [Y/n] " yn
-    [[ "${yn:-y}" =~ ^[Nn] ]] && want="false" || want="true"
+    # Asked, not assumed - the right answer depends on how many people work
+    # here, which the installer cannot see. The recommendation is stated with
+    # its reason, so the choice survives being made by whoever runs setup next.
+    blank
+    printf '  %sCheck for skill updates on setup?%s\n' "$C_B" "$C_0"
+    note "Working solo: yes. Fixes reach you as they land."
+    note "On a team: no, and this is the recommendation. Every developer's"
+    note "setup pulling independently lands a different revision at a different"
+    note "time, and those conflict in the tracked .agents/ tree. Let one person"
+    note "update the repo for everyone."
+    blank
+    local yn; read -rp "  Check for updates from $SKILLS_REPO? [y/N] " yn
+    [[ "${yn:-n}" =~ ^[Yy] ]] && want="true" || want="false"
+    blank
   else
-    want="true"
+    want="false"
   fi
   merge_json "$dir/.agents/config/story-tools.json" "updates" '{
     "check": '"$want"',
@@ -1905,7 +1972,7 @@ write_updates_config() {  # $1 dir - ask once, preserve thereafter
   }'
   [[ "$want" == "true" ]] \
     && ok "update check: on (set updates.check false in the pointer to disable)" \
-    || ok "update check: off"
+    || ok "update check: off (set updates.check true in the pointer to enable)"
 }
 
 ship_setup() {  # copy this installer into the project as .agents/setup.sh
@@ -2221,9 +2288,15 @@ case "${1:-}" in
       [[ "$(grep -c . <<<"$profiles")" == "1" ]] && profile="$profiles"
     fi
     [[ -z "$profile" ]] && { say "usage: install.sh --register [--connection <name>]  (several connections exist - name one)" >&2; exit 1; }
-    load_connection "$profile" || { say "error: connection '$profile' not found" >&2; exit 1; }
-    PROFILE="$profile"
-    register_agents
+    # Tracker-agnostic, matching the shipped .agents/setup.sh copy: a
+    # connection is a YouTrack one or a GitHub one, and --register re-pushes
+    # whichever it is. This arm was YouTrack-only while the shipped copy
+    # already fell back, so the same flag did different things depending on
+    # which script you ran - and the GitHub binding documents this flag for
+    # rotating a GitHub token.
+    if load_connection "$profile"; then PROFILE="$profile"; register_agents
+    elif load_github "$profile"; then register_agents_github "$profile"
+    else say "error: connection '$profile' not found" >&2; exit 1; fi
     say ""
     say "Registrations updated. Restart your agent sessions so they reconnect"
     say "with the new token.";;

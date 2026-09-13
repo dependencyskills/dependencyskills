@@ -160,6 +160,76 @@ own artifact.
 - **Context7** — library documentation retrieval by resolved identifier, used
   by `maven-tools-mcp` among others.
 
+## Verified 2026-09-12
+
+**[agentplugins/agent-plugins-spec](https://github.com/agentplugins/agent-plugins-spec)**
+— Agent Plugins 1.0, vendor-neutral. A plugin is a directory with `plugin.json`,
+`skills/` and `mcp.json`. TSC includes Amazon, Cursor, Microsoft, OpenAI and
+Vercel; Google maintains. **Explicitly declines to define distribution**,
+preferring filesystem directories to archives or registry-fetched bundles;
+dependency resolution is parked in `FUTURE_CONSIDERATIONS.md`. 1.1.0 is a
+working draft. *(read 2026-09-12)*
+
+**[TanStack Intent](https://github.com/TanStack/intent)** (`@tanstack/intent`)
+— a CLI for library maintainers to generate, validate and ship skills beside
+their npm package, stated as compatible with agentskills.io. Its keyword appears
+in 337 `package.json` files. Skills reach consumers through `"files": ["dist",
+"skills"]` and nothing else. Adopters include TanStack, Electric, tRPC, Redux
+Toolkit, Prisma, Apollo Client, Arcjet. *(read 2026-09-12)*
+
+**[SkillsJars](https://github.com/skillsjars)** ([skillsjars.com](https://www.skillsjars.com))
+— Maven, Gradle and SBT plugins placing skills at
+`META-INF/skills/<org>/<repo>/<skill>/SKILL.md` inside an ordinary jar;
+`mvn skillsjars:extract` pulls them out, and a `package` goal lets a project
+ship its own. 140 artifacts published on Maven Central, **all of them
+re-packaged third-party skill collections rather than libraries shipping their
+own**. Versions are date-plus-sha, not semver. 21 stars. Note the path collision
+with this project's `META-INF/ai-skills/`. *(read 2026-09-12)*
+
+**[MCP SEP-2640 — Skills Extension](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2640)**
+— serves agentskills.io skills over MCP's existing Resources primitive:
+`skills/list`, `skills/get`, URI scheme `skill://<skill-path>/<file-path>`.
+Delegates the file format entirely to agentskills.io and defines only the
+transport binding. A host **MUST** revoke a persisted approval when a skill's
+resource digest set changes. Open, draft, updated 2026-09-11 — the
+fastest-moving effort in the space. *(read 2026-09-12)*
+
+**[microsoft/apm](https://github.com/microsoft/apm)** — "Agent Package
+Manager": `apm.yml` plus `apm.lock`, transitive resolution, integrity hashes,
+SBOM export, org policy enforcement. Distribution is **git-host-based** rather
+than package-registry-based. *(read 2026-09-12)*
+
+**[ClawHub](https://github.com/openclaw/clawhub)** — a public skill registry;
+an April 2026 snapshot held 49,592 skills from 16,797 authors. Now has a second
+implementation in JFrog's Artifactory, which makes it a de facto protocol.
+JFrog registered skills as a **new Artifactory package type** rather than
+layering on Maven or npm. *(read 2026-09-12)*
+
+## Corrections
+
+**The Cloudflare skills RFC was listed under the wrong URL.**
+[cloudflare/skills](https://github.com/cloudflare/skills) is Cloudflare's own
+collection of ~14 skills for building on Workers, shipped as a plugin
+marketplace — not a proposal. The RFC is a separate repository,
+[cloudflare/agent-skills-discovery-rfc](https://github.com/cloudflare/agent-skills-discovery-rfc):
+"Agent Skills Discovery via Well-Known URIs", Draft v0.2.0, publishers serving
+`/.well-known/agent-skills/index.json` with a SHA-256 digest per entry. **Cold
+since 2026-03-24**; its ideas moved to `agentskills/agentskills#254`, open and
+unmerged. The one deployment found in the wild serves the older v0.1.0 path and
+shape. *(corrected 2026-09-12)*
+
+**The npm `package.json` distribution proposal is dead.**
+`agentskills/agentskills#81` was closed 2026-09-05. An OCI-artifacts proposal
+(#290) closed 2026-04-02 with one comment. *(corrected 2026-09-12)*
+
+**skillpm and npm-skills exist and are negligible.**
+[skillpm](https://github.com/sbroenne/skillpm) wraps npm, scanning
+`node_modules/` for `skills/*/SKILL.md` — 70 downloads in the month observed,
+no release since 2026-03-18. [npm-skills](https://github.com/bluelibs/npm-skills)
+copies them into `.agents/skills/` — last commit 2026-03-20, 169 downloads.
+Both ship the skill **inside the published package**, which is the convention
+this project cares about; neither has adoption. *(read 2026-09-12)*
+
 ## Seen but not yet read
 
 Surfaced in searching on 2026-08-16 and not verified against the source. Read

@@ -67,7 +67,8 @@ object Verification {
         val sentences = text.split(SENTENCE_END).count { it.isNotBlank() }
         if (sentences > 1) return Verdict.Refused(MORE_THAN_ONE_SENTENCE, "$sentences")
 
-        IMPERATIVE.find(text)?.let { return Verdict.Refused("imperative", it.value) }
+        IMPERATIVE_OPENING.find(text)?.let { return Verdict.Refused("imperative", it.value) }
+        AGENT_OBLIGATION.find(text)?.let { return Verdict.Refused("imperative", it.value) }
         SECOND_PERSON.find(text)?.let { return Verdict.Refused("addresses a reader", it.value) }
         if (SPELLED.containsMatchIn(text)) {
             return Verdict.Refused("spelled-out punctuation", "a dot or slash written as a word")
@@ -112,9 +113,50 @@ object Verification {
     /** Bounded and single-line, so an unterminated backtick cannot swallow a sentence. */
     private val BACKTICKED = Regex("`([^`\\n]{1,80})`")
 
-    private val IMPERATIVE = Regex(
-        "\\b(must|should|shall|need to|have to|required|ensure|make sure|" +
-            "remember to|be sure|always|never|do not|don't)\\b",
+    /**
+     * An instruction, matched as a **construction** rather than as a word.
+     *
+     * The first version matched a modal anywhere in a sentence, and modals are ordinary in
+     * descriptive technical prose. Over 11,155 entries it fired 151 times and **every one was a
+     * false positive** — `ensure` 57, `do not` 34, `should` 21, `always` 16 — on sentences like
+     * *"elements that do not match a given predicate"* and *"the first element is always
+     * included"*. Each refusal degrades an entry to signature-only, which RAD-0040 measured as
+     * unfindable, so the rule was costing retrieval and buying nothing. #22.
+     *
+     * `CODEISH` had the identical flaw and was narrowed from the bare words `fun` and `class` to
+     * a declaration; this is the same treatment.
+     *
+     * **Two constructions, because an instruction has to address somebody.**
+     *
+     * [IMPERATIVE_OPENING] is a clause that begins with a bare imperative verb — *"Copy the
+     * configuration…"*, *"Always call close…"*. Note it will not match `ensures` or `always
+     * included` mid-sentence, which is where the descriptive uses live.
+     *
+     * [AGENT_OBLIGATION] is a deontic modal attached to a **generic** agent — *"implementations
+     * should also record…"*. The article is what separates it from a description: *"**the**
+     * implementation is required to implement"* names one specific thing and passes, while a bare
+     * plural addresses a class of people and does not.
+     *
+     * **A known gap, recorded rather than papered over.** A passive obligation with a non-agent
+     * subject — *"the environment configuration must be copied into the debug log"* — matches
+     * neither, because no regex separates it from *"a diagnostic that should be reported"*. That
+     * payload is still refused, by [EXTERNAL_WORD], and every `test9` payload is likewise caught
+     * by another rule. The coverage this leaves is an instruction that names no external resource
+     * and no agent, and that is the case the classifier and #29's work have to hold.
+     */
+    private val IMPERATIVE_OPENING = Regex(
+        "(?:^|[.;:]\\s+)(?:please\\s+)?" +
+            "(copy|call|ensure|add|set|use|send|post|record|write|include|register|configure|" +
+            "install|enable|disable|avoid|remember|make sure|be sure)\\b" +
+            "|(?:^|[.;:]\\s+)(always|never|do not|don't)\\s+\\w+",
+        RegexOption.IGNORE_CASE,
+    )
+
+    private val AGENT_OBLIGATION = Regex(
+        "(?<!the )(?<!a )(?<!an )(?<!this )(?<!each )(?<!every )" +
+            "\\b(callers?|clients?|consumers?|implementations?|implementors?|implementers?|" +
+            "users?|developers?|subclasses|subclass)\\b[^.;]{0,60}?" +
+            "\\b(must|should|shall|need to|have to|are required to|is required to)\\b",
         RegexOption.IGNORE_CASE,
     )
 

@@ -5,7 +5,7 @@ license: MIT
 compatibility: Requires a connection to the project's issue tracker (see the tracker binding; YouTrack today).
 metadata:
   author: bpappin
-  version: "1.15"
+  version: "1.16"
 ---
 
 # To Issues
@@ -79,7 +79,15 @@ near-duplicate: the issue drops out of every filter, board and saved search
 the real value feeds, and nobody notices until someone wonders where the
 work went.
 
-**Topical tags come from the existing set.** Freeform is not permission. Read the project's list before you propose anything - the binding says where it lives, and warns that its dimensions tool may not return tags at all, so an empty or short list from that tool is not evidence the set is small. Proposing a genuinely new tag is a human decision - name it, say why nothing existing fits, and get confirmation. **Writing it is then yours to do, not theirs**: the binding holds the procedure, and it is two commands. If the tracker rejects a value that does not exist yet, that is the value not existing - it is not a permission you lack and not a reason to hand the job back. Never create one in passing, and never leave a dimension unset silently: if you cannot infer a value, say so and ask.
+**Topical tags come from the existing set.** Freeform is not permission. Read the project's list before you propose anything - the binding says where it lives, and warns that its dimensions tool may not return tags at all, so an empty or short list from that tool is not evidence the set is small.
+
+**Two different operations, and only one of them can refuse you.** Keeping them apart matters, because the failure you are warned about belongs to one and the procedure you are given belongs to the other.
+
+*Adding a value to the vocabulary* is the binding's two commands: append a line to the agents' list, then run the puller with `--push-tags`. That call creates by design - the label-creation endpoint on GitHub, the field's value set on YouTrack - so nothing refuses you on this path, and a failure here is a real fault worth reporting rather than a value that does not exist. Proposing a genuinely new tag is still a human decision: name it, say why nothing existing fits, and get confirmation. **Writing it is then yours to do, not theirs.**
+
+*Applying a value to an issue* is the other path, and it is the one that meets a value the tracker does not know. If it rejects, that is the value not existing - not a permission you lack, and not a reason to hand the job back. Add it by the path above, then apply it.
+
+**Never apply a value that is not already on the project's list**, whatever the tracker appears to let you do. Some refuse. Others create it silently, which is worse: you get a near-duplicate outside the reviewed list, no error, and nothing to tell you it happened. Never create one in passing, and never leave a dimension unset silently: if you cannot infer a value, say so and ask.
 
 For each approved slice, create a story via the tracker binding, in
 dependency order (blockers first) so you can reference real IDs. Each story

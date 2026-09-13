@@ -29,7 +29,9 @@ and Python.
 
 ## What actually goes wrong
 
-Three failures, in the order a developer meets them. This part has held up.
+Four failures. The first is the one this project started from, and the bar every remedy is held to; the other three follow in the order a developer meets them. This part has held up.
+
+**Misuse.** An agent uses a dependency it knows is there, in a way that compiles and passes and is not how the library is meant to be used. The case that started this project: an agent wrote a whole library against a dependency's result type, pattern-matching on its success and failure subtypes in every file, when the type already provided `onSuccess`, `onFailure`, `fold` and a null-returning accessor that replaced three helpers it had written by hand. The dependency's sources sat in the local build cache throughout. Nothing failed — the pattern was exhaustive, compiled on every target and passed hundreds of test runs — because the defect was in idiom rather than behaviour, which no compiler or test reaches. It had learned the type from a sentence in its own project's notes that was true and incomplete, then copied its own first use until the pattern was entrenched. Asked afterwards whether a search it had to invoke would have caught it, it said no: it never felt a gap, so there was nothing to ask about. **That defines the bar. A remedy that waits to be asked does not reach this failure, however good the thing it would have found.**
 
 **Reinvention.** An agent writes its own version of something the project
 already depends on, having never established that the library was there. Two

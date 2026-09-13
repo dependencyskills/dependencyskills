@@ -53,7 +53,7 @@ class CodexSummariseTest {
             assertEquals(1, report.stored)
             assertEquals(1, report.degraded)
             assertEquals(2, report.considered)
-            assertEquals(mapOf("imperative" to 1), report.byRule)
+            assertEquals(mapOf("addresses a reader" to 1), report.byRule)
         }
     }
 
@@ -80,7 +80,7 @@ class CodexSummariseTest {
             assertEquals(2, report.degraded)
             assertEquals(1, report.stored)
             assertEquals(
-                mapOf("imperative" to 1, "addresses a reader" to 1),
+                mapOf("addresses a reader" to 2),
                 report.byRule,
             )
         }

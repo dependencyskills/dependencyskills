@@ -21,8 +21,12 @@ class SourcesJarHarvesterTest {
         val result = harvested(Fixtures.javaSources)
         assertEquals(47, result.report.sourceFiles)
         assertEquals(816, result.report.declarations)
-        assertEquals(229, result.report.documented)
-        assertEquals(229, result.entries.size)
+        // 223 and not 229 since the source screen: read blind, six of this jar's documented
+        // declarations open with an explicit `private`. Java's implicit cases — package-private,
+        // and an interface member that is public without saying so — are untouched and still
+        // wait on the oracle.
+        assertEquals(223, result.report.documented)
+        assertEquals(223, result.entries.size)
         assertEquals(0, result.report.unreadable)
         assertEquals(0, result.report.withParseErrors)
         assertTrue(result.entries.all { it.lang == "java" && it.docFormat == "javadoc" })
@@ -37,8 +41,11 @@ class SourcesJarHarvesterTest {
         // and the words "Workaround of ... and ...". Dropping the addresses leaves three words
         // that retrieve nothing, so it falls under the minimum. Re-pinned deliberately - the
         // number moving is the whole signal that extraction changed.
-        assertEquals(323, result.report.documented)
-        assertEquals(323, result.entries.size)
+        // 277 and not 323 since the source screen: this fixture is read blind, with no classes
+        // jar, and 46 of its documented declarations open with an explicit `internal` or
+        // `private`. They were kept before only because nothing had judged them.
+        assertEquals(277, result.report.documented)
+        assertEquals(277, result.entries.size)
         assertEquals(0, result.report.unreadable)
         assertTrue(result.entries.all { it.lang == "kotlin" && it.docFormat == "kdoc" })
     }

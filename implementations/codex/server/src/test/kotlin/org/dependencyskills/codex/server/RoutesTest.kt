@@ -6,6 +6,7 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
+import kotlinx.coroutines.runBlocking
 import org.dependencyskills.codex.core.Codex
 import org.dependencyskills.codex.core.Coordinate
 import org.dependencyskills.codex.core.NewEntry
@@ -162,6 +163,49 @@ class RoutesTest {
             client.post("/projects") { setBody("""{"path":"  "}""") }.status,
             "a blank path names no project and cannot be recorded",
         )
+    }
+
+    // -- the scope header, which is the containment boundary ---------------------------------
+
+    @Test
+    fun `the project header decides what a caller can see, and its absence shows nothing`() {
+        // PROJECT_HEADER is how a request says whose scope it is asking in, so it is the one
+        // header that must not be ambiguous or optional. Named for this project rather than the
+        // generic word precisely so it cannot collide with another tool's header and hand one
+        // project's dependency graph to a client asking about a different one.
+        testApplication {
+            val store = seeded(store())
+            Codex.open(store).use { it.recordProject("/work/mine", "mine", "maven", listOf(acme)) }
+            application { codexModule(store, CodexConfig.load(store)) }
+
+            fun call(header: String?) = runBlocking {
+                client.post("/mcp") {
+                    // The MCP transport validates Host as a DNS-rebinding guard, so a request
+                    // without one is refused before scope is even considered.
+                    headers.append("Host", "127.0.0.1")
+                    headers.append("Content-Type", "application/json")
+                    headers.append("Accept", "application/json, text/event-stream")
+                    header?.let { headers.append(PROJECT_HEADER, it) }
+                    setBody(
+                        """{"jsonrpc":"2.0","id":1,"method":"tools/call","params":""" +
+                            """{"name":"search","arguments":{"need":"documented thing"}}}"""
+                    )
+                }.bodyAsText()
+            }
+
+            // With the header, the project's own entry is reachable.
+            val scoped = call("/work/mine")
+            assertTrue("com.example.acme.run" in scoped, "scoped search should answer: ${scoped.take(300)}")
+
+            // Without it, nothing — and the reason is said rather than being an empty list that
+            // reads as "this project has nothing".
+            val anonymous = call(null)
+            assertFalse("com.example.acme.run" in anonymous, "an unscoped request must see nothing")
+            assertTrue(PROJECT_HEADER in anonymous, "and must say which header was missing")
+
+            // A project nobody registered is not answered from somebody else's scope.
+            assertFalse("com.example.acme.run" in call("/work/never-registered"))
+        }
     }
 
     @Test

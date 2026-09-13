@@ -39,8 +39,16 @@ import kotlin.system.exitProcess
 /** The port this service listens on when nothing says otherwise. */
 const val SERVER_PORT = 8310
 
-/** The header a caller uses to say which project it is asking for. */
-const val PROJECT_HEADER = "X-Codex-Project"
+/**
+ * The header a caller uses to say which project it is asking for.
+ *
+ * Named for *this* project rather than for the generic word. "Codex" is a name several unrelated
+ * tools already use, and a header called `X-Codex-Project` would collide with any of them the
+ * moment two sit behind one proxy or one client talks to both — silently, by sending the wrong
+ * project's scope to a service that would answer it perfectly happily. The scope header is the
+ * containment boundary, so it is the last thing that should be ambiguous about whose it is.
+ */
+const val PROJECT_HEADER = "X-DsCodex-Project"
 
 private val logger = LoggerFactory.getLogger("org.dependencyskills.codex.server.Application")
 

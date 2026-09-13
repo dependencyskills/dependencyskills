@@ -93,6 +93,9 @@ class SourcesJarHarvester(
                     // #30: a capability a developer cannot invoke is not a capability. The
                     // enclosing declaration decides — the oracle has already resolved a member
                     // of an unreachable type to unreachable, so this is a single lookup.
+                    // The keyword first, because a keyword that is present is never ambiguous and
+                    // the oracle is answering a coarser question — see [declaresNonPublic].
+                    if (declaresNonPublic(item.signature)) { notReachable++; continue }
                     when (visibility.reach(item.symbol)) {
                         Reach.Unreachable -> { notReachable++; continue }
                         Reach.Unknown -> visibilityUnknown++
@@ -138,6 +141,68 @@ class SourcesJarHarvester(
          * for input it already read.
          */
         const val EXTRACTOR = "tree-sitter-sources-jar/1"
+
+        /**
+         * Whether a signature says, in a word, that nobody outside the library can reach it.
+         *
+         * **This does not reopen the argument [VisibilityOracle] settled.** That argument is about
+         * the *absence* of a keyword: `T build()` in an interface is implicitly public and
+         * `final class StrBuilderReader` is package-private, and no rule applied to source tells
+         * them apart. Nothing here reads an absence. It reads a keyword that is present, and a
+         * declaration that says `private` or `internal` out loud is unreachable from outside the
+         * library in both languages, with no artifact required to know it.
+         *
+         * It exists because there are declarations no compiled artifact can speak for. An
+         * `expect class` has no bytecode by definition, and a multiplatform sources jar carries
+         * whole source sets — Kotlin/Native, JS — that no JVM classes jar covers. For those the
+         * source keyword is not the weaker evidence, it is the only evidence there is. Measured on
+         * a rebuild of four Kotlin libraries: 20 entries survived the oracle this way, among them
+         * `internal expect class ValueTimeMarkReading` and an `internal class FileSink` taking a
+         * `CPointer`.
+         *
+         * **It runs before the oracle, not after, and that ordering is load-bearing.** A symbol
+         * omits parameter types, so an overload family shares one — and therefore one verdict.
+         * `kotlin.text.split` is five declarations under that name, four public and one
+         * `private`, and the family resolves to [Reach.Reachable]; consulted second, this screen
+         * would never see the private one. That is #42 arriving as a visibility leak rather than
+         * a ranking complaint, and reading the keyword first closes it without waiting on #42.
+         *
+         * `protected` is deliberately absent: a subclass outside the library can reach it.
+         */
+        internal fun declaresNonPublic(signature: String): Boolean {
+            // Annotations first, and they may carry parenthesised arguments containing anything
+            // at all — including the word `private`. Stripping them is what keeps this reading
+            // the declaration's own modifiers rather than an annotation's payload.
+            val declaration = LEADING_ANNOTATIONS.replace(signature.trimStart(), "")
+            // Only the run of modifiers that OPENS the declaration counts, and the scan stops at
+            // the first word that is not one. `public class Uuid private constructor(...)` is
+            // public API whose constructor is not, and a rule that searched the whole string —
+            // or allowed any word before the keyword — would delete the class. Same trap with
+            // `var x: Int private set`.
+            for (token in declaration.split(WHITESPACE)) {
+                if (token in NON_PUBLIC) return true
+                if (token !in MODIFIERS) return false
+            }
+            return false
+        }
+
+        private val LEADING_ANNOTATIONS = Regex("""^(?:@[\w.]+(?:\([^)]*\))?\s+)*""")
+        private val WHITESPACE = Regex("""\s+""")
+
+        /** `protected` is deliberately not here: a subclass outside the library can reach it. */
+        private val NON_PUBLIC = setOf("private", "internal")
+
+        /**
+         * Words that may precede a visibility keyword in either language. Anything else ends the
+         * modifier run — including `class`, `fun`, `val`, `var` and a Java return type.
+         */
+        private val MODIFIERS = setOf(
+            "public", "protected", "abstract", "final", "open", "sealed", "data", "inline",
+            "value", "expect", "actual", "override", "suspend", "external", "tailrec",
+            "operator", "infix", "const", "lateinit", "inner", "companion", "annotation",
+            "enum", "static", "synchronized", "native", "strictfp", "transient", "volatile",
+            "default", "vararg", "crossinline", "noinline", "reified",
+        )
 
         /**
          * A Kotlin Multiplatform sources jar is rooted on source sets — `commonMain`,

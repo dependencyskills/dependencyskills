@@ -97,4 +97,47 @@ class SourcesInCacheTest {
             ),
         )
     }
+
+    // -- the compiled artifact, and where multiplatform keeps it -------------------------------
+
+    @Test
+    fun `the classes jar is found under the coordinate that names it`() {
+        val expected = cache("com.example", "zeta", "1.0", "zeta-1.0.jar")
+        assertEquals(expected, SourcesInCache.classes(Coordinate("maven", "com.example:zeta:1.0"), env, props))
+    }
+
+    @Test
+    fun `a multiplatform common module falls back to the JVM variant for its bytecode`() {
+        // The defect this exists for. A build resolves the COMMON module and reports that
+        // coordinate, which is correct - one entry per library, not one per target. But the common
+        // module's artifact is Kotlin metadata, and the bytecode the visibility rule needs is
+        // published beside it under `-jvm`. Without this the oracle is blind for every
+        // multiplatform dependency and keeps what it never judged.
+        cache("org.example", "coroutines", "1.0", "coroutines-metadata-1.0.jar")
+        val jvm = cache("org.example", "coroutines-jvm", "1.0", "coroutines-jvm-1.0.jar")
+        assertEquals(jvm, SourcesInCache.classes(Coordinate("maven", "org.example:coroutines:1.0"), env, props))
+    }
+
+    @Test
+    fun `the coordinate's own classes jar wins over the JVM variant`() {
+        // The fallback is a fallback. A library that publishes both must be read as itself.
+        val own = cache("org.example", "eta", "1.0", "eta-1.0.jar")
+        cache("org.example", "eta-jvm", "1.0", "eta-jvm-1.0.jar")
+        assertEquals(own, SourcesInCache.classes(Coordinate("maven", "org.example:eta:1.0"), env, props))
+    }
+
+    @Test
+    fun `a coordinate already naming the JVM variant is not asked for it twice`() {
+        // Guards the obvious way to write this wrong: appending unconditionally would look for
+        // `theta-jvm-jvm`, which nothing publishes, and the miss would be silent.
+        cache("org.example", "theta-jvm-jvm", "1.0", "theta-jvm-jvm-1.0.jar")
+        assertNull(SourcesInCache.classes(Coordinate("maven", "org.example:theta-jvm:1.0"), env, props))
+    }
+
+    @Test
+    fun `a library with neither classes nor a JVM variant is null rather than an exception`() {
+        // Still the ordinary case, and still not a finding: the harvest runs unjudged and says so.
+        cache("com.example", "iota", "1.0", "iota-1.0-sources.jar")
+        assertNull(SourcesInCache.classes(Coordinate("maven", "com.example:iota:1.0"), env, props))
+    }
 }

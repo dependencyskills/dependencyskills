@@ -1,3 +1,4 @@
+import java.io.File
 // The door. An MCP server over the store, and the last code that runs before third-party content
 // reaches a model.
 //
@@ -94,14 +95,28 @@ val hostPlatform: String = run {
     "$family-$cpu"
 }
 
+// The inference module keeps its natives out of the plain jvm jar, so anything in this build that
+// loads a generator has to be told where the working copy is.
+//
+// **This applies to `run`, not only to tests, and that was a real defect.** The property was set
+// for `Test` alone, so the whole suite passed while `./gradlew :server:run` — the documented way
+// to start the service — died on `Cannot open library: libdscodex.dylib` the first time a pass
+// tried to open a model. Tests that arrange something the application does not get are tests of a
+// configuration nobody ships.
+val nativeDir: File = layout.projectDirectory
+    .file("../inference/src/jvmMain/resources/dscodex/$hostPlatform").asFile
+
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
     jvmArgs("--enable-native-access=ALL-UNNAMED", "--add-modules", "jdk.incubator.vector")
-    // The inference module keeps its natives out of the plain jvm jar, so a sibling's tests have
-    // to be told where the working copy is - and the protocol tests hand this whole classpath to
-    // a child process, which needs it too.
-    val nativeDir = layout.projectDirectory
-        .file("../inference/src/jvmMain/resources/dscodex/$hostPlatform").asFile
+    // The protocol tests hand this whole classpath to a child process, which needs it too.
+    jvmArgumentProviders.add(
+        CommandLineArgumentProvider { listOf("-Ddscodex.native.dir=" + nativeDir.absolutePath) }
+    )
+}
+
+tasks.withType<JavaExec>().configureEach {
+    jvmArgs("--enable-native-access=ALL-UNNAMED", "--add-modules", "jdk.incubator.vector")
     jvmArgumentProviders.add(
         CommandLineArgumentProvider { listOf("-Ddscodex.native.dir=" + nativeDir.absolutePath) }
     )
