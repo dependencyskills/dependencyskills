@@ -1,0 +1,19 @@
+--- Javadoc 26.0.2.1
+    skill-info.java                                      stays out (files with text: 0, with name: 0)
+    the same text in package-info.java (reuse)           SKILL TEXT RENDERED (files with text: 1, with name: 0)
+--- Dokka 2.2.0, HTML, Kotlin Multiplatform fixture · exit 0
+    skill-info.kt in commonMain                          stays out (files with text: 0, with name: 0)
+--- go doc -all go1.27.1
+    skill-info.go, comment after the package clause      stays out (files with text: 0, with name: 0)
+    skill-info.go, comment before the package clause     SKILL TEXT RENDERED (files with text: 1, with name: 0)
+--- rustdoc, cargo doc 1.98.1 · exit 0
+    src/skill-info.rs, reached by no mod                 stays out (files with text: 0, with name: 0)
+    reached by #[path] mod, --document-private-items     SKILL TEXT RENDERED (files with text: 1, with name: 3)
+--- pydoc 3.14.7, pdoc 16.0.0
+    pydoc acme_text                                      text out, file NAME appears (files with text: 0, with name: 1)
+    pdoc acme_text (HTML)                                SKILL TEXT RENDERED (files with text: 2, with name: 3)
+--- TypeDoc 0.28.20, entry point src/index.ts
+    skill-info.ts, re-exported from the entry point      stays out (files with text: 0, with name: 0)
+    skill-info.ts, not imported by the entry point       stays out (files with text: 0, with name: 0)
+--- DocC, swift-docc-plugin 1.5.0 · exit 0
+    skill-info.swift                                     stays out (files with text: 0, with name: 0)

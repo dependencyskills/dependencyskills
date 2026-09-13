@@ -4,7 +4,7 @@ RAD-0073 · 2026-09-13
 
 Keywords: package-info.java for skills; a source file that is only documentation; doc.go as a skill carrier; ship a skill without a resource mechanism; source travels where resources do not; crate-level docs; module docstring; packageDocumentation; does kotlin have a package doc file; skill in the sources jar; will the toolchain accept a file with no code; does skill content pollute the rendered docs.
 
-Measured against: tests 1 and 2 — nine toolchains, a nine-target Kotlin Multiplatform publication, and the ordinary publishing tools of seven ecosystems, Maven and Gradle both; versions under each test's results. Tests 3 to 5 are unmeasured, and what this record says about them is argument.
+Measured against: tests 1 to 4 — nine toolchains, a nine-target Kotlin Multiplatform publication, the ordinary publishing tools of seven ecosystems, their consumers' package managers, and nine documentation generators; versions under each test's results. Test 5 is unmeasured, and what this record says about it is argument.
 
 ## Question
 
@@ -13,6 +13,11 @@ A skill embedded in a library as a resource file does not come out reliably. It 
 **Can a library ship its skill as a source file instead — the way `package-info.java` documents a Java package — so that the skill travels wherever the source travels, with no per-ecosystem resource mechanism at all?**
 
 ## Trail
+
+### Documentation read from source is not a skill
+
+Everything this project indexes today is documentation: doc comments, harvested and summarised. That describes what an API *is*. A skill tells an agent what to *do* — which call to prefer, which mistake is common, what a correct use looks like next to a wrong one — and doc comments are written for a different reader and rarely say it. So proper skill instructions still have to exist and still have to reach the consumer, and the question is how they travel. A registry manifest or a side channel is a second distribution system to build and trust. **The first thing to establish is whether the skill can ride inside the source that is already being fetched and indexed** — and that is what the tests below measure.
+
 
 ### Why resources failed
 
@@ -64,12 +69,12 @@ So this is half of the problem. It gets the skill onto the machine, version-matc
 - **The slot is empty in practice** in at least two widely-used Kotlin libraries.
 - **A skill in source addresses distribution only.** It does not make an agent read it.
 
-**The tests.** Tests 1 and 2 are measured, with results below; 3 to 5 are not.
+**The tests.** Tests 1 to 4 are measured, with results below; 5 is not.
 
 1. **Survival.** Does a documentation-only source file reach the published artifact unchanged — a Maven sources jar, each target of a Kotlin Multiplatform publication (does a `commonMain` file appear where a consumer resolves it?), an npm tarball, a Go module, a Rust crate, a PyPI sdist and wheel, a Swift package? **Measured 2026-09-13; results below.**
 2. **Toolchain tolerance.** Does a source file holding only a package declaration and a doc comment compile cleanly, emit no class file, and raise no warning — in Kotlin particularly, where there is no sanctioned form, and in Java under a name other than `package-info.java`? **Measured 2026-09-13; results below.**
-3. **Harvestability.** Can a harvester find it by filename convention alone, without a parser?
-4. **Collision with human documentation.** `package-info.java` Javadoc *becomes* the package summary page a person reads. Does skill-shaped content — severity-graded mistakes, Wrong/Correct pairs — degrade that page, or does it read acceptably to both audiences?
+3. **Harvestability.** Can a harvester find it by filename convention alone, without a parser? **Measured 2026-09-13; results below.**
+4. **Collision with human documentation.** `package-info.java` Javadoc *becomes* the package summary page a person reads. Does skill-shaped content — severity-graded mistakes, Wrong/Correct pairs — degrade that page, or does it read acceptably to both audiences? **Measured 2026-09-13 for whether it reaches the page at all; results below.**
 5. **Uptake.** With the file present versus absent, on a misuse task shaped like the guiding case, does an agent's use of the library change? This only means something combined with a trigger; measured alone it will reproduce the not-looking.
 
 ### Test 1: survival
@@ -137,20 +142,67 @@ Each case is a package holding one real type plus a skill file containing only t
 - **Where the text survives into compiled output is uneven, and it matters for npm**, which usually publishes `dist/` rather than source: `tsc` keeps a leading comment in `.d.ts` but drops it from the `.js` of a module.
 - **Not tested here:** whether a packager drops the file — test 1, though the KMP and Cargo results above already answer it for those two.
 
+### Test 3: harvestability
+
+Measured against: Gradle 9.7.1 · Maven 3.9.16 · npm 11.13.0 · uv 0.12.5 · Go 1.27.1 · Swift 6.3.3 · this repository's codex harvester at the commit of this record. Harness: `experiments/skill-as-source/harvest/run.sh`, raw output beside it; it still runs.
+
+Each consumer resolves the published fixture the way its ecosystem does, into caches isolated for the run, and a harvester that knows only the filename looks for `skill-info.*`. The text is then recovered by stripping comment markers line by line — one rule set for every language, no parser — and compared with what was written.
+
+| consumer | where it landed | found by name | text recovered exactly |
+|---|---|---|---|
+| Gradle, KMP library over HTTP, sources resolved as an IDE resolves them | Gradle cache: the root and `-jvm` sources jars | **yes**, both | **yes** |
+| Maven, `dependency:get` of the sources classifier | local repository | **yes** | **yes** |
+| npm install, `files: ["dist"]` tarball | `node_modules/.../dist/` | **yes** — `.d.ts` and `.js` | **yes** from `.d.ts`; the `.js` carries no text |
+| uv pip install of the wheel | `site-packages/acme_text/` | **yes** | **yes** |
+| `go get` through a module proxy | module cache | **yes** | **yes** |
+| SwiftPM git dependency | `.build/checkouts/` | **yes** | **yes** |
+
+Rust was not consumed: a registry download is the `.crate` extracted in place, and test 1 showed the `.crate` carries the file.
+
+**The name collides with nothing that exists.** Across the local caches of a working machine — 4,222 sources jars in the Gradle cache, 274 in the Maven repository, the Go module cache, and every `node_modules` tree in a workspace of 700,000 files — **no file named `skill-info.*` existed** other than this experiment's own fixture. Six Gradle entries and 51 `node_modules` files did begin with `skill`, which is the plain-name collision the hyphen avoids. Only counts were recorded.
+
+**The codex's existing harvester reads the file and discards it.** Run over the Kotlin Multiplatform, Gradle and Maven sources jars, it counts `skill-info` as a source file, finds its doc comment, cannot bind it to a declaration, and records it as an unclaimed doc. No entry carries the skill text in any of the four. The file is in the source already indexed; the indexer drops it because it looks for documentation *of declarations*.
+
+- **A harvester can find the file by name alone** in every consumer location measured, and recover the text without a parser.
+- **The name is unclaimed** in the caches examined.
+- **The current indexer would need a rule for it**: recognise `skill-info.*` by name before extraction, and keep its comment instead of discarding it as unclaimed.
+
+### Test 4: does it reach a human's documentation
+
+Measured against: Javadoc 26.0.2.1 · Dokka 2.2.0 · Go 1.27.1 · rustdoc 1.98.1 · pydoc 3.14.7 · pdoc 16.0.0 · TypeDoc 0.28.20 · swift-docc-plugin 1.5.0. Harness: `experiments/skill-as-source/docs/run.sh`, raw output beside it; it still runs.
+
+Each generator is run the standard way over the fixture and its output searched for the skill text and the file name. Every generator was confirmed to render the fixture's real doc comments, so "stays out" is a result and not an empty site.
+
+| generator | `skill-info`, as the convention places it | reusing the language's slot, or a non-default placement |
+|---|---|---|
+| Javadoc | **stays out** | `package-info.java`: **rendered** on the package page |
+| Dokka, Kotlin Multiplatform | **stays out** | — Kotlin has no slot |
+| `go doc -all` | **stays out** — comment after the package clause | comment before the clause: **rendered** as package documentation |
+| rustdoc | **stays out** — reached by no `mod` | reached by a `#[path]` module with private items documented: **rendered** |
+| pydoc | text stays out; the **name** is listed under package contents | — |
+| pdoc | **rendered** — a `skill-info` submodule page with the text | — |
+| TypeDoc | **stays out**, re-exported from the entry point or not | — |
+| DocC | **stays out** | — |
+
+- **In seven of eight generators the dedicated file stays off the page a person reads.** The skill and the human documentation stay separate by default.
+- **Reusing the existing slot puts the skill on that page in every case measured** — `package-info.java` and a Go comment above the package clause both render. That settles the design question below in favour of the dedicated file.
+- **Python is the exception.** pdoc walks the package directory and renders every module it finds, a hyphenated one included, so the skill gets its own page; pydoc lists the name. The fix is the generator's own: pdoc and Sphinx both take exclusion patterns. Whether skill text on a separate module page *harms* the docs, rather than merely appearing, is the part of test 4 still unmeasured.
+- **Placement is part of the convention in Go:** the comment goes after the package clause.
+
 ## Recommendation
 
-**Not a commitment. Test 1 was the whole claim, and it holds.** A documentation-only `skill-info` file survives the ordinary publishing path of every ecosystem measured with no configuration, the Kotlin Multiplatform case included. The exception is a JavaScript bundle, which carries no source by design. What is left open is not distribution but everything after it: whether a harvester finds the file (test 3), whether it harms the human docs (test 4), and whether an agent reads it (test 5, which needs a trigger).
+**Not a commitment. Test 1 was the whole claim, and it holds.** A documentation-only `skill-info` file survives the ordinary publishing path of every ecosystem measured with no configuration, the Kotlin Multiplatform case included. The exception is a JavaScript bundle, which carries no source by design. Tests 3 and 4 hold as well: a harvester finds the file by name in every consumer location measured and recovers the text without a parser, and in seven of eight documentation generators the file stays off the human's page. **What is left is not distribution. It is the indexer, which currently reads the file and discards it, and test 5 — whether an agent acts on it, which needs a trigger.**
 
 **The design question to settle first is reuse versus a dedicated file.**
 
-- **Reusing the existing slot** — writing skill content into `package-info.java`, `doc.go` or `//!` — needs no new convention and is picked up by every existing tool. But it makes the skill the page a human reads, which is test 4, and in Kotlin there is no slot to reuse.
-- **A dedicated file** — a `skill-info` source file in the package — keeps the two audiences apart and gives Kotlin a home. It is a new convention, and a new convention has to be adopted.
+- **Reusing the existing slot** — writing skill content into `package-info.java`, `doc.go` or `//!` — needs no new convention and is picked up by every existing tool. But test 4 measured that it puts the skill on the page a human reads, every time, and in Kotlin there is no slot to reuse. **Measured against it.**
+- **A dedicated file** — a `skill-info` source file in the package — keeps the two audiences apart and gives Kotlin a home. It is a new convention, and a new convention has to be adopted. **Tests 1 to 4 found nothing against it.**
 
 **The hyphen is the one rule that works everywhere tested.** An earlier draft of this record argued from recall that the hyphen was a Java-only trick that buys nothing elsewhere and breaks Python. Test 2 contradicts both halves. Every toolchain tested accepted `skill-info`, and the hyphen buys something everywhere: **on a case-insensitive filesystem — the default on macOS and Windows — `skill.kt` and `Skill.kt` are the same file**, so a plain `skill` name collides with any type called `Skill` in that package, and a hyphen cannot appear in a type name in Java, Kotlin, Swift, TypeScript or C#. In Python the hyphen that stops an `import` statement is harmless — nothing needs to import a skill — and the file cannot shadow a module name. In Rust it keeps the file out of compilation while `cargo package` still ships it. Go accepts `skill-info.go` too. **So the name is `skill-info` in every language** — `skill-info.java`, `skill-info.kt`, `skill-info.py`, `skill-info.ts`, `skill-info.swift`, `skill-info.go`, `skill-info.rs`.
 
 **Place it in the package, not at the root.** Every precedent is per-package, and a library of several packages has several things to say.
 
-**What would change the answer.** Test 1 found no ecosystem that strips the file from its source distribution; if the unmeasured paths above — the classic Android plugin, other JavaScript build tools — turn out to drop it, the convention narrows to the ecosystems where it was measured. If test 4 shows skill content makes the human docs worse, reuse is off and only the dedicated file survives.
+**What would change the answer.** Test 1 found no ecosystem that strips the file from its source distribution; if the unmeasured paths above — the classic Android plugin, other JavaScript build tools — turn out to drop it, the convention narrows to the ecosystems where it was measured. Test 4 has already ruled reuse out; if a Python project cannot exclude the module from its generator, that ecosystem needs a different name or location.
 
 ## Connections
 

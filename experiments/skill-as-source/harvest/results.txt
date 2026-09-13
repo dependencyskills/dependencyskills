@@ -1,0 +1,20 @@
+gradle: Gradle 9.7.1 · maven: 3.9.16
+npm 11.13.0 · uv 0.12.5 (Homebrew 2026-08-14 aarch64-apple-darwin) · go1.27.1 · Swift version 6.3.3
+Rust not run: a registry download is the .crate extracted into ~/.cargo/registry/src, and ../survival showed the .crate carries the file.
+
+--- Gradle consumer of the KMP library over HTTP, ArtifactResolutionQuery for sources, isolated GRADLE_USER_HOME · exit 0
+    resolved acme-text-0.1.0-sources.jar
+    resolved acme-text-jvm-0.1.0-sources.jar
+    gradle cache acme-text-jvm-0.1.0-sources.jar found: commonMain/com/example/acme/text/skill-info.kt · text recovered exactly
+    gradle cache acme-text-0.1.0-sources.jar found: commonMain/com/example/acme/text/skill-info.kt · text recovered exactly
+--- Maven consumer, dependency:get of the sources classifier, isolated local repository · exit 0
+    ~/.m2 equivalent acme-text-0.1.0-sources.jar found: com/example/acme/text/skill-info.kt · text recovered exactly
+--- npm consumer, npm install of the files:[dist] tarball · exit 0
+    node_modules                             found: dist/skill-info.d.ts · text recovered exactly
+    node_modules                             found: dist/skill-info.js · file present, carries no skill text
+--- Python consumer, uv pip install of the uv_build wheel · exit 0
+    site-packages                            found: skill-info.py · text recovered exactly
+--- Go consumer, go get through a file:// proxy, isolated GOMODCACHE · exit 0
+    module cache                             found: acmetext@v0.1.0/acmetext/skill-info.go · text recovered exactly
+--- Swift consumer, git URL dependency · exit 0
+    .build/checkouts                         found: swift/Sources/AcmeText/skill-info.swift · text recovered exactly
