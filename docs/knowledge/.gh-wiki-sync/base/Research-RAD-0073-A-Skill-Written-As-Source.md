@@ -59,6 +59,8 @@ This is not a new kind of artifact. Nearly every ecosystem already reserves a so
 
 So this is half of the problem. It gets the skill onto the machine, version-matched, in every ecosystem. Something else still has to put it in front of the agent at the moment it first names a type from that library — a routine step, a load-on-import, or a nudge when code matches a known hand-rolled pattern. That is a separate question and this record does not answer it.
 
+**But the placement narrows that question sharply.** A skill that lives in a package is scoped by the same thing that scopes the code: an import. An agent never has to choose among every skill on the classpath — only the skills of the packages the file in front of it actually imports, and a declared dependency that nothing imports contributes none. The unit of lookup is already in the source being edited. What remains hard is the timing and the budget: getting the agent to read the right skill at the moment it needs it, without loading so many that the context cost defeats the point.
+
 ## Findings
 
 **Established, by precedent and argument.**
