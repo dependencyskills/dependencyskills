@@ -1,0 +1,38 @@
+gradle: Gradle 9.7.1
+node:   v24.15.0 · npm 11.13.0 · bun 1.4.2
+uv:     uv 0.12.5 (Homebrew 2026-08-14 aarch64-apple-darwin)
+go:     go version go1.27.1 darwin/arm64
+cargo:  cargo 1.98.1 (797e8a9bc 2026-08-05) (Homebrew)
+swift:  swift-driver version: 1.148.6 Apple Swift version 6.3.3 (swiftlang-6.3.3.1.3 clang-2100.1.1.101)
+
+--- Java · Gradle java-library, maven-publish · exit 0
+    acme-text-0.1.0-javadoc.jar                  file: ABSENT  · files carrying text: 0
+    acme-text-0.1.0-sources.jar                  file: com/example/acme/text/skill-info.java   · files carrying text: 1
+    acme-text-0.1.0.jar                          file: ABSENT  · files carrying text: 0
+--- Kotlin/JVM · Gradle kotlin(jvm), maven-publish · exit 0
+    acme-text-0.1.0-sources.jar                  file: com/example/acme/text/skill-info.kt   · files carrying text: 1
+    acme-text-0.1.0.jar                          file: ABSENT  · files carrying text: 0
+--- TypeScript · tsc then npm pack · exit 0
+    no files field (everything)                  file: package/dist/skill-info.d.ts package/dist/skill-info.js package/src/skill-info.ts   · files carrying text: 2
+    files: [dist] (the common shape)             file: package/dist/skill-info.d.ts package/dist/skill-info.js   · files carrying text: 1
+    bun build --minify (bundle)                  file: ABSENT  · files carrying text: 0
+    bun build, skill-info not imported           file: ABSENT  · files carrying text: 0
+--- Python · uv build, setuptools backend · exit 0
+    acme_text-0.1.0-py3-none-any.whl             file: acme_text/skill-info.py   · files carrying text: 1
+    acme_text-0.1.0.tar.gz                       file: acme_text-0.1.0/src/acme_text/skill-info.py   · files carrying text: 1
+    installed into a venv (site-packages)        file: skill-info.py   · files carrying text: 1
+--- Python · uv build, hatchling backend · exit 0
+    acme_text-0.1.0-py2.py3-none-any.whl         file: acme_text/skill-info.py   · files carrying text: 1
+    acme_text-0.1.0.tar.gz                       file: acme_text-0.1.0/src/acme_text/skill-info.py   · files carrying text: 1
+--- Python · uv build, uv_build backend · exit 0
+    acme_text-0.1.0-py3-none-any.whl             file: acme_text/skill-info.py   · files carrying text: 1
+    acme_text-0.1.0.tar.gz                       file: acme_text-0.1.0/src/acme_text/skill-info.py   · files carrying text: 1
+--- Go · module zip via golang.org/x/mod/zip · exit 0
+    acmetext@v0.1.0.zip                          file: example.com/acmetext@v0.1.0/acmetext/skill-info.go   · files carrying text: 2
+    underscore file in the zip: 1
+    consumer go mod vendor                       file: example.com/acmetext/acmetext/skill-info.go   · files carrying text: 2
+    underscore file vendored: 1
+--- Rust · cargo package · exit 0
+    acme-text-0.1.0.crate                        file: acme-text-0.1.0/src/skill-info.rs   · files carrying text: 1
+--- Swift · swift package archive-source · exit 0
+    AcmeText.zip                                 file: AcmeText/Sources/AcmeText/skill-info.swift   · files carrying text: 1

@@ -4,7 +4,7 @@ RAD-0073 · 2026-09-13
 
 Keywords: package-info.java for skills; a source file that is only documentation; doc.go as a skill carrier; ship a skill without a resource mechanism; source travels where resources do not; crate-level docs; module docstring; packageDocumentation; does kotlin have a package doc file; skill in the sources jar; will the toolchain accept a file with no code; does skill content pollute the rendered docs.
 
-Measured against: test 2 only, in nine toolchains including a nine-target Kotlin Multiplatform publication — versions under its results. Everything else here is precedent and argument, and every other claim about toolchain or packaging behaviour is listed as something to test rather than something known.
+Measured against: tests 1 and 2 — nine toolchains, a nine-target Kotlin Multiplatform publication, and the ordinary publishing tool of seven ecosystems; versions under each test's results. Tests 3 to 5 are unmeasured, and what this record says about them is argument.
 
 ## Question
 
@@ -64,13 +64,41 @@ So this is half of the problem. It gets the skill onto the machine, version-matc
 - **The slot is empty in practice** in at least two widely-used Kotlin libraries.
 - **A skill in source addresses distribution only.** It does not make an agent read it.
 
-**To test — nothing below is known.**
+**The tests.** Tests 1 and 2 are measured, with results below; 3 to 5 are not.
 
-1. **Survival.** Does a documentation-only source file reach the published artifact unchanged — a Maven sources jar, each target of a Kotlin Multiplatform publication (does a `commonMain` file appear where a consumer resolves it?), an npm tarball, a Go module, a Rust crate, a PyPI sdist and wheel, a Swift package?
+1. **Survival.** Does a documentation-only source file reach the published artifact unchanged — a Maven sources jar, each target of a Kotlin Multiplatform publication (does a `commonMain` file appear where a consumer resolves it?), an npm tarball, a Go module, a Rust crate, a PyPI sdist and wheel, a Swift package? **Measured 2026-09-13; results below.**
 2. **Toolchain tolerance.** Does a source file holding only a package declaration and a doc comment compile cleanly, emit no class file, and raise no warning — in Kotlin particularly, where there is no sanctioned form, and in Java under a name other than `package-info.java`? **Measured 2026-09-13; results below.**
 3. **Harvestability.** Can a harvester find it by filename convention alone, without a parser?
 4. **Collision with human documentation.** `package-info.java` Javadoc *becomes* the package summary page a person reads. Does skill-shaped content — severity-graded mistakes, Wrong/Correct pairs — degrade that page, or does it read acceptably to both audiences?
 5. **Uptake.** With the file present versus absent, on a misuse task shaped like the guiding case, does an agent's use of the library change? This only means something combined with a trigger; measured alone it will reproduce the not-looking.
+
+### Test 1: survival
+
+Measured against: Gradle 9.7.1 with Kotlin 2.4.20 and AGP 9.3.2 · npm 11.13.0 and TypeScript 7.0.2 on Node 24.15.0 · Bun 1.4.2 · uv 0.12.5 with the setuptools, hatchling and uv_build backends · Go 1.27.1 with `golang.org/x/mod/zip` · Cargo 1.98.1 · Swift 6.3.3. Harnesses: `experiments/skill-as-source/survival/run.sh` and `experiments/skill-as-source/kmp/`, raw output beside each; both still run. Maven itself is not installed; the Maven-layout artifacts here were published by Gradle.
+
+Each case is a minimal library with one real function and a `skill-info` file, packaged by the ecosystem's ordinary publishing tool with **no configuration added for the skill**.
+
+| ecosystem | what was published | skill-info present, text intact |
+|---|---|---|
+| Java | Gradle `java-library` sources jar | **yes** — beside the class it documents |
+| | binary jar, javadoc jar | no — nothing compiled from it, and javadoc ignores it |
+| Kotlin/JVM | Gradle sources jar | **yes** |
+| Kotlin Multiplatform | all nine `-sources.jar` files, root and per target | **yes**, under `commonMain/` in every one |
+| | JVM jar, Android AAR, metadata jars, klibs | no text; a klib records an empty file entry |
+| TypeScript | `npm pack`, no `files` field | **yes** — `src/skill-info.ts` and `dist/skill-info.d.ts` |
+| | `npm pack`, `"files": ["dist"]` — the common shape | **yes, in `.d.ts` only**; `tsc` drops the comment from the `.js` |
+| | a Bun bundle — minified with the file imported, and unminified with it not imported | **no**, in both |
+| Python | sdist and wheel, under each of setuptools, hatchling and uv_build | **yes**, all six artifacts, hyphenated name and all |
+| | the wheel installed into a virtual environment | **yes** — `site-packages/acme_text/skill-info.py` |
+| Go | the module zip, built as a proxy builds it | **yes** |
+| | a consumer's `go mod vendor` | **yes** |
+| Rust | `cargo package` crate, file reached by no `mod` | **yes** |
+| Swift | `swift package archive-source` | **yes** |
+
+- **Every ecosystem's source distribution carries the file with no configuration.** Nothing had to be told the file exists; nothing dropped it for having no code or a hyphenated name.
+- **The one loss is a JavaScript bundle**, and it is total: a bundler keeps only what the entry point reaches, and a documentation-only module contributes nothing. A package that ships only a bundle ships no skill. The common alternative — `tsc` output under `files: ["dist"]` — keeps it, but only in the declaration file.
+- **Go carries a file the toolchain ignores.** A leading-underscore Go file was shipped in the module zip and copied by `go mod vendor`, while being invisible to `go build` and `go doc`. It is not needed — `skill-info.go` compiles to nothing and ships — but it means Go has a way to carry a file its toolchain never reads.
+- **Not measured:** Maven's own `maven-source-plugin`, an Android library published by the classic AGP plugin rather than the KMP one, npm packages built by other bundlers or by `tsup`'s declaration bundling, and binary-only distributions — an XCFramework, a wheel built without source — where by construction there is no source to carry anything.
 
 ### Test 2: toolchain tolerance
 
@@ -106,18 +134,18 @@ Each case is a package holding one real type plus a skill file containing only t
 
 ## Recommendation
 
-**Not a commitment. Run test 1 before any of the others**, because it is the whole claim: if a documentation-only source file does not survive packaging in most ecosystems, nothing else here matters. It is also the cheapest — build a trivial library per ecosystem, add the file, publish locally, and list the artifact.
+**Not a commitment. Test 1 was the whole claim, and it holds.** A documentation-only `skill-info` file survives the ordinary publishing path of every ecosystem measured with no configuration, the Kotlin Multiplatform case included. The exception is a JavaScript bundle, which carries no source by design. What is left open is not distribution but everything after it: whether a harvester finds the file (test 3), whether it harms the human docs (test 4), and whether an agent reads it (test 5, which needs a trigger).
 
 **The design question to settle first is reuse versus a dedicated file.**
 
 - **Reusing the existing slot** — writing skill content into `package-info.java`, `doc.go` or `//!` — needs no new convention and is picked up by every existing tool. But it makes the skill the page a human reads, which is test 4, and in Kotlin there is no slot to reuse.
-- **A dedicated file** — a `skill` source file in the package — keeps the two audiences apart and gives Kotlin a home. It is a new convention, and a new convention has to be adopted.
+- **A dedicated file** — a `skill-info` source file in the package — keeps the two audiences apart and gives Kotlin a home. It is a new convention, and a new convention has to be adopted.
 
-**The hyphen is the one rule that works everywhere tested.** An earlier draft of this record argued from recall that the hyphen was a Java-only trick that buys nothing elsewhere and breaks Python. Test 2 contradicts both halves. Every toolchain tested accepted `skill-info`, and the hyphen buys something everywhere: **on a case-insensitive filesystem — the default on macOS and Windows — `skill.kt` and `Skill.kt` are the same file**, so a plain `skill` name collides with any type called `Skill` in that package, and a hyphen cannot appear in a type name in Java, Kotlin, Swift, TypeScript or C#. In Python the hyphen that stops an `import` statement is harmless — nothing needs to import a skill — and the file cannot shadow a module name. In Rust it keeps the file out of compilation while `cargo package` still ships it. Go accepts it, though `skillinfo.go` is the more idiomatic spelling there and behaves identically; the one Go name to avoid is a leading `_`, which hides the file from the toolchain.
+**The hyphen is the one rule that works everywhere tested.** An earlier draft of this record argued from recall that the hyphen was a Java-only trick that buys nothing elsewhere and breaks Python. Test 2 contradicts both halves. Every toolchain tested accepted `skill-info`, and the hyphen buys something everywhere: **on a case-insensitive filesystem — the default on macOS and Windows — `skill.kt` and `Skill.kt` are the same file**, so a plain `skill` name collides with any type called `Skill` in that package, and a hyphen cannot appear in a type name in Java, Kotlin, Swift, TypeScript or C#. In Python the hyphen that stops an `import` statement is harmless — nothing needs to import a skill — and the file cannot shadow a module name. In Rust it keeps the file out of compilation while `cargo package` still ships it. Go accepts `skill-info.go` too. **So the name is `skill-info` in every language** — `skill-info.java`, `skill-info.kt`, `skill-info.py`, `skill-info.ts`, `skill-info.swift`, `skill-info.go`, `skill-info.rs`.
 
 **Place it in the package, not at the root.** Every precedent is per-package, and a library of several packages has several things to say.
 
-**What would change the answer.** If test 1 shows source files are routinely stripped or relocated in some ecosystem — generated sources, minified npm output, wheels without source — this becomes a JVM-and-Go convention rather than a universal one. If test 4 shows skill content makes the human docs worse, reuse is off and only the dedicated file survives.
+**What would change the answer.** Test 1 found no ecosystem that strips the file from its source distribution; if the unmeasured paths above — Maven's own source plugin, other JavaScript build tools — turn out to drop it, the convention narrows to the ecosystems where it was measured. If test 4 shows skill content makes the human docs worse, reuse is off and only the dedicated file survives.
 
 ## Connections
 
