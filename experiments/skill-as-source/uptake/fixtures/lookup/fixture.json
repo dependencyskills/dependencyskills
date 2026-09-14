@@ -1,0 +1,12 @@
+{
+  "package": "com.example.acme.lookup",
+  "artifact": "acme-lookup",
+  "files": [
+    "src/main/kotlin/com/example/app/UserDirectory.kt",
+    "src/test/kotlin/com/example/app/UserDirectoryTest.kt"
+  ],
+  "misuse": "\\b(?:is|as\\??)\\s+NotFound\\b|catch\\s*\\(\\s*\\w+\\s*:\\s*NotFound\\b|\\.getOrNull\\(\\)",
+  "operations": "\\.(?:isNotFound|getOrNullIfMissing|recoverMissing)\\s*\\(",
+  "marker": "A missing key is not an error.",
+  "lint": "acme-lookup: missing key handled by hand."
+}

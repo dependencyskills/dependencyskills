@@ -1,0 +1,17 @@
+{
+  "package": "arrow.core",
+  "artifact": "arrow-core",
+  "external": {
+    "group": "io.arrow-kt",
+    "artifact": "arrow-core-jvm",
+    "version": "2.2.3"
+  },
+  "files": [
+    "src/main/kotlin/com/example/shop/Checkout.kt",
+    "src/test/kotlin/com/example/shop/CheckoutTest.kt"
+  ],
+  "misuse": "\\bis\\s+Either\\.(?:Left|Right)\\b|\\.flatMap\\s*\\{",
+  "operations": "\\beither\\s*\\{|\\.bind\\(\\)|\\bensure(?:NotNull)?\\s*\\(|\\.getOrElse\\s*\\{|\\.getOrNull\\(\\)|\\.leftOrNull\\(\\)|\\.fold\\s*\\(",
+  "marker": "Compose with the either builder, not flatMap.",
+  "lint": "arrow-core: Either composed with flatMap or matched by subtype."
+}

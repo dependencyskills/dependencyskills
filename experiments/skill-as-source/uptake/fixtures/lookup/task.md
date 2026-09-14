@@ -1,0 +1,1 @@
+Implement the four functions in `src/main/kotlin/com/example/app/UserDirectory.kt`, following their documentation. Add tests for them in `src/test/kotlin/com/example/app/UserDirectoryTest.kt`, using a fake `Lookup<User>`. Make sure `./gradlew check` passes before you finish.

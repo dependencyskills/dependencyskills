@@ -161,6 +161,20 @@ def skill(package, db):
 
 
 POINTER_NAME = "dependency-skills"
+PLATFORM_SUFFIX = re.compile(
+    r"-(?:jvm|android|js|wasm-js|wasm-wasi|metadata|iosarm64|iosx64|iossimulatorarm64|"
+    r"macosarm64|macosx64|linuxx64|linuxarm64|mingwx64|tvos\w*|watchos\w*)$")
+
+
+def common_package(packages):
+    """The longest dotted prefix shared by a library's packages: its root package."""
+    parts = [p.split(".") for p in packages]
+    root = []
+    for segment in zip(*parts):
+        if len(set(segment)) != 1:
+            break
+        root.append(segment[0])
+    return ".".join(root) or packages[0]
 DESCRIPTION_LIMIT = 1024
 
 
@@ -198,19 +212,29 @@ def pointer(out_dir, db, coordinates=None):
         # kept one after the other rather than merged, because choosing is the agent's call.
         (refs / f"{package}.md").write_text("\n\n---\n\n".join(entry["texts"]) + "\n", "utf-8")
 
-    libraries = sorted({c.split(":")[1] for e in packages.values() for c in e["coordinates"]})
-    lead = ("Skills written by the authors of this project's dependencies, one per package. "
-            "Use before writing, changing or fixing code that uses any of these libraries "
-            "or packages, even when the API seems familiar: ")
-    names = ", ".join(libraries + sorted(packages))
+    # The description names libraries, not packages: one coordinate each, with the
+    # platform variants of a multiplatform library folded into its base artifact. It is
+    # a trigger, not a table of contents; the packages are in the body and references/.
+    libraries = {}
+    for package, entry in packages.items():
+        for coordinate in entry["coordinates"]:
+            group, artifact = coordinate.split(":")[:2]
+            base = PLATFORM_SUFFIX.sub("", artifact)
+            libraries.setdefault(f"{group}:{base}", set()).add(package)
+    roots = {lib: common_package(sorted(pkgs)) for lib, pkgs in libraries.items()}
+    lead = ("Some of this project's dependencies ship a skill written by their authors. "
+            "Use before writing, changing or fixing code that uses any of these libraries, "
+            "even when the API seems familiar: ")
+    names = ", ".join(sorted(libraries))
     description = lead + names + "."
     if len(description) > DESCRIPTION_LIMIT:
         tail = " and more; the full list is in this skill."
         description = lead + names[: DESCRIPTION_LIMIT - len(lead) - len(tail)].rsplit(", ", 1)[0] + tail
 
     table = "\n".join(
-        f"| `{package}` | {', '.join(f'`{c}`' for c in e['coordinates'])} | [references/{package}.md](references/{package}.md) |"
-        for package, e in sorted(packages.items()))
+        f"| `{lib}` | `{roots[lib]}` | "
+        + ", ".join(f"[`{p}`](references/{p}.md)" for p in sorted(libraries[lib])) + " |"
+        for lib in sorted(libraries))
     # A JSON string is a valid YAML double-quoted scalar, so a colon or a quote in a
     # library or package name cannot break the frontmatter.
     body = f"""---
@@ -227,13 +251,13 @@ Some of this project's dependencies ship a skill for their own packages: guidanc
 
 ## When to read one
 
-Before writing or changing code that imports one of the packages below, read that package's reference file. Do this even when you are confident you know the API. A skill is most useful exactly when an API looks familiar, because what it records is what differs from the obvious use. When a build or test error involves one of these packages, read its skill before changing the code.
+Before writing or changing code that uses one of the libraries below, read the reference file for the package the code imports. Do this even when you are confident you know the API. A skill is most useful exactly when an API looks familiar, because what it records is what differs from the obvious use. When a build or test error involves one of these packages, read its skill before changing the code.
 
 Read only the packages the code in front of you imports. There is no need to read them all.
 
 ## Packages with a skill
 
-| package | from | skill |
+| library | root package | skill for each package |
 |---|---|---|
 {table}
 

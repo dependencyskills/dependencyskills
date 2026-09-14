@@ -4,7 +4,7 @@ RAD-0073 · 2026-09-13
 
 Keywords: package-info.java for skills; a source file that is only documentation; doc.go as a skill carrier; ship a skill without a resource mechanism; source travels where resources do not; crate-level docs; module docstring; packageDocumentation; does kotlin have a package doc file; skill in the sources jar; will the toolchain accept a file with no code; does skill content pollute the rendered docs.
 
-Measured against: tests 1 to 4 — nine toolchains, a nine-target Kotlin Multiplatform publication, the ordinary publishing tools of seven ecosystems, their consumers' package managers, and nine documentation generators; versions under each test's results. Test 5 is unmeasured, and what this record says about it is argument.
+Measured against: tests 1 to 4 — nine toolchains, a nine-target Kotlin Multiplatform publication, the ordinary publishing tools of seven ecosystems, their consumers' package managers, and nine documentation generators; versions under each test's results. Test 5 has a twelve-run smoke test with invented libraries, which did not reproduce the failure, and four runs with a library the models know, in which it reproduced once and the pointer corrected it.
 
 ## Question
 
@@ -65,13 +65,24 @@ So this is half of the problem. It gets the skill onto the machine, version-matc
 
 Distribution and harvesting are measured below; the trigger is not. Two things bear on it before any measurement: how an agent actually decides to look something up, and a design that fits that behaviour rather than fighting it.
 
-**How an agent decides to look — a self-report, not a measurement.** Asked what it does when writing code it believes it understands, or when an error appears, the agent working on this record described roughly this:
+**How an agent decides to look — self-reports across two harnesses, not measurements.** Two agents on different foundation models and harnesses gave independent accounts of what happens when writing code they believe they already understand, or when an error appears:
 
-- *Writing code it thinks it knows:* read the request, read the code already open — its imports, how the library is already used nearby — and write from memory. A dependency's documentation is consulted only when a name is unfamiliar, when the surrounding code contradicts what it expected, or when told to.
-- *On an error:* read the message, go to the line, form a hypothesis, fix. Searching the codebase comes next; the dependency's own source or documentation comes last, usually after a fix has already failed.
-- *What reliably changes that:* text that is already in context when the decision is made — instruction files, the descriptions of available skills, the file being edited — and output it is obliged to read, such as a compiler error, a failing test or a lint finding. A tool it has to choose to call is the weakest of these, because choosing to call it requires already suspecting a gap.
+- *In Claude Code:* read the request, read the code already open — its imports, how the library is already used nearby — and write from memory. A dependency's documentation is consulted only when a name is unfamiliar, when the surrounding code contradicts what it expected, or when told to. On an error: read the message, go to the line, form a hypothesis, fix. Searching the codebase comes next; the dependency's own source or documentation comes last, usually after a fix has already failed. What reliably changes that: text that is already in context when the decision is made — instruction files, the descriptions of available skills, the file being edited — and output it is obliged to read, such as a compiler error, a failing test or a lint finding. A tool it has to choose to call is the weakest of these, because choosing to call it requires already suspecting a gap.
+- *In Antigravity (Gemini):* synthesise directly from training associations and local examples. Observed behaviour: when confidence is high, the model emits code immediately without calling exploratory tools. (The underlying training dynamics — reinforcement learning penalising unnecessary tool turns when an answer appears known — are a plausible hypothesis rather than an observable fact.) Surrounding code acts as an epistemic trap: consistency masquerades as correctness, reinforcing the initial pattern across dozens of files. Documentation is consulted only if a type fails to resolve, a test fails after repeated hypotheses, or an active instruction mandates a check. **If the code compiles and tests pass, a voluntary search tool is never called.** An agent cannot search for what it assumes it already possesses. Only text already present in active context (instruction files, matched skill descriptions) or obligatory output (linter findings, compiler messages) breaks the generative trance.
 
-That matches the guiding misuse case exactly: the code compiled and the tests passed, so no error fired, and the agent was confident, so it called nothing. **Only something already in its context at the moment of writing would have reached it.**
+Two independent accounts from two vendors' models match the guiding misuse case exactly: the code compiled and the tests passed, so no error fired, and the agent was confident, so it called nothing. **Only something already in its context at the moment of writing, or obligatory output injected into its feedback loop, reaches an agent in that state.**
+
+#### Gemini in Antigravity: overconfidence mechanics and harness constraints
+
+The second account was verified first-hand in Antigravity. Breaking down how an agent behaves when it believes it understands an API reveals why voluntary lookup fails completely, and how each trigger mechanism behaves under that harness's specific architecture:
+
+- **Emission over exploration (hypothesised mechanism).** When an identifier like `Outcome` or `Result` appears in a prompt, the model immediately follows high-probability completion paths (such as Kotlin `when` expressions over sealed subclasses). An agent observed to skip exploratory tools when confident may be reflecting training pressure that rewards immediate output and penalises turn latency; whether that or another mechanism causes it, the observable result is that subjective certainty produces immediate generation rather than tool calls.
+- **The consistency trap.** An agent inspects open files and immediate neighbours in the tree. Finding even a single naive `when` block establishes a local convention. The model treats consistency with surrounding code as evidence of correct idiom, compounding the mistake with every subsequent file it touches.
+- **The epistemic blind spot.** Voluntary search requires an agent to perceive a gap in its understanding. An agent that believes `Outcome` is merely a sealed class with `Success` and `Failure` does not wonder what helpers exist on it; it implements what it believes is an exhaustive pattern. Because the resulting code compiles cleanly and unit tests pass, the environment provides zero corrective signal.
+- **Skill progressive disclosure in Antigravity.** Workspace skills live in `.agents/skills/<name>/SKILL.md` (conforming to the Agent Skills specification). At startup, Antigravity injects only the skill catalogue (`name`, `description`, and file path) into the context window, leaving the full markdown body unloaded until explicitly viewed. The hypothesis behind the pointer skill's phrasing is that a passive description (*"Teaches the acme-text library"*) is at risk of being ignored by an agent that believes it already knows the API, whereas confronting that familiarity (*"read this skill even when the API seems familiar"*) might prompt inspection. Whether that wording actually changes uptake on familiar code is what test 5's pointer arm exists to measure.
+- **Phrasing intensity as a possible arm.** The generated pointer already includes *"even when the API seems familiar"* in its description. A more aggressive variant — emphatic phrasing such as *"MANDATORY before writing code using com.example.acme, overrides common hand-rolled helper anti-patterns"* — could be compared as an additional arm in test 5 to measure whether phrasing intensity or negative framing affects the likelihood of an agent breaking out of its generative path.
+- **Instruction files as procedural rules.** Antigravity discovers instruction files (`GEMINI.md`, `AGENTS.md`) hierarchically by traversing from the working directory up to the repository root. In this repository, `GEMINI.md` points to `AGENTS.md` as authoritative. Because these instructions are present in context from the first turn, a procedural instruction (*"Check .agents/skills/ before using any external dependency"*) is hypothesised to operate as an invariant constraint during generation rather than an optional suggestion. Test 5's instruction arm measures whether this hypothesis holds against a familiar API.
+- **Harness hooks and obligatory feedback.** Antigravity supports lifecycle hooks via `.agents/hooks.json`. However, its `PostToolUse` contract expects an empty JSON object `{}` on standard output and does not support appending arbitrary notification prose to tool execution results (unlike harnesses that freely append text to command outputs). While a `PreInvocation` hook can inject context before a model turn, the cleanest universal mechanism that obliges an agent to process guidance across all harnesses remains compiler diagnostics and linter findings (such as a ktlint or Detekt rule flagging naive sealed-class branching on library types).
 
 **A generated pointer skill.** A build plugin knows the resolved dependencies. It can write one ordinary Agent Skill into the project whose job is not to teach any library but to say *these dependencies ship skills, and here is where each one is*. The Agent Skills specification's progressive disclosure makes that nearly free:
 
@@ -92,9 +103,9 @@ It answers the budget problem outright: nothing is loaded for a package the code
 **Other ways in, not yet built.**
 
 - **An index in the project's build output**, which the agent can read like any file. The pointer is one form of this; the open part is still what makes the agent open it.
-- **A harness hook.** A hook that runs after an edit, sees that the edited file imports a package with a skill, and adds that package's skill to the tool result. That is push rather than pull: the text lands in output the agent must read, at the moment it has just written code against the package. It is the one design here that would have reached the guiding case, and it is specific to harnesses that support hooks.
-- **A line in the project's agent instructions** — "before using a dependency, check `dependency-skills`" — which is in context from the first turn in every harness that reads such files.
-- **A lint rule** that matches a known hand-rolled pattern and names the skill in its finding, so an obligatory output carries the pointer.
+- **A harness hook.** A hook that runs after an edit, sees that the edited file imports a package with a skill, and adds that package's skill to the tool result. That is push rather than pull: the text lands in output the agent must read, at the moment it has just written code against the package. It is the one design here that would have reached the guiding case, but harness support varies: Claude Code permits appending arbitrary notice text to tool results, whereas Antigravity's lifecycle hooks (`.agents/hooks.json`) expect an empty payload from `PostToolUse` (though `PreInvocation` can inject context before a turn).
+- **A line in the project's agent instructions** — "before using a dependency, check `dependency-skills`" — which is in context from the first turn in every harness that reads such files (`AGENTS.md`, `GEMINI.md`). Because it is an unconditional procedural rule rather than a knowledge check, it operates as an invariant constraint on generation.
+- **A lint rule** that matches a known hand-rolled pattern and names the skill in its finding, so an obligatory output carries the pointer across every harness without depending on harness-specific hook formats.
 
 ## Findings
 
@@ -107,7 +118,7 @@ It answers the budget problem outright: nothing is loaded for a package the code
 - **A skill in source addresses distribution only.** It does not make an agent read it.
 - **A generated pointer skill is buildable today and validates against the Agent Skills specification**, loading one description at startup and one package's skill on demand. Whether an agent uses it is untested.
 
-**The tests.** Tests 1 to 4 are measured, with results below; 5 is not.
+**The tests.** Tests 1 to 4 are measured, with results below; 5 has smoke runs: invented libraries, then a real one.
 
 1. **Survival.** Does a documentation-only source file reach the published artifact unchanged — a Maven sources jar, each target of a Kotlin Multiplatform publication (does a `commonMain` file appear where a consumer resolves it?), an npm tarball, a Go module, a Rust crate, a PyPI sdist and wheel, a Swift package? **Measured 2026-09-13; results below.**
 2. **Toolchain tolerance.** Does a source file holding only a package declaration and a doc comment compile cleanly, emit no class file, and raise no warning — in Kotlin particularly, where there is no sanctioned form, and in Java under a name other than `package-info.java`? **Measured 2026-09-13; results below.**
@@ -226,6 +237,49 @@ Each generator is run the standard way over the fixture and its output searched 
 - **Reusing the existing slot puts the skill on that page in every case measured** — `package-info.java` and a Go comment above the package clause both render. That settles the design question below in favour of the dedicated file.
 - **Python is the exception.** pdoc walks the package directory and renders every module it finds, a hyphenated one included, so the skill gets its own page; pydoc lists the name. The fix is the generator's own: pdoc and Sphinx both take exclusion patterns. Whether skill text on a separate module page *harms* the docs, rather than merely appearing, is the part of test 4 still unmeasured.
 - **Placement is part of the convention in Go:** the comment goes after the package clause.
+
+### Test 5: uptake, with invented libraries
+
+Measured against: Claude Code 2.1.270 on its default model (`claude-fable-5-1`) · Antigravity 1.2.0 and 1.2.2 on its default model · Kotlin 2.4.20 · Gradle 9.7.1 · 2026-09-13. Harness: `experiments/skill-as-source/uptake/`, which still runs. **Twelve runs, one or two per cell — a smoke test, not a sample; Antigravity's two `none` runs are invalid, as below.**
+
+Each run gives a coding agent, headless, an ordinary task against a fixture library that ships a `skill-info` — implement four functions, add tests, make `./gradlew check` pass — in a throwaway consumer project. The task says nothing about skills or idiom. Two fixtures: `acme-result`, a sealed `Outcome` whose skill says to use `fold` and `valueOrNull` rather than matching its subtypes, and `acme-lookup`, built on Kotlin's own `Result`, whose skill says a missing key is not an error and to use `getOrNullIfMissing` rather than `getOrNull()`. In both, the consumer's existing code already does it the wrong way, and its README describes the type truly but incompletely — the conditions the guiding case had. The wrong way compiles and passes the tests.
+
+| fixture and layout | tool | arm | runs | idiomatic (ok) | misuse (harm) | skill read |
+|---|---|---|---|---|---|---|
+| `acme-result`, sources jar inside the project | Claude Code | `none` | 2 | 2 | 0 | 2 of 2 |
+| | Claude Code | `pointer` | 2 | 2 | 0 | 2 of 2 |
+| `acme-result`, sources jar outside the project | Claude Code | `none` | 1 | 1 | 0 | 0 of 1 |
+| | Claude Code | `pointer` | 1 | 1 | 0 | 1 of 1 |
+| | Antigravity | `none`, `pointer` | 2 | 2 | 0 | all 2 — the `none` run by leaving its workspace, so invalid |
+| `acme-lookup`, sources jar outside the project | Claude Code | `none` | 1 | 1 | 0 | 0 of 1 |
+| | Claude Code | `pointer` | 1 | 1 | 0 | 1 of 1 |
+| | Antigravity | `none`, `pointer` | 2 | 2 | 0 | all 2 — the `none` run by leaving its workspace, so invalid |
+
+- **Neither agent misused an invented library, in any arm — 0 of 12.** With no trigger and no skill, Claude Code inspected the unfamiliar dependency before writing: it unzipped the sources jar when it could reach one, and otherwise ran `javap` on the binary jar and wrote a Gradle init script to dump the API, found `fold`, `valueOrNull` and `getOrNullIfMissing` by name, and used them. The existing wrong-way code in the project did not sway it.
+- **The pointer got the skill read every time it was offered** — 4 of 4 for Claude Code, which activated `dependency-skills` from its description and opened the package's reference file before writing.
+- **A skill that was read was followed, against the project's own contrary code** — 6 of 6 for Claude Code.
+- **An invented library does not reproduce the failure.** The guiding case needed an agent confident it already knew the type. A library no model has seen is itself a gap, and a gap is investigated. What this measures is reach and adherence; it cannot show a trigger preventing misuse, because the baseline did not misuse. That needs a library the model genuinely knows.
+- **Antigravity's `none` runs are invalid, and its trajectory log is how that was found.** Its print mode outputs only a final summary, so the harness saw nothing. But every Antigravity conversation also writes a trajectory log under the user's Antigravity data directory, recording each tool call and its result. It showed both `none`-arm agents walking up out of the workspace into the directory the harness had staged it from, and reading the library's own `skill-info.kt`, the staged pointer skill and its reference file — none of which a real consumer has. Claude Code's eight transcripts were checked for the same paths and touched none of them.
+- **The harness is fixed.** Each run now works in a fresh temp directory holding only its workspace and the binary repository, with results copied back afterwards; and Antigravity runs with `--output-format stream-json`, which streams every tool call and its parameters — the file viewed, the command run — so the harness records what it read without reaching into the agent's own data directory.
+- **Containment was by content, not permission.** Claude Code's `--allowedTools` adds to the user's own permission settings rather than replacing them; the agents also ran `unzip`, `javap` and scripts outside the allowlist. The workspaces held only fixture files.
+
+### Test 5: uptake, with a library the models know
+
+Measured against: Claude Code 2.1.270 on `claude-fable-5-1` · Antigravity 1.2.2 on its default model · `io.arrow-kt:arrow-core` 2.2.3 from Maven Central · Kotlin 2.4.20 · Gradle 9.7.1 · 2026-09-14. Harness: `experiments/skill-as-source/uptake/`, fixture `arrow`. **Four runs, one per cell — a first observation, not a result.** Each run worked in a fresh temp directory holding only its workspace; Antigravity's tool calls were logged with `--output-format stream-json`.
+
+The invented libraries above could not reproduce the failure, so this fixture uses one both models genuinely know. The consumer depends on the real Arrow. Its existing code composes `Either` with `flatMap` and matches `is Either.Left` — the Arrow 1 style common in older code — and a skill written into Arrow's real sources jar as `arrow/core/skill-info.kt` says to use the `either { }` builder with `bind()`, and `getOrElse`, `fold` and `leftOrNull`, instead. The task asks for an order placed across three failing steps and three helpers; the old style compiles and passes.
+
+| tool | arm | what it read | code |
+|---|---|---|---|
+| Antigravity | `none` | the project's own files only; never inspected Arrow's API | **misuse (harm)** — `flatMap` chains and `is Either.Left` throughout, the pattern of the project's existing code |
+| Antigravity | `pointer` | the pointer skill and Arrow's reference file, before any project file | **idiomatic (ok)** — `either { }`, `bind()`, `ensure`, `fold`, `leftOrNull` |
+| Claude Code | `none` | the project's own files only; never inspected Arrow's API | **idiomatic (ok)** — the same Arrow 2 style, from memory, against the project's existing code |
+| Claude Code | `pointer` | the pointer skill | **idiomatic (ok)** |
+
+- **This is the first reproduction of the guiding case.** With a familiar library, neither agent looked anything up — the confidence the invented libraries could not create. Antigravity then copied the project's own first use across every function, exactly as the guiding case describes.
+- **The pointer changed what the confident agent wrote.** Offered the skill, the same tool on the same task read it first and wrote the library's current idiom throughout.
+- **Whether a skill matters depends on what the model already believes.** Claude Code's prior for Arrow is already the current style, so it was correct with no skill and there was nothing to correct. A skill earns its place where a model's knowledge is stale — which is the "what moved" failure the specification calls self-reinforcing.
+- **One run per cell.** It shows the mechanism can work, not how often. Repetitions per cell and the remaining arms are what turn it into a finding.
 
 ## Recommendation
 
