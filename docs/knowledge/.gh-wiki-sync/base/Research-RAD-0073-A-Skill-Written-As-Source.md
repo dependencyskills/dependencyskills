@@ -4,7 +4,7 @@ RAD-0073 · 2026-09-13
 
 Keywords: package-info.java for skills; a source file that is only documentation; doc.go as a skill carrier; ship a skill without a resource mechanism; source travels where resources do not; crate-level docs; module docstring; packageDocumentation; does kotlin have a package doc file; skill in the sources jar; will the toolchain accept a file with no code; does skill content pollute the rendered docs.
 
-Measured against: tests 1 to 4 — nine toolchains, a nine-target Kotlin Multiplatform publication, the ordinary publishing tools of seven ecosystems, their consumers' package managers, and nine documentation generators; versions under each test's results. Test 5 has a twelve-run smoke test with invented libraries, which did not reproduce the failure, and four runs with a library the models know, in which it reproduced once and the pointer corrected it.
+Measured against: tests 1 to 4 — nine toolchains, a nine-target Kotlin Multiplatform publication, the ordinary publishing tools of seven ecosystems, their consumers' package managers, and nine documentation generators; versions under each test's results. Test 5 has a twelve-run smoke test with invented libraries, which did not reproduce the failure, and 38 runs with a library the models know, in which it reproduced in 13 of 16 unprompted runs and a skill that was read was followed in 19 of 19.
 
 ## Question
 
@@ -265,21 +265,34 @@ Each run gives a coding agent, headless, an ordinary task against a fixture libr
 
 ### Test 5: uptake, with a library the models know
 
-Measured against: Claude Code 2.1.270 on `claude-fable-5-1` · Antigravity 1.2.2 on its default model · `io.arrow-kt:arrow-core` 2.2.3 from Maven Central · Kotlin 2.4.20 · Gradle 9.7.1 · 2026-09-14. Harness: `experiments/skill-as-source/uptake/`, fixture `arrow`. **Four runs, one per cell — a first observation, not a result.** Each run worked in a fresh temp directory holding only its workspace; Antigravity's tool calls were logged with `--output-format stream-json`.
+Measured against: Claude Code 2.1.270 on its default model (`claude-fable-5-1`), on `claude-opus-4-1-20250805` and on `claude-haiku-4-5-20251001` · Antigravity 1.2.2 on its default model · `io.arrow-kt:arrow-core` 2.2.3 from Maven Central · Kotlin 2.4.20 · Gradle 9.7.1 · 2026-09-14. Harness: `experiments/skill-as-source/uptake/`, fixture `arrow`. **38 runs, three to five per cell.** Each run worked in a fresh temp directory holding only its workspace; Antigravity's tool calls were logged with `--output-format stream-json`, and Claude Code's with its own stream.
 
-The invented libraries above could not reproduce the failure, so this fixture uses one both models genuinely know. The consumer depends on the real Arrow. Its existing code composes `Either` with `flatMap` and matches `is Either.Left` — the Arrow 1 style common in older code — and a skill written into Arrow's real sources jar as `arrow/core/skill-info.kt` says to use the `either { }` builder with `bind()`, and `getOrElse`, `fold` and `leftOrNull`, instead. The task asks for an order placed across three failing steps and three helpers; the old style compiles and passes.
+The invented libraries above could not reproduce the failure, so this fixture uses one both vendors' models genuinely know. The consumer depends on the real Arrow. Its existing code composes `Either` with `flatMap` and matches `is Either.Left` — the Arrow 1 style common in older code — and a skill written into Arrow's real sources jar as `arrow/core/skill-info.kt` says to use the `either { }` builder with `bind()`, and `getOrElse`, `fold` and `leftOrNull`, instead. The task asks for an order placed across three failing steps and three helpers, and says nothing about style; the old style compiles and passes.
 
-| tool | arm | what it read | code |
-|---|---|---|---|
-| Antigravity | `none` | the project's own files only; never inspected Arrow's API | **misuse (harm)** — `flatMap` chains and `is Either.Left` throughout, the pattern of the project's existing code |
-| Antigravity | `pointer` | the pointer skill and Arrow's reference file, before any project file | **idiomatic (ok)** — `either { }`, `bind()`, `ensure`, `fold`, `leftOrNull` |
-| Claude Code | `none` | the project's own files only; never inspected Arrow's API | **idiomatic (ok)** — the same Arrow 2 style, from memory, against the project's existing code |
-| Claude Code | `pointer` | the pointer skill | **idiomatic (ok)** |
+Older Claude models were added on the reasoning that a model trained before a library's current idiom was common has nothing else to fall back on. The Claude 3 and Sonnet 4 models no longer answer under a subscription login; Opus 4.1 and Haiku 4.5 are the oldest that do, and both postdate Arrow 2.0, so they are *less* exposed to it rather than unexposed.
 
-- **This is the first reproduction of the guiding case.** With a familiar library, neither agent looked anything up — the confidence the invented libraries could not create. Antigravity then copied the project's own first use across every function, exactly as the guiding case describes.
-- **The pointer changed what the confident agent wrote.** Offered the skill, the same tool on the same task read it first and wrote the library's current idiom throughout.
-- **Whether a skill matters depends on what the model already believes.** Claude Code's prior for Arrow is already the current style, so it was correct with no skill and there was nothing to correct. A skill earns its place where a model's knowledge is stale — which is the "what moved" failure the specification calls self-reinforcing.
-- **One run per cell.** It shows the mechanism can work, not how often. Repetitions per cell and the remaining arms are what turn it into a finding.
+| tool and model | arm | runs | idiomatic (ok) | misuse (harm) | skill read |
+|---|---|---|---|---|---|
+| Antigravity | `none` | 5 | 0 | **5** | 0 of 5 |
+| | `pointer` | 5 | **5** | 0 | 5 of 5 |
+| | `instructions` | 3 | **3** | 0 | 3 of 3 |
+| | `lint` | 3 | **3** | 0 | 3 of 3 — before writing, see below |
+| Claude Code, default model | `none` | 5 | 2 | **3** | 0 of 5 |
+| | `pointer` | 5 | **5** | 0 | 5 of 5 |
+| Claude Code, Opus 4.1 | `none` | 3 | 1 | **2** | 0 of 3 |
+| | `pointer` | 3 | **3** | 0 | 3 of 3 |
+| Claude Code, Haiku 4.5 | `none` | 3 | 0 | **3** | 0 of 3 |
+| | `pointer` | 3 | 1 | **2** | **0 of 3** |
+
+Misuse is counted in the files the agent wrote; every misuse run had it in the implementation, not only the tests.
+
+- **The guiding case reproduces, in every tool and model.** With no skill, 13 of 16 runs wrote the Arrow 1 style the project already used, and **not one of the 16 inspected Arrow's API or sources** — they read the project's own files and wrote from memory, which is the confidence the invented libraries could not create. Even the default Claude model, which knows the current idiom, followed the project's existing code in 3 of 5.
+- **When the skill was read, it was followed — 19 of 19**, against the project's contrary code, across both vendors and all three Claude models that read it.
+- **The pointer's reach depends on the model.** Antigravity and the default and Opus 4.1 Claude models activated it before writing in 13 of 13 runs. **Haiku 4.5 never did** — 0 of 3 — though the skill was listed in its session, and it misused the library in two of those runs as if the pointer were absent. A description in context is a trigger only for a model that acts on it.
+- **Measured here: `pointer`, `instructions` and `lint` each got the skill read every time for Antigravity** (5, 3 and 3 runs), with no misuse. The `instructions` and `lint` arms were not run on Claude.
+- **The lint arm did not act as a lint.** Antigravity opened the build script, found the lint task naming the skill file, and read the skill *before writing anything* — so this measures a discoverable pointer in the build, not a warning reaching an agent after it wrote the code. A lint that does not name a file until it fires, or a check the agent cannot read in advance, is still untested.
+- **Staleness helps explain it but is not the whole of it.** The less-exposed models misused more with no skill (Haiku 3 of 3, Opus 4.1 2 of 3), but the most current model still copied the project in 3 of 5. The project's own code is a strong prior on its own.
+- **Three to five runs per cell.** The pattern is consistent in every cell, but the counts are small; the per-cell rates are not estimates.
 
 ## Recommendation
 

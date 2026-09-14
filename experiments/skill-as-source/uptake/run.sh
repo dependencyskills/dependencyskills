@@ -12,12 +12,17 @@
 #           run-gemini.sh runs it: print mode cannot answer its confirmations, and it hangs
 #           without a TTY. The workspace is a throwaway copy under $WORK.
 #
-# Usage: run.sh <claude|agy> <none|pointer|instructions|hook|lint> <run-number>
+# Usage: [MODEL=<id> LABEL=<name>] run.sh <claude|agy> <none|pointer|instructions|hook|lint> <run-number>
+#   MODEL picks a model other than the tool's default; LABEL names the run directory in its
+#   place (no hyphens), so runs on an older model score as a tool of their own.
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 WORK="${WORK:?set WORK to the directory setup.sh staged}"
 TOOL="${1:?tool}"; ARM="${2:?arm}"; N="${3:?run number}"
-RUN="$WORK/runs/$TOOL-$ARM-$N"
+LABEL="${LABEL:-$TOOL}"
+case "$LABEL" in *-*) echo "LABEL must not contain a hyphen"; exit 2 ;; esac
+MODEL_ARGS=(); if [ -n "${MODEL:-}" ]; then MODEL_ARGS=(--model "$MODEL"); fi
+RUN="$WORK/runs/$LABEL-$ARM-$N"
 if [ "$ARM" = hook ] && [ "$TOOL" != claude ]; then
   echo "the hook arm needs a post-edit hook that can add context; Antigravity's expects {}"; exit 2
 fi
@@ -40,21 +45,21 @@ if [ "$ARM" = lint ]; then printf '\napply(from = "gradle/skill-lint.gradle.kts"
 
 TASK="$(cat "$WORK/task.md")"
 {
-  echo "tool=$TOOL arm=$ARM run=$N started=$(date -u +%FT%TZ)"
+  echo "tool=$TOOL label=$LABEL model=${MODEL:-default} arm=$ARM run=$N started=$(date -u +%FT%TZ)"
   if [ "$TOOL" = claude ]; then claude --version; else agy --version; fi
 } > "$RUN/meta.txt"
 
 cd "$ISO/ws"
 case "$TOOL" in
   claude)
-    claude -p "$TASK" --output-format stream-json --verbose \
+    claude -p "$TASK" ${MODEL_ARGS[@]+"${MODEL_ARGS[@]}"} --output-format stream-json --verbose \
       --permission-mode acceptEdits \
       --allowedTools "Read Edit Write Glob Grep Skill Bash(./gradlew:*)" \
       > "$RUN/transcript.jsonl" 2> "$RUN/stderr.txt" || true ;;
   agy)
     # stream-json records every tool call with its parameters (the file viewed, the command
     # run), though not file contents; plain print mode records only the final summary.
-    script -q /dev/null agy -p "$TASK" --new-project --dangerously-skip-permissions \
+    script -q /dev/null agy -p "$TASK" ${MODEL_ARGS[@]+"${MODEL_ARGS[@]}"} --new-project --dangerously-skip-permissions \
       --output-format stream-json --log-file "$RUN/agy.log" \
       2> "$RUN/stderr.txt" | tr -d '\r' > "$RUN/transcript.jsonl" || true ;;
   *) echo "unknown tool $TOOL"; exit 2 ;;
