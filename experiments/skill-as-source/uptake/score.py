@@ -36,7 +36,8 @@ def score(run, fixture):
     operations = sum(len(re.findall(fixture["operations"], text)) for text in written)
     transcript = read(run / "transcript.jsonl") or read(run / "transcript.txt")
     if arm == "hook":
-        skill_read = (run / "ws/.claude/hooks/.seen").is_file()
+        # The hook's own marker, and — with --include-hook-events — its delivered text.
+        skill_read = (run / "hook-seen").is_file() or (run / "ws/.claude/hooks/.seen").is_file()
     elif tool.startswith("agy"):
         # Antigravity's stream-json logs tool parameters but not file contents, so the skill
         # counts as read when a tool opened the reference file or the skill-info source, or a

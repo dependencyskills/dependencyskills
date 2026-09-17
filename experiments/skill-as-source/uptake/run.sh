@@ -51,6 +51,19 @@ import sys; p = sys.argv[1]; lines = open(p).read().split("\n")
 lines.insert(1, f'set -- --init-script "{sys.argv[2]}" "$@"')
 open(p, "w").write("\n".join(lines))
 PY
+elif [ "$ARM" = hook ]; then
+  # Only the settings file goes in the workspace. The hook script and the skill it hands over
+  # live in a separate temp dir: in the first hook runs the agent browsed .claude/ and read
+  # the staged skill before writing, which measured the file and not the hook.
+  LINTDIR="$(mktemp -d)"
+  cp "$WORK/arms/hook/.claude/hooks/dependency-skill.py" "$LINTDIR/"
+  cp -R "$WORK/arms/hook/.claude/hooks/skills" "$LINTDIR/skills"
+  mkdir -p "$ISO/ws/.claude"
+  python3 - "$LINTDIR/dependency-skill.py" > "$ISO/ws/.claude/settings.json" <<'PY'
+import json, sys
+print(json.dumps({"hooks": {"PostToolUse": [{"matcher": "Edit|Write|MultiEdit",
+    "hooks": [{"type": "command", "command": f'python3 "{sys.argv[1]}"'}]}]}}, indent=2))
+PY
 else
   cp -R "$WORK/arms/$ARM/." "$ISO/ws/"
 fi
@@ -69,7 +82,7 @@ TASK="$(cat "$WORK/task.md")"
 cd "$ISO/ws"
 case "$TOOL" in
   claude)
-    claude -p "$TASK" ${MODEL_ARGS[@]+"${MODEL_ARGS[@]}"} --output-format stream-json --verbose \
+    claude -p "$TASK" ${MODEL_ARGS[@]+"${MODEL_ARGS[@]}"} --output-format stream-json --verbose --include-hook-events \
       --permission-mode acceptEdits \
       --allowedTools "Read Edit Write Glob Grep Skill Bash(./gradlew:*)" \
       > "$RUN/transcript.jsonl" 2> "$RUN/stderr.txt" || true ;;
@@ -84,6 +97,7 @@ esac
 
 git add -A && git diff --cached > "$RUN/changes.diff"
 cp -R "$ISO/ws" "$RUN/ws"
+if [ "$ARM" = hook ] && [ -f "$LINTDIR/.seen" ]; then cp "$LINTDIR/.seen" "$RUN/hook-seen"; fi
 echo "isolated=$ISO" >> "$RUN/meta.txt"
 echo "finished=$(date -u +%FT%TZ)" >> "$RUN/meta.txt"
 echo "$RUN"

@@ -100,6 +100,8 @@ It answers the budget problem outright: nothing is loaded for a package the code
 
 **What it does not solve.** An agent still chooses a skill by matching its *task* against descriptions, not by reading the imports in the file. A confident agent with a task phrased in its own terms may never match "code that uses acme-text". The description is written to catch that — it names the libraries and packages plainly and says to read the skill *even when the API seems familiar* — but whether it does is test 5, not something argued here.
 
+**The project's own modules.** In a multi-module build, a module depends on its siblings as source, never as a published jar, so their skills are in no cache for a harvester to find — yet a shared module inside the same repository is exactly the kind of library an agent assumes it already understands. The pointer can cover them too. **Prototyped** as `pkgindex.py pointer <dir> --project <root>`: it walks the project's source tree for skill files under each module's `src/<sourceSet>/<kotlin|java>/`, names each module the way Gradle does (`:core`, `:data:store`), and lists them in the same generated skill beside the published dependencies, with the module names in the description. Unlike a dependency's skill, a module's is **linked where it lives rather than copied**, so an edit to it is what the pointer shows next time without regenerating. On a synthetic three-module build the generated skill validated, both relative links resolved, and a skill file under `build/` was ignored. Whether an agent follows a link into its own project more readily than into a copied reference is untested.
+
 **Other ways in, not yet built.**
 
 - **An index in the project's build output**, which the agent can read like any file. The pointer is one form of this; the open part is still what makes the agent open it.
@@ -311,6 +313,23 @@ The `lint` arm above leaked: the lint task sat in the project's build script and
 - **The remaining two runs never needed it.** One default-Claude run wrote the current idiom from the start, so the lint never fired. One Antigravity run listed the build's tasks with `gradlew tasks --all`, found the lint by name, read its script and the skill, and wrote idiomatically before any warning — a smaller leak than the build-script one, through Gradle's own task list.
 - **Two Antigravity runs were cut off by its 20-minute print limit** while re-running tests after the code was finished; their code is scored as they left it. Antigravity was much slower today than on earlier runs, for reasons not investigated.
 - **Three runs per tool.** Consistent within each model, and small.
+
+### Test 5: a post-edit hook
+
+Measured against: Claude Code 2.1.270 on its default model and on `claude-haiku-4-5-20251001` · the Arrow fixture · 2026-09-17. Arm `hook`. **Six valid runs, three per model; six earlier runs invalidated.** Claude Code only: Antigravity's post-tool hook cannot add context.
+
+A hook runs after every file write. The first time an edited file imports a package whose library ships a skill, it adds that skill, as written, to the tool result the agent reads next. Push, not pull: the text arrives at the moment the agent has just written code against the package.
+
+**The first six runs were invalid, the same way the build-script lint was.** The hook's script and its copy of the skill sat in the workspace's `.claude/` directory, and the default model browsed `.claude/` before writing and read the skill there in all three runs. The hook was also unverifiable: Claude Code's transcript does not record what a hook adds unless asked. The harness now keeps the hook script and skill in a separate temporary directory — the workspace holds only a settings file naming the script — and runs Claude Code with `--include-hook-events`, which records the hook's output.
+
+| model | runs | hook delivered the skill | first write | final code |
+|---|---|---|---|---|
+| default | 3 | 3 of 3 — confirmed in the transcript | the project's Arrow 1 style, 3 of 3 | **3 idiomatic (ok)** — rewritten after the hook |
+| Haiku 4.5 | 3 | 3 of 3 — confirmed in the transcript | the project's Arrow 1 style, 3 of 3 | **3 misuse (harm)** |
+
+- **The hook corrected the default model every time.** All three runs wrote `flatMap` chains first, received the skill in the result of that write, and rewrote to the current idiom. None opened the hook's files; all three read the settings file that names the script, and none followed it.
+- **Haiku 4.5 received the skill and did not act on it, 3 of 3** — confirmed delivered, not merely fired. That makes it unmoved by every trigger tested: a pointer in context, a warning in build output, and now the skill's full text in a tool result.
+- **Across the push triggers, the pattern holds**: for the models that act on them, a post-write lint and a post-edit hook both turned an agent's own misuse into the library's idiom (4 of 4 and 3 of 3), with no instruction in the task.
 
 ## Recommendation
 
