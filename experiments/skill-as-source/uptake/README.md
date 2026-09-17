@@ -28,7 +28,8 @@ The README's misuse case is an agent confident about a result type, pattern-matc
 | `pointer` | the generated `dependency-skills` Agent Skill, in `.claude/skills/` and `.agents/skills/` — where Claude Code and Antigravity each load project skills, name and description only at startup | whether a skill description in context triggers a read |
 | `instructions` | the pointer, plus one line in `AGENTS.md`, `CLAUDE.md` and `GEMINI.md` | whether an instruction file adds to it |
 | `hook` | a post-edit hook that hands over the skill the first time an edited file imports the package | push into obligatory tool output. **Claude Code only**: Antigravity's post-tool hook expects `{}` on stdout and cannot add context |
-| `lint` | a Gradle `check` task that warns on each misuse the fixture defines and names the skill file | a finding the agent must read, at the line it wrote |
+| `lint` | a Gradle `check` task in the build script that warns on each misuse and names the skill file | a finding the agent must read — but the build script names the skill, so agents found it before writing |
+| `lintpost` | nothing in the workspace; a Gradle init script passed by the wrapper from a separate temp directory warns on misuse in changed code only, naming the skill's path there | a real post-write warning: silent until the misuse is written |
 
 Every arm that carries the skill carries the same bytes — the `references/` file the lightweight codex generated from the published sources jar.
 

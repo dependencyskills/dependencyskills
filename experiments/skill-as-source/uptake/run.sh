@@ -12,7 +12,7 @@
 #           run-gemini.sh runs it: print mode cannot answer its confirmations, and it hangs
 #           without a TTY. The workspace is a throwaway copy under $WORK.
 #
-# Usage: [MODEL=<id> LABEL=<name>] run.sh <claude|agy> <none|pointer|instructions|hook|lint> <run-number>
+# Usage: [MODEL=<id> LABEL=<name>] run.sh <claude|agy> <none|pointer|instructions|hook|lint|lintpost> <run-number>
 #   MODEL picks a model other than the tool's default; LABEL names the run directory in its
 #   place (no hyphens), so runs on an older model score as a tool of their own.
 set -euo pipefail
@@ -33,10 +33,27 @@ fi
 # other run — and Antigravity's trajectory logs showed exactly that in the first runs.
 rm -rf "$RUN" && mkdir -p "$RUN"
 ISO="$(mktemp -d)"
-trap 'rm -rf "$ISO"' EXIT
+LINTDIR=""
+trap 'rm -rf "$ISO" ${LINTDIR:+"$LINTDIR"}' EXIT
 if [ -d "$WORK/repo" ]; then cp -R "$WORK/repo" "$ISO/repo"; fi
 cp -R "$WORK/template" "$ISO/ws"
-cp -R "$WORK/arms/$ARM/." "$ISO/ws/"
+if [ "$ARM" = lintpost ]; then
+  # Nothing goes in the workspace. The skill and the init script live in a second temp dir
+  # that is not a neighbour of the workspace, and the wrapper passes the script to Gradle.
+  LINTDIR="$(mktemp -d)"
+  cp "$WORK/arms/lintpost/"*.md "$LINTDIR/"
+  SKILLFILE="$(ls "$LINTDIR"/*.md)"
+  python3 - "$WORK/arms/lintpost/skill-lint.init.gradle.kts" "$LINTDIR/skill-lint.init.gradle.kts" "$SKILLFILE" <<'PY'
+import sys; open(sys.argv[2], "w").write(open(sys.argv[1]).read().replace("@SKILL@", sys.argv[3]))
+PY
+  python3 - "$ISO/ws/gradlew" "$LINTDIR/skill-lint.init.gradle.kts" <<'PY'
+import sys; p = sys.argv[1]; lines = open(p).read().split("\n")
+lines.insert(1, f'set -- --init-script "{sys.argv[2]}" "$@"')
+open(p, "w").write("\n".join(lines))
+PY
+else
+  cp -R "$WORK/arms/$ARM/." "$ISO/ws/"
+fi
 python3 - "$ISO/ws/build.gradle.kts" "$WORK/repo" "$ISO/repo" <<'PY'
 import sys; p = sys.argv[1]; text = open(p).read(); open(p, "w").write(text.replace(sys.argv[2], sys.argv[3]))
 PY
@@ -59,7 +76,7 @@ case "$TOOL" in
   agy)
     # stream-json records every tool call with its parameters (the file viewed, the command
     # run), though not file contents; plain print mode records only the final summary.
-    script -q /dev/null agy -p "$TASK" ${MODEL_ARGS[@]+"${MODEL_ARGS[@]}"} --new-project --dangerously-skip-permissions \
+    script -q /dev/null agy -p "$TASK" ${MODEL_ARGS[@]+"${MODEL_ARGS[@]}"} --new-project --dangerously-skip-permissions --print-timeout 20m \
       --output-format stream-json --log-file "$RUN/agy.log" \
       2> "$RUN/stderr.txt" | tr -d '\r' > "$RUN/transcript.jsonl" || true ;;
   *) echo "unknown tool $TOOL"; exit 2 ;;

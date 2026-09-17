@@ -87,4 +87,11 @@ f = json.load(open(sys.argv[3]))
 text = open(sys.argv[1]).read().replace("@MISUSE@", f["misuse"]).replace("@LINT@", f["lint"]).replace("@PACKAGE@", f["package"])
 open(sys.argv[2], "w").write(text)
 EOF
-echo "staged $FIXTURE: template, and arms none, pointer, instructions, hook, lint"
+mkdir -p "$A/lintpost" && cp "$REFERENCE" "$A/lintpost/" && cp "$HERE/arms/lintpost-template/skill-lint.init.gradle.kts" "$A/lintpost/"
+python3 - "$A/lintpost/skill-lint.init.gradle.kts" "$WORK/fixture.json" <<'EOF2'
+import json, sys
+f = json.load(open(sys.argv[2])); p = sys.argv[1]
+text = open(p).read().replace("@MISUSE@", f["misuse"]).replace("@LINT@", f["lint"])
+open(p, "w").write(text)
+EOF2
+echo "staged $FIXTURE: template, and arms none, pointer, instructions, hook, lint, lintpost"

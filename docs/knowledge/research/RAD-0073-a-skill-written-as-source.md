@@ -290,9 +290,27 @@ Misuse is counted in the files the agent wrote; every misuse run had it in the i
 - **When the skill was read, it was followed — 19 of 19**, against the project's contrary code, across both vendors and all three Claude models that read it.
 - **The pointer's reach depends on the model.** Antigravity and the default and Opus 4.1 Claude models activated it before writing in 13 of 13 runs. **Haiku 4.5 never did** — 0 of 3 — though the skill was listed in its session, and it misused the library in two of those runs as if the pointer were absent. A description in context is a trigger only for a model that acts on it.
 - **Measured here: `pointer`, `instructions` and `lint` each got the skill read every time for Antigravity** (5, 3 and 3 runs), with no misuse. The `instructions` and `lint` arms were not run on Claude.
-- **The lint arm did not act as a lint.** Antigravity opened the build script, found the lint task naming the skill file, and read the skill *before writing anything* — so this measures a discoverable pointer in the build, not a warning reaching an agent after it wrote the code. A lint that does not name a file until it fires, or a check the agent cannot read in advance, is still untested.
+- **The lint arm did not act as a lint.** Antigravity opened the build script, found the lint task naming the skill file, and read the skill *before writing anything* — so this measures a discoverable pointer in the build, not a warning reaching an agent after it wrote the code. The next section tests a lint that cannot be found in advance.
 - **Staleness helps explain it but is not the whole of it.** The less-exposed models misused more with no skill (Haiku 3 of 3, Opus 4.1 2 of 3), but the most current model still copied the project in 3 of 5. The project's own code is a strong prior on its own.
 - **Three to five runs per cell.** The pattern is consistent in every cell, but the counts are small; the per-cell rates are not estimates.
+
+### Test 5: a lint that fires after the code is written
+
+Measured against: the same tools, models and fixture as the section above · 2026-09-14. Arm `lintpost` in `experiments/skill-as-source/uptake/`. **Nine runs, three per tool.**
+
+The `lint` arm above leaked: the lint task sat in the project's build script and named the skill file, so an agent read the skill before writing. This arm is the real thing. Nothing in the workspace names the lint or the skill. The lint is a Gradle init script passed by the wrapper from a separate temp directory, the skill sits in that directory, and the lint checks only code changed since the baseline commit — so it is silent until the agent has written the misuse, and then warns on compilation with the skill's path.
+
+| tool and model | runs | lint fired (misuse written) | read the skill after the warning | final code |
+|---|---|---|---|---|
+| Antigravity | 3 | 2 | 2 of 2 | **3 idiomatic (ok)** |
+| Claude Code, default model | 3 | 2 | 2 of 2 | **3 idiomatic (ok)** |
+| Claude Code, Haiku 4.5 | 3 | 3 | **0 of 3** | **3 misuse (harm)** |
+
+- **A post-write warning corrected the code in 4 of 4 runs where a capable agent saw it.** Antigravity and the default Claude model each wrote the project's Arrow 1 style, got the warning from their own `check`, opened the skill, and rewrote to `either { }` and `bind()`. The default Claude model first traced where the unfamiliar lint came from — Gradle's `init.d`, `help --task`, the init script — before reading the skill.
+- **Haiku 4.5 saw the warning and ignored it, every time.** It appeared in four separate build outputs in one run; Haiku fixed its failing tests, declared "all tests pass", and left every misuse in place. This matches it never activating the pointer: for this model neither a description in context nor a warning in obligatory output was a trigger.
+- **The remaining two runs never needed it.** One default-Claude run wrote the current idiom from the start, so the lint never fired. One Antigravity run listed the build's tasks with `gradlew tasks --all`, found the lint by name, read its script and the skill, and wrote idiomatically before any warning — a smaller leak than the build-script one, through Gradle's own task list.
+- **Two Antigravity runs were cut off by its 20-minute print limit** while re-running tests after the code was finished; their code is scored as they left it. Antigravity was much slower today than on earlier runs, for reasons not investigated.
+- **Three runs per tool.** Consistent within each model, and small.
 
 ## Recommendation
 

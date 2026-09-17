@@ -42,7 +42,7 @@ def score(run, fixture):
         # counts as read when a tool opened the reference file or the skill-info source, or a
         # command pulled the sources jar apart. A plain-text transcript records neither.
         skill_read = None if not transcript.lstrip().startswith("{") and "step_update" not in transcript else bool(
-            re.search(r"(?:references/|\.dependency-skills/)%s\.md|skill-info\.kt|-sources\.jar" % re.escape(fixture["package"]), transcript))
+            re.search(r"(?:references/|\.dependency-skills/|/tmp\.\w+/)%s\.md|skill-info\.kt|-sources\.jar" % re.escape(fixture["package"]), transcript))
     else:
         # A sentence found only in the skill: its text reached the agent by some route.
         skill_read = fixture["marker"] in transcript
@@ -54,7 +54,8 @@ def score(run, fixture):
         verdict = "idiomatic"
     else:
         verdict = "other"
-    return dict(fixture=fixture["artifact"], tool=tool, arm=arm, run=n, verdict=verdict,
+    lint_fired = fixture["lint"] in transcript
+    return dict(fixture=fixture["artifact"], tool=tool, arm=arm, run=n, verdict=verdict, lint_fired=lint_fired,
                 misuse=misuse, operations=operations, skill_read=skill_read)
 
 
