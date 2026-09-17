@@ -25,6 +25,18 @@ Everything this project indexes today is documentation: doc comments, harvested 
 
 A resource is a file the build must be told to package, in a location the ecosystem must agree to preserve, read back through a mechanism that differs per ecosystem. Every one of those is a place to lose it.
 
+**Measured 2026-09-17, on a four-target Kotlin Multiplatform library** (JVM, Android, JS, linuxX64) publishing the same skill through every resource route at once:
+
+| the file, as placed | where it arrives |
+|---|---|
+| `jvmMain/resources/META-INF/skills/` | the JVM jar, and the Android AAR's `classes.jar` |
+| `commonMain/resources/META-INF/skills/` | the JS klib |
+| the same, for the native target | **nowhere** — the linuxX64 klib carries no resources |
+| `androidMain/res/raw/` | the AAR, as `res/raw/…` — and only with `androidResources` enabled on the target |
+| any of the above | **none of the five sources jars** |
+
+So a `META-INF` resource is not lost on the JVM — it travels, and on Android and JS too. What it never reaches is the **sources jar**, which is the carrier [ADR-0009](../decisions/ADR-0009-transport-is-sources-jar.md) chose and the artifact an agent actually has open on disk; RAD-0065 measured the same absence across 82 published sources jars. Android's `res/raw` works but is Android-only, so a multiplatform library would need a different answer per target, and the native targets have no answer at all. A file in the source tree needs none of this: it is one place, and it arrives everywhere the source does.
+
 ### Source is the one thing every ecosystem distributes
 
 Source code is the artifact no ecosystem can drop, because it is the point. Go modules and Rust crates distribute source natively. Python sdists are source. Swift packages are source. On the JVM, [ADR-0009](../decisions/ADR-0009-transport-is-sources-jar.md) already chose the `-sources.jar` as this project's primary carrier, for a reason that transfers directly: it is **tied to the resolved version by construction**.

@@ -12,6 +12,7 @@ The README's misuse case is an agent confident about a result type, pattern-matc
 |---|---|---|---|
 | `outcome` | `com.example.acme:acme-result` — its own sealed `Outcome` with `Success` and `Failure` | use `fold`, `valueOrNull`, `errorOrNull`, `onSuccess`, `onFailure`, `map` | `is`/`as` on a subtype |
 | `arrow` | the real `io.arrow-kt:arrow-core` 2.2.3 from Maven Central, with a `skill-info.kt` added to its published sources jar for the pointer, hook and lint arms | use the `either { }` builder with `bind()`, and `getOrElse`, `fold`, `leftOrNull` | `flatMap` chains, `is Either.Left`/`Right` |
+| `arrow-md` | the same real Arrow, with the skill as `SKILL.md` in the package directory rather than `skill-info.kt` — the naming question of [RAD-0075](../../../docs/knowledge/research/RAD-0075-naming-the-skill-file.md) | the same skill, in markdown | the same |
 | `lookup` | `com.example.acme:acme-lookup` — Kotlin's own `Result`, which every agent already knows, failing with `NotFound` for a missing key | use `getOrNullIfMissing`, `isNotFound`, `recoverMissing` | `is NotFound`, `catch (e: NotFound)`, `getOrNull()` |
 
 `outcome` and `lookup` are invented, and no run misused them: an unfamiliar library is itself a gap, and agents inspect it. `arrow` is a library both models know, and it is the first fixture where an agent wrote from memory without looking — and, in one run, copied the project's wrong-way code throughout.
@@ -51,7 +52,7 @@ Reading the skill and following it are scored separately, because they fail sepa
 ## Running it
 
 ```bash
-FIXTURE=<outcome|lookup|arrow> WORK=<a scratch directory per fixture> ./setup.sh
+FIXTURE=<outcome|lookup|arrow|arrow-md> WORK=<a scratch directory per fixture> ./setup.sh
 ```
 
 `setup.sh` publishes the fixture's library, splits its binary and sources jars into the layout above, generates the pointer with `../../minimal-codex/pkgindex.py` and validates it, compiles the consumer template, and stages the arm overlays. It runs no agent.

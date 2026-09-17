@@ -9,12 +9,12 @@
 # smoke runs put the whole repository inside the project, and an agent found the skill
 # with one `find`.
 #
-# Usage: FIXTURE=<outcome|lookup|arrow> WORK=<dir> ./setup.sh
+# Usage: FIXTURE=<outcome|lookup|arrow|arrow-md> WORK=<dir> ./setup.sh
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$HERE/../../.." && pwd)"
 WORK="${WORK:?set WORK to a directory for the builds and runs of this fixture}"
-FIXTURE="${FIXTURE:?set FIXTURE to outcome, lookup or arrow}"
+FIXTURE="${FIXTURE:?set FIXTURE to outcome, lookup, arrow or arrow-md}"
 GRADLE="${GRADLE:-gradle}"
 F="$HERE/fixtures/$FIXTURE"
 mkdir -p "$WORK"
@@ -47,9 +47,10 @@ else
   curl -sfL "https://repo1.maven.org/maven2/${GROUP//.//}/$EART/$VERSION/$EART-$VERSION-sources.jar" -o "$SOURCES"
   PACKAGE_DIR="commonMain/${PACKAGE//.//}"
   unzip -l "$SOURCES" | grep -q " $PACKAGE_DIR/" || PACKAGE_DIR="${PACKAGE//.//}"
-  STAGE="$(mktemp -d)" && mkdir -p "$STAGE/$PACKAGE_DIR" && cp "$F/skill/skill-info.kt" "$STAGE/$PACKAGE_DIR/"
-  (cd "$STAGE" && zip -q "$SOURCES" "$PACKAGE_DIR/skill-info.kt") && rm -rf "$STAGE"
-  unzip -l "$SOURCES" | grep -q "$PACKAGE_DIR/skill-info.kt" || { echo "skill-info.kt not added"; exit 1; }
+  SKILL_NAME="$(cd "$F/skill" && ls | head -1)"   # skill-info.kt, or SKILL.md — see RAD-0075
+  STAGE="$(mktemp -d)" && mkdir -p "$STAGE/$PACKAGE_DIR" && cp "$F/skill/$SKILL_NAME" "$STAGE/$PACKAGE_DIR/"
+  (cd "$STAGE" && zip -q "$SOURCES" "$PACKAGE_DIR/$SKILL_NAME") && rm -rf "$STAGE"
+  unzip -l "$SOURCES" | grep -q "$PACKAGE_DIR/$SKILL_NAME" || { echo "$SKILL_NAME not added"; exit 1; }
   CACHE="$WORK/gradle-home/caches/modules-2/files-2.1/$GROUP/$EART/$VERSION/0"
 fi
 

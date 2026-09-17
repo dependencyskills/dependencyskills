@@ -1,0 +1,1 @@
+Implement the four functions in `src/main/kotlin/com/example/shop/Checkout.kt`, following their documentation. Add tests for them in `src/test/kotlin/com/example/shop/CheckoutTest.kt`, using fake `Customers` and `Stock`. Make sure `./gradlew check` passes before you finish.

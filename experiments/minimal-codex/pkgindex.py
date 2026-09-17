@@ -54,6 +54,21 @@ END;
 
 
 SKILL_FILE = re.compile(r"(?:^|/)skill-info\.(?:kt|java)$")
+MARKDOWN_SKILL = re.compile(r"(?:^|/)SKILL\.md$")
+SOURCE_SET = re.compile(r"^[a-zA-Z0-9]+(?:Main|Test)$")
+
+
+def package_of_path(entry):
+    """The package a sources-jar path sits in, for a file that cannot declare one.
+
+    A jar holds `com/example/text/SKILL.md`, and a multiplatform one prefixes the source
+    set: `commonMain/com/example/text/SKILL.md`. Nothing else is stripped, so a file
+    outside a package directory yields nothing and is skipped.
+    """
+    parts = entry.split("/")[:-1]
+    if parts and SOURCE_SET.match(parts[0]):
+        parts = parts[1:]
+    return ".".join(parts)
 
 
 def skill_text(source):
@@ -77,6 +92,17 @@ def packages_of(jar):
     skills = {}
     with zipfile.ZipFile(jar) as zf:
         for entry in zf.namelist():
+            if MARKDOWN_SKILL.search(entry):
+                # A skill written as markdown rather than as a source file: delivered exactly
+                # as it is, and its package read from where it sits, since markdown cannot
+                # declare one. See RAD-0075.
+                package = package_of_path(entry)
+                if package:
+                    try:
+                        skills[package] = zf.read(entry).decode("utf-8", "replace").strip("\n")
+                    except (KeyError, OSError):
+                        pass
+                continue
             if not (entry.endswith(".kt") or entry.endswith(".java")):
                 continue
             lang = "kotlin" if entry.endswith(".kt") else "java"
