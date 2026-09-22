@@ -101,7 +101,16 @@ inside the jar. Maven and Gradle plugins package on build and extract from
 dependencies on consume; Spring AI consumers read from the classpath without
 extracting. A machine-readable catalogue is published at skillsjars.com. The
 documentation covers Maven Central and JVM agents; it does not mention Android
-AAR or Kotlin Multiplatform. *(read 2026-08-16)*
+AAR or Kotlin Multiplatform. *(read 2026-08-16)* Onboarding is addressed to the
+agent and served by content negotiation: `Accept: text/markdown` on `/setup`
+returns a procedure that detects the build tool, adds the plugin, picks skills
+and writes the `AGENTS.md` entry, and the same header on `/` returns the
+catalogue, with `?q=` to search it. A skill's `allowed-tools` is mirrored into a
+POM property, `skillsjars.skill.<name>.allowed-tools`, which the packaging
+plugin checks against the `SKILL.md` — so a consumer can read the permission
+request without extracting the jar. Assessed in
+[RAD-0076](../research/RAD-0076-skills-republished-by-a-third-party.md), which
+rejects what it distributes and keeps these two ideas. *(read 2026-09-18)*
 
 ### Tool managers
 

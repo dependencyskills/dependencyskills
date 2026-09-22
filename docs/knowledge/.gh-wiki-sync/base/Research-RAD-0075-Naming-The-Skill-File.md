@@ -8,7 +8,7 @@ Measured against: Claude Code 2.1.270 and Antigravity 1.2.2 over 15 uptake runs 
 
 ## Question
 
-[RAD-0073](Research-RAD-0073-A-Skill-Written-As-Source) settled that a library can ship a skill as a per-package file inside its source, and chose `skill-info.<ext>` — a documentation-only source file named by analogy with `package-info.java`. The name was measured as legal and collision-free everywhere it was tried. It was never chosen for being a good name, and it reads as an awkward borrowing.
+[RAD-0073](Research-RAD-0073-A-Skill-Written-As-Source) settled that a library can ship a skill as a file inside its source, filed under the namespace it documents, and chose `skill-info.<ext>` — a documentation-only source file named by analogy with `package-info.java`. The name was measured as legal and collision-free everywhere it was tried. It was never chosen for being a good name, and it reads as an awkward borrowing.
 
 **What should the file be called?** And, underneath that, two questions RAD-0073 assumed rather than measured: does it have to be a source file at all, and does it have to be a comment?
 
@@ -56,8 +56,25 @@ RAD-0073 rejected a markdown file on the grounds that packagers keep source and 
 ### What it costs
 
 - **Three ecosystems need a line of configuration** where a source file needed none: `package_data` for setuptools, a copy step into `dist` for npm, a resource or exclude declaration for SwiftPM.
-- **Its effect on generated documentation is not measured.** It is expected to be invisible to Javadoc, Dokka, `go doc`, rustdoc, pdoc and TypeDoc, none of which render stray markdown by default — which would also remove the one exception RAD-0073 found, pdoc rendering `skill-info.py` as a module. DocC's handling of a markdown file inside a target is the least certain.
+- **Its effect on generated documentation** is measured below: none, in eight of eight generators.
 - **Loaded directly as a skill, package names collide.** If an agent harness loaded every package's `SKILL.md` as a skill in its own right, a dozen libraries each with a `util` or `core` package would collide on `name`. The generated pointer skill ([RAD-0073](Research-RAD-0073-A-Skill-Written-As-Source)) avoids this by indexing them under their coordinates.
+
+### Does a markdown file reach the human's documentation
+
+The criterion the source-file shape was measured on, asked of markdown. Each generator runs the standard way over a package holding one documented declaration and a `SKILL.md` beside it; a control counts files carrying the real doc comment, so a run that renders nothing proves nothing. Measured 2026-09-17 with the versions on the line above; harness `markdown-in-docs.sh`.
+
+| generator | `SKILL.md` | `skill-info.<ext>` (RAD-0073) |
+|---|---|---|
+| Javadoc | stays out | stays out |
+| Dokka | stays out | stays out |
+| `go doc -all` | stays out | stays out with the comment below the package clause |
+| rustdoc | stays out | stays out while no `mod` reaches it |
+| pydoc | stays out | the file's **name** is listed |
+| pdoc | stays out | **rendered** as a module page |
+| TypeDoc | stays out | stays out |
+| DocC | stays out, with the file excluded in `Package.swift` | stays out |
+
+**Eight of eight ignore it**, controls confirming each rendered the real documentation. This removes the last measured difference that favoured a source file: markdown is invisible where `skill-info` was visible in Python, and equal everywhere else.
 
 ### A third shape: the skill as a raw string constant
 
@@ -93,13 +110,26 @@ Both candidates so far are text a compiler ignores — a doc comment, or a file 
 
 **The file it lives in is a separate choice from the declaration's name.** `val skill` is unambiguous; a file called `skill.kt` is the one spelling measured to collide with a `Skill.kt` type on a case-insensitive filesystem.
 
+### What happens when two skills collide
+
+A convention that names one file invites a collision wherever a build flattens several artifacts into one. Measured 2026-09-17 with Gradle 9.7.1, Kotlin 2.4.20 and AGP 9.3.2; harness `collisions.sh`.
+
+| where they meet | result |
+|---|---|
+| one library, `SKILL.md` in both `src/main/kotlin` and `src/main/java` | **the build fails**: *"Entry com/example/acme/text/SKILL.md is a duplicate but no duplicate handling strategy has been set"* |
+| two libraries sharing a namespace, each with its own `SKILL.md` | **both survive** — sources jars are never merged, and each is keyed by its coordinate |
+| a fat jar merging two `META-INF/skills/…` resources | **the build fails** on Gradle's default strategy, and fails harder with `DuplicatesStrategy.FAIL` |
+| an Android application merging two libraries' `res/raw/skill_….md` | **the build succeeds and one file silently disappears** — the APK carries the first dependency's copy, with no duplicate error and no warning |
+
+**The source-tree placement is the one whose only collision is inside a single library, where it fails loudly for the person who can fix it.** The resource placements fail in a *consumer's* build instead: noisily in a fat jar, and silently on Android, which is the worst of the four — the application ships, and a skill is simply gone. That is an argument about placement rather than about the name, and it holds for whichever spelling is chosen.
+
 ### npm already has a convention, and it is not in the source tree
 
 [RAD-0072](Research-RAD-0072-The-One-Thing-We-Are-Not-Doing) measured this on 2026-09-12 by downloading published tarballs: npm packages already ship skills, as `skills/<name>/SKILL.md` **at the package root**, included by adding `skills` to `package.json`'s `files` array. `antfu/skills-npm`'s proposal states exactly that layout and that `files` entry; it is still titled a proposal, but the practice is real and has adopters. The one `SKILL.md` found in a working `node_modules` tree sits there too, at `get-tsconfig/skills/get-tsconfig/SKILL.md`.
 
 **So npm's two losses in the table above do not need fixing; they need not to be fought.** A skill placed in `src/` and dropped by `files: ["dist"]` is a skill in the wrong place for that ecosystem. Following npm's own convention costs one `files` entry, is what agents already look for there, and both fixes measured for the source-tree placement — adding `src/**/SKILL.md` to `files`, or copying the file into `dist/` — are worse than simply using `skills/`.
 
-**It also differs on granularity, and that is the open question.** npm's unit is the *package* — one skill for the library, named for it. This project's unit is the *package as a namespace*: one skill per import, which is what scopes a lookup to the file being edited ([RAD-0073](Research-RAD-0073-A-Skill-Written-As-Source)). For a small npm library the two coincide. For a large JVM library they do not, and a convention that fits both would have to allow several skills per artifact, keyed by the package they document. `skills/<name>/SKILL.md` allows exactly that — the directory name is free — so the shapes are compatible even where the grain differs.
+**The grain is the same, expressed differently — and which way a JVM library should express it is open.** npm's unit is the published package — one skill for the library, named for it. This project's unit is the library's **root namespace**, which is the same grain expressed the way a JVM import can be matched: `import com.example.acme.text.Normalizer` finds the skill filed at `com/example/acme`. A library that genuinely spans namespaces may ship more than one, and `skills/<name>/SKILL.md` allows that too, since the directory name is free.
 
 **What this settles for the name.** `SKILL.md` is not merely unclaimed; it is the filename the one working in-artifact practice already uses. A JVM convention that spells it the same way inherits that recognition, whatever directory it sits in.
 
@@ -156,6 +186,7 @@ Test 5 of [RAD-0073](Research-RAD-0073-A-Skill-Written-As-Source) was re-run wit
 - A raw string constant reaches every sources jar **and** the JVM jar, the JS klib and the native klib; Dokka renders a public one's declaration but not its text, and an `internal` one not at all. R8 removes it from an application's release build unless a keep rule covers the library.
 - Test 5 re-run with the skill as `SKILL.md` matches the source-file result across 15 runs: unprompted 4 of 6 misuse and 0 of 6 found it, pointer 6 of 6 read and followed, hook 3 of 3 corrected.
 - setuptools ships `SKILL.md` with a `[tool.setuptools.package-data]` entry; npm ships it either from a `files` entry naming the source path or by copying it into `dist/`.
+- Colliding skills fail the build in a source tree and in a fat jar, and are **silently dropped** by an Android resource merge.
 
 **Argued, not measured.**
 
@@ -173,9 +204,11 @@ Test 5 of [RAD-0073](Research-RAD-0073-A-Skill-Written-As-Source) was re-run wit
 
 **Keep `skill-info.<ext>` as the fallback, not the rule**, for the places a markdown file needs configuration and a source file does not — setuptools and SwiftPM. Both fixes are one line and are **measured to work**: `[tool.setuptools.package-data]` puts `SKILL.md` in the wheel and the sdist; for npm, either a `files` entry naming the source path or a copy into `dist/` ships it, though the convention above is the better answer there. A harvester should recognise both; the lightweight codex's package index and pointer already do.
 
+**What the evidence cannot settle.** Every measurement here is about packaging, tooling and rendering, and on those grounds the markdown file leads. None of it touches the questions a convention actually lives or dies on: whether library authors will write the file, which shape reads best to the person maintaining it, whether an agent meeting one unprompted opens it, and whether a name can be proposed to other ecosystems without being rejected as this project's private invention. Those want authors' opinions and an uptake measurement, not another packaging run.
+
 **Measure before deciding:**
 
-1. Documentation generators with `SKILL.md` present — Javadoc, Dokka, `go doc`, rustdoc, pdoc, TypeDoc, DocC.
+1. ~~Documentation generators with `SKILL.md` present~~ — done, above: eight of eight ignore it.
 2. ~~Test 5 with the skill as `SKILL.md`~~ — done, above: no detectable difference. What remains is a fixture where an agent *does* explore, to test whether the spelling changes what it opens.
 3. Whether SwiftPM's `exclude`, or declaring the file as a resource, is the better of the two one-line answers there; the setuptools and npm fixes are already verified.
 
@@ -183,7 +216,8 @@ Test 5 of [RAD-0073](Research-RAD-0073-A-Skill-Written-As-Source) was re-run wit
 
 ## Connections
 
-- [RAD-0073](Research-RAD-0073-A-Skill-Written-As-Source) — the per-package skill file, the measurements this relies on, and the generated pointer.
+- [RAD-0073](Research-RAD-0073-A-Skill-Written-As-Source) — the skill file under a library's root namespace, the measurements this relies on, and the generated pointer.
 - [RAD-0072](Research-RAD-0072-The-One-Thing-We-Are-Not-Doing) — the Agent Skills format and the shipped-skill field.
 - [RAD-0074](Research-RAD-0074-A-Skill-Built-From-The-Documentation) — delivery as written in the lightweight codex.
 - [RAD-0065](Research-RAD-0065-What-V1-Skill-Authors-Wrote-Unprompted) — where v1 skills sat, and why resources failed.
+- `docs/knowledge/reference/agent-file-conventions.md` — the inventory of every file name and path an agent already looks for, which this decision has to sit beside.

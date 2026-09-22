@@ -8,7 +8,7 @@ Measured against: nothing new. Every figure below is cited from the record that 
 
 ## Question
 
-[RAD-0073](Research-RAD-0073-A-Skill-Written-As-Source) established that a library can ship a real skill as a `skill-info` source file in each package, and that it survives into what every ecosystem publishes. Almost no library does that today, and most never will.
+[RAD-0073](Research-RAD-0073-A-Skill-Written-As-Source) established that a library can ship a real skill as a file inside its source, filed under the namespace it documents, and that it survives into what every ecosystem publishes. Almost no library does that today, and most never will.
 
 **When a dependency's package has no `skill-info`, can a usable skill be built from the source documentation the codex already harvests — and is it better than serving that documentation as it is?**
 
@@ -22,9 +22,9 @@ This is scoped to the **lightweight codex** ([RAD-0070](Research-RAD-0070-The-Sm
 
 [RAD-0072](Research-RAD-0072-The-One-Thing-We-Are-Not-Doing) described the field as a ladder. A library that ships a skill has it served; one that does not falls back to harvested documentation; one with no documentation falls back to signatures. RAD-0073 made the top rung reachable from source. This record asks whether the middle rung can be raised — whether documentation can be turned into something skill-shaped rather than served as a pile of member comments.
 
-### The unit is the package, which makes this affordable
+### The unit, and why this is affordable
 
-RAD-0070 found, after measurement, that the package — not the member and not the library — is the unit worth indexing: members cannot be discriminated, libraries are vendors rather than topics, and a package is a subject. RAD-0073 puts an authored skill in exactly that unit. A synthesised skill should match it, so a consumer sees one skill per package whether it was written or built.
+RAD-0070 found, after measurement, that the package — not the member and not the library — is the unit worth *indexing*: members cannot be discriminated, libraries are vendors rather than topics, and a package is a subject. An authored skill is filed one level up again, under the library's root namespace (RAD-0073), because a library is one subject to its reader. A synthesised skill should match the authored one, so a consumer sees the same unit whether the skill was written or built — while the retrieval index underneath it may still be finer.
 
 That changes the cost argument that sank per-member summarising. [RAD-0064](Research-RAD-0064-The-Skill-Is-The-Overview) measured single libraries at 1,447 and 6,414 entries with summarisation the dominant cost. The same libraries hold tens of packages, not thousands. One generation per package is two orders of magnitude fewer calls, and each one can afford a larger model and a longer prompt.
 
@@ -97,7 +97,7 @@ What this record found stays useful when that point is reached: the field-by-fie
 
 **Not a commitment.** Build it as an experiment in the lightweight codex, and measure it against the baseline before anything else.
 
-1. **Generate one skill per package** from its harvested doc comments, package documentation and deprecation structure, in the `spec/content.md` body shape, every claim citing the declaration it rests on, and provenance stated.
+1. **Generate one skill per library namespace** from the harvested doc comments, package documentation and deprecation structure of the packages under it, in the `spec/content.md` body shape, every claim citing the declaration it rests on, and provenance stated.
 2. **Score grounding first.** For each generated skill, count claims whose cited declaration does not support them. A high invention rate ends the approach, however good the skills read.
 3. **Compare against authored skills.** Where one of RAD-0065's libraries ships an authored skill, generate one for the same version and compare field coverage and disagreements. The authored skill is not ground truth, but a disagreement is worth reading.
 4. **Then test uptake.** Three arms on a misuse task shaped like the guiding case: concatenated documentation, the synthesised skill, and nothing. This inherits RAD-0073's caveat — it means little without a trigger that puts the skill in front of the agent.

@@ -1,0 +1,26 @@
+Gradle 9.7.1 · Kotlin 2.4.20
+Four files under src/commonMain/resources: META-INF/skills/, skills/acme-text/, the root, and the namespace path.
+
+--- build exit 0
+  the npm package a JavaScript consumer installs
+    METAINF    META-INF/skills/acme-text.md 
+    NPMSHAPE   skills/acme-text/SKILL.md 
+    PKGROOT    SKILL.md 
+    NAMESPACE  com/example/acme/text/SKILL.md 
+    package.json files field: none — npm would publish the whole directory
+
+  acme-text-js-0.1.0-sources.jar
+    METAINF    ABSENT
+    NPMSHAPE   ABSENT
+    PKGROOT    ABSENT
+    NAMESPACE  ABSENT
+  acme-text-js-0.1.0.klib
+    METAINF    META-INF/skills/acme-text.md 
+    NPMSHAPE   skills/acme-text/SKILL.md 
+    PKGROOT    SKILL.md 
+    NAMESPACE  com/example/acme/text/SKILL.md 
+  acme-text-0.1.0-sources.jar
+    METAINF    ABSENT
+    NPMSHAPE   ABSENT
+    PKGROOT    ABSENT
+    NAMESPACE  ABSENT

@@ -1,0 +1,17 @@
+Gradle 9.7.1, Kotlin 2.4.20
+The npm shape is a skills/ directory beside the source, so the first cases put it at src/skills — a sibling of src/main.
+
+--- Gradle, Kotlin JVM
+    src/skills, no build change                    sources jar: ABSENT   binary jar: ABSENT
+    src/skills as a Kotlin source directory        sources jar: acme-text/SKILL.md   binary jar: ABSENT
+    src/skills as a resource directory             sources jar: acme-text/SKILL.md   binary jar: acme-text/SKILL.md
+    src/skills added to sourcesJar only            sources jar: skills/acme-text/SKILL.md   binary jar: ABSENT
+    src/main/skills, no build change               sources jar: ABSENT   binary jar: ABSENT
+    beside the code, for comparison                sources jar: com/example/acme/text/SKILL.md   binary jar: ABSENT
+--- Kotlin Multiplatform, skill at src/skills/acme-text/SKILL.md, no build change · exit 0
+    acme-text-jvm-0.1.0-sources.jar                
+    acme-text-linuxx64-0.1.0-sources.jar           
+    acme-text-0.1.0-sources.jar                    
+--- Maven
+    src/skills, no build change                    sources jar: ABSENT   binary jar: ABSENT
+    src/skills declared as a resource directory    sources jar: skills/acme-text/SKILL.md   binary jar: skills/acme-text/SKILL.md

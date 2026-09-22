@@ -25,7 +25,21 @@ GRADLE=<gradle> ./resource-routes.sh
 Publishes one multiplatform library carrying the same skill on every resource route at once — `jvmMain` resources, `commonMain` resources, Android `res/raw` — and lists which artifact each lands in. Needs the Android SDK.
 
 ```bash
+GRADLE=<gradle> ./skills-source-dir.sh      # does a skills/ directory beside the source ship
+GRADLE=<gradle> ./collisions.sh             # what happens when two skills share a path
+GRADLE=<gradle> ./markdown-in-docs.sh       # does a SKILL.md reach the rendered documentation
+GRADLE=<gradle> ./kmp-consumer-routes.sh    # every route a multiplatform library reaches a consumer by
+GRADLE=<gradle> ./npm-resource-root.sh      # where a resource lands in the published npm package
+```
+
+```bash
+GRADLE=<gradle> ./xcframework-routes.sh
+```
+
+Eight mechanisms tried against one XCFramework — source file, two resource placements, an exported and an internal raw-string constant, a KDoc comment, and three writes into the `.framework` bundle — each with its own sentinel, measured in the linked bundle and again after assembly. Needs Xcode. The bundle writes happen in a `doLast` on the link task, which is where a plugin has to do them; staging the same writes from the shell between two Gradle invocations triggers a relink that regenerates the `Info.plist` and produces a false negative.
+
+```bash
 ./recognition-probe.sh <output-file>
 ```
 
-Each script writes its recorded run beside it: `markdown-survival.txt`, `binary-reach.txt`, `resource-routes.txt`, `recognition-probe.txt`. The probe is primed by its own question and is kept as a weak signal; see RAD-0075.
+Each script writes its recorded run beside it, as `<script>.txt`. The probe is primed by its own question and is kept as a weak signal; see RAD-0075.

@@ -11,3 +11,6 @@ it does not control, the standing tracking burden is carried here.
 - [landscape.md](landscape.md) — other projects and conventions in this space.
 - [doc-comment-systems.md](doc-comment-systems.md) — the in-source documentation
   system and tag vocabulary per ecosystem, with authoritative sources.
+- [agent-file-conventions.md](agent-file-conventions.md) — every file name and path
+  an agent already looks for: instruction files, skill layouts, the distribution
+  proposals, and the per-package documentation slot each language has.

@@ -21,6 +21,7 @@ from pathlib import Path
 import codex  # the member-level harvester, reused for its extractor
 
 CACHE = Path(os.environ.get("GRADLE_USER_HOME") or Path.home() / ".gradle") / "caches/modules-2/files-2.1"
+M2 = Path(os.environ.get("M2_REPO") or Path.home() / ".m2/repository")
 DB = Path.home() / ".minicodex/libraries.db"
 
 DESC = re.compile(r"<description>(.*?)</description>", re.S)
@@ -44,8 +45,17 @@ END;
 
 
 def pom_text(version_dir, artifact, version):
-    for hashed in version_dir.iterdir():
-        pom = hashed / f"{artifact}-{version}.pom"
+    """The POM beside the jar, in either cache layout.
+
+    Maven keeps it next to the artifact; Gradle puts each file in its own checksum
+    directory under the version.
+    """
+    candidates = [version_dir / f"{artifact}-{version}.pom"]
+    try:
+        candidates += [d / f"{artifact}-{version}.pom" for d in version_dir.iterdir() if d.is_dir()]
+    except OSError:
+        pass
+    for pom in candidates:
         if pom.is_file():
             try:
                 return pom.read_text("utf-8", "replace")
@@ -76,18 +86,39 @@ def type_docs(jar, cap=400):
 
 
 def discover(limit):
-    """Every cached coordinate whose sources jar is present."""
-    found = []
+    """Every cached coordinate whose sources jar is present, from both local caches.
+
+    Gradle files an artifact at `<group>/<artifact>/<version>/<checksum>/<file>`, with the
+    group as one dotted directory. Maven nests the group as directories and puts the files
+    directly under the version: `com/example/acme/acme-text/0.1.0/acme-text-0.1.0-sources.jar`.
+    A library present in both is yielded once, by coordinate.
+    """
+    found, seen = [], set()
+
+    def take(coordinate, version_dir, artifact, version, jar):
+        if coordinate in seen:
+            return
+        seen.add(coordinate)
+        found.append((coordinate, version_dir, artifact, version, jar))
+
     for jar in CACHE.rglob("*-sources.jar"):
+        version_dir = jar.parent.parent
+        artifact, version = version_dir.parent.name, version_dir.name
+        group = version_dir.parent.parent.name
+        if jar.name == f"{artifact}-{version}-sources.jar":
+            take(f"{group}:{artifact}:{version}", version_dir, artifact, version, jar)
+        if len(found) >= limit:
+            return found
+
+    for jar in M2.rglob("*-sources.jar"):
+        version_dir = jar.parent
+        artifact, version = version_dir.parent.name, version_dir.name
         try:
-            version_dir = jar.parent.parent
-            artifact, version = version_dir.parent.name, version_dir.name
-            group = version_dir.parent.parent.name
-        except (OSError, IndexError):
+            group = ".".join(version_dir.parent.parent.relative_to(M2).parts)
+        except ValueError:
             continue
-        if jar.name != f"{artifact}-{version}-sources.jar":
-            continue
-        found.append((f"{group}:{artifact}:{version}", version_dir, artifact, version, jar))
+        if group and jar.name == f"{artifact}-{version}-sources.jar":
+            take(f"{group}:{artifact}:{version}", version_dir, artifact, version, jar)
         if len(found) >= limit:
             break
     return found
