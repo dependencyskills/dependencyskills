@@ -125,10 +125,14 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
             writeReportFile()
             reportToService()
             report()
+            announceAdded()
         }
     }
 
     private var written: String? = null
+
+    /** `group:artifact:version` of every component the SBOM gained over the one it replaced. */
+    private var added: List<String> = emptyList()
 
     /**
      * Writes the resolved set as a CycloneDX 1.6 SBOM, rewriting the file only when it changed.
@@ -137,7 +141,8 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
      * erase the last real one. A classpath that resolved and held nothing IS written, as an SBOM
      * with no components — an empty scope, which is true. Unchanged content leaves the file alone,
      * so its modification time says when the dependencies last changed rather than when the build
-     * last ran, and a reader checking it does no work between changes. Nothing here may fail a build.
+     * last ran, and a reader checking it does no work between changes. What a rewrite adds over the
+     * file it replaces is kept for [announceAdded]. Nothing here may fail a build.
      */
     private fun writeReportFile() {
         if (resolutions == 0) return
@@ -172,10 +177,14 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
                 append("  ]\n")
                 append("}\n")
             }
-            if (file.isFile && file.readText() == text) {
+            val previous = if (file.isFile) file.readText() else null
+            if (previous == text) {
                 written = file.path
                 return@runCatching
             }
+            // Only against a file that was there: the first build, and the first after `clean`, have
+            // nothing to compare with, and calling every dependency new would say nothing.
+            if (previous != null) added = (purls(text) - purls(previous)).sorted()
             file.parentFile.mkdirs()
             file.writeText(text)
             written = file.path
@@ -293,9 +302,43 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
         )
     }
 
+    /**
+     * Names the dependencies this build added, so an agent reading the build's output knows to look.
+     *
+     * An agent that asked the lightweight codex early, got an empty list, then added a library and
+     * built, never asked again, and the library's skill was never read. The build's output is the
+     * one place every agent reads whatever harness it runs in, and it is read right after the change
+     * that made a new skill reachable — so the news goes there, rather than into a hook one harness
+     * has and another does not.
+     *
+     * It cannot say which of them ship a skill: the plugin never reads a sources jar, which is the
+     * codex's work. So it names what changed and where to ask. Quiet level, so a build run with `-q`,
+     * as agents often run one, still shows it; and only when something was added, so it is not noise.
+     */
+    private fun announceAdded() {
+        if (added.isEmpty()) return
+        val shown = added.take(MAX_ANNOUNCED).map { it.substringBeforeLast(':') }
+        val more = added.size - shown.size
+        logger.quiet(
+            "dependencyskills: new since the last build: ${shown.joinToString(", ")}" +
+                (if (more > 0) " and $more more" else "") +
+                ". Any of them may ship a skill; an agent with the dependency-skills lookup can check " +
+                "with list_dependency_skills.",
+        )
+    }
+
+    /** The `group:artifact:version` of every component in an SBOM this class wrote. */
+    private fun purls(sbom: String): Set<String> =
+        PURL.findAll(sbom).map { "${it.groupValues[1]}:${it.groupValues[2]}:${it.groupValues[3]}" }.toSet()
+
     private fun plural(n: Int, one: String, many: String) = if (n == 1) one else many
 
     private companion object {
+        val PURL = Regex(""""purl":"pkg:maven/([^/"]+)/([^@"]+)@([^"]+)"""")
+
+        /** Enough to recognise a change; a build that added more than this is a new project. */
+        const val MAX_ANNOUNCED = 5
+
         // Short on purpose. A build waiting on a local service that is not running should notice
         // in the time it takes to fail a connection, not in the time it takes a request to expire.
         const val CONNECT_TIMEOUT_MS = 500L

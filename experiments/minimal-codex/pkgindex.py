@@ -1103,7 +1103,8 @@ def list_tool(db, project):
             descriptions.setdefault(library, description)
     log(db, "query", command="list", result="hit" if rows else "none", project=project, libraries=sorted(rows))
     if not rows:
-        return "None of this project's dependencies ships a skill."
+        return ("None of this project's dependencies ships a skill — of those the build last resolved. "
+                "A dependency added since is not on it until the project is built again.")
     # Name and description, as the Agent Skills specification loads every skill at first: enough to
     # decide which one the code in front of you needs, and no more.
     lines = ["These dependencies ship a skill. Read the one for the library the code uses with get_dependency_skill.", ""]

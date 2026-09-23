@@ -67,6 +67,23 @@ class ReportFileTest {
     }
 
     @Test
+    fun `names a dependency added since the last build, even under -q, and only then`() {
+        val project = project()
+        project.build("""dependencies { api("com.example:alpha:1.0") }""")
+        val first = project.run("classes", "-q").output
+        // The first build has nothing to compare with, and every dependency being new says nothing.
+        assertFalse("new since the last build" in first, first)
+
+        project.build("""dependencies { api("com.example:alpha:1.0"); api("com.example:gamma:1.0") }""")
+        val second = project.run("classes", "-q").output
+        assertContains(second, "dependencyskills: new since the last build: com.example:gamma.")
+        assertFalse("com.example:alpha," in second, second)
+
+        val third = project.run("classes", "-q", "--rerun-tasks").output
+        assertFalse("new since the last build" in third, third)
+    }
+
+    @Test
     fun `a project that resolves nothing gets an SBOM with no components, not a missing file`() {
         val project = project()
         project.build("")
