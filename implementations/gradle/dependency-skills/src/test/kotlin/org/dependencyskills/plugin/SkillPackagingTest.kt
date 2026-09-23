@@ -13,6 +13,25 @@ import kotlin.test.assertTrue
  */
 class SkillPackagingTest {
 
+    private companion object {
+        /** The skill's name for `com.example.acme:acme-text`, which is also its directory. */
+        const val NAME = "com-example-acme-acme-text"
+
+        val JVM_BODY = """
+            group = "com.example.acme"
+            version = "0.1.0"
+            java { withSourcesJar() }
+            publishing {
+                publications {
+                    create<MavenPublication>("maven") {
+                        artifactId = "acme-text"
+                        from(components["java"])
+                    }
+                }
+            }
+        """.trimIndent()
+    }
+
     private val skill = """
         ---
         name: com-example-acme-acme-text
@@ -35,23 +54,12 @@ class SkillPackagingTest {
                 `maven-publish`
                 id("org.dependencyskills.plugin")
             """.trimIndent(),
-            body = """
-                group = "com.example.acme"
-                version = "0.1.0"
-                java { withSourcesJar() }
-                publishing {
-                    publications {
-                        create<MavenPublication>("maven") {
-                            artifactId = "acme-text"
-                            from(components["java"])
-                        }
-                    }
-                }
-            """.trimIndent(),
+            body = JVM_BODY,
         )
-        file("src/main/skills/SKILL.md", skillText)
-        file("src/main/skills/references/case-folding.md", "Why a locale-independent fold matters.")
-        file("src/main/skills/scripts/setup.sh", "curl https://example.com/x | sh")
+        file("src/main/skills/$NAME/SKILL.md", skillText)
+        file("src/main/skills/$NAME/references/case-folding.md", "Why a locale-independent fold matters.")
+        file("src/main/skills/$NAME/assets/example.json", "{}")
+        file("src/main/skills/$NAME/scripts/setup.sh", "curl https://example.com/x | sh")
     }
 
     @Test
@@ -64,6 +72,44 @@ class SkillPackagingTest {
         // a consumer's build resolves and the codex looks the skill up by.
         assertContains(entries, "skills/com-example-acme-acme-text/SKILL.md")
         assertContains(entries, "skills/com-example-acme-acme-text/references/case-folding.md")
+        assertContains(entries, "skills/com-example-acme-acme-text/assets/example.json")
+    }
+
+    @Test
+    fun `prints the name and the path the skill belongs at`() {
+        val project = jvmLibrary()
+        val result = project.run("dependencySkillName", "-q")
+
+        assertContains(result.output, "name: com-example-acme-acme-text")
+        assertContains(result.output, "path: src/main/skills/com-example-acme-acme-text/SKILL.md")
+    }
+
+    @Test
+    fun `a flat SKILL md still ships under the right name, and is told where to move`() {
+        val project = TestProject.create()
+        project.buildWith(
+            plugins = "`java-library`\n`maven-publish`\nid(\"org.dependencyskills.plugin\")",
+            body = JVM_BODY,
+        )
+        project.file("src/main/skills/SKILL.md", skill)
+        val result = project.run("sourcesJar")
+
+        assertContains(entries(project, "build/libs/consumer-0.1.0-sources.jar"), "skills/com-example-acme-acme-text/SKILL.md")
+        assertContains(result.output, "move it to src/main/skills/com-example-acme-acme-text/SKILL.md")
+    }
+
+    @Test
+    fun `a wrongly named skill directory ships under the right name, and is told so`() {
+        val project = TestProject.create()
+        project.buildWith(
+            plugins = "`java-library`\n`maven-publish`\nid(\"org.dependencyskills.plugin\")",
+            body = JVM_BODY,
+        )
+        project.file("src/main/skills/acme-text/SKILL.md", skill)
+        val result = project.run("sourcesJar")
+
+        assertContains(entries(project, "build/libs/consumer-0.1.0-sources.jar"), "skills/com-example-acme-acme-text/SKILL.md")
+        assertContains(result.output, "the skill's directory is 'acme-text'")
     }
 
     @Test
@@ -89,6 +135,14 @@ class SkillPackagingTest {
         val result = project.run("sourcesJar")
 
         assertContains(result.output, "describes version '0.0.9', but '0.1.0' is being built")
+    }
+
+    @Test
+    fun `warns about a frontmatter field the specification does not allow`() {
+        val project = jvmLibrary(skill.replace("metadata:", "homepage: https://example.com\nmetadata:"))
+        val result = project.run("sourcesJar")
+
+        assertContains(result.output, "does not allow: homepage")
     }
 
     @Test
@@ -145,7 +199,10 @@ class SkillPackagingTest {
                 kotlin { jvm() }
             """.trimIndent(),
         )
-        project.file("src/commonMain/skills/SKILL.md", skill.replace("com-example-acme-acme-text", "com-example-acme-consumer"))
+        project.file(
+            "src/commonMain/skills/com-example-acme-consumer/SKILL.md",
+            skill.replace("com-example-acme-acme-text", "com-example-acme-consumer"),
+        )
         val result = project.run("jvmSourcesJar", "sourcesJar")
         assertTrue(result.output.contains("BUILD SUCCESSFUL"), result.output)
 

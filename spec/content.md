@@ -52,10 +52,10 @@ The Agent Skills specification fixes the directory's name, not where it sits. Pl
 | ecosystem | where the skill is authored | where it ships |
 |---|---|---|
 | npm | `skills/<name>/SKILL.md` at the package root | the same path in the package, by a `files` entry — the existing practice, conformed to |
-| JVM (Maven, Gradle) | `src/main/skills/SKILL.md` | `skills/<name>/SKILL.md` in the **sources jar**, added by the build |
-| Kotlin Multiplatform | `src/commonMain/skills/SKILL.md` | `commonMain/skills/<name>/SKILL.md` in every target's sources jar |
+| JVM (Maven, Gradle) | `src/main/skills/<name>/SKILL.md` | `skills/<name>/` in the **sources jar**, added by the build |
+| Kotlin Multiplatform | `src/commonMain/skills/<name>/SKILL.md` | `commonMain/skills/<name>/` in every target's sources jar |
 
-The author writes the file once, without its name in the path; the build knows the coordinate and files it. A binary jar, `META-INF` and a Kotlin/Native klib are not placements: none of them reaches the copy a consumer's tooling reads (RAD-0065, RAD-0075).
+**The skill is a valid skill directory where it is written**, named for the skill as the Agent Skills specification requires, so an ordinary validator accepts it in the source tree. The author never computes the name: the build knows the coordinate and can print it (the Gradle plugin's `dependencySkillName`). The whole directory ships — `SKILL.md`, `references/` and `assets/` — except `scripts/`, which a dependency skill never has. A binary jar, `META-INF` and a Kotlin/Native klib are not placements: none of them reaches the copy a consumer's tooling reads (RAD-0065, RAD-0075).
 
 **Authorship.** A consumer takes a skill only from the artifact whose coordinate its name encodes. An artifact that files a skill under another library's name is republishing it, and the skill is refused. This is checkable from the artifact alone, with no registry or signature behind it, and it is what stops a third party's text being served as a library's own.
 
@@ -223,7 +223,7 @@ finishes reading has failed differently from one that says too little.
 
 ## Validation
 
-An implementation should **reject** a skill whose `name` disagrees with its directory, whose name is not the encoding of the coordinate of the artifact it ships in, whose `description` is absent, or whose files break the filesystem rules in `publishing.md`. A publishing build should not ship a `scripts/` directory at all.
+An implementation should **reject** a skill whose `name` disagrees with its directory, whose name is not the encoding of the coordinate of the artifact it ships in, whose `description` is absent, whose frontmatter has a field outside the six the Agent Skills specification defines (anything else belongs under `metadata`), or whose files break the filesystem rules in `publishing.md`. These match the reference validator, `skills-ref`, which was run against this project's checkers on the same skills (2026-09-23) and agreed on every case once unknown fields were made an error. A publishing build should not ship a `scripts/` directory at all.
 
 It should **warn** — not fail — when a library publishes for a language with no matching reference, when `metadata.version` is absent or is not the version being built, or when the description is very short. Each of those is usually a mistake and occasionally deliberate, and a specification that cannot tell the difference should say so rather than guess.
 

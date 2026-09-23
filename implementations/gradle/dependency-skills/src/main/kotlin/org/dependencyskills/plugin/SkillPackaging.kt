@@ -3,6 +3,7 @@ package org.dependencyskills.plugin
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
@@ -16,64 +17,93 @@ import org.gradle.api.tasks.bundling.Zip
 import java.io.File
 
 /**
- * Ships a library's own skill inside its sources jar, filed under the library's coordinates.
+ * Ships a library's own skill inside its sources jar, filed under the library's coordinate.
  *
- * The author writes one file, `src/main/skills/SKILL.md` — `src/commonMain/skills/SKILL.md` in a
- * multiplatform build — and this puts it in every sources jar at `skills/<name>/SKILL.md`, where
- * `<name>` is the library's coordinate made a legal skill name ([skillName]). That path is what the
- * codex looks for, and the codex takes a skill only from the artifact whose coordinate it encodes
+ * The author writes an Agent Skill directory in the source tree, named for the library's coordinate
+ * ([skillName]) as the specification requires a skill's directory to be named for the skill:
+ *
+ * ```
+ * src/main/skills/<name>/SKILL.md            a JVM library
+ * src/commonMain/skills/<name>/SKILL.md      a Kotlin Multiplatform library
+ * ```
+ *
+ * so it is a valid skill where it is written, and `skills-ref validate` accepts it there. This puts
+ * that directory in every sources jar at `skills/<name>/` — `commonMain/skills/<name>/` in a
+ * multiplatform jar, which prefixes every entry with its source set. That path is what the codex
+ * looks for, and the codex takes a skill only from the artifact whose coordinate the name encodes
  * (RAD-0076).
  *
- * **The author never types the coordinates.** They are read from the build's own publication, so
- * a skill cannot be filed under a name the jar does not carry — which the codex would refuse as
- * republishing, silently from the author's side. A `references/` directory beside the file travels
- * with it, as the Agent Skills specification allows. A `scripts/` directory does not: a library's
- * skill tells an agent how to use the library, and never gives it something to run.
+ * **`references/` and `assets/` travel with it**, the specification's directories for material read
+ * on demand and for templates and data. **`scripts/` does not**: a library's skill tells an agent how
+ * to use the library, and never gives it something to run.
+ *
+ * **The coordinate comes from the build, never the author.** `dependencySkillName` prints the name
+ * and the path the skill belongs at, so an author — or their agent — never computes the encoding. A
+ * skill in a wrongly named directory, or the alpha's earlier flat `skills/SKILL.md`, still ships under
+ * the right name, and `checkDependencySkill` says where it should move.
  *
  * **A directory the build does not declare does not ship.** RAD-0075 measured `src/main/skills`
  * reaching no artifact without a line of build configuration. This is that line, supplied.
  *
- * Nothing happens in a project with no skill, which is every consuming project that applies this
+ * Nothing is packaged in a project with no skill, which is every consuming project that applies this
  * plugin for the other half of what it does.
  */
 internal object SkillPackaging {
 
-    /** Where an author puts the skill, per source set, relative to the project directory. */
-    private const val JVM_SKILL = "src/main/skills"
-    private const val MULTIPLATFORM_SKILL = "src/commonMain/skills"
+    /** Where an author's skills root is, per source set, relative to the project directory. */
+    private const val JVM_SKILLS = "src/main/skills"
+    private const val MULTIPLATFORM_SKILLS = "src/commonMain/skills"
 
     fun apply(project: Project) = with(project) {
         // After evaluation, because the coordinates come from the publication, and a build script
         // sets artifactId and groupId in its own body - after this plugin was applied.
         afterEvaluate {
-            // Which layout is decided by which file exists: the file is what gets packaged, so it is
-            // the fact that matters, and it needs no knowledge of which Kotlin plugin is applied.
-            val multiplatformSkill = layout.projectDirectory.dir(MULTIPLATFORM_SKILL).asFile
-            val multiplatform = File(multiplatformSkill, "SKILL.md").isFile
-            val skillDir = if (multiplatform) multiplatformSkill else layout.projectDirectory.dir(JVM_SKILL).asFile
-            val skillFile = File(skillDir, "SKILL.md")
-            if (!skillFile.isFile) return@afterEvaluate
+            val (libraryGroup, artifact) = coordinates(project)
+            val name = if (libraryGroup.isBlank()) "" else skillName(libraryGroup, artifact)
+            // Where a skill is found decides the layout; with none yet, the Kotlin plugin applied
+            // decides where one should go.
+            val existing = listOf(MULTIPLATFORM_SKILLS, JVM_SKILLS)
+                .map { layout.projectDirectory.dir(it).asFile }
+                .firstOrNull { it.isDirectory }
+            val multiplatform = existing?.path?.endsWith(MULTIPLATFORM_SKILLS.replace('/', File.separatorChar))
+                ?: pluginManager.hasPlugin("org.jetbrains.kotlin.multiplatform")
+            val root = existing ?: layout.projectDirectory.dir(if (multiplatform) MULTIPLATFORM_SKILLS else JVM_SKILLS).asFile
 
-            val (group, artifact) = coordinates(project)
-            if (group.isBlank()) {
-                logger.warn(
-                    "dependencyskills: ${skillFile.relativeTo(projectDir)} is not packaged, because this " +
-                        "project has no group, so the skill has no coordinates to be filed under",
-                )
-                return@afterEvaluate
+            tasks.register("dependencySkillName", DependencySkillName::class.java) {
+                this.group = "dependency skills"
+                description = "Prints the name this library's skill must carry, and the directory it belongs in."
+                skillName.set(name)
+                skillPath.set(if (name.isBlank()) "" else "${root.relativeTo(projectDir).invariantSeparatorsPath}/$name/SKILL.md")
             }
-            // A multiplatform sources jar prefixes every entry with its source set; following that
-            // keeps the skill beside the code it describes, and the codex accepts both shapes.
-            val name = skillName(group, artifact)
-            val destination = (if (multiplatform) "commonMain/" else "") + "skills/$name"
+
+            // The skill directory: the correctly named one, else the only one, else the flat file the
+            // alpha first asked for. More than one candidate is ambiguous, and the check says so.
+            val candidates = root.listFiles { f -> f.isDirectory && File(f, "SKILL.md").isFile }.orEmpty().toList()
+            val skillDir = when {
+                name.isNotBlank() && File(root, "$name/SKILL.md").isFile -> File(root, name)
+                candidates.size == 1 -> candidates.single()
+                File(root, "SKILL.md").isFile -> root
+                else -> null
+            }
+            if (skillDir == null && candidates.isEmpty()) return@afterEvaluate
 
             val check = tasks.register("checkDependencySkill", CheckDependencySkill::class.java) {
                 description = "Checks the library's skill before it is packaged into the sources jar."
-                skill.set(skillFile)
                 expectedName.set(name)
                 expectedVersion.set(version.toString())
-                scripts.set(File(skillDir, "scripts").exists())
+                expectedPath.set("${root.relativeTo(projectDir).invariantSeparatorsPath}/$name/SKILL.md")
+                if (skillDir != null) {
+                    skill.set(File(skillDir, "SKILL.md"))
+                    directoryName.set(if (skillDir == root) "" else skillDir.name)
+                    scripts.set(File(skillDir, "scripts").exists())
+                }
+                ambiguous.set(if (skillDir == null) candidates.map { it.name }.sorted() else emptyList())
             }
+            if (skillDir == null || name.isBlank()) return@afterEvaluate
+
+            // Always into the right name, whatever the source directory is called, so a misplaced
+            // skill still ships where a consumer looks for it; the check tells the author to move it.
+            val destination = (if (multiplatform) "commonMain/" else "") + "skills/$name"
 
             // Every sources jar: a JVM library's `sourcesJar`, and a multiplatform library's root and
             // per-target ones, which are the jars a consumer's build resolves.
@@ -88,7 +118,7 @@ internal object SkillPackaging {
                 .configureEach {
                     dependsOn(check)
                     from(skillDir) {
-                        include("SKILL.md", "references/**")
+                        include("SKILL.md", "references/**", "assets/**")
                         into(destination)
                     }
                 }
@@ -155,19 +185,43 @@ internal object SkillPackaging {
 }
 
 /**
- * Warns about a skill that would ship but not work.
+ * Prints the skill's name and the directory it belongs in, so neither an author nor their agent
+ * ever computes the coordinate encoding by hand.
+ */
+abstract class DependencySkillName : DefaultTask() {
+
+    @get:Input
+    abstract val skillName: Property<String>
+
+    @get:Input
+    abstract val skillPath: Property<String>
+
+    @TaskAction
+    fun print() {
+        if (skillName.get().isBlank()) {
+            logger.quiet("This project has no group, so its skill has no coordinate to be named for.")
+            return
+        }
+        logger.quiet("name: ${skillName.get()}")
+        logger.quiet("path: ${skillPath.get()}")
+    }
+}
+
+/**
+ * Warns about a skill that would ship but not work, or not be a valid Agent Skill where it is written.
  *
  * Warnings rather than failures, for the alpha: the checks are what a library author most likely
  * gets wrong, and a publish failing on a new file's frontmatter is a worse first experience than a
- * line in the build output.
+ * line in the build output. `spec/content.md` says a consumer rejects the naming ones outright.
  */
 abstract class CheckDependencySkill : DefaultTask() {
 
     @get:InputFile
+    @get:Optional
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val skill: RegularFileProperty
 
-    /** The library's coordinate made a legal skill name, which `name` must match. */
+    /** The library's coordinate made a legal skill name, which `name` and the directory must match. */
     @get:Input
     abstract val expectedName: Property<String>
 
@@ -175,15 +229,48 @@ abstract class CheckDependencySkill : DefaultTask() {
     @get:Input
     abstract val expectedVersion: Property<String>
 
+    /** Where the skill belongs, relative to the project, for a message that says where to move it. */
+    @get:Input
+    abstract val expectedPath: Property<String>
+
+    /** The directory the skill was found in; empty when it is the flat file directly under `skills/`. */
+    @get:Input
+    @get:Optional
+    abstract val directoryName: Property<String>
+
     @get:Input
     @get:Optional
     abstract val scripts: Property<Boolean>
 
+    /** More than one candidate directory and none correctly named: nothing is packaged. */
+    @get:Input
+    abstract val ambiguous: ListProperty<String>
+
     @TaskAction
     fun check() {
+        val expected = expectedName.get()
+        val path = expectedPath.get()
+        if (ambiguous.get().isNotEmpty()) {
+            logger.warn(
+                "dependencyskills: no skill packaged: found ${ambiguous.get().joinToString()} under skills/, " +
+                    "and none is named '$expected'. A library ships one skill, at $path",
+            )
+            return
+        }
+        if (!skill.isPresent) return
+        when (val directory = directoryName.getOrElse("")) {
+            expected -> Unit
+            "" -> logger.warn(
+                "dependencyskills: SKILL.md is not in a directory named for the skill, so it is not a valid " +
+                    "Agent Skill where it is written. It was packaged under the right name; move it to $path",
+            )
+            else -> logger.warn(
+                "dependencyskills: the skill's directory is '$directory'; the Agent Skills specification requires " +
+                    "it to match the skill's name, '$expected'. It was packaged under the right name; move it to $path",
+            )
+        }
         val text = skill.get().asFile.readText()
         val frontmatter = FRONTMATTER.find(text)?.groupValues?.get(1)
-        val expected = expectedName.get()
         if (frontmatter == null) {
             logger.warn(
                 "dependencyskills: SKILL.md has no frontmatter. An agent decides whether to read a skill " +
@@ -200,6 +287,22 @@ abstract class CheckDependencySkill : DefaultTask() {
             }
             if (description.isNullOrBlank()) {
                 logger.warn("dependencyskills: SKILL.md has no `description`, which is what tells an agent when to read it")
+            }
+            // The specification allows six top-level fields and the reference validator rejects any
+            // other; anything more belongs under `metadata`.
+            val unknown = TOP_LEVEL.findAll(frontmatter).map { it.groupValues[1] }.filterNot { it in FIELDS }.toList()
+            if (unknown.isNotEmpty()) {
+                logger.warn(
+                    "dependencyskills: SKILL.md has fields the Agent Skills specification does not allow: " +
+                        "${unknown.joinToString()}. Only ${FIELDS.sorted().joinToString()} are allowed; put anything " +
+                        "else under `metadata`.",
+                )
+            }
+            if (ALLOWED_TOOLS.containsMatchIn(frontmatter)) {
+                logger.warn(
+                    "dependencyskills: SKILL.md declares `allowed-tools`. A dependency skill may not grant an " +
+                        "agent tools; consumers treat it as a finding (spec/content.md).",
+                )
             }
             // Version-matched guidance is the point of shipping a skill with the artifact, so the
             // version it claims to describe should be the one being built.
@@ -228,6 +331,9 @@ abstract class CheckDependencySkill : DefaultTask() {
         val FRONTMATTER = Regex("""\A---\r?\n(.*?)\r?\n---""", RegexOption.DOT_MATCHES_ALL)
         val NAME = Regex("""(?m)^name:\s*(.+)$""")
         val DESCRIPTION = Regex("""(?m)^description:\s*(.+)$""")
+        val ALLOWED_TOOLS = Regex("""(?m)^allowed-tools:""")
+        val TOP_LEVEL = Regex("""(?m)^([A-Za-z][\w-]*):""")
+        val FIELDS = setOf("name", "description", "license", "compatibility", "metadata", "allowed-tools")
         /** `version:` indented under `metadata:`, which is where the specification puts it. */
         val VERSION = Regex("""(?m)^metadata:\s*\r?\n(?:[ \t]+.*\r?\n)*?[ \t]+version:\s*(.+)$""")
     }

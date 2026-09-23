@@ -43,14 +43,16 @@ On a **configuration-cache hit** the plugin observes nothing, because the config
 
 ### The library half: shipping a skill *(alpha)*
 
-Applied to a library, the same plugin ships the library's own skill. The author writes one file:
+Applied to a library, the same plugin ships the library's own skill. The author writes an Agent Skill directory named for the skill, so it is a valid skill where it is written:
 
 ```
-src/main/skills/SKILL.md            a JVM library
-src/commonMain/skills/SKILL.md      a Kotlin Multiplatform library
+src/main/skills/<name>/SKILL.md            a JVM library
+src/commonMain/skills/<name>/SKILL.md      a Kotlin Multiplatform library
 ```
 
-and every sources jar the build produces carries it at `skills/<name>/SKILL.md` — prefixed `commonMain/` in a multiplatform jar, as that jar prefixes everything. A `references/` directory beside the file travels with it.
+and every sources jar the build produces carries that directory at `skills/<name>/` — prefixed `commonMain/` in a multiplatform jar, as that jar prefixes everything. `references/` and `assets/` travel with it; `scripts/` never does.
+
+**The build says what `<name>` is**, so nobody computes it: `./gradlew -q :<module>:dependencySkillName` prints the name and the path. A skill in a wrongly named directory, or the alpha's first flat `skills/SKILL.md`, still ships under the right name, and `checkDependencySkill` says where to move it.
 
 **`<name>` is the library's coordinate, made a legal skill name.** The Agent Skills specification requires the name to match its directory and allows only lowercase letters, digits and single hyphens, up to 64 characters — no dots, colons, underscores or `--`. So `com.example.acme:acme-text` is filed as `com-example-acme-acme-text`, and a coordinate that would run past 64 characters — about 2% of real libraries — has its group shrunk to the first and last letter of each segment while the artifact stays whole: `cm-ge-ad-as-cn-tg-ay-fk-accessibility-test-framework`. If even that is too long it is cut and ends in eight hex digits of a SHA-256 of `group:artifact`; one library in 3,184 surveyed needed that. Chosen by measurement over initials, which merged sibling groups ([RAD-0075](../../docs/knowledge/research/RAD-0075-naming-the-skill-file.md)). The encoding is one-way, and nothing decodes it: the codex knows each jar's real coordinate, encodes it the same way, and compares. It is the coordinate rather than the artifactId so that the name is unique per library — two groups can each publish a `core` — and it is npm's `skills/<name>/SKILL.md` exactly.
 
@@ -58,7 +60,7 @@ and every sources jar the build produces carries it at `skills/<name>/SKILL.md` 
 
 **A `scripts/` directory is never shipped**, and the build says so. A library's skill tells an agent how to use the library; it never hands the agent something to run.
 
-**`checkDependencySkill` warns, for now, rather than fails**: missing frontmatter, a `name` that is not the coordinate's skill name, no `description`, or a `metadata.version` that is absent or is not the version being built.
+**`checkDependencySkill` warns, for now, rather than fails**: a directory not named for the skill, missing frontmatter, a `name` that is not the coordinate's skill name, no `description`, `allowed-tools`, or a `metadata.version` that is absent or is not the version being built.
 
 A project with no skill file is untouched, which is every purely consuming one. Where the file lives and what it is called is still open — [RAD-0075](../../docs/knowledge/research/RAD-0075-naming-the-skill-file.md) — and this is the alpha of one answer, built to be tried.
 

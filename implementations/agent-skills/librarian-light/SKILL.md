@@ -19,8 +19,9 @@ What you know about a library was true at some point, averaged over every versio
 
 ## How to use it
 
-1. **`list_dependency_skills`** — which of this project's dependencies ship a skill. Call it once, early; it is cheap.
+1. **`list_dependency_skills`** — which of this project's dependencies ship a skill, each with the skill's own description. Call it once, early; it is cheap, and the descriptions say which one applies.
 2. **`get_dependency_skill(library: "group:artifact")`** — read the skill for the library the code in front of you uses. Read only the ones you need; there is no reason to read them all.
+3. **`get_dependency_skill_file(library, path)`** — a skill links its other files, such as `references/swift.md`, by relative path. You cannot open those on disk; read them with this, when the skill points you at one.
 
 Do this before writing the code, not after it fails. If a build or test error involves a library that has a skill, read the skill before changing the code.
 
