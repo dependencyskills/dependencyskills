@@ -54,10 +54,19 @@ internal object SkillPackaging {
     private const val JVM_SKILLS = "src/main/skills"
     private const val MULTIPLATFORM_SKILLS = "src/commonMain/skills"
 
-    fun apply(project: Project) = with(project) {
-        // After evaluation, because the coordinates come from the publication, and a build script
-        // sets artifactId and groupId in its own body - after this plugin was applied.
-        afterEvaluate {
+    fun apply(project: Project) {
+        // Once every project is evaluated, because the coordinates come from the publication, and it
+        // is named late. A build script sets artifactId in its own body, after this plugin was
+        // applied; a publishing plugin's `coordinates(...)` - vanniktech's - lands later still, in an
+        // afterEvaluate of its own, so reading it in this plugin's afterEvaluate took the Gradle
+        // project's name: `datetime`, where the library publishes as `format-datetime`, and every
+        // skill named for a coordinate nothing resolves.
+        project.gradle.projectsEvaluated { configure(project) }
+    }
+
+    /** Registers the name and check tasks, and packages the skill; called once the coordinates are final. */
+    private fun configure(project: Project) = with(project) {
+        run {
             val (libraryGroup, artifact) = coordinates(project)
             val name = if (libraryGroup.isBlank()) "" else skillName(libraryGroup, artifact)
             // Where a skill is found decides the layout; with none yet, the Kotlin plugin applied
@@ -85,7 +94,7 @@ internal object SkillPackaging {
                 File(root, "SKILL.md").isFile -> root
                 else -> null
             }
-            if (skillDir == null && candidates.isEmpty()) return@afterEvaluate
+            if (skillDir == null && candidates.isEmpty()) return@run
 
             val check = tasks.register("checkDependencySkill", CheckDependencySkill::class.java) {
                 description = "Checks the library's skill before it is packaged into the sources jar."
@@ -99,7 +108,7 @@ internal object SkillPackaging {
                 }
                 ambiguous.set(if (skillDir == null) candidates.map { it.name }.sorted() else emptyList())
             }
-            if (skillDir == null || name.isBlank()) return@afterEvaluate
+            if (skillDir == null || name.isBlank()) return@run
 
             // Always into the right name, whatever the source directory is called, so a misplaced
             // skill still ships where a consumer looks for it; the check tells the author to move it.

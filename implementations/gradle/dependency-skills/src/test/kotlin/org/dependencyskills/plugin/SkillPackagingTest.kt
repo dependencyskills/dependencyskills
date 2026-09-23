@@ -76,6 +76,31 @@ class SkillPackagingTest {
     }
 
     @Test
+    fun `takes an artifactId a publishing plugin sets after the build script, as vanniktech's does`() {
+        val project = TestProject.create()
+        project.buildWith(
+            plugins = """
+                `java-library`
+                `maven-publish`
+                id("org.dependencyskills.plugin")
+            """.trimIndent(),
+            // Set in an afterEvaluate registered after this plugin's own, which is where a publishing
+            // plugin's `coordinates(...)` lands: the name was still the default when the plugin looked.
+            body = JVM_BODY.replace("artifactId = \"acme-text\"", "artifactId = \"early\"") + """
+
+                afterEvaluate {
+                    publishing.publications.withType<MavenPublication>().configureEach { artifactId = "acme-text" }
+                }
+            """.trimIndent(),
+        )
+        project.file("src/main/skills/$NAME/SKILL.md", skill)
+
+        assertContains(project.run("dependencySkillName", "-q").output, "name: $NAME")
+        project.run("sourcesJar")
+        assertContains(entries(project, "build/libs/consumer-0.1.0-sources.jar"), "skills/$NAME/SKILL.md")
+    }
+
+    @Test
     fun `prints the name and the path the skill belongs at`() {
         val project = jvmLibrary()
         val result = project.run("dependencySkillName", "-q")
