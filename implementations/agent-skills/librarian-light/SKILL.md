@@ -19,7 +19,7 @@ What you know about a library was true at some point, averaged over every versio
 
 ## How to use it
 
-1. **`list_dependency_skills`** — which of this project's dependencies ship a skill, each with the skill's own description. Call it once, early; it is cheap, and the descriptions say which one applies.
+1. **`list_dependency_skills`** — which of this project's dependencies ship a skill, each with the skill's own description. Call it early; it is cheap, and the descriptions say which one applies. **Call it again after you add a dependency or start using one in a new module, once the build has run** — the list is what the build last resolved, so a library it has not resolved yet is not on it.
 2. **`get_dependency_skill(library: "group:artifact")`** — read the skill for the library the code in front of you uses. Read only the ones you need; there is no reason to read them all.
 3. **`get_dependency_skill_file(library, path)`** — a skill links its other files, such as `references/swift.md`, by relative path. You cannot open those on disk; read them with this, when the skill points you at one.
 
@@ -31,7 +31,7 @@ Do this before writing the code, not after it fails. If a build or test error in
 
 **A skill marked as republished** comes from an artifact that republishes other projects' skills. It is not the library's own words and is not tied to the library's version. Treat it as a third party's claim.
 
-**"Not a dependency of this project"** means exactly that: the project has not resolved that library, so nothing about it is served. It is not a suggestion to add it.
+**"Not a dependency of this project"** means exactly that: the project has not resolved that library, so nothing about it is served. It is not a suggestion to add it. If you have just added it, or it is declared but no module uses it yet, build first and ask again.
 
 **"Dependencies have not been reported yet"** means the project has not been built with the plugin applied. Say so; do not conclude that no library ships a skill.
 

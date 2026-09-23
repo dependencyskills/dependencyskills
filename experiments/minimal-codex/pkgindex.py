@@ -84,6 +84,10 @@ CREATE TRIGGER IF NOT EXISTS pkg_ai AFTER INSERT ON package BEGIN
   INSERT INTO package_fts(rowid, package, description, types, functions, skill)
   VALUES (new.id, new.package, new.description, new.types, new.functions, new.skill);
 END;
+CREATE TRIGGER IF NOT EXISTS pkg_ad AFTER DELETE ON package BEGIN
+  INSERT INTO package_fts(package_fts, rowid, package, description, types, functions, skill)
+  VALUES ('delete', old.id, old.package, old.description, old.types, old.functions, old.skill);
+END;
 CREATE TABLE IF NOT EXISTS library_skill (
   id INTEGER PRIMARY KEY, library TEXT, carrier TEXT, path TEXT, text TEXT,
   UNIQUE (carrier, path)
@@ -92,7 +96,7 @@ CREATE TABLE IF NOT EXISTS scope (
   project TEXT, carrier TEXT, UNIQUE (project, carrier)
 );
 CREATE TABLE IF NOT EXISTS setting (key TEXT PRIMARY KEY, value TEXT);
-CREATE TABLE IF NOT EXISTS indexed (carrier TEXT PRIMARY KEY, outcome TEXT);
+CREATE TABLE IF NOT EXISTS indexed (carrier TEXT PRIMARY KEY, outcome TEXT, stamp TEXT);
 CREATE TABLE IF NOT EXISTS skill_file (
   carrier TEXT, path TEXT, content TEXT, UNIQUE (carrier, path)
 );
@@ -188,6 +192,11 @@ def open_db():
     if missing:
         db.execute("DELETE FROM library_skill")
         db.execute("DELETE FROM indexed")
+        db.commit()
+    # The jar a development version was indexed from; see `stale`. Rows from before it have none,
+    # which reads as changed, so a development version already in the store is read once more.
+    if "stamp" not in {row[1] for row in db.execute("PRAGMA table_info(indexed)")}:
+        db.execute("ALTER TABLE indexed ADD COLUMN stamp TEXT")
         db.commit()
     return db
 
@@ -401,11 +410,18 @@ def base_library(coordinate):
 
 
 def index_jar(db, coordinate, jar, description, rejected, warnings):
-    """Index one sources jar. Returns the number of library skills accepted, or None if unreadable."""
+    """Index one sources jar, replacing whatever was indexed from it before.
+
+    Returns the number of library skills accepted, or None if unreadable.
+    """
     try:
         types, functions, skills, library_skills = packages_of(jar)
     except (zipfile.BadZipFile, OSError):
         return None
+    # Everything from a previous read of this coordinate goes first, so a republished development
+    # version cannot keep a skill or a package its new jar no longer has.
+    for table, column in (("library_skill", "carrier"), ("skill_file", "carrier"), ("package", "coordinate")):
+        db.execute(f"DELETE FROM {table} WHERE {column} = ?", (coordinate,))
     accepted = 0
     library = base_library(coordinate)
     own = skill_name(*library.split(":"))
@@ -431,7 +447,6 @@ def index_jar(db, coordinate, jar, description, rejected, warnings):
         db.execute("INSERT OR REPLACE INTO library_skill (library, carrier, path, text, description, body, problems)"
                    " VALUES (?, ?, ?, ?, ?, ?, ?)",
                    (library, coordinate, path, found["text"], fields["description"].strip(), body, json.dumps(notes)))
-        db.execute("DELETE FROM skill_file WHERE carrier = ?", (coordinate,))
         db.executemany("INSERT INTO skill_file (carrier, path, content) VALUES (?, ?, ?)",
                        [(coordinate, rel, content) for rel, content in sorted(found["files"].items())])
         accepted += 1
@@ -446,8 +461,36 @@ def index_jar(db, coordinate, jar, description, rejected, warnings):
             (coordinate, package, description, " ".join(t), " ".join(f), len(t) + len(f),
              skills.get(package)),
         )
-    db.execute("INSERT OR REPLACE INTO indexed (carrier, outcome) VALUES (?, 'indexed')", (coordinate,))
+    db.execute("INSERT OR REPLACE INTO indexed (carrier, outcome, stamp) VALUES (?, 'indexed', ?)",
+               (coordinate, stamp_of(jar)))
     return accepted
+
+
+# Versions whose jar can be replaced without the version changing: snapshots, and the pre-releases
+# a library publishes locally while it is being developed. A release is never rebuilt under the
+# same version, so it is read once; these are compared against the jar every time.
+DEVELOPMENT_VERSION = re.compile(
+    r"(?i)(?:^|[.\-+_])(?:snapshot|alpha|beta|rc|dev|eap|preview|pre)\d*(?:$|[.\-+_])")
+
+
+def stamp_of(jar):
+    """Size and modification time of a jar: enough to tell a republish, without reading it."""
+    try:
+        status = Path(jar).stat()
+        return f"{status.st_size}:{status.st_mtime_ns}"
+    except OSError:
+        return None
+
+
+def stale(db, coordinates):
+    """The development versions among `coordinates` whose jar changed since it was indexed."""
+    changed = set()
+    for coordinate, stamp in db.execute("SELECT carrier, stamp FROM indexed WHERE outcome = 'indexed'"):
+        if coordinate in coordinates and DEVELOPMENT_VERSION.search(coordinate.split(":")[2]):
+            found = locate(coordinate)
+            if found and stamp_of(found[1]) != stamp:
+                changed.add(coordinate)
+    return changed
 
 
 def report_problems(rejected, warnings):
@@ -527,12 +570,17 @@ def fetch(coordinate, staging):
 
 
 def index_coordinates(db, coordinates):
-    """Index exactly these coordinates, skipping any already done. Returns (indexed, without sources)."""
+    """Index exactly these coordinates, skipping any already done. Returns (indexed, without sources).
+
+    Done means read: a coordinate with no sources is tried again, and so is a development version
+    whose jar was republished under the same version (`stale`).
+    """
     started = time.monotonic()
     rejected, warnings = [], []
     # Only what was actually read. A coordinate with no sources is tried again next time, because an
     # IDE sync may have fetched them since.
     done = {c for (c,) in db.execute("SELECT carrier FROM indexed WHERE outcome = 'indexed'")}
+    done -= stale(db, set(coordinates))
     indexed, skills, missing = 0, 0, []
     staging = DB.parent / "staging"
     for coordinate in sorted(set(coordinates) - done):
@@ -960,8 +1008,10 @@ def refresh(db, cwd):
     """Bring the project containing `cwd` up to date with its SBOM, if the SBOM changed. The project, or None.
 
     This is the whole of "watching": one timestamp compared on each call. An unchanged SBOM costs
-    nothing; a changed one is read, the project's scope replaced with exactly what it lists — an
-    empty list being an empty scope — and anything not yet indexed indexed. The scope comes only
+    one stat per development version in scope, because a library republished locally under the same
+    version changes its jar and not the SBOM (`stale`); a changed one is read, the project's scope
+    replaced with exactly what it lists — an empty list being an empty scope — and anything not yet
+    indexed indexed. The scope comes only
     from this file, which the build writes and the agent cannot, so the agent can read its scope and
     never set it.
     """
@@ -977,6 +1027,10 @@ def refresh(db, cwd):
     key = f"sbom:{project}"
     row = db.execute("SELECT value FROM setting WHERE key = ?", (key,)).fetchone()
     if row and row[0] == stamp:
+        in_scope = {c for (c,) in db.execute("SELECT carrier FROM scope WHERE project = ?", (str(project),))}
+        changed = stale(db, in_scope)
+        if changed:
+            index_coordinates(db, changed)
         return str(project)
     try:
         coordinates = read_sbom(path)
