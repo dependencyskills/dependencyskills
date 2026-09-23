@@ -159,7 +159,10 @@ class DependencySkillsPluginTest {
 
         val result = project.run("classes")
         assertContains(result.output, "no codex service")
-        assertContains(result.output, "not recorded")
+        // Written to the SBOM regardless, which is all the lightweight codex needs; only the full
+        // service was not told, and the line says so rather than "not recorded".
+        assertContains(result.output, "written to")
+        assertContains(result.output, "bom.cdx.json")
     }
 
     @Test

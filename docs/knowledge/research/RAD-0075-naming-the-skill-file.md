@@ -299,6 +299,38 @@ Test 5 of [RAD-0073](RAD-0073-a-skill-written-as-source.md) was re-run with one 
 
 **What this does not show.** Three runs a cell cannot separate spellings that both work; it shows no penalty for the change. The uptake question the spelling might really affect — whether an agent that stumbles on the file *unprompted* opens it — is answered by neither, because in six unprompted runs neither agent went looking at all.
 
+### The name the alpha adopted: the coordinate
+
+Built and run rather than argued: the lightweight codex and the Gradle plugin name a library's skill for its **coordinate**, filed at `skills/<name>/SKILL.md` in the sources jar. The Agent Skills rules (1–64 characters, lowercase letters, digits, single hyphens; the directory must match) rule out the coordinate verbatim, and rule out underscores and `--` as separators, so `group:artifact` is lowercased and every run of other characters becomes one hyphen; past 64 the group shrinks to the first and last letter of each segment while the artifact stays whole; and past 64 even then it is cut and ends in eight hex digits of a SHA-256. The encoding is one-way, and nothing decodes it — a consumer encodes the coordinate of the artifact it resolved and compares, which is also the authorship check. Normative text: [`spec/content.md`](../../../spec/content.md) v4.
+
+**Measured, 2026-09-23** — `naming-candidates/coordinate-lengths.py`, over 1,739 libraries in one machine's Gradle and Maven caches and all 1,753 in Google's Maven repository:
+
+| | local caches | Google's Maven |
+|---|---|---|
+| median / p90 / p99 encoded length | 38 / 54 / 69 | 39 / 54 / 69 |
+| longest | 80 | 91 |
+| over 64, so cut | 2.0% | 2.1% |
+| two libraries meeting at one name | 0 | 0 |
+
+Gradle plugin markers (`<id>:<id>.gradle.plugin`) run to 141 but carry no code and never ship a skill, and are set aside. The one-way collision the encoding allows did not occur once.
+
+**What to do past 64.** The first alpha simply cut the name, which kept the group and lost the artifact — `com.google.android.apps.common.testing.accessibility.framework:accessibility-test-framework` kept none of `accessibility-test-framework`. The alternatives, measured over the combined 3,184 libraries:
+
+| scheme for names over 64 | collisions | artifact kept whole | last-resort cut |
+|---|---|---|---|
+| cut the full name, then hash (the first alpha) | 0 | 3,118 | 54 |
+| group to initials, always | **18** | 3,184 | 0 |
+| group hashed, always | 0 | 3,184 | 0 |
+| initials + hash, only when over 64 | 0 | 3,180 | 4 |
+| **group to first-and-last letters, only when over 64 — adopted** | **0** | **3,183** | **1** |
+| first-and-last + hash, only when over 64 | 0 | 3,170 | 12 |
+
+**Initials merge sibling groups, and the worst pair is the one that matters most**: `android.arch.core:core-testing` and `androidx.arch.core:core-testing` both became `a-a-c-core-testing`, the old and new homes of one library — exactly the drift a skill is for. `com.google.test.platform` and `com.google.testing.platform` met five times. First-and-last letters (`ad`/`ax`, `tt`/`tg`) separated every one. **A hash on top competes for the same 64 characters** and pushed twelve names into the last-resort cut, losing the artifact again. Hashing the group always is unique but changes every name to fix 2% of them, and hides who published it. The adopted rule keeps 98% of names as the full coordinate and every other name's artifact whole, except one: `com.android.tools.utp:android-test-plugin-host-additional-test-output-proto`, whose artifactId alone is 53 characters and which, as internal test-platform tooling, will never ship a skill.
+
+**Uniqueness past step 1 is measured, not guaranteed.** Two groups differing only mid-segment — `feature` and `fixture` — would still meet. Nothing depends on it: a consumer finds a skill by its artifact's coordinate and only ever compares a name against that coordinate's encoding. Only a flat folder of many libraries' skills would feel a collision, which is the extraction pattern [RAD-0076](RAD-0076-skills-republished-by-a-third-party.md) rejects.
+
+The directory's *name* is fixed by the specification; where it sits is not, so the flat `skills/<name>/` is a choice — npm's shape — rather than a requirement.
+
 ## Findings
 
 **Measured.**
@@ -317,6 +349,8 @@ Test 5 of [RAD-0073](RAD-0073-a-skill-written-as-source.md) was re-run with one 
 - The bundle is the link task's output, so a plugin must write into it from inside that task: a later edit makes the task out of date and the next build regenerates every file the linker owns.
 - A skill in `commonMain` reaches every target's sources jar; one in `jvmMain` reaches only the JVM consumer, alongside the common one — the source set scopes the skill as it scopes the code, with no configuration.
 - A skills directory beside the source (`src/main/skills/`) reaches no artifact until the build registers it: one line as a source directory, as a resource directory, or on the `sourcesJar` task, each with a different reach.
+
+- The coordinate as a skill name needs shortening in about 2% of real libraries and runs to 91 characters at most outside plugin markers. Compacting the group to initials merged 18 libraries, including one library's old and new coordinates; first-and-last letters merged none of 3,184 and kept the artifact whole in all but one.
 
 **Argued, not measured.**
 

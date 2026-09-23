@@ -1,0 +1,47 @@
+Agent Skills name limit: 64 characters, [a-z0-9] and single hyphens.
+Encoded length is before cutting, so it shows how far past the limit a coordinate runs.
+
+--- local caches (names withheld: private coordinates are mixed in)
+    3091 group:artifact; 27 are plugin markers, set aside; 1739 libraries once platform variants are folded
+    encoded length: median 38, p90 54, p99 69, longest 80
+    over 64, so shortened: 35 (2.01%)
+    two libraries sharing one name: 0 names, 0 libraries
+    plugin markers alone: longest 119, 17 of 27 over 64
+
+--- Google's Maven repository, 331 groups
+    2840 group:artifact; 46 are plugin markers, set aside; 1753 libraries once platform variants are folded
+    encoded length: median 39, p90 54, p99 69, longest 91
+    over 64, so shortened: 37 (2.11%)
+    two libraries sharing one name: 0 names, 0 libraries
+    longest ten:
+       91  com.google.android.apps.common.testing.accessibility.framework:accessibility-test-framework
+           -> cm-ge-ad-as-cn-tg-ay-fk-accessibility-test-framework
+       85  com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin
+           -> cm-ge-ad-ls-mm-ss-ge-pn-secrets-gradle-plugin
+       80  com.google.android.libraries.mapsplatform.transportation:transportation-consumer
+           -> cm-ge-ad-ls-mm-tn-transportation-consumer
+       78  com.google.android.libraries.mapsplatform.transportation:transportation-driver
+           -> cm-ge-ad-ls-mm-tn-transportation-driver
+       77  androidx.camera.featurecombinationquery:featurecombinationquery-play-services
+           -> ax-ca-fy-featurecombinationquery-play-services
+       77  com.google.android.enterprise.connectedapps:connectedapps-testing-annotations
+           -> cm-ge-ad-ee-cs-connectedapps-testing-annotations
+       75  com.android.tools.utp:android-test-plugin-host-additional-test-output-proto
+           -> cm-ad-ts-up-android-test-plugin-host-additional-test-ou-de95d7e1
+       71  androidx.compose.material3:material3-adaptive-navigation-suite-jvmstubs
+           -> ax-ce-m3-material3-adaptive-navigation-suite-jvmstubs
+       70  com.google.android.libraries.cloud.telco.subgraph:cloud_telco_subgraph
+           -> cm-ge-ad-ls-cd-to-sh-cloud-telco-subgraph
+       70  androidx.compose.material3:material3-adaptive-navigation-suite-desktop
+           -> ax-ce-m3-material3-adaptive-navigation-suite-desktop
+    plugin markers alone: longest 141, 29 of 46 over 64
+
+--- shortening a name over 64: 3184 libraries, both samples combined
+    scheme                                   collisions  artifact whole  last-resort cut
+    cut the full name, then hash                      0            3118               54
+    group to initials, always                        18            3184                0
+    group hashed, always                              0            3184                0
+    initials + hash, only when over                   0            3180                4
+    first+last, only when over (adopted)              0            3183                1
+    first+last + hash, only when over                 0            3170               12
+

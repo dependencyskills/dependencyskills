@@ -10,7 +10,8 @@ import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.SourceSetContainer
 
 /**
- * Reports which of a consuming project's dependencies the codex has never seen.
+ * Reports which of a consuming project's dependencies the codex has never seen — and, applied to
+ * a library, ships that library's own skill in its sources jar ([SkillPackaging]).
  *
  * **The build detects; something out of band harvests.** That seam is the whole design. An
  * artifact transform looks like the natural fit — it runs per artifact, is cached by Gradle,
@@ -48,6 +49,10 @@ class DependencySkillsPlugin : Plugin<Project> {
             parameters.projectName.set(
                 extension.projectName.orElse(layout.projectDirectory.asFile.absolutePath),
             )
+            // The root's build directory, because the recorder is one per build: a multi-module
+            // build's resolved set is one union, and one file at the root is where a reader starting
+            // anywhere in the checkout finds it.
+            parameters.reportFile.set(rootProject.layout.buildDirectory.file(REPORT_FILE))
         }
 
         // Instantiated for every build, but only once the build script has been evaluated.
@@ -94,6 +99,10 @@ class DependencySkillsPlugin : Plugin<Project> {
         pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
             MultiplatformCompilations.watchAll(project, observer)
         }
+
+        // The other half: a library applying this ships its own skill in its sources jar. Does
+        // nothing in a project that has no skill, which is every purely consuming one.
+        SkillPackaging.apply(project)
     }
 
     internal companion object {
@@ -101,6 +110,9 @@ class DependencySkillsPlugin : Plugin<Project> {
         const val SERVICE = "dependencySkillsCodex"
         const val ENABLED_PROPERTY = "dependencySkills.enabled"
         const val SERVICE_URL_PROPERTY = "dependencySkills.serviceUrl"
+
+        /** The CycloneDX SBOM the lightweight codex reads, relative to the root build directory. */
+        const val REPORT_FILE = "dependencyskills/bom.cdx.json"
 
         /** Loopback, because the service holds one machine's dependency graph and stays on it. */
         const val DEFAULT_SERVICE_URL = "http://127.0.0.1:8310"

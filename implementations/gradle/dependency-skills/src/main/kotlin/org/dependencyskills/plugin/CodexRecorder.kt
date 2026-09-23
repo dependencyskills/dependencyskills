@@ -1,5 +1,6 @@
 package org.dependencyskills.plugin
 
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Property
 import org.gradle.api.services.BuildService
@@ -19,10 +20,14 @@ import java.time.Duration
  * file at a path the service had to know how to find, which left the service — the one component
  * meant to be ecosystem-agnostic — knowing where Gradle keeps a project's directory.
  *
- * Now it reports over HTTP. The build knows its own coordinates and the service's address; the
- * service knows the store. Neither knows anything about the other's layout, which is what lets the
- * store move, and what lets a Maven or npm plugin use the same endpoint without teaching the
- * service anything new.
+ * Now it reports two ways, one per codex. **Over HTTP to the full service**: the build knows its own
+ * coordinates and the service's address; the service knows the store. Neither knows anything about
+ * the other's layout, which is what lets the store move, and what lets a Maven or npm plugin use the
+ * same endpoint without teaching the service anything new. **As a CycloneDX SBOM in the root build
+ * directory, for the lightweight codex**, which runs as a stdio MCP server started by the agent's
+ * harness, has no port to be told on, and reads the file when an agent asks. That reader does know
+ * where a Gradle build writes its output — the cost ADR-0012 v4 removed from the full service, taken
+ * back deliberately for the lightweight one, where it buys having no process to keep running.
  *
  * **Nothing here may fail a build.** The index is an aid; a project whose scope cannot be written
  * still compiles, says so once, and stops trying.
@@ -44,6 +49,20 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
          * so only the build knows it. The build reports it and the service keeps it.
          */
         val projectName: Property<String>
+
+        /**
+         * Where the resolved set is also written, as a CycloneDX SBOM — the root build directory.
+         *
+         * This is the handoff to the lightweight codex, which runs as an MCP server over stdio and
+         * has no port to be reported to: it reads this file when an agent asks, rather than being
+         * told when a build finishes. A file in the build's own output is the pattern SBOM plugins
+         * already use, adds nothing a project must ignore, and is gone after `clean`.
+         *
+         * It is also the channel that keeps scope out of the agent's reach. Scope is what the build
+         * resolved; if it were set through the same MCP interface the agent queries, the agent could
+         * widen its own.
+         */
+        val reportFile: RegularFileProperty
     }
 
     private val logger = Logging.getLogger(CodexRecorder::class.java)
@@ -103,8 +122,63 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
 
     override fun close() {
         synchronized(lock) {
+            writeReportFile()
             reportToService()
             report()
+        }
+    }
+
+    private var written: String? = null
+
+    /**
+     * Writes the resolved set as a CycloneDX 1.6 SBOM, rewriting the file only when it changed.
+     *
+     * Only when something resolved, for the same reason as the HTTP report: an empty report would
+     * erase the last real one. A classpath that resolved and held nothing IS written, as an SBOM
+     * with no components — an empty scope, which is true. Unchanged content leaves the file alone,
+     * so its modification time says when the dependencies last changed rather than when the build
+     * last ran, and a reader checking it does no work between changes. Nothing here may fail a build.
+     */
+    private fun writeReportFile() {
+        if (resolutions == 0) return
+        val file = parameters.reportFile.orNull?.asFile ?: return
+        runCatching {
+            val root = parameters.projectName.orNull?.takeIf { it.isNotBlank() }
+                ?: parameters.projectPath.orNull ?: "project"
+            val components = resolved.filter { it.ecosystem == "maven" }.map { it.value }.sorted()
+                .mapNotNull { value ->
+                    val parts = value.split(':')
+                    if (parts.size != 3) return@mapNotNull null
+                    val (group, artifact, version) = parts
+                    val purl = "pkg:maven/$group/$artifact@$version"
+                    """    {"type":"library","bom-ref":${quote(purl)},"group":${quote(group)},""" +
+                        """"name":${quote(artifact)},"version":${quote(version)},"purl":${quote(purl)}}"""
+                }
+            val text = buildString {
+                append("{\n")
+                append("  \"bomFormat\": \"CycloneDX\",\n")
+                append("  \"specVersion\": \"1.6\",\n")
+                append("  \"version\": 1,\n")
+                append("  \"metadata\": {\n")
+                append("    \"tools\": {\"components\": [{\"type\": \"application\", \"name\": \"dependency-skills\"}]},\n")
+                append("    \"component\": {\"type\": \"application\", \"bom-ref\": \"root\", \"name\": ${quote(root)}},\n")
+                // Which classpath this is, since SBOM plugins usually describe the runtime one. This is
+                // the compile classpath: what the project can import, which is what its scope must be.
+                append("    \"properties\": [{\"name\": \"dependencyskills:classpath\", \"value\": \"compile\"}]\n")
+                append("  },\n")
+                append("  \"components\": [\n")
+                append(components.joinToString(",\n"))
+                if (components.isNotEmpty()) append('\n')
+                append("  ]\n")
+                append("}\n")
+            }
+            if (file.isFile && file.readText() == text) {
+                written = file.path
+                return@runCatching
+            }
+            file.parentFile.mkdirs()
+            file.writeText(text)
+            written = file.path
         }
     }
 
@@ -190,9 +264,17 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
         // Not silence. Saying "recorded" would be a lie and saying nothing leaves a developer
         // wondering why their agent knows nothing, so it says what it saw and what became of it.
         unreachable?.let {
+            // Which of the two handoffs landed. The file is enough for the lightweight codex; only the
+            // full service needs to be told, and saying "not recorded" when the file was written
+            // would send someone looking for a problem that is not there.
             logger.lifecycle(
-                "dependencyskills: no codex service at $it, so ${resolved.size} " +
-                    "${plural(resolved.size, "coordinate was", "coordinates were")} not recorded",
+                if (written != null) {
+                    "dependencyskills: ${resolved.size} ${plural(resolved.size, "coordinate", "coordinates")} " +
+                        "written to $written; no codex service at $it, so the full codex was not told"
+                } else {
+                    "dependencyskills: no codex service at $it, so ${resolved.size} " +
+                        "${plural(resolved.size, "coordinate was", "coordinates were")} not recorded"
+                },
             )
             return
         }

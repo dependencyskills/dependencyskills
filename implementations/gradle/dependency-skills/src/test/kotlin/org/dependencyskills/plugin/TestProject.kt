@@ -187,6 +187,12 @@ $plugins
         Files.writeString(file, body)
     }
 
+    /** Writes any file into the project, for a test that needs more than a build script. */
+    fun file(path: String, body: String) = source(path, body)
+
+    /** A path inside the project, for reading back what a build produced. */
+    fun path(path: String): Path = projectDirectory.resolve(path)
+
     /** Null once [stopService] has been called, which is a test making a point about absence. */
     private var serviceUrl: String? = null
 

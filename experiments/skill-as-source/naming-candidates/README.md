@@ -42,4 +42,10 @@ Eight mechanisms tried against one XCFramework — source file, two resource pla
 ./recognition-probe.sh <output-file>
 ```
 
+```bash
+python3 coordinate-lengths.py --google
+```
+
+How long a library's coordinate runs once it is a skill name, how often it passes the 64-character limit and is cut, and whether two libraries ever meet at one name — over this machine's caches (aggregates only, since private coordinates are mixed in) and all of Google's Maven repository (named, since it is public). Uses the codex's own `skill_name`.
+
 Each script writes its recorded run beside it, as `<script>.txt`. The probe is primed by its own question and is kept as a weak signal; see RAD-0075.

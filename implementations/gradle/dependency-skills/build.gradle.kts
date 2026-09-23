@@ -58,7 +58,8 @@ gradlePlugin {
             implementationClass = "org.dependencyskills.plugin.DependencySkillsPlugin"
             displayName = "Dependency Skills"
             description = "Reports which of a project's dependencies the machine-level codex has " +
-                "never seen, and records them for harvesting out of band."
+                "never seen, and records them for harvesting out of band. Applied to a library, " +
+                "ships the library's own skill in its sources jar."
         }
     }
 }
