@@ -3,6 +3,7 @@ package org.dependencyskills.plugin
 import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ResolvableDependencies
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -35,6 +36,9 @@ class DependencySkillsPlugin : Plugin<Project> {
                 providers.gradleProperty(ENABLED_PROPERTY).map(String::toBoolean).orElse(true),
             )
             harvester.transitive.convention(false)
+            fetchSources.convention(
+                providers.gradleProperty(FETCH_SOURCES_PROPERTY).map(String::toBoolean).orElse(true),
+            )
         }
 
         val recorder = gradle.sharedServices.registerIfAbsent(SERVICE, CodexRecorder::class.java) {
@@ -81,11 +85,20 @@ class DependencySkillsPlugin : Plugin<Project> {
             if (extension.enabled.getOrElse(true)) service.signalSyncing()
         }
 
+        // Its own service rather than the recorder's: under the configuration cache a task's service
+        // is a fresh instance at execution, and the recorder's would then report, on close, that
+        // nothing resolved.
+        val claims = gradle.sharedServices.registerIfAbsent(SourcesClaims.NAME, SourcesClaims::class.java) {}
+        val fetching = extension.enabled.zip(extension.fetchSources) { on, fetch -> on && fetch }
+
         val observer = Observer(
             recorder = recorder,
             enabled = extension.enabled,
             transitive = extension.harvester.transitive,
             ignored = extension.harvester.ignored,
+            onWatched = { configuration, compileTasks ->
+                Sources.fetchBefore(project, configuration, compileTasks, fetching, claims)
+            },
         )
 
         // Ask the build for its compile classpaths; never model scope. A compile classpath
@@ -95,7 +108,9 @@ class DependencySkillsPlugin : Plugin<Project> {
         // get compileOnlyApi, feature variants and platform constraints wrong.
         pluginManager.withPlugin("java-base") {
             extensions.findByType(SourceSetContainer::class.java)?.configureEach {
-                observer.watch(project, compileClasspathConfigurationName)
+                // Java's and Kotlin's compile tasks for the source set: either may be the one that runs.
+                observer.watch(project, compileClasspathConfigurationName,
+                    listOf(compileJavaTaskName, getCompileTaskName("kotlin")))
             }
         }
 
@@ -115,6 +130,7 @@ class DependencySkillsPlugin : Plugin<Project> {
         const val SERVICE = "dependencySkillsCodex"
         const val ENABLED_PROPERTY = "dependencySkills.enabled"
         const val SERVICE_URL_PROPERTY = "dependencySkills.serviceUrl"
+        const val FETCH_SOURCES_PROPERTY = "dependencySkills.fetchSources"
 
         /** The CycloneDX SBOM the lightweight codex reads, relative to the root build directory. */
         const val REPORT_FILE = "dependencyskills/bom.cdx.json"
@@ -136,21 +152,26 @@ internal class Observer(
     private val enabled: Property<Boolean>,
     private val transitive: Property<Boolean>,
     private val ignored: SetProperty<String>,
+    /** Called once for each configuration watched, with its compile tasks, so its dependencies' sources can be fetched. */
+    private val onWatched: (Configuration, List<String>) -> Unit = { _, _ -> },
 ) {
 
-    fun watch(project: Project, configurationName: String) {
+    /** Watches one compile-dependency configuration, which the tasks named [compileTasks] compile against. */
+    fun watch(project: Project, configurationName: String, compileTasks: List<String>) {
         val path = project.path
         // `matching` rather than `named`: the configuration may not exist yet, and a name that
         // never appears should be silence rather than a failure. Neither realises it, and
         // nothing here resolves anything at configuration time.
         project.configurations.matching { it.name == configurationName }.configureEach {
             // The explicit Action disambiguates from the Groovy Closure overload.
-            incoming.afterResolve(Action<ResolvableDependencies> { onResolved(path, this) })
+            val configuration = name
+            incoming.afterResolve(Action<ResolvableDependencies> { onResolved(path, configuration, this) })
+            onWatched(this, compileTasks)
         }
     }
 
     /** Records one resolved compile classpath against the Gradle project, by path, it belongs to. */
-    private fun onResolved(projectPath: String, dependencies: ResolvableDependencies) {
+    private fun onResolved(projectPath: String, configuration: String, dependencies: ResolvableDependencies) {
         // A broken index must not break a build. This is the outermost boundary: the callback
         // runs inside Gradle's resolution machinery, so anything escaping it fails the
         // resolution itself, and a project would stop compiling because its index is unwell.
@@ -160,7 +181,7 @@ internal class Observer(
             val coordinates: List<Coordinate> =
                 Coordinates.of(dependencies.resolutionResult, transitive.get())
                     .filterNot { Coordinates.ignored(it, ignores) }
-            recorder.get().record(projectPath, coordinates)
+            recorder.get().record(projectPath, configuration, coordinates)
         }
     }
 }

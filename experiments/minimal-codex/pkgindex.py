@@ -552,7 +552,37 @@ def locate(coordinate):
     m2 = libindex.M2.joinpath(*group.split("."), artifact, version)
     if (m2 / name).is_file():
         return m2, m2 / name
-    return None
+    return platform_sources(group, artifact, version)
+
+
+def platform_sources(group, artifact, version):
+    """(version_dir, sources jar) of a multiplatform library's platform module, or None.
+
+    The build records a multiplatform library under its root coordinate, but fetches the sources of
+    the platform module it compiled against — `charts-jvm`, not `charts` — because that is the
+    variant the graph selected. Every platform sources jar carries the library's `commonMain`, so its
+    skill is the root's; the JVM one is preferred, then any.
+    """
+    candidates = []
+    gradle = libindex.CACHE / group
+    if gradle.is_dir():
+        for module in gradle.iterdir():
+            if module.name.startswith(artifact + "-") and PLATFORM_SUFFIX.search(module.name) \
+                    and PLATFORM_SUFFIX.sub("", module.name) == artifact and (module / version).is_dir():
+                name = f"{module.name}-{version}-sources.jar"
+                candidates += [(module.name, module / version, h / name)
+                               for h in (module / version).iterdir() if (h / name).is_file()]
+    m2 = libindex.M2.joinpath(*group.split("."))
+    if m2.is_dir():
+        for module in m2.iterdir():
+            jar = module / version / f"{module.name}-{version}-sources.jar"
+            if module.name.startswith(artifact + "-") and PLATFORM_SUFFIX.sub("", module.name) == artifact \
+                    and module.name != artifact and jar.is_file():
+                candidates.append((module.name, module / version, jar))
+    if not candidates:
+        return None
+    candidates.sort(key=lambda c: (not c[0].endswith("-jvm"), c[0]))
+    return candidates[0][1], candidates[0][2]
 
 
 def fetch(coordinate, staging):

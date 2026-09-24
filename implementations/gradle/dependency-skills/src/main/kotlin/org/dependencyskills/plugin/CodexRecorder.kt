@@ -133,11 +133,19 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
         }.apply { isDaemon = true; name = "dependencyskills-warm" }.start()
     }
 
-    /** Called once per compile-dependency configuration that resolved, with its project's path. */
-    fun record(projectPath: String, coordinates: Collection<Coordinate>) {
+    /** Configurations already counted, as `projectPath:configuration`. */
+    private val counted = HashSet<String>()
+
+    /**
+     * Called each time a compile-dependency configuration resolves, with its project's path.
+     *
+     * A configuration is counted once however often it reports: fetching its dependencies' sources
+     * reselects variants from the same graph and fires the same callback again.
+     */
+    fun record(projectPath: String, configuration: String, coordinates: Collection<Coordinate>) {
         synchronized(lock) {
             if (broken) return
-            resolutions++
+            if (counted.add("$projectPath:$configuration")) resolutions++
             resolved.addAll(coordinates)
             resolvedBy.getOrPut(projectPath) { LinkedHashSet() }.addAll(coordinates)
         }

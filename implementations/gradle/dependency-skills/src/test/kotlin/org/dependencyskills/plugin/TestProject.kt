@@ -126,6 +126,8 @@ internal class TestProject(
         version: String,
         compile: List<String> = emptyList(),
         runtime: List<String> = emptyList(),
+        /** Also publish a sources jar, carrying one source file, as a library normally does. */
+        sources: Boolean = false,
     ) {
         val dir = repository.resolve(group.replace('.', '/')).resolve(artifact).resolve(version)
         Files.createDirectories(dir)
@@ -135,6 +137,13 @@ internal class TestProject(
             it.putNextEntry(java.util.zip.ZipEntry("META-INF/MANIFEST.MF"))
             it.write("Manifest-Version: 1.0\n".toByteArray())
             it.closeEntry()
+        }
+        if (sources) {
+            java.util.zip.ZipOutputStream(Files.newOutputStream(dir.resolve("$artifact-$version-sources.jar"))).use {
+                it.putNextEntry(java.util.zip.ZipEntry("com/example/$artifact/Api.java"))
+                it.write("package com.example.$artifact; public class Api {}".toByteArray())
+                it.closeEntry()
+            }
         }
         fun deps(coordinates: List<String>, scope: String) = coordinates.joinToString("\n") {
             val (g, a, v) = it.split(':')

@@ -68,6 +68,20 @@ abstract class DependencySkillsExtension @Inject constructor(objects: ObjectFact
      */
     abstract val serviceUrl: Property<String>
 
+    /**
+     * Whether the build fetches the sources jar of every dependency on a compile classpath, and of
+     * every library the version catalog declares.
+     *
+     * On by default, because a JVM library's skill travels in its sources jar and a build never
+     * downloads one: without this, a machine that only builds from the command line has no skills to
+     * find (RAD-0079). Defaults to the `dependencySkills.fetchSources` Gradle property when set:
+     *
+     * ```
+     * ./gradlew build -PdependencySkills.fetchSources=false
+     * ```
+     */
+    abstract val fetchSources: Property<Boolean>
+
     /** What the out-of-band harvester is fed. */
     val harvester: HarvesterSpec = objects.newInstance(HarvesterSpec::class.java)
 
