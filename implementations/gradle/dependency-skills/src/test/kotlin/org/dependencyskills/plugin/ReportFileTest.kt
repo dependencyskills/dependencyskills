@@ -83,6 +83,53 @@ class ReportFileTest {
         assertFalse("new since the last build" in third, third)
     }
 
+    /** A root with two modules, `:a` using alpha and `:b` using gamma, each applying the plugin. */
+    private fun twoModules(include: String = "\":a\", \":b\"") = project().apply {
+        build("")
+        file("settings.gradle.kts", path("settings.gradle.kts").toFile().readText() + "\ninclude($include)\n")
+        for ((module, library) in listOf("a" to "alpha", "b" to "gamma")) {
+            file("$module/build.gradle.kts", """
+                plugins { `java-library`; id("org.dependencyskills.plugin") }
+                dependencies { api("com.example:$library:1.0") }
+            """.trimIndent())
+            file("$module/src/main/java/com/example/$module/Lib.java", "package com.example.$module; public class Lib {}")
+        }
+    }
+
+    @Test
+    fun `building one module keeps what the others resolved, and says only what that module added`() {
+        val project = twoModules()
+        project.run("classes")
+        val both = project.path(sbom).toFile().readText()
+        assertContains(both, "pkg:maven/com.example/alpha@1.0")
+        assertContains(both, "pkg:maven/com.example/gamma@1.0")
+        assertContains(both, """{"name":"dependencyskills:project","value":":b"}""")
+
+        // Only :a is compiled. :b's dependency stays in scope - it used to vanish here.
+        project.file("a/build.gradle.kts", """
+            plugins { `java-library`; id("org.dependencyskills.plugin") }
+            dependencies { api("com.example:alpha:1.0"); api("com.example:beta:1.0") }
+        """.trimIndent())
+        val output = project.run(":a:classes", "-q").output
+        val merged = project.path(sbom).toFile().readText()
+        assertContains(merged, "pkg:maven/com.example/gamma@1.0")
+        assertContains(merged, "pkg:maven/com.example/beta@1.0")
+        assertContains(output, "new since the last build: com.example:beta.")
+    }
+
+    @Test
+    fun `a module removed from the build takes its dependencies with it`() {
+        val project = twoModules()
+        project.run("classes")
+        project.file("settings.gradle.kts",
+            project.path("settings.gradle.kts").toFile().readText().replace("include(\":a\", \":b\")", "include(\":a\")"))
+        project.run(":a:classes")
+
+        val text = project.path(sbom).toFile().readText()
+        assertContains(text, "pkg:maven/com.example/alpha@1.0")
+        assertFalse("gamma" in text, text)
+    }
+
     @Test
     fun `a project that resolves nothing gets an SBOM with no components, not a missing file`() {
         val project = project()

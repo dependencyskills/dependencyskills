@@ -943,7 +943,10 @@ CORRECTION = re.compile(
     r"|\bnot what i (?:asked|wanted|meant)\b"
     r"|\bwhy did you\b"
     r"|\b(?:you|that) (?:broke|shouldn'?t have|should not have)\b"
-    r"|\binstead of\b|\bshould (?:be using|have used)\b"
+    # "instead of" only after something the agent did: "use X instead of Y" is an instruction,
+    # and counting it put every ordinary request in the correction column.
+    r"|\byou(?:'ve| have)? (?:used|wrote|added|called|picked|chose|went with)\b[^.?!\n]*\binstead of\b"
+    r"|\bshould (?:be using|have used)\b"
     r"|\b(?:revert|undo) (?:that|this|it)\b",
     re.IGNORECASE)
 EXCERPT = 200
@@ -1090,6 +1093,10 @@ TOOLS = [
 ]
 
 
+REBUILD_HINT = ("This is what the build last resolved. A library declared but not yet used by a module, or "
+                "added since, is not here until the project is built again — add it, build, then ask again "
+                "before reading its sources.")
+
 def list_tool(db, project):
     if project is None:
         return NOT_REGISTERED
@@ -1103,8 +1110,7 @@ def list_tool(db, project):
             descriptions.setdefault(library, description)
     log(db, "query", command="list", result="hit" if rows else "none", project=project, libraries=sorted(rows))
     if not rows:
-        return ("None of this project's dependencies ships a skill — of those the build last resolved. "
-                "A dependency added since is not on it until the project is built again.")
+        return "None of this project's dependencies ships a skill. " + REBUILD_HINT
     # Name and description, as the Agent Skills specification loads every skill at first: enough to
     # decide which one the code in front of you needs, and no more.
     lines = ["These dependencies ship a skill. Read the one for the library the code uses with get_dependency_skill.", ""]
@@ -1114,6 +1120,9 @@ def list_tool(db, project):
         lines.append(f"- {library} {', '.join(sorted(versions))}{mark}")
         if descriptions.get(library):
             lines.append(f"  {descriptions[library]}")
+    # Always, not only when the list is empty: an agent that saw other libraries here and not the
+    # one it was about to use read that as "no skill", and went to the library's sources.
+    lines += ["", REBUILD_HINT]
     return "\n".join(lines)
 
 

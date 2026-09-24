@@ -3,6 +3,7 @@ package org.dependencyskills.plugin
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import java.net.URI
@@ -63,6 +64,13 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
          * widen its own.
          */
         val reportFile: RegularFileProperty
+
+        /**
+         * The path of every project in the build. The SBOM keeps what a project resolved in an
+         * earlier build until that project resolves again, so it needs to know which projects still
+         * exist: one deleted from settings is dropped rather than kept forever.
+         */
+        val projectPaths: SetProperty<String>
     }
 
     private val logger = Logging.getLogger(CodexRecorder::class.java)
@@ -75,6 +83,13 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
      * formed here rather than computed anywhere later.
      */
     private val resolved = LinkedHashSet<Coordinate>()
+
+    /**
+     * The same, by the Gradle project that resolved it. A project whose classpath resolved empty is
+     * here with an empty set, which is different from not being here: it says the project now has
+     * no dependencies, where absence says this build did not look.
+     */
+    private val resolvedBy = LinkedHashMap<String, MutableSet<Coordinate>>()
     private var resolutions = 0
     private var broken = false
     private var unreachable: String? = null
@@ -111,12 +126,13 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
         }.apply { isDaemon = true; name = "dependencyskills-warm" }.start()
     }
 
-    /** Called once per compile-dependency configuration that resolved. */
-    fun record(coordinates: Collection<Coordinate>) {
+    /** Called once per compile-dependency configuration that resolved, with its project's path. */
+    fun record(projectPath: String, coordinates: Collection<Coordinate>) {
         synchronized(lock) {
             if (broken) return
             resolutions++
             resolved.addAll(coordinates)
+            resolvedBy.getOrPut(projectPath) { LinkedHashSet() }.addAll(coordinates)
         }
     }
 
@@ -137,6 +153,13 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
     /**
      * Writes the resolved set as a CycloneDX 1.6 SBOM, rewriting the file only when it changed.
      *
+     * **Merged by project, not replaced.** Each component names the Gradle projects that resolved it.
+     * A build replaces the entries of the projects it resolved and keeps the rest from the file it
+     * replaces, so compiling one module leaves every other module's dependencies in scope — the file
+     * used to hold only what the last build happened to resolve, and building one module of a
+     * multi-module project dropped every other module's libraries. A project no longer in the build
+     * is dropped; a file from before projects were recorded is replaced whole.
+     *
      * Only when something resolved, for the same reason as the HTTP report: an empty report would
      * erase the last real one. A classpath that resolved and held nothing IS written, as an SBOM
      * with no components — an empty scope, which is true. Unchanged content leaves the file alone,
@@ -150,15 +173,31 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
         runCatching {
             val root = parameters.projectName.orNull?.takeIf { it.isNotBlank() }
                 ?: parameters.projectPath.orNull ?: "project"
-            val components = resolved.filter { it.ecosystem == "maven" }.map { it.value }.sorted()
-                .mapNotNull { value ->
-                    val parts = value.split(':')
-                    if (parts.size != 3) return@mapNotNull null
-                    val (group, artifact, version) = parts
-                    val purl = "pkg:maven/$group/$artifact@$version"
-                    """    {"type":"library","bom-ref":${quote(purl)},"group":${quote(group)},""" +
-                        """"name":${quote(artifact)},"version":${quote(version)},"purl":${quote(purl)}}"""
+            val previous = if (file.isFile) file.readText() else null
+            val existing = parameters.projectPaths.orNull.orEmpty()
+
+            // coordinate -> the projects that resolve it: this build's, then what the previous file
+            // says of every project this build did not resolve and that still exists.
+            val byCoordinate = sortedMapOf<String, MutableSet<String>>()
+            resolvedBy.forEach { (project, coordinates) ->
+                coordinates.filter { it.ecosystem == "maven" && it.value.split(':').size == 3 }
+                    .forEach { byCoordinate.getOrPut(it.value) { sortedSetOf() }.add(project) }
+            }
+            previous?.let(::components)?.forEach { (coordinate, projects) ->
+                projects.filter { it !in resolvedBy && it in existing }
+                    .forEach { byCoordinate.getOrPut(coordinate) { sortedSetOf() }.add(it) }
+            }
+
+            val components = byCoordinate.map { (coordinate, projects) ->
+                val (group, artifact, version) = coordinate.split(':')
+                val purl = "pkg:maven/$group/$artifact@$version"
+                val properties = projects.joinToString(",") {
+                    """{"name":"$PROJECT_PROPERTY","value":${quote(it)}}"""
                 }
+                """    {"type":"library","bom-ref":${quote(purl)},"group":${quote(group)},""" +
+                    """"name":${quote(artifact)},"version":${quote(version)},"purl":${quote(purl)},""" +
+                    """"properties":[$properties]}"""
+            }
             val text = buildString {
                 append("{\n")
                 append("  \"bomFormat\": \"CycloneDX\",\n")
@@ -177,7 +216,6 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
                 append("  ]\n")
                 append("}\n")
             }
-            val previous = if (file.isFile) file.readText() else null
             if (previous == text) {
                 written = file.path
                 return@runCatching
@@ -190,6 +228,19 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
             written = file.path
         }
     }
+
+    /**
+     * `group:artifact:version` to the projects that resolve it, for every component in an SBOM this
+     * class wrote — one component per line. A component with no project recorded is left out, so a
+     * file from before projects were recorded is replaced rather than merged.
+     */
+    private fun components(sbom: String): Map<String, List<String>> =
+        sbom.lineSequence().mapNotNull { line ->
+            val purl = PURL.find(line) ?: return@mapNotNull null
+            val projects = PROJECT.findAll(line).map { it.groupValues[1] }.toList()
+            if (projects.isEmpty()) return@mapNotNull null
+            "${purl.groupValues[1]}:${purl.groupValues[2]}:${purl.groupValues[3]}" to projects
+        }.toMap()
 
     /**
      * Tells the service what this build resolved.
@@ -335,6 +386,10 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
 
     private companion object {
         val PURL = Regex(""""purl":"pkg:maven/([^/"]+)/([^@"]+)@([^"]+)"""")
+
+        /** The component property naming a Gradle project that resolves it, by path. */
+        const val PROJECT_PROPERTY = "dependencyskills:project"
+        val PROJECT = Regex(""""name":"$PROJECT_PROPERTY","value":"([^"]*)"""")
 
         /** Enough to recognise a change; a build that added more than this is a new project. */
         const val MAX_ANNOUNCED = 5

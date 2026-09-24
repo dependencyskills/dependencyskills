@@ -53,6 +53,9 @@ class DependencySkillsPlugin : Plugin<Project> {
             // build's resolved set is one union, and one file at the root is where a reader starting
             // anywhere in the checkout finds it.
             parameters.reportFile.set(rootProject.layout.buildDirectory.file(REPORT_FILE))
+            // Every project in the build, so a module deleted from settings leaves the SBOM, while one
+            // this build simply did not compile keeps what it last resolved.
+            parameters.projectPaths.set(rootProject.allprojects.map { it.path })
         }
 
         // Instantiated for every build, but only once the build script has been evaluated.
@@ -134,16 +137,18 @@ internal class Observer(
 ) {
 
     fun watch(project: Project, configurationName: String) {
+        val path = project.path
         // `matching` rather than `named`: the configuration may not exist yet, and a name that
         // never appears should be silence rather than a failure. Neither realises it, and
         // nothing here resolves anything at configuration time.
         project.configurations.matching { it.name == configurationName }.configureEach {
             // The explicit Action disambiguates from the Groovy Closure overload.
-            incoming.afterResolve(Action<ResolvableDependencies> { onResolved(this) })
+            incoming.afterResolve(Action<ResolvableDependencies> { onResolved(path, this) })
         }
     }
 
-    private fun onResolved(dependencies: ResolvableDependencies) {
+    /** Records one resolved compile classpath against the Gradle project, by path, it belongs to. */
+    private fun onResolved(projectPath: String, dependencies: ResolvableDependencies) {
         // A broken index must not break a build. This is the outermost boundary: the callback
         // runs inside Gradle's resolution machinery, so anything escaping it fails the
         // resolution itself, and a project would stop compiling because its index is unwell.
@@ -153,7 +158,7 @@ internal class Observer(
             val coordinates: List<Coordinate> =
                 Coordinates.of(dependencies.resolutionResult, transitive.get())
                     .filterNot { Coordinates.ignored(it, ignores) }
-            recorder.get().record(coordinates)
+            recorder.get().record(projectPath, coordinates)
         }
     }
 }
