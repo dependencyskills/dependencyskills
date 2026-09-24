@@ -39,7 +39,10 @@ means it is not a skill and is refused — its `references/` and `assets/` are k
 `mcp` is the lookup an agent uses: an MCP server over stdio, started by the agent's
 harness in the project. It reads the CycloneDX SBOM the Gradle plugin writes into the
 root build directory, and indexes and re-scopes whenever that file has changed — so
-nothing watches anything, and no process runs between sessions.
+nothing watches anything, and no process runs between sessions. A library the version catalog
+declares counts as a dependency before any module uses it. `find_library` searches every sources
+jar in the local caches by what each library says it is for — its skill's frontmatter, or its POM —
+and never serves the body of a skill the project has not chosen (RAD-0078).
 
 The agent reads a skill by asking — the `get_dependency_skill` tool, or `skill
 <group:artifact>` on the command line — rather than being handed a copy, so every
@@ -52,6 +55,7 @@ stays on this machine.
 """
 
 import json
+import math
 import os
 import re
 import shlex
@@ -99,6 +103,12 @@ CREATE TABLE IF NOT EXISTS setting (key TEXT PRIMARY KEY, value TEXT);
 CREATE TABLE IF NOT EXISTS indexed (carrier TEXT PRIMARY KEY, outcome TEXT, stamp TEXT);
 CREATE TABLE IF NOT EXISTS skill_file (
   carrier TEXT, path TEXT, content TEXT, UNIQUE (carrier, path)
+);
+CREATE TABLE IF NOT EXISTS declared (
+  project TEXT, carrier TEXT, UNIQUE (project, carrier)
+);
+CREATE TABLE IF NOT EXISTS cached (
+  carrier TEXT PRIMARY KEY, library TEXT, description TEXT, frontmatter TEXT, stamp TEXT
 );
 """
 
@@ -943,10 +953,10 @@ CORRECTION = re.compile(
     r"|\bnot what i (?:asked|wanted|meant)\b"
     r"|\bwhy did you\b"
     r"|\b(?:you|that) (?:broke|shouldn'?t have|should not have)\b"
-    # "instead of" only after something the agent did: "use X instead of Y" is an instruction,
-    # and counting it put every ordinary request in the correction column.
-    r"|\byou(?:'ve| have)? (?:used|wrote|added|called|picked|chose|went with)\b[^.?!\n]*\binstead of\b"
-    r"|\bshould (?:be using|have used)\b"
+    # A bare "instead of", although it also matches instructions: a correction is usually phrased
+    # as one — "use the library instead of JS" after the agent wrote JS — and only the context,
+    # which a hook does not have, tells them apart. The excerpt is logged so a person can.
+    r"|\binstead of\b|\bshould (?:be using|have used)\b"
     r"|\b(?:revert|undo) (?:that|this|it)\b",
     re.IGNORECASE)
 EXCERPT = 200
@@ -998,13 +1008,17 @@ def find_sbom(start):
 
 
 def read_sbom(path):
-    """The group:artifact:version of every Maven component in a CycloneDX SBOM."""
-    coordinates = set()
+    """(coordinates, declared): the group:artifact:version of every Maven component in a CycloneDX
+    SBOM, and those of them a version catalog declares that no module resolves yet."""
+    coordinates, declared = set(), set()
     for component in json.loads(path.read_text("utf-8")).get("components", []):
         found = PURL.match(component.get("purl") or "")
         if found:
-            coordinates.add(":".join(found.groups()))
-    return coordinates
+            coordinate = ":".join(found.groups())
+            coordinates.add(coordinate)
+            if any(p.get("name") == "dependencyskills:declared" for p in component.get("properties") or []):
+                declared.add(coordinate)
+    return coordinates, declared
 
 
 def refresh(db, cwd):
@@ -1036,10 +1050,15 @@ def refresh(db, cwd):
             index_coordinates(db, changed)
         return str(project)
     try:
-        coordinates = read_sbom(path)
+        coordinates, declared = read_sbom(path)
     except (OSError, ValueError):
         return str(project) if row else None   # a half-written file: keep the last good scope
     register(db, project, coordinates)
+    # Declared libraries are in scope like resolved ones — adding a catalog entry is the developer's
+    # choice of library — and remembered as declared, so the list can say no module uses them yet.
+    db.execute("DELETE FROM declared WHERE project = ?", (str(Path(project).resolve()),))
+    db.executemany("INSERT OR IGNORE INTO declared (project, carrier) VALUES (?, ?)",
+                   [(str(Path(project).resolve()), c) for c in declared])
     index_coordinates(db, coordinates)
     db.execute("INSERT OR REPLACE INTO setting (key, value) VALUES (?, ?)", (key, stamp))
     db.commit()
@@ -1076,6 +1095,20 @@ TOOLS = [
         },
     },
     {
+        "name": "find_library",
+        "description": (
+            "Search the libraries already downloaded on this machine for one that does what you need — "
+            "before writing something a library might already do, such as formatting, parsing or "
+            "validation. Answers with each library's coordinate and what it says it is for, marked as a "
+            "dependency of this project or not. Adding one is the developer's decision: propose it."),
+        "inputSchema": {
+            "type": "object",
+            "properties": {"need": {"type": "string", "description": "what the code needs, in plain words, e.g. locale-aware date formatting"}},
+            "required": ["need"],
+            "additionalProperties": False,
+        },
+    },
+    {
         "name": "get_dependency_skill_file",
         "description": (
             "Read one of a dependency skill's other files — a reference under references/ or a file under "
@@ -1093,9 +1126,9 @@ TOOLS = [
 ]
 
 
-REBUILD_HINT = ("This is what the build last resolved. A library declared but not yet used by a module, or "
-                "added since, is not here until the project is built again — add it, build, then ask again "
-                "before reading its sources.")
+REBUILD_HINT = ("This is what the build last resolved, with the libraries the version catalog declares. One "
+                "added since is not here until the project is built again — build, then ask again before "
+                "reading its sources. For a library this project does not have yet, use find_library.")
 
 def list_tool(db, project):
     if project is None:
@@ -1114,9 +1147,12 @@ def list_tool(db, project):
     # Name and description, as the Agent Skills specification loads every skill at first: enough to
     # decide which one the code in front of you needs, and no more.
     lines = ["These dependencies ship a skill. Read the one for the library the code uses with get_dependency_skill.", ""]
+    declared = {base_library(c) for (c,) in db.execute("SELECT carrier FROM declared WHERE project = ?", (project,))}
     for library, versions in sorted(rows.items()):
         mark = "  (republishes other projects' skills — not the library's own words)" \
             if library.split(":")[0] in REPUBLISHER_GROUPS else ""
+        if library in declared:
+            mark += "  (declared in the version catalog; no module uses it yet)"
         lines.append(f"- {library} {', '.join(sorted(versions))}{mark}")
         if descriptions.get(library):
             lines.append(f"  {descriptions[library]}")
@@ -1131,7 +1167,9 @@ def get_tool(db, project, library):
         return NOT_REGISTERED
     result, answers = library_skill(library, db)
     if result == "out_of_scope":
-        return f"{library} is not a dependency of this project, so its skill is not served."
+        return (f"{library} is not a dependency of this project, so its skill is not served. If it is on this "
+                "machine, find_library says what it is for; adding it is the developer's decision, and its skill "
+                "is served once it is added and the project built.")
     if result == "no_skill":
         return f"{library} ships no skill."
     if result == "unregistered":
@@ -1156,13 +1194,145 @@ def get_tool(db, project, library):
     return "\n\n---\n\n".join(parts)
 
 
+CACHE_RESCAN = 300   # seconds; the caches change when something downloads, not between tool calls
+
+
+def describe_jar(coordinate, jar, version_dir, artifact, version):
+    """(description, frontmatter JSON or None) for one cached sources jar, reading no skill body.
+
+    A skill counts only if it is filed under the jar's own coordinate and is valid, exactly as when
+    it is indexed; its allowed frontmatter fields are kept and its body never is. A library without
+    one is described by its POM, as the build tool recorded it.
+    """
+    own = skill_name(*base_library(coordinate).split(":"))
+    try:
+        with zipfile.ZipFile(jar) as archive:
+            entry = next((n for n in archive.namelist()
+                          if (m := LIBRARY_SKILL.match(n)) and m.group(1) == own), None)
+            text = archive.read(entry).decode("utf-8", "replace") if entry else None
+    except (zipfile.BadZipFile, OSError, KeyError):
+        text = None
+    if text:
+        fields, _ = frontmatter(text)
+        if fields and not check_skill(fields, own)[0]:
+            kept = {k: fields[k] for k in ("name", "description", "license", "compatibility", "metadata") if k in fields}
+            return str(fields["description"]).strip(), json.dumps(kept)
+    return description_of(version_dir, artifact, version), None
+
+
+def scan_cache(db):
+    """Bring the `cached` table up to date with the local Gradle and Maven caches.
+
+    Every sources jar on the machine, described by its skill's frontmatter or its POM. Only jars that
+    changed since they were read are opened, and the walk itself is skipped for CACHE_RESCAN seconds.
+    """
+    row = db.execute("SELECT value FROM setting WHERE key = 'cache_scan'").fetchone()
+    if row and time.time() - float(row[0]) < CACHE_RESCAN:
+        return
+    known = dict(db.execute("SELECT carrier, stamp FROM cached"))
+    seen = set()
+    for coordinate, version_dir, artifact, version, jar in libindex.discover(10 ** 9):
+        seen.add(coordinate)
+        stamp = stamp_of(jar)
+        if known.get(coordinate) == stamp:
+            continue
+        description, fields = describe_jar(coordinate, jar, version_dir, artifact, version)
+        db.execute("INSERT OR REPLACE INTO cached (carrier, library, description, frontmatter, stamp) VALUES (?, ?, ?, ?, ?)",
+                   (coordinate, base_library(coordinate), description, fields, stamp))
+    db.executemany("DELETE FROM cached WHERE carrier = ?", [(c,) for c in set(known) - seen])
+    db.execute("INSERT OR REPLACE INTO setting (key, value) VALUES ('cache_scan', ?)", (str(time.time()),))
+    db.commit()
+
+
+FIND_LIMIT = 8
+FIND_RELEVANCE = 0.4   # a match must score this fraction of the best one to be shown
+FIND_SKILL_BONUS = 1.5
+FIND_STOP = {"the", "and", "for", "with", "that", "this", "from", "into", "library", "libraries", "use", "using", "kotlin"}
+
+
+def stem(word):
+    """A crude English stem, enough that "dates", "dated" and "dating" meet "date"."""
+    for suffix in ("ing", "es", "ed", "s"):
+        if word.endswith(suffix) and len(word) - len(suffix) >= 3:
+            return word[: -len(suffix)]
+    return word
+
+
+def find_tool(db, project, query):
+    """Libraries already on this machine that match `query`: names and what they say they are for.
+
+    The other half of RAD-0078: an agent that needed a date formatter wrote its own while one sat in
+    the local cache, because it could only see what the project had resolved. This searches every
+    cached sources jar, and answers with each library's coordinate and its skill's frontmatter — or
+    its POM's description — and never a skill's body: a library the project did not choose may
+    describe itself, and may not instruct. Its full skill is served once the developer adds it.
+    """
+    started = time.monotonic()
+    scan_cache(db)
+    _, allowed = scope_of(db, project) if project else (None, set())
+    in_scope = {lib for lib, _ in allowed} if allowed else set()
+    words = {stem(w) for w in re.findall(r"[a-z0-9]+", query.lower()) if len(w) > 2 and w not in FIND_STOP}
+    libraries = {}
+    for carrier, library, description, fields in db.execute(
+            "SELECT carrier, library, description, frontmatter FROM cached ORDER BY carrier"):
+        entry = libraries.setdefault(library, {"versions": set(), "description": "", "fields": None})
+        entry["versions"].add(carrier.split(":")[2])
+        if fields or not entry["description"]:
+            entry["description"], entry["fields"] = description or entry["description"], fields or entry["fields"]
+    # Rarer words count for more — "format" is in dozens of descriptions, "date" in few — and a word
+    # that starts one in the description counts half, so "date" finds "datetime".
+    terms = {library: {stem(w) for w in re.findall(r"[a-z0-9]+", f"{library} {entry['description']}".lower())}
+             for library, entry in libraries.items()}
+    weight = {w: math.log((len(terms) + 1) / (1 + sum(w in s for s in terms.values()))) for w in words}
+    scored = []
+    for library, entry in libraries.items():
+        score = sum(weight[w] if w in terms[library] else
+                    weight[w] / 2 if any(t.startswith(w) for t in terms[library]) else 0 for w in words)
+        if score > 0:
+            # A library that ships a skill counts for more: it says what it is for in its authors'
+            # words, and its skill is there to read once it is added. A bonus rather than a rank, so
+            # a skill that merely shares a word does not outrank the library that does the job.
+            scored.append((round(score * (FIND_SKILL_BONUS if entry["fields"] else 1), 3), library))
+    best = max((score for score, _ in scored), default=0)
+    scored = sorted((s for s in scored if s[0] >= best * FIND_RELEVANCE), reverse=True)
+    found = [library for _, library in scored[:FIND_LIMIT]]
+    log(db, "query", command="find", asked=query, result="hit" if found else "none", project=project,
+        libraries=found, ms=round((time.monotonic() - started) * 1000, 1))
+    if not found:
+        return (f"Nothing on this machine matches \"{query}\". This searches only libraries some build here "
+                "has already downloaded; it does not search a registry.")
+    lines = [f"Libraries on this machine matching \"{query}\". Each description is the library's own words "
+             "about itself. One that is not a dependency of this project is the developer's decision to add: "
+             "propose it, with your reason, rather than adding it yourself. Once it is added and the project "
+             "is built, get_dependency_skill serves its full skill.", ""]
+    for library in found:
+        entry = libraries[library]
+        versions = ", ".join(sorted(entry["versions"]))
+        standing = "a dependency of this project — read its skill with get_dependency_skill" \
+            if library in in_scope else "not a dependency of this project"
+        if library.split(":")[0] in REPUBLISHER_GROUPS:
+            standing += "; republishes other projects' skills — not the library's own words"
+        if entry["fields"]:
+            lines.append(f"- {library} ({versions}) — ships a skill; {standing}")
+            for key, value in json.loads(entry["fields"]).items():
+                value = ", ".join(f"{k}={v}" for k, v in value.items()) if isinstance(value, dict) else " ".join(str(value).split())
+                lines.append(f"  {key}: {value}")
+        else:
+            lines.append(f"- {library} ({versions}) — no skill; {standing}")
+            if entry["description"]:
+                lines.append(f"  its POM: {' '.join(entry['description'].split())}")
+    return "\n".join(lines)
+
+
 def get_file_tool(db, project, library, path):
     """One of a skill's files under references/ or assets/, by its path within the skill."""
     if project is None:
         return NOT_REGISTERED
     result, answers = library_skill(library, db, command="skill-file")
     if result == "out_of_scope":
-        return f"{library} is not a dependency of this project, so its skill is not served."
+        return (f"{library} is not a dependency of this project, so its skill is not served. If it is on this "
+                "machine, find_library says what it is for; adding it is the developer's decision, and its skill "
+                "is served once it is added and the project built.")
     if result != "hit":
         return f"{library} ships no skill." if result == "no_skill" else NOT_REGISTERED
     wanted = path.strip().lstrip("./")
@@ -1236,6 +1406,8 @@ def mcp():
                     text = list_tool(db, project)
                 elif name == "get_dependency_skill" and isinstance(arguments.get("library"), str):
                     text = get_tool(db, project, arguments["library"].strip())
+                elif name == "find_library" and isinstance(arguments.get("need"), str):
+                    text = find_tool(db, project, arguments["need"].strip())
                 elif name == "get_dependency_skill_file" and isinstance(arguments.get("library"), str) \
                         and isinstance(arguments.get("path"), str):
                     text = get_file_tool(db, project, arguments["library"].strip(), arguments["path"])

@@ -28,6 +28,8 @@ It prints the `name` and the `path`, for example `src/commonMain/skills/io-examp
 
 **2. Create that directory, and start `SKILL.md` from [the template](assets/SKILL.template.md).** Fill the frontmatter from the build: `name` exactly as printed, `metadata.version` as the version being built, `license` and `metadata.repository` from the build's publication settings. The specification allows six top-level fields — `name`, `description`, `license`, `compatibility`, `metadata`, `allowed-tools` — and a skill with any other is invalid; put anything more under `metadata`.
 
+**The `description` matters more than any section.** It is what an agent reads to decide whether to open the skill, and in a project that does not depend on the library yet it is the only part shown — an agent searching the machine for "date formatting" finds the library by these words or not at all. Write it in the words of someone who has the need, not in the library's own vocabulary; [Writing each section](references/writing-each-section.md) says how.
+
 **3. Write the five sections.** [Writing each section](references/writing-each-section.md) says what each one is for and where in this repository to find it. Read it before writing; the fourth section — what moved — is the one that most needs the repository's history, and the fifth needs the maintainer.
 
 **4. Decide which consumer languages need a reference file.** A library consumed from Swift or JavaScript as well as Kotlin reaches those callers differently. [Per-language references](references/per-language.md) says how to tell from the build which languages consume this library, and what goes in `references/<language>.md` for each.

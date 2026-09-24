@@ -71,6 +71,13 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
          * exist: one deleted from settings is dropped rather than kept forever.
          */
         val projectPaths: SetProperty<String>
+
+        /**
+         * `group:artifact:version` of every library the build's version catalogs declare. One no
+         * module resolves goes into the SBOM marked as declared, so its skill is readable before the
+         * first build that uses it — which is when an agent decides whether to write its own.
+         */
+        val declared: SetProperty<String>
     }
 
     private val logger = Logging.getLogger(CodexRecorder::class.java)
@@ -158,7 +165,8 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
      * replaces, so compiling one module leaves every other module's dependencies in scope — the file
      * used to hold only what the last build happened to resolve, and building one module of a
      * multi-module project dropped every other module's libraries. A project no longer in the build
-     * is dropped; a file from before projects were recorded is replaced whole.
+     * is dropped; a file from before projects were recorded is replaced whole. A library a version
+     * catalog declares and no project resolves is listed too, marked `dependencyskills:declared`.
      *
      * Only when something resolved, for the same reason as the HTTP report: an empty report would
      * erase the last real one. A classpath that resolved and held nothing IS written, as an SBOM
@@ -188,12 +196,17 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
                     .forEach { byCoordinate.getOrPut(coordinate) { sortedSetOf() }.add(it) }
             }
 
+            // Declared in a catalog and resolved by no project: listed, marked, and recomputed from the
+            // catalogs every build rather than merged, since the catalog is the whole record of it.
+            parameters.declared.orNull.orEmpty()
+                .filter { it.split(':').size == 3 && it !in byCoordinate }
+                .forEach { byCoordinate[it] = sortedSetOf() }
+
             val components = byCoordinate.map { (coordinate, projects) ->
                 val (group, artifact, version) = coordinate.split(':')
                 val purl = "pkg:maven/$group/$artifact@$version"
-                val properties = projects.joinToString(",") {
-                    """{"name":"$PROJECT_PROPERTY","value":${quote(it)}}"""
-                }
+                val properties = if (projects.isEmpty()) """{"name":"$DECLARED_PROPERTY","value":"true"}"""
+                else projects.joinToString(",") { """{"name":"$PROJECT_PROPERTY","value":${quote(it)}}""" }
                 """    {"type":"library","bom-ref":${quote(purl)},"group":${quote(group)},""" +
                     """"name":${quote(artifact)},"version":${quote(version)},"purl":${quote(purl)},""" +
                     """"properties":[$properties]}"""
@@ -389,6 +402,9 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
 
         /** The component property naming a Gradle project that resolves it, by path. */
         const val PROJECT_PROPERTY = "dependencyskills:project"
+
+        /** The component property marking a library a catalog declares and no project resolves yet. */
+        const val DECLARED_PROPERTY = "dependencyskills:declared"
         val PROJECT = Regex(""""name":"$PROJECT_PROPERTY","value":"([^"]*)"""")
 
         /** Enough to recognise a change; a build that added more than this is a new project. */

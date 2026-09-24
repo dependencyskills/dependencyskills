@@ -2,8 +2,9 @@
 name: NAME-FROM-dependencySkillName
 description: >-
   What this library is for, and when a caller should reach for it instead of
-  writing their own. A decision, not a category or a feature list. Under 1,024
-  characters.
+  writing their own — the commonest task first, in the words someone with that
+  need would search for. A decision, not a category or a feature list. Under
+  1,024 characters.
 license: LICENSE-FROM-THE-PUBLICATION
 metadata:
   version: "VERSION-BEING-BUILT"

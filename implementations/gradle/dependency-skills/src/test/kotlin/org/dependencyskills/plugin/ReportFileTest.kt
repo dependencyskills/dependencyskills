@@ -131,6 +131,27 @@ class ReportFileTest {
     }
 
     @Test
+    fun `lists a library the version catalog declares before any module uses it, marked as declared`() {
+        val project = project()
+        project.build("""dependencies { api("com.example:alpha:1.0") }""")
+        project.file("settings.gradle.kts", project.path("settings.gradle.kts").toFile().readText() + """
+
+            dependencyResolutionManagement {
+                versionCatalogs { create("libs") { library("gamma", "com.example:gamma:1.0"); library("alpha", "com.example:alpha:1.0") } }
+            }
+        """.trimIndent())
+        project.run("classes")
+
+        val lines = project.path(sbom).toFile().readLines()
+        val gamma = lines.single { "pkg:maven/com.example/gamma@1.0" in it }
+        assertContains(gamma, """{"name":"dependencyskills:declared","value":"true"}""")
+        // Resolved and declared: a dependency like any other, attributed to its project.
+        val alpha = lines.single { "pkg:maven/com.example/alpha@1.0" in it }
+        assertContains(alpha, """{"name":"dependencyskills:project","value":":"}""")
+        assertFalse("declared" in alpha, alpha)
+    }
+
+    @Test
     fun `a project that resolves nothing gets an SBOM with no components, not a missing file`() {
         val project = project()
         project.build("")

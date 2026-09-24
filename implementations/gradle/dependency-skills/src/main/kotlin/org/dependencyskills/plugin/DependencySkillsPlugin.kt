@@ -56,6 +56,8 @@ class DependencySkillsPlugin : Plugin<Project> {
             // Every project in the build, so a module deleted from settings leaves the SBOM, while one
             // this build simply did not compile keeps what it last resolved.
             parameters.projectPaths.set(rootProject.allprojects.map { it.path })
+            // What the version catalogs declare, whether or not a module uses it yet; see Catalogs.
+            parameters.declared.set(provider { Catalogs.declared(project) })
         }
 
         // Instantiated for every build, but only once the build script has been evaluated.
