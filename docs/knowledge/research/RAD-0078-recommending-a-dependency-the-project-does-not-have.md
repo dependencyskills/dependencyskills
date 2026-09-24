@@ -1,14 +1,32 @@
 # Recommending a Dependency the Project Does Not Have
 
-RAD-0078 · 2026-09-22 · v1
+RAD-0078 · 2026-09-22 · v2
 
-Keywords: should the agent suggest a new library; recommend a dependency to reach a goal; the codex only answers for declared dependencies; out-of-scope queries as a demand signal; hallucinated package names; slopsquatting; adding a dependency is the developer's decision; names without prose; the machine store as a catalogue; laundering across projects; reimplementing a capability the organisation already publishes; duplicate utility functions; undeclared capabilities hidden by the scope filter.
+Keywords: should the agent suggest a new library; recommend a dependency to reach a goal; the codex only answers for declared dependencies; out-of-scope queries as a demand signal; hallucinated package names; slopsquatting; adding a dependency is the developer's decision; names without prose; the machine store as a catalogue; laundering across projects; reimplementing a capability the organisation already publishes; duplicate utility functions; undeclared capabilities hidden by the scope filter; a version catalog entry as the developer's choice; find_library; searching the local cache by what a library says it is for; frontmatter as the only prose crossing the boundary; the agent that never asks for a library it does not know exists.
 
 ## Question
 
 The lightweight codex answers only for libraries the asking project has resolved — the one filter it keeps from the full system. But some goals are best met by a library the project does not have yet, and an agent working toward one will reach for it. **Can the codex help an agent recommend a dependency it does not have, safely, while leaving the decision to add it with the developer?**
 
 Opened to track viability. Nothing here is built, and the lightweight codex deliberately leaves it out for now.
+
+## Update — v2 (2026-09-24), the case appeared, and the prototype
+
+**Observed once.** In a trial consumer project, an agent asked to show times in a web UI wrote its own JavaScript date formatter. A date-formatting library that ships a skill was declared in the project's version catalog and already sat in the local Maven repository, but no module used it, so the codex — scoped to resolved dependencies — listed only other libraries. Told by the developer to use the library, the agent read "not on the list" as "no skill" and went to the library's sources; told that a build would bring it into scope, it added the dependency, built, listed again and read the skill before writing the code. One session, and not a measurement of demand.
+
+**The demand signal in step 1 would not have recorded it.** The agent never asked the codex for the library by name — it did not know the library existed — so nothing reached the `out_of_scope` log. The case this record is about is exactly the one where the agent does not know what to ask for, and a signal made of refused requests is blind to it. The need showed up only as the developer's correction.
+
+**What was built.**
+
+1. **A declared library counts as chosen.** The build reports the libraries its version catalogs declare, marked as declared when no module uses them, and the codex serves their skills in full like any dependency's. Adding a catalog entry is the developer's choice of library — the same trust decision as adding the dependency — so this stays inside ADR-0012's boundary. On its own it would have prevented the observed case.
+2. **`find_library`, step 2 of the recommendation, with one departure.** It searches every sources jar in the local Gradle and Maven caches and answers with each library's coordinate and the versions on the machine, marked as a dependency of the project or not, and tells the agent that adding one is the developer's decision to propose, not its own to take. A library's full skill is served only once the developer has added it and the build has resolved it.
+3. **Ranked with libraries that ship a skill first**, as a bonus rather than an absolute order: strict priority let a skill that merely shared a word outrank the library that did the job.
+
+**The departure: frontmatter, not names only.** The recommendation said names and a recorded description, never prose. The prototype shows each skill's frontmatter — `name`, `description`, `license`, `metadata` — which is up to 1,024 characters the library's author wrote; a library without a skill is described by its POM. The reason is that a coordinate does not say what a library is for, and the skill's `description` is written for exactly the decision the agent is making. The cost is that author prose from a library the project did not choose now crosses the boundary. It is bounded: the field is short, the skill must pass the specification's validation and be filed under its own jar's coordinate (RAD-0076), it is framed to the agent as the library's words about itself, and the body — where instructions would go — is never served.
+
+**Measured on one machine.** 4,952 cached sources jars, 49 of them carrying a skill. The first search reads them all in about 3 s; later ones re-read only changed jars and take about 0.05 s. Searches are logged (`command: find`), which is the demand signal that can see an unknown need: what the agent searched for, and what it was offered.
+
+**What would change it now.** A description that misleads or instructs reaching an agent through `find_library` argues for cutting back to names and POM descriptions, as v1 recommended. Searches that return nothing useful while a suitable library sits in the cache argue for better matching before anything wider.
 
 ## Trail
 

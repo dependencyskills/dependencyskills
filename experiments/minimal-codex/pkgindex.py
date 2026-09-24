@@ -1251,10 +1251,18 @@ FIND_STOP = {"the", "and", "for", "with", "that", "this", "from", "into", "libra
 
 
 def stem(word):
-    """A crude English stem, enough that "dates", "dated" and "dating" meet "date"."""
-    for suffix in ("ing", "es", "ed", "s"):
+    """A crude English stem, enough that "dates" meets "date" and "formatting" meets "format"."""
+    for suffix in ("ing", "ed"):
         if word.endswith(suffix) and len(word) - len(suffix) >= 3:
-            return word[: -len(suffix)]
+            word = word[: -len(suffix)]
+            # "formatting" and "formatted" are "format", not "formatt".
+            if len(word) > 3 and word[-1] == word[-2] and word[-1] not in "aeioulsz":
+                word = word[:-1]
+            return word
+    if word.endswith(("ches", "shes", "sses", "xes", "zes")):
+        return word[:-2]   # "matches", "boxes"; "dates" and "times" only lose the s
+    if word.endswith("s") and not word.endswith("ss") and len(word) > 3:
+        return word[:-1]
     return word
 
 
