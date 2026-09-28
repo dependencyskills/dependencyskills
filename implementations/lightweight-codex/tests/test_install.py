@@ -14,8 +14,9 @@ class InstallTest(unittest.TestCase):
         self.project = self.temp / "project"
         self.project.mkdir()
         # No real harness is touched: Codex's configuration is a temporary one, and `claude` is off PATH.
-        self._saved = {k: os.environ.get(k) for k in ("CODEX_HOME", "PATH", "HOME")}
+        self._saved = {k: os.environ.get(k) for k in ("CODEX_HOME", "PATH", "HOME", "DEPENDENCYSKILLS_HOME")}
         os.environ["CODEX_HOME"] = str(self.temp / "codex")
+        os.environ["DEPENDENCYSKILLS_HOME"] = str(self.temp / "store")   # where this machine's record goes
         os.environ["HOME"] = str(self.temp / "home")   # Antigravity's configuration is under it
         os.environ["PATH"] = str(self.temp / "empty-bin")
 
@@ -110,3 +111,35 @@ class InstallTest(unittest.TestCase):
 
         self.assertTrue((self.project / ".agents/skills/to-library-skill/assets/SKILL.template.md").is_file())
         self.assertEqual([], [e for e in proposal["effects"] if e["kind"].endswith("-mcp")])
+
+    def test_the_lock_file_names_nothing_on_this_machine(self):
+        # A source checkout is the case that leaked: its absolute path went into the hook and the MCP entries.
+        checkout = str(self.temp / "home/Workspace/lightweight-codex")
+        install.apply(install.plan("consumer", self.project, ["claude", "codex", "gemini", "antigravity"], True, checkout))
+        lock = (self.project / "dependencyskills-lock.json").read_text()
+
+        self.assertNotIn(str(self.temp), lock)
+        self.assertEqual({"skill"}, {c["kind"] for c in json.loads(lock)["changes"]})
+        self.assertNotIn("source", json.loads(lock))
+        local = json.loads(install.local_record(self.project).read_text())
+        self.assertEqual(checkout, local["source"])
+        self.assertEqual({"gemini-mcp", "codex-mcp", "antigravity-mcp", "claude-hook"}, {c["kind"] for c in local["changes"]})
+        self.assertFalse(install.local_record(self.project).is_relative_to(self.project))
+
+    def test_an_older_lock_file_holding_registrations_is_still_undone_and_cleaned(self):
+        install.apply(self.consumer(harnesses=["gemini"], hook=True))
+        local = install.local_record(self.project)
+        lock = self.project / "dependencyskills-lock.json"
+        # What the first alpha wrote: everything in the lock file, with the source's path beside it.
+        old = json.loads(lock.read_text())
+        old["changes"] += json.loads(local.read_text())["changes"]
+        old["source"] = str(self.temp / "home/Workspace/lightweight-codex")
+        lock.write_text(json.dumps(old))
+        local.unlink()
+        install.uninstall(self.project, apply_it=True)
+
+        self.assertNotIn("librarian", (self.project / ".gemini/settings.json").read_text())
+        self.assertNotIn("dependencyskills hook", (self.project / ".claude/settings.local.json").read_text())
+        self.assertFalse(lock.exists())
+        self.assertFalse(local.exists())
+

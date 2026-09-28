@@ -14,8 +14,13 @@ package, and:
 - **Nothing in the repository steers it.** It reads no file to decide what to do, so text planted in
   one cannot change the plan.
 - **It proposes, and applies only when asked.** Without `--apply` it prints the plan. With it, it
-  records every change and its digest in a manifest, reports what landed, and `uninstall` reverses
-  exactly that — refusing to delete anything that was changed after it was written.
+  records every change, reports what landed, and `uninstall` reverses exactly that — refusing to
+  delete anything that was changed after it was written.
+- **What it records is split by where it may travel.** The skills it copied, with their digests, go in
+  `dependencyskills-lock.json` at the project's root, which is meant to be committed and so holds only
+  paths relative to the project. What it registered on this machine — MCP servers, the hook, the
+  source it ran from — goes in a record under `~/.dependencyskills/installs/`, never in the project,
+  because it names this machine's paths and a commit would publish them.
 """
 
 import hashlib
@@ -28,9 +33,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from . import __version__
+from .store import home
 
 SERVER = "librarian"
-# The lock file the Gradle plugin keeps too, at the root, on the `*-lock.json` convention.
+# The lock file the Gradle plugin keeps too, at the root, on the `*-lock.json` convention. Committed, so
+# portable: skill entries only, every path relative to the project.
 MANIFEST = Path("dependencyskills-lock.json")
 DEFAULT_SOURCE = f"dependencyskills-lightweight-codex=={__version__}"
 HARNESSES = ("claude", "codex", "gemini", "antigravity")
@@ -55,6 +62,56 @@ def server_command(source):
 
 def digest(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def local_record(project):
+    """Where this machine's registrations for `project` are recorded: outside the project, keyed by its path."""
+    key = hashlib.sha256(str(Path(project).resolve()).encode()).hexdigest()[:16]
+    return home() / "installs" / f"{key}.json"
+
+
+def _read(path):
+    try:
+        return json.loads(Path(path).read_text()) if Path(path).is_file() else {}
+    except ValueError:
+        return {}
+
+
+def _recorded(project):
+    """Every change recorded for `project`: the lock file's skills, and this machine's registrations.
+
+    An older lock file held the registrations too, with this machine's paths in them; those are read
+    from it here, so they can still be undone, and are written back only to the local record.
+    """
+    return _read(project / MANIFEST).get("changes", []) + _read(local_record(project)).get("changes", [])
+
+
+def _write(project, changes, source):
+    """Writes the lock file (skills) and the local record (the rest); removes either when it has nothing."""
+    skills = [c for c in changes if c["kind"] == "skill"]
+    others = [c for c in changes if c["kind"] != "skill"]
+    lock, local = project / MANIFEST, local_record(project)
+    if skills:
+        # Four-space indentation, as the Gradle plugin writes it, so the file does not reformat whenever the other writes.
+        text = json.dumps({"version": __version__, "changes": skills}, indent=4) + "\n"
+        _require_portable(text)
+        lock.write_text(text)
+    elif lock.is_file():
+        lock.unlink()
+    if others:
+        local.parent.mkdir(parents=True, exist_ok=True)
+        local.write_text(json.dumps({"project": str(project), "version": __version__, "source": source,
+                                     "applied": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                                     "changes": others}, indent=2) + "\n")
+    elif local.is_file():
+        local.unlink()
+
+
+def _require_portable(text):
+    """The lock file is committed, so it must name nothing on this machine; refuse rather than publish it."""
+    entries = json.loads(text)["changes"]
+    if any(Path(c.get("path", "")).is_absolute() for c in entries) or str(Path.home()) in text:
+        raise ValueError(f"{MANIFEST} would name a path on this machine, and it is meant to be committed")
 
 
 def antigravity_config():
@@ -128,15 +185,15 @@ def render(proposal, applied=None):
     else:
         lines += ["", "Nothing was fetched: the skill is the one this version carries."]
     if applied is not None:
-        lines += ["", f"Every change is recorded in {MANIFEST}. Undo it with: dependencyskills uninstall --apply"]
+        lines += ["", f"The skills are recorded in {MANIFEST}, which is meant to be committed; what was registered on "
+                      "this machine is recorded outside the project. Undo it with: dependencyskills uninstall --apply"]
     return "\n".join(lines)
 
 
 def apply(proposal):
-    """Make the changes, record them with their digests, and return {id(effect): outcome}."""
+    """Make the changes, record them — skills in the lock file, the rest on this machine — and return {id(effect): outcome}."""
     project = Path(proposal["project"])
-    manifest_path = project / MANIFEST
-    previous = json.loads(manifest_path.read_text()) if manifest_path.is_file() else {"changes": []}
+    previous = {"changes": _recorded(project)}
     changes, outcomes = [], {}
     for effect in proposal["effects"]:
         outcome, record = _apply(project, effect, previous)
@@ -144,10 +201,7 @@ def apply(proposal):
         if record:
             changes.append(record)
     kept = [c for c in previous["changes"] if not any(_same(c, n) for n in changes)]
-    manifest_path.parent.mkdir(parents=True, exist_ok=True)
-    manifest_path.write_text(json.dumps({"version": __version__, "source": proposal["source"],
-                                         "applied": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-                                         "changes": kept + changes}, indent=2) + "\n")
+    _write(project, kept + changes, proposal["source"])
     return outcomes
 
 
@@ -225,12 +279,12 @@ def _unchanged(directory, files):
 
 
 def uninstall(project, apply_it):
-    """Reverse what the manifest records. Returns the report; changes nothing unless `apply_it`."""
+    """Reverse what is recorded, in the lock file and on this machine. Returns the report; changes nothing unless `apply_it`."""
     project = Path(project).resolve()
-    manifest_path = project / MANIFEST
-    if not manifest_path.is_file():
-        return f"Nothing to undo: {MANIFEST} is not in {project}."
-    changes = json.loads(manifest_path.read_text())["changes"]
+    changes = _recorded(project)
+    if not changes:
+        return f"Nothing to undo: nothing is recorded for {project}."
+    source = _read(local_record(project)).get("source")
     lines, remaining = [("Removed:" if apply_it else "Would remove (nothing is changed without --apply):")], []
     for change in reversed(changes):
         outcome = _undo(project, change) if apply_it else "planned"
@@ -238,11 +292,7 @@ def uninstall(project, apply_it):
         if apply_it and not outcome.startswith("done"):
             remaining.append(change)
     if apply_it:
-        if remaining:
-            manifest_path.write_text(json.dumps({"changes": list(reversed(remaining))}, indent=2) + "\n")
-        else:
-            manifest_path.unlink()
-            _prune(project, manifest_path.parent)
+        _write(project, list(reversed(remaining)), source)
     return "\n".join(lines)
 
 
