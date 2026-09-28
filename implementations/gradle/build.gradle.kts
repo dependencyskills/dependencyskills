@@ -5,5 +5,5 @@ plugins { base }
 
 allprojects {
     group = "org.dependencyskills.gradle"
-    version = providers.gradleProperty("version").getOrElse("0.1.0")
+    version = providers.gradleProperty("version").getOrElse("0.0.1")
 }

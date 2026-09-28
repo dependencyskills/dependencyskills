@@ -242,7 +242,7 @@ abstract class WriteAgentSkill : DefaultTask() {
                     logger.lifecycle("dependencyskills: updated the $name skill in $path/ to the version this plugin carries")
                 AgentSkills.Outcome.Replaced -> logger.warn(
                     "dependencyskills: OVERWROTE local edits to the $name skill in $path/ with the version this plugin " +
-                        "carries; the edits are in version control if you want them back. To keep edits, set " +
+                        "carries; if the edits were committed, version control still has them. To keep edits, set " +
                         "dependencySkills { $block { refresh = SkillRefresh.UnlessEdited } }.",
                 )
                 // Already what the plugin carries: only a copy nothing recorded yet needs recording.

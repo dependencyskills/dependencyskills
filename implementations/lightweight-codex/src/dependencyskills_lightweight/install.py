@@ -94,7 +94,7 @@ def plan(role, project, harnesses, hook, source):
     yours = [
         "Apply the Gradle plugin `org.dependencyskills.plugin` to every module "
         + ("whose dependencies the agent should see" if role == "consumer" else "that publishes a library")
-        + f", at version {__version__.split('a')[0]} — this installer never edits a build file. "
+        + f", at version {__version__}, the same version as this — this installer never edits a build file. "
         + "In a Gradle build, declaring `dependencySkills { " + role
         + " { } }` has the plugin write and update the skill itself, and this installer is needed only for the rest.",
     ]

@@ -85,7 +85,7 @@ The blocks are named for the project's role: `consumer` for a project that uses 
 
 **Edits.** Each file written is recorded with its digest in `dependencyskills-lock.json` at the root — named on the `*-lock.json` convention, like the `skills` CLI's `skills-lock.json` — which the lightweight codex's installer also keeps, so `dependencyskills uninstall` reverses either. A copy nobody edited is updated when the plugin carries a newer version. A copy that differs from what was recorded, or that nothing recorded, has been edited, and `refresh` decides what happens to it:
 
-- **`Always`**, the default: replaced with the version the plugin carries on every build, with a warning in the build output that local edits were overwritten and how to keep them; the edits remain in version control. A project that wants otherwise says so explicitly.
+- **`Always`**, the default: replaced with the version the plugin carries on every build, with a warning in the build output that local edits were overwritten and how to keep them; edits that were committed remain in version control. A project that wants otherwise says so explicitly.
 - **`UnlessEdited`**: kept, with a warning that it was not updated and how to take the new version. When the edit is to the version already carried, nothing is being held back, and it is kept without a warning.
 
 `enabled = false` inside a block turns that skill off without deleting the block, and `-PdependencySkills.enabled=false` turns off the whole plugin, this included.

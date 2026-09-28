@@ -6,4 +6,4 @@ harness started it for. Nothing runs between sessions, nothing is downloaded whi
 and a library the project did not choose may describe itself but never instruct.
 """
 
-__version__ = "0.1.0a1"
+__version__ = "0.0.1"

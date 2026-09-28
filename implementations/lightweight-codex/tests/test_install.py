@@ -28,7 +28,7 @@ class InstallTest(unittest.TestCase):
 
     def consumer(self, project=None, **options):
         return install.plan("consumer", project or self.project, options.get("harnesses", ["claude", "codex", "gemini", "antigravity"]),
-                            options.get("hook", True), "dependencyskills-lightweight-codex==0.1.0a1")
+                            options.get("hook", True), "dependencyskills-lightweight-codex==0.0.1")
 
     def files(self, root):
         return sorted(str(p.relative_to(root)) for p in root.rglob("*") if p.is_file() or p.is_symlink())
@@ -46,7 +46,7 @@ class InstallTest(unittest.TestCase):
         skill = self.project / ".agents/skills/librarian/SKILL.md"
         self.assertIn("name: librarian", skill.read_text())
         gemini = json.loads((self.project / ".gemini/settings.json").read_text())["mcpServers"]["librarian"]
-        self.assertEqual(["--from", "dependencyskills-lightweight-codex==0.1.0a1", "dependencyskills", "mcp"], gemini["args"])
+        self.assertEqual(["--from", "dependencyskills-lightweight-codex==0.0.1", "dependencyskills", "mcp"], gemini["args"])
         self.assertIn("[mcp_servers.librarian]", (self.temp / "codex/config.toml").read_text())
         antigravity = json.loads((self.temp / "home/.gemini/config/mcp_config.json").read_text())
         self.assertEqual("uvx", antigravity["mcpServers"]["librarian"]["command"])
