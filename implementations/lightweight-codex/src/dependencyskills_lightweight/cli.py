@@ -11,6 +11,8 @@ USAGE = """usage: dependencyskills <command>
                       put this project's half in place: a skill, and for a consumer the MCP
                       server; prints the plan, and changes nothing without --apply
   uninstall [--apply] reverse what install recorded
+  name                for a library with no build plugin (npm): print its skill's name and path
+  check               for the same: say what would stop its skill shipping or being read
   mcp                 serve the lookup over MCP on stdio; the agent's harness starts this
   skill <group:artifact>
                       print a dependency's skill, as the agent would read it
@@ -54,6 +56,20 @@ def main(argv=None):
         print(hook_settings())
         return 0
 
+    if command in ("name", "check"):
+        from . import authoring
+        found = authoring.describe(os.getcwd())
+        if command == "name":
+            if found is None:
+                print("no package.json here: run this from the root of the library", file=sys.stderr)
+                return 1
+            print(f"name: {found['name']}")
+            print(f"path: {found['path']}")
+            return 0
+        problems = authoring.warnings(os.getcwd())
+        for problem in problems:
+            print(f"dependencyskills: {problem}")
+        return 1 if problems else 0
     from .store import Store
     store = Store()
     if command == "skill" and rest:

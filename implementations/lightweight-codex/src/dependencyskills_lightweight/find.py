@@ -12,10 +12,11 @@ import math
 import re
 import time
 import zipfile
+from pathlib import Path
 
-from . import caches
-from .index import REPUBLISHER_GROUPS, SKILL_ENTRY, stamp_of
-from .names import library as library_of, skill_name, version as version_of
+from . import caches, npm
+from .index import MAX_FILE, REPUBLISHER_GROUPS, SERVED_DIRS, SKILL_ENTRY, stamp_of
+from .names import ecosystem, library as library_of, own_name, skill_name, version as version_of
 from .project import scope_of
 from .skillfile import SHOWN_FIELDS, check, frontmatter
 
@@ -51,6 +52,20 @@ def describe(coordinate, jar, version_dir):
             return str(fields["description"]).strip(), json.dumps(shown)
     artifact = coordinate.split(":")[1]
     return caches.pom_description(version_dir, artifact, version_of(coordinate)), None
+
+
+def describe_package(coordinate, directory):
+    """(description, frontmatter JSON or None) for an installed package: its own guide's shown fields, else
+    the first valid guide it ships under another name, else its package.json description. Never a body."""
+    own = own_name(library_of(coordinate))
+    skills = npm.skills_in(directory, SERVED_DIRS, MAX_FILE)
+    for name in [own] + sorted(n for n in skills if n != own):
+        text = skills.get(name, {}).get("text")
+        if text:
+            fields, _ = frontmatter(text)
+            if fields and not check(fields, name)[0]:
+                return str(fields["description"]).strip(), json.dumps({k: fields[k] for k in SHOWN_FIELDS if k in fields})
+    return npm.description(directory), None
 
 
 def scan(store):
@@ -101,8 +116,12 @@ def find(store, project, need):
     in_scope = {lib for lib, _ in allowed or ()}
     words = {stem(w) for w in re.findall(r"[a-z0-9]+", need.lower()) if len(w) > 2 and w not in STOP}
     libraries = {}
-    for carrier, library, description, shown in store.execute(
-            "SELECT carrier, library, description, frontmatter FROM cached ORDER BY carrier"):
+    rows = list(store.execute("SELECT carrier, library, description, frontmatter FROM cached ORDER BY carrier"))
+    # An npm project's node_modules is what is on this machine for it: every installed package, declared or not.
+    if project and npm.is_project(Path(project)):
+        for coordinate, directory in sorted(npm.everything_installed(Path(project)).items()):
+            rows.append((coordinate, library_of(coordinate), *describe_package(coordinate, directory)))
+    for carrier, library, description, shown in rows:
         entry = libraries.setdefault(library, {"versions": set(), "description": "", "shown": None})
         entry["versions"].add(version_of(carrier))
         if shown or not entry["description"]:
@@ -145,5 +164,6 @@ def find(store, project, need):
         else:
             lines.append(f"- {library} ({versions}) — no guide; {standing}")
             if entry["description"]:
-                lines.append(f"  its POM: {entry['description']}")
+                source = "its POM" if ecosystem(library) == "maven" else "its package description"
+                lines.append(f"  {source}: {entry['description']}")
     return "\n".join(lines)

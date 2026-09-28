@@ -1,4 +1,4 @@
-"""Reading the skills out of a sources jar into the store."""
+"""Reading a library's skills into the store: out of a sources jar, or out of an installed package's directory."""
 
 import json
 import re
@@ -6,8 +6,8 @@ import time
 import zipfile
 from pathlib import Path
 
-from . import caches
-from .names import library, skill_name, version
+from . import caches, npm
+from .names import ecosystem, library, own_name, version
 from .skillfile import check, frontmatter
 
 # skills/<name>/<path within the skill>, optionally under the source set a multiplatform sources jar
@@ -70,21 +70,48 @@ def stamp_of(jar):
 def index_jar(store, coordinate, jar, rejected, warnings):
     """Index one sources jar under `coordinate`, replacing whatever was read from it before.
 
-    Returns the number of skills accepted, or None if the jar could not be read. A skill is taken
-    only if it is filed under the coordinate's own name — a jar cannot ship a skill for some other
-    library — and only if it is a valid Agent Skill.
+    Returns the number of skills accepted, or None if the jar could not be read.
     """
     try:
         found = skills_in(jar)
     except (zipfile.BadZipFile, OSError):
         return None
+    return _accept(store, coordinate, found, stamp_of(jar), rejected, warnings)
+
+
+def index_directory(store, coordinate, directory, rejected, warnings):
+    """Index one installed package's directory under `coordinate`, replacing whatever was read from it before."""
+    try:
+        found = npm.skills_in(directory, SERVED_DIRS, MAX_FILE)
+    except OSError:
+        return None
+    return _accept(store, coordinate, found, npm.package_stamp(directory), rejected, warnings)
+
+
+def second_order(coordinate, path):
+    """Whether the skill at `path` is one a package ships under a name its author chose, rather than its own."""
+    return f"/{own_name(library(coordinate))}/" not in f"/{path}"
+
+
+def _accept(store, coordinate, found, stamp, rejected, warnings):
+    """Store the skills a library ships that may be served, and say why each other one was not.
+
+    **On the JVM a skill is taken only if it is filed under the coordinate's own name**: a jar cannot
+    ship a skill for some other library, which is what keeps a republisher from filing one under
+    someone else's coordinate (RAD-0076). **A package from another ecosystem may ship several**, under
+    names its author chose — npm's existing practice (RAD-0077) — so its own-named skill is first-order
+    and every other valid one is second-order: kept, attributed to the package that carries it and to
+    no other library, and served after the first (RAD-0079). Its files are stored under its name, so two
+    skills in one package cannot collide.
+    """
     store.execute("DELETE FROM skill WHERE carrier = ?", (coordinate,))
     store.execute("DELETE FROM skill_file WHERE carrier = ?", (coordinate,))
-    own = skill_name(*library(coordinate).split(":"))
+    own = own_name(library(coordinate))
+    jvm = ecosystem(coordinate) == "maven"
     accepted = 0
     for name, skill in found.items():
         path = skill["path"] or f"skills/{name}/"
-        if name != own:
+        if name != own and jvm:
             rejected.append({"carrier": coordinate, "path": path, "reason": f"is filed as {name}, not {own}"})
             continue
         if skill["text"] is None:
@@ -101,14 +128,37 @@ def index_jar(store, coordinate, jar, rejected, warnings):
                       " VALUES (?, ?, ?, ?, ?, ?, ?)",
                       (coordinate, library(coordinate), path, skill["text"], fields["description"].strip(), body,
                        json.dumps(notes)))
+        prefix = "" if name == own else f"{name}/"
         store.executemany("INSERT INTO skill_file (carrier, path, content) VALUES (?, ?, ?)",
-                          [(coordinate, rel, content) for rel, content in sorted(skill["files"].items())])
+                          [(coordinate, prefix + rel, content) for rel, content in sorted(skill["files"].items())])
         accepted += 1
         if republished(coordinate):
             warnings.append({"carrier": coordinate, "reason": "republishes other projects' skills"})
     store.execute("INSERT OR REPLACE INTO indexed (carrier, outcome, stamp) VALUES (?, 'indexed', ?)",
-                  (coordinate, stamp_of(jar)))
+                  (coordinate, stamp))
     return accepted
+
+
+def index_packages(store, packages):
+    """Index installed packages, {coordinate: directory}, skipping any whose directory is as it was read.
+
+    A registry version never changes, but a local or linked package does, in place; comparing one stamp
+    per package is what lets a rewritten one be read again.
+    """
+    started = time.monotonic()
+    known = dict(store.execute("SELECT carrier, stamp FROM indexed WHERE outcome = 'indexed'"))
+    rejected, warnings, read, accepted = [], [], 0, 0
+    for coordinate, directory in sorted(packages.items()):
+        if known.get(coordinate) == npm.package_stamp(directory):
+            continue
+        count = index_directory(store, coordinate, directory, rejected, warnings)
+        if count is not None:
+            read += 1
+            accepted += count
+    store.commit()
+    if read or rejected:
+        store.log("index", packages=read, skills=accepted, rejected=rejected, warnings=warnings,
+                  ms=round((time.monotonic() - started) * 1000, 1))
 
 
 def stale(store, coordinates):

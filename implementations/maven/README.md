@@ -1,6 +1,6 @@
 # maven
 
-The Maven counterpart of the [Gradle plugin](../gradle/), `org.dependencyskills.maven:dependency-skills-maven-plugin`, prefix `dependency-skills`. **Its own build root** (ADR-0005): `mvn verify` here builds it, runs its unit tests, and runs a real library build and a real consumer build against it.
+The Maven counterpart of the [Gradle plugin](../gradle/), `org.dependencyskills.maven:dependency-skills-maven-plugin`, prefix `dependency-skills`. **Its own build root** (ADR-0005), with its own wrapper: `./mvnw verify` here builds it, runs its unit tests, and runs a real library build and a real consumer build against it.
 
 It does what the Gradle plugin does, the same way, so the lightweight codex cannot tell which build system a project uses: the same skill name for a coordinate, the same SBOM, the same agent skills in the same places, and the same `dependencyskills-lock.json`.
 
@@ -35,7 +35,7 @@ Each goal writes its skill to `.agents/skills/<skill>/` at the root of the build
 ## Tests
 
 ```
-mvn verify
+./mvnw verify
 ```
 
 Unit tests share the Gradle plugin's naming vectors and its agent-skill cases; `src/it/` holds the two builds, run by `maven-invoker-plugin` against the plugin as installed: `author` checks the sources jar, `consumer` the SBOM, the skills and the lock file.

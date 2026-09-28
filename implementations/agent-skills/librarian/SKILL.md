@@ -21,12 +21,12 @@ This project's dependencies have been indexed. Before writing code against a lib
 
 ## How to use it
 
-1. **`list_guides`** — the project's libraries whose authors ship a guide, each with one line on what it is for. Call it early; it is cheap. **Call it again after you add a dependency or start using one in a new module, once the build has run** — it lists what the build last resolved, plus what the version catalog declares. The build says when that changes: a line beginning `dependencyskills: new since the last build:` is your cue.
+1. **`list_guides`** — the project's libraries whose authors ship a guide, each with one line on what it is for. Call it early; it is cheap. **Call it again after you add a dependency or start using one in a new module, once the build has run** — in an npm project, once it is installed — because it lists what the build last resolved, plus what the version catalog declares; in an npm project, what `package.json` declares at the version installed. A Gradle or Maven build says when that changes: a line beginning `dependencyskills: new since the last build:` is your cue.
 2. **`read_guide(library, file?)`** — read the guide for the library the code in front of you uses. Read only the ones you need. A guide links its other files, such as `references/swift.md`, by relative path; you cannot open those on disk, so pass the path as `file`.
 3. **`search_libraries(need)`** — before writing something a library might already do, describe the need in plain words: *"format a date for display"*, *"retry a failed request with backoff"*. The project's own libraries come first, then others already on this machine, each marked. **A library that is not a dependency is the developer's decision to add:** propose it with your reason, and do not add it yourself unless they asked you to.
 4. **`read_symbol(name)`**, where the lookup offers it — the exact signature of one capability a search found.
 
-If a library you are about to use is not in `list_guides`, that does not mean it has none: build, and list again, before reading its sources.
+If a library you are about to use is not in `list_guides`, that does not mean it has none: build or install, and list again, before reading its sources.
 
 ## When you find something
 

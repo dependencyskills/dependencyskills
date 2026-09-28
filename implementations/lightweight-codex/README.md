@@ -6,9 +6,10 @@ It is the lightweight system, separate from the full codex in [`../codex`](../co
 
 ## How it gets what it needs
 
-- **What the project uses** comes from the build. The Gradle plugin in [`../gradle`](../gradle/) writes a CycloneDX SBOM to `build/dependencyskills/bom.cdx.json` and fetches the dependencies' sources jars into Gradle's cache. The lookup reads that file on each call and re-indexes when it has changed. The agent can read its scope and never set it.
-- **Where each skill is** is the local caches: Gradle's and the local Maven repository. A multiplatform library recorded under its root coordinate is found through its platform module's sources jar.
-- **Which skill is a library's own** is decided by name: a skill is taken only from the jar whose coordinate its name encodes, and only if it is a valid [Agent Skill](https://agentskills.io/specification).
+- **What the project uses** comes from the build. The Gradle plugin in [`../gradle`](../gradle/) writes a CycloneDX SBOM to `build/dependencyskills/bom.cdx.json`, and the Maven plugin in [`../maven`](../maven/) the same file under `target/`; each fetches the dependencies' sources jars into its build tool's cache. **An npm project needs no plugin**: its scope is what `package.json` declares — dependencies, dev, optional and peer — at the version `node_modules` holds. The lookup rereads either on each call when it has changed. The agent can read its scope and never set it.
+- **Where each skill is** is the local caches, Gradle's and the local Maven repository, for a JVM library — a multiplatform one recorded under its root coordinate is found through its platform module's sources jar — and the package's own directory in `node_modules` for an npm one.
+- **Which skill is a library's own** is decided by name, and every skill must be a valid [Agent Skill](https://agentskills.io/specification). A jar's skill is taken only if its name encodes the jar's coordinate. An npm package may ship several: the one named for the package is its first-order guide, served first, and its others are second-order, served after it and attributed to the package (`spec/content.md`).
+- **An npm library's author** has no build plugin to ask, so `dependencyskills name` prints the skill's name and path from `package.json`, and `dependencyskills check` says what would stop it shipping or being read — including a `files` list that leaves `skills` out.
 
 ## Tools
 

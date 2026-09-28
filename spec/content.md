@@ -2,7 +2,7 @@
 
 Design attempt: **v4** · Status: draft, normative intent · Not yet released
 
-**v4 (2026-09-23):** a skill is named for its library's coordinate; a dependency skill may direct nothing but the use of its own library; a Swift consumer of an XCFramework is reached through doc comments; validation checks `metadata.version` against the version being built. Each change follows an alpha that was built and run, not only argued.
+**v4 (2026-09-23, extended 2026-09-28):** a skill is named for its library's coordinate — outside Maven coordinates, the package's namespace in the group's place, and a source-shipping package's own-named skill first-order and its others second-order; a dependency skill may direct nothing but the use of its own library; a Swift consumer of an XCFramework is reached through doc comments; validation checks `metadata.version` against the version being built. Each change follows an alpha that was built and run, not only argued.
 
 The [Agent Skills specification](https://agentskills.io/specification)
 defines what a skill *is* — a directory containing `SKILL.md`, with optional
@@ -37,6 +37,8 @@ as the prose it is built from.
 
 The version is not part of the name; a multiplatform library's per-platform artifacts carry the base library's name.
 
+**Outside Maven coordinates, a package's namespace takes the group's place** and the same three steps apply. npm's `@acme/text` is `acme-text`, as `acme:text` would be, and an unscoped `text` is `text`. A PyPI project and a Cargo crate have no namespace, so each is its name alone: `acme_text` is `acme-text`. A Go module's path up to its last segment is the group, so `example.com/acme/text` is `example-com-acme-text`.
+
 **It is the coordinate rather than the artifactId because an artifactId is not unique** — two groups can each publish a `core` — and because an author never has to invent it: a build knows its own coordinate. That is also the rule this specification most expects generators to break, by using the coordinate verbatim.
 
 **The encoding is one-way, and nothing decodes it.** `com.example:acme-text` and `com.example.acme:text` meet at the same name. A consumer never needs to go back from a name to a coordinate: it knows the coordinate of the artifact it resolved, encodes that, and compares. That comparison is also the authorship rule below.
@@ -55,9 +57,11 @@ The Agent Skills specification fixes the directory's name, not where it sits. Pl
 | JVM (Maven, Gradle) | `src/main/skills/<name>/SKILL.md` | `skills/<name>/` in the **sources jar**, added by the build |
 | Kotlin Multiplatform | `src/commonMain/skills/<name>/SKILL.md` | `commonMain/skills/<name>/` in every target's sources jar |
 
-**The skill is a valid skill directory where it is written**, named for the skill as the Agent Skills specification requires, so an ordinary validator accepts it in the source tree. The author never computes the name: the build knows the coordinate and can print it (the Gradle plugin's `dependencySkillName`). The whole directory ships — `SKILL.md`, `references/` and `assets/` — except `scripts/`, which a dependency skill never has. A binary jar, `META-INF` and a Kotlin/Native klib are not placements: none of them reaches the copy a consumer's tooling reads (RAD-0065, RAD-0075).
+**The skill is a valid skill directory where it is written**, named for the skill as the Agent Skills specification requires, so an ordinary validator accepts it in the source tree. The author never computes the name: the build knows the coordinate and can print it — the Gradle plugin's `dependencySkillName`, the Maven plugin's `name` goal, or, for a package with no build plugin, the `dependencyskills name` command. The whole directory ships — `SKILL.md`, `references/` and `assets/` — except `scripts/`, which a dependency skill never has. A binary jar, `META-INF` and a Kotlin/Native klib are not placements: none of them reaches the copy a consumer's tooling reads (RAD-0065, RAD-0075).
 
-**Authorship.** A consumer takes a skill only from the artifact whose coordinate its name encodes. An artifact that files a skill under another library's name is republishing it, and the skill is refused. This is checkable from the artifact alone, with no registry or signature behind it, and it is what stops a third party's text being served as a library's own.
+**Authorship.** On the JVM a consumer takes a skill only from the artifact whose coordinate its name encodes. An artifact that files a skill under another library's name is republishing it, and the skill is refused. This is checkable from the artifact alone, with no registry or signature behind it, and it is what stops a third party's text being served as a library's own.
+
+**A package that ships its source may carry more than one skill**, and npm's existing practice is exactly that, under names the package's authors chose (RAD-0077). There the skill named for the package is **first-order**: listed and served first, as the package's own guide. Every other valid skill the package ships is **second-order**: kept, served after the first, and attributed to the package that carries it — never to another library, whatever its name suggests. Authorship holds without the name rule, because a skill found inside a package's own installed directory was shipped by that package; what must not happen is serving it as another library's (RAD-0079). A skill written to this specification is the package's first-order skill.
 
 ## Frontmatter
 

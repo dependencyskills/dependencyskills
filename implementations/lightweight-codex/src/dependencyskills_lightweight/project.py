@@ -1,10 +1,11 @@
-"""What a project may read: the scope its build reported, as a CycloneDX SBOM in its build directory."""
+"""What a project may read: the scope its build reported, as a CycloneDX SBOM in its build directory —
+or, in an npm project, which needs no plugin, what its package.json declares and node_modules holds."""
 
 import json
 import re
 from pathlib import Path
 
-from . import index as indexing
+from . import index as indexing, npm
 from .names import library, version
 
 # Where each build plugin writes the SBOM, relative to the root project: Gradle's build directory
@@ -13,6 +14,21 @@ SBOMS = (Path("build") / "dependencyskills" / "bom.cdx.json", Path("target") / "
 SBOM = SBOMS[0]
 _PURL = re.compile(r"^pkg:maven/([^/]+)/([^@/]+)@([^?#]+)")
 DECLARED = "dependencyskills:declared"
+
+
+def find_project(start):
+    """("sbom", directory, SBOM) or ("npm", directory, None) for the nearest project at or above `start`, or None.
+
+    A build's report wins where one directory has both, since it is what that build resolved.
+    """
+    here = Path(start).resolve()
+    for directory in [here, *here.parents]:
+        for sbom in SBOMS:
+            if (directory / sbom).is_file():
+                return "sbom", directory, directory / sbom
+        if npm.is_project(directory):
+            return "npm", directory, None
+    return None
 
 
 def find_sbom(start):
@@ -84,11 +100,13 @@ def refresh(store, cwd):
     new is indexed. The scope comes only from this file, which the build writes and the agent cannot.
     A missing file — after `clean` — keeps the scope already stored: the last build is still true.
     """
-    found = find_sbom(cwd)
+    found = find_project(cwd)
     if not found:
         project, _ = scope_of(store, cwd)
         return project
-    directory, path = found
+    kind, directory, path = found
+    if kind == "npm":
+        return refresh_npm(store, directory)
     project = str(directory.resolve())
     stamp = str(path.stat().st_mtime_ns)
     if store.setting(f"sbom:{project}") == stamp:
@@ -106,3 +124,22 @@ def refresh(store, cwd):
     store.set_setting(f"sbom:{project}", stamp)
     store.log("scope", project=project, coordinates=len(coordinates), declared=len(declared))
     return project
+
+
+def refresh_npm(store, directory):
+    """Bring an npm project up to date: its scope is what package.json declares at the version installed.
+
+    Reread only when an install marker changed — npm, pnpm and yarn each rewrite one — so an unchanged
+    project costs a few stats per call. The scope is written by the package manager, never by the agent.
+    """
+    project = str(directory.resolve())
+    stamp = npm.stamp(directory)
+    if store.setting(f"npm:{project}") == stamp:
+        return project
+    packages = npm.installed(directory)
+    register(store, project, packages)
+    indexing.index_packages(store, packages)
+    store.set_setting(f"npm:{project}", stamp)
+    store.log("scope", project=project, coordinates=len(packages), ecosystem="npm")
+    return project
+
