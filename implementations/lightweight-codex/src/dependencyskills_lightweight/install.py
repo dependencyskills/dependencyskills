@@ -30,10 +30,11 @@ from pathlib import Path
 from . import __version__
 
 SERVER = "librarian"
-MANIFEST = Path(".agents") / "dependencyskills-install.json"
+# The lock file the Gradle plugin keeps too, at the root, on the `*-lock.json` convention.
+MANIFEST = Path("dependencyskills-lock.json")
 DEFAULT_SOURCE = f"dependencyskills-lightweight-codex=={__version__}"
 HARNESSES = ("claude", "codex", "gemini", "antigravity")
-SKILL_FOR = {"consumer": "librarian", "library": "to-library-skill"}
+SKILL_FOR = {"consumer": "librarian", "author": "to-library-skill"}
 
 
 def bundled_skill(name):
@@ -67,7 +68,7 @@ def codex_config():
 
 
 def plan(role, project, harnesses, hook, source):
-    """The effects of installing `role` ("consumer" or "library") into `project`, and what is left to the developer."""
+    """The effects of installing `role` ("consumer" or "author") into `project`, and what is left to the developer."""
     project = Path(project).resolve()
     skill = SKILL_FOR[role]
     # The one standard place for a project's skills. No links: they are fine in a checkout someone is
@@ -93,9 +94,11 @@ def plan(role, project, harnesses, hook, source):
     yours = [
         "Apply the Gradle plugin `org.dependencyskills.plugin` to every module "
         + ("whose dependencies the agent should see" if role == "consumer" else "that publishes a library")
-        + f", at version {__version__.split('a')[0]} — this installer never edits a build file.",
+        + f", at version {__version__.split('a')[0]} — this installer never edits a build file. "
+        + "In a Gradle build, declaring `dependencySkills { " + role
+        + " { } }` has the plugin write and update the skill itself, and this installer is needed only for the rest.",
     ]
-    if role == "library":
+    if role == "author":
         yours.append("Ask your agent to write the library's skill with the to-library-skill skill, and review it before release.")
     else:
         yours.append("Build once, so the build writes the report the lookup reads.")

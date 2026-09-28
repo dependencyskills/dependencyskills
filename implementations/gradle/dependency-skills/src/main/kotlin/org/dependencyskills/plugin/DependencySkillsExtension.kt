@@ -17,6 +17,8 @@ import javax.inject.Inject
  *         transitive = true
  *         ignore("com.example:noisy-library")
  *     }
+ *     consumer { }                                   // write the librarian agent skill
+ *     author { refresh = SkillRefresh.UnlessEdited } // and to-library-skill, keeping local edits
  * }
  * ```
  *
@@ -81,6 +83,42 @@ abstract class DependencySkillsExtension @Inject constructor(objects: ObjectFact
      * ```
      */
     abstract val fetchSources: Property<Boolean>
+
+    /**
+     * For a project that uses libraries: the `librarian` agent skill, written into the project's
+     * `.agents/skills/` so its agents check what the dependencies offer before writing code. Not written
+     * unless this block is declared:
+     *
+     * ```kotlin
+     * dependencySkills { consumer { } }
+     * ```
+     *
+     * See [AgentSkills] for where it goes and how edits are treated.
+     */
+    val consumer: AgentSkillSpec = objects.newInstance(AgentSkillSpec::class.java)
+
+    fun consumer(configure: Action<in AgentSkillSpec>) {
+        consumer.enabled.set(true)
+        configure.execute(consumer)
+    }
+
+    /**
+     * For a project that publishes a library: the `to-library-skill` agent skill, with which an agent
+     * writes the guide this library ships in its sources jar. Separate from [consumer], and not written
+     * unless this block is declared — a project that publishes nothing has no use for it:
+     *
+     * ```kotlin
+     * dependencySkills { author { } }
+     * ```
+     *
+     * Only the author's skill: the library's own guide is packaged whenever it exists, block or not.
+     */
+    val author: AgentSkillSpec = objects.newInstance(AgentSkillSpec::class.java)
+
+    fun author(configure: Action<in AgentSkillSpec>) {
+        author.enabled.set(true)
+        configure.execute(author)
+    }
 
     /** What the out-of-band harvester is fed. */
     val harvester: HarvesterSpec = objects.newInstance(HarvesterSpec::class.java)

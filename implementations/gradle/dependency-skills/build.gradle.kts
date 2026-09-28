@@ -29,6 +29,29 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
 }
 
+// The agent skills the plugin writes into a project that asks for them (AgentSkills), carried in
+// the jar from their one source in `implementations/agent-skills/`, so a plugin version and the
+// skills it writes can never drift apart. With an index, since a jar cannot list a directory.
+// `scripts/` never travels: a skill this plugin writes gives an agent nothing to run.
+val bundledSkills by tasks.registering(Sync::class) {
+    val skills = "org/dependencyskills/plugin/skills"
+    from(layout.projectDirectory.dir("../../agent-skills")) {
+        include("librarian/**", "to-library-skill/**")
+        exclude("**/scripts/**")
+        into(skills)
+    }
+    into(layout.buildDirectory.dir("bundled-skills"))
+    val index = layout.buildDirectory.file("bundled-skills/$skills/index.txt")
+    doLast {
+        val root = index.get().asFile.parentFile
+        val files = root.walkTopDown().filter { it.isFile && it.name != "index.txt" }
+            .map { it.relativeTo(root).invariantSeparatorsPath }.sorted()
+        index.get().asFile.writeText(files.joinToString("\n", postfix = "\n"))
+    }
+}
+
+sourceSets.main { resources.srcDir(bundledSkills) }
+
 // KGP on the TestKit plugin classpath, so a multiplatform test project can apply it without
 // resolving anything: the classes are injected rather than fetched.
 val kotlinPluginClasspath: Configuration by configurations.creating {
@@ -59,7 +82,8 @@ gradlePlugin {
             displayName = "Dependency Skills"
             description = "Reports which of a project's dependencies the machine-level codex has " +
                 "never seen, and records them for harvesting out of band. Applied to a library, " +
-                "ships the library's own skill in its sources jar."
+                "ships the library's own skill in its sources jar. Writes the librarian and " +
+                "to-library-skill agent skills into a project that declares their blocks."
         }
     }
 }

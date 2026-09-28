@@ -12,7 +12,9 @@ import org.gradle.api.tasks.SourceSetContainer
 
 /**
  * Reports which of a consuming project's dependencies the codex has never seen — and, applied to
- * a library, ships that library's own skill in its sources jar ([SkillPackaging]).
+ * a library, ships that library's own skill in its sources jar ([SkillPackaging]). Where a project
+ * declares the `consumer { }` or `author { }` block, it also writes that agent skill into the
+ * project ([AgentSkills]).
  *
  * **The build detects; something out of band harvests.** That seam is the whole design. An
  * artifact transform looks like the natural fit — it runs per artifact, is cached by Gradle,
@@ -39,6 +41,12 @@ class DependencySkillsPlugin : Plugin<Project> {
             fetchSources.convention(
                 providers.gradleProperty(FETCH_SOURCES_PROPERTY).map(String::toBoolean).orElse(true),
             )
+            val claudeCode = rootProject.layout.projectDirectory.dir(".claude").asFile.isDirectory
+            listOf(consumer, author).forEach {
+                it.enabled.convention(false)
+                it.refresh.convention(SkillRefresh.Always)
+                it.claudeCode.convention(claudeCode)
+            }
         }
 
         val recorder = gradle.sharedServices.registerIfAbsent(SERVICE, CodexRecorder::class.java) {
@@ -91,6 +99,12 @@ class DependencySkillsPlugin : Plugin<Project> {
         val claims = gradle.sharedServices.registerIfAbsent(SourcesClaims.NAME, SourcesClaims::class.java) {}
         val fetching = extension.enabled.zip(extension.fetchSources) { on, fetch -> on && fetch }
 
+        // The agent skills, each only where its block is declared, written before any compile task.
+        val skillWriters = listOf(
+            AgentSkills.register(project, "writeConsumerSkill", AgentSkills.LIBRARIAN, extension.consumer, extension.enabled, claims),
+            AgentSkills.register(project, "writeAuthorSkill", AgentSkills.TO_LIBRARY_SKILL, extension.author, extension.enabled, claims),
+        )
+
         val observer = Observer(
             recorder = recorder,
             enabled = extension.enabled,
@@ -98,6 +112,7 @@ class DependencySkillsPlugin : Plugin<Project> {
             ignored = extension.harvester.ignored,
             onWatched = { configuration, compileTasks ->
                 Sources.fetchBefore(project, configuration, compileTasks, fetching, claims)
+                tasks.configureEach { if (name in compileTasks) dependsOn(skillWriters) }
             },
         )
 

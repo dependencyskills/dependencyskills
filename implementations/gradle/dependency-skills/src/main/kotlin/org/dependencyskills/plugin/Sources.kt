@@ -97,6 +97,20 @@ internal object Sources {
     }
 }
 
+/** Once-per-build work shared by every project that applies the plugin: the first to claim a key does it. */
+abstract class SourcesClaims : BuildService<BuildServiceParameters.None> {
+    private val claimed = HashSet<String>()
+
+    fun claim(key: String): Boolean = synchronized(claimed) { claimed.add(key) }
+
+    /** Runs [work] with no other project's once-per-build work running, for files several of them write. */
+    fun <T> exclusively(work: () -> T): T = synchronized(this) { work() }
+
+    internal companion object {
+        const val NAME = "dependencySkillsSourcesClaims"
+    }
+}
+
 /**
  * Fetches the sources jars [Sources] names, before the compile task that uses them, so they are in
  * the cache before an agent asks. Resolving them is the whole of the work; there is nothing to write.
@@ -104,17 +118,6 @@ internal object Sources {
  * Nothing here may fail a build: a failure to fetch is logged at info and forgotten, because an index
  * is an aid and a project must still compile without it.
  */
-/** Once-per-build work shared by every project that applies the plugin: the first to claim a key does it. */
-abstract class SourcesClaims : BuildService<BuildServiceParameters.None> {
-    private val claimed = HashSet<String>()
-
-    fun claim(key: String): Boolean = synchronized(claimed) { claimed.add(key) }
-
-    internal companion object {
-        const val NAME = "dependencySkillsSourcesClaims"
-    }
-}
-
 @DisableCachingByDefault(because = "Resolving the sources is the work, and it produces no output")
 abstract class FetchDependencySources : DefaultTask() {
 

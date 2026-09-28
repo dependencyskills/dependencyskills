@@ -54,7 +54,7 @@ class InstallTest(unittest.TestCase):
         # Without the claude command it says what to run, rather than failing or guessing.
         self.assertIn("claude mcp add --scope local librarian", report)
         self.assertIn("dependencyskills uninstall --apply", report)
-        created = {".agents/dependencyskills-install.json", ".claude/settings.local.json", ".gemini/settings.json"}
+        created = {"dependencyskills-lock.json", ".claude/settings.local.json", ".gemini/settings.json"}
         self.assertTrue(created <= set(self.files(self.project)))
         self.assertEqual(set(), {f for f in self.files(self.project)
                                  if f not in created and not f.startswith(".agents/skills/librarian/")})
@@ -105,7 +105,7 @@ class InstallTest(unittest.TestCase):
         self.assertNotIn("evil", json.dumps(json.loads((planted / ".gemini/settings.json").read_text())["mcpServers"]))
 
     def test_a_library_gets_the_authoring_skill_and_no_server(self):
-        proposal = install.plan("library", self.project, ["claude"], False, install.DEFAULT_SOURCE)
+        proposal = install.plan("author", self.project, ["claude"], False, install.DEFAULT_SOURCE)
         install.apply(proposal)
 
         self.assertTrue((self.project / ".agents/skills/to-library-skill/assets/SKILL.template.md").is_file())

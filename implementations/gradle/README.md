@@ -6,7 +6,7 @@ Published under `org.dependencyskills.gradle`, so the coordinate says which buil
 
 | module | plugin id | what it is |
 |---|---|---|
-| `dependency-skills` | `org.dependencyskills.plugin` | reports which of a project's dependencies the codex has never seen; applied to a library, ships the library's own skill in its sources jar |
+| `dependency-skills` | `org.dependencyskills.plugin` | reports which of a project's dependencies the codex has never seen; applied to a library, ships the library's own skill in its sources jar; writes the `librarian` and `to-library-skill` agent skills where their blocks are declared |
 
 ## Naming
 
@@ -65,6 +65,30 @@ and every sources jar the build produces carries that directory at `skills/<name
 A project with no skill file is untouched, which is every purely consuming one. Where the file lives and what it is called is still open — [RAD-0075](../../docs/knowledge/research/RAD-0075-naming-the-skill-file.md) — and this is the alpha of one answer, built to be tried.
 
 **Sources jars are matched as `Zip`, not `Jar`.** The java plugin's is a `bundling.Jar`; Kotlin Multiplatform's are `org.gradle.jvm.tasks.Jar`, which in Gradle 9 extends `Zip` directly. Matching on `Jar` shipped the skill for JVM libraries and silently skipped every multiplatform one.
+
+### The agent skills it writes
+
+The plugin carries two agent skills and writes each into the project only where its block is declared. A missing block means that skill is not configured, and nothing is written:
+
+```kotlin
+import org.dependencyskills.plugin.SkillRefresh
+
+dependencySkills {
+    consumer { }                                   // librarian: check what the dependencies offer before writing code
+    author { refresh = SkillRefresh.UnlessEdited }  // to-library-skill: write the guide this library ships, keeping local edits
+}
+```
+
+The blocks are named for the project's role: `consumer` for a project that uses libraries, `author` for one that publishes them — a project can be both. The `author` block writes only the author's skill; the library's own guide is packaged whenever it exists, block or not.
+
+**Where they go.** `.agents/skills/<skill>/` at the root of the build, always, and `.claude/skills/<skill>/` as well, by default wherever the root has a `.claude/` directory, since Claude Code reads only that (`claudeCode = false` turns it off). They are copies, never links. A `.claude/skills/<skill>` that is already a link is left alone. They are written before any compile task, once per build however many modules declare the block, so the skills always match the plugin version that wrote them.
+
+**Edits.** Each file written is recorded with its digest in `dependencyskills-lock.json` at the root — named on the `*-lock.json` convention, like the `skills` CLI's `skills-lock.json` — which the lightweight codex's installer also keeps, so `dependencyskills uninstall` reverses either. A copy nobody edited is updated when the plugin carries a newer version. A copy that differs from what was recorded, or that nothing recorded, has been edited, and `refresh` decides what happens to it:
+
+- **`Always`**, the default: replaced with the version the plugin carries on every build, with a warning in the build output that local edits were overwritten and how to keep them; the edits remain in version control. A project that wants otherwise says so explicitly.
+- **`UnlessEdited`**: kept, with a warning that it was not updated and how to take the new version. When the edit is to the version already carried, nothing is being held back, and it is kept without a warning.
+
+`enabled = false` inside a block turns that skill off without deleting the block, and `-PdependencySkills.enabled=false` turns off the whole plugin, this included.
 
 ### Two codexes, two handoffs
 

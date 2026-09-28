@@ -7,7 +7,7 @@ from . import __version__
 
 USAGE = """usage: dependencyskills <command>
 
-  install consumer|library [--harness claude,codex,gemini,antigravity] [--hook] [--source SPEC] [--apply]
+  install consumer|author [--harness claude,codex,gemini,antigravity] [--hook] [--source SPEC] [--apply]
                       put this project's half in place: a skill, and for a consumer the MCP
                       server; prints the plan, and changes nothing without --apply
   uninstall [--apply] reverse what install recorded
@@ -30,7 +30,7 @@ def main(argv=None):
         from .mcp import serve
         serve()
         return 0
-    if command == "install" and rest[:1] in (["consumer"], ["library"]):
+    if command == "install" and rest[:1] in (["consumer"], ["author"]):
         from . import install
         options = rest[1:]
         harnesses = _option(options, "--harness", "claude").split(",")
