@@ -88,6 +88,8 @@ The blocks are named for the project's role: `consumer` for a project that uses 
 - **`Always`**, the default: replaced with the version the plugin carries on every build, with a warning in the build output that local edits were overwritten and how to keep them; edits that were committed remain in version control. A project that wants otherwise says so explicitly.
 - **`UnlessEdited`**: kept, with a warning that it was not updated and how to take the new version. When the edit is to the version already carried, nothing is being held back, and it is kept without a warning.
 
+**Commit `dependencyskills-lock.json` if and only if you commit the skills it records**, as with any lock file. Committed together, a fresh clone knows its copies are unedited, and an update shows in review as the skill's diff beside the lock file's. Skills committed without it look edited to every fresh clone: the next update overwrites them with a warning, or under `UnlessEdited` keeps them and warns every build. Ignore the skills, and ignore it too. It holds only paths inside the project and digests, and changes only when a skill does.
+
 `enabled = false` inside a block turns that skill off without deleting the block, and `-PdependencySkills.enabled=false` turns off the whole plugin, this included.
 
 ### Two codexes, two handoffs

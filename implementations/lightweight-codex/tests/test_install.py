@@ -55,6 +55,7 @@ class InstallTest(unittest.TestCase):
         # Without the claude command it says what to run, rather than failing or guessing.
         self.assertIn("claude mcp add --scope local librarian", report)
         self.assertIn("dependencyskills uninstall --apply", report)
+        self.assertIn("commit it together with the skills", report)
         created = {"dependencyskills-lock.json", ".claude/settings.local.json", ".gemini/settings.json"}
         self.assertTrue(created <= set(self.files(self.project)))
         self.assertEqual(set(), {f for f in self.files(self.project)

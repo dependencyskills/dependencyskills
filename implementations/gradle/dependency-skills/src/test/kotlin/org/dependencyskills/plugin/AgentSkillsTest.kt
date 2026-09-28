@@ -52,6 +52,7 @@ class AgentSkillsTest {
         assertFalse(Files.exists(project.path(".agents/skills/to-library-skill")))
         assertFalse(Files.exists(project.path(".claude")), "no .claude/ in the project, so no copy for Claude Code")
         assertContains(output, "dependencyskills: wrote the librarian skill to .agents/skills/librarian/")
+        assertContains(output, "commit it together with dependencyskills-lock.json, which records it")
         assertContains(project.text(AgentSkills.MANIFEST), "\"path\": \".agents/skills/librarian\"")
     }
 

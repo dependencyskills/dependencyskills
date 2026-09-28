@@ -32,6 +32,8 @@ A project declares the goal for each role it has. **A goal not declared is a rol
 
 Each goal writes its skill to `.agents/skills/<skill>/` at the root of the build, and a copy to `.claude/skills/<skill>/` where the root has a `.claude/` directory (`<claudeCode>` overrides). Copies, never links, recorded with their digests in `dependencyskills-lock.json` at the root, the file the Gradle plugin and the installer keep too. `<refresh>` decides what happens to an edited copy: `Always`, the default, replaces it with a warning that says so; `UnlessEdited` keeps it, with a warning that it was not updated. `-DdependencySkills.skip=true` turns off the whole plugin.
 
+**Commit `dependencyskills-lock.json` if and only if you commit the skills it records**, as with any lock file. Committed together, a fresh clone knows its copies are unedited, and an update shows in review as the skill's diff beside the lock file's. Skills committed without it look edited to every fresh clone: the next update overwrites them with a warning, or under `UnlessEdited` keeps them and warns every build. Ignore the skills, and ignore it too. It holds only paths inside the project and digests, and changes only when a skill does.
+
 ## Tests
 
 ```

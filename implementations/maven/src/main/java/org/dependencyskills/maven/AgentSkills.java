@@ -182,7 +182,8 @@ final class AgentSkills {
         for (String path : targets) {
             Map<String, String> recorded = recorded(lock, path);
             switch (reconcile(root.resolve(path), carried, recorded, refresh)) {
-                case Written -> lifecycle.accept("dependencyskills: wrote the " + skill + " skill to " + path + "/");
+                case Written -> lifecycle.accept("dependencyskills: wrote the " + skill + " skill to " + path
+                    + "/ — commit it together with dependencyskills-lock.json, which records it");
                 case Updated -> lifecycle.accept("dependencyskills: updated the " + skill + " skill in " + path
                     + "/ to the version this plugin carries");
                 case Replaced -> warn.accept("dependencyskills: OVERWROTE local edits to the " + skill + " skill in " + path

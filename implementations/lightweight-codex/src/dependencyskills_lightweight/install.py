@@ -185,8 +185,9 @@ def render(proposal, applied=None):
     else:
         lines += ["", "Nothing was fetched: the skill is the one this version carries."]
     if applied is not None:
-        lines += ["", f"The skills are recorded in {MANIFEST}, which is meant to be committed; what was registered on "
-                      "this machine is recorded outside the project. Undo it with: dependencyskills uninstall --apply"]
+        lines += ["", f"The skills are recorded in {MANIFEST}: commit it together with the skills, as you would any lock "
+                      "file — or, if you ignore the skills, ignore it too. What was registered on this machine is recorded "
+                      "outside the project. Undo it with: dependencyskills uninstall --apply"]
     return "\n".join(lines)
 
 

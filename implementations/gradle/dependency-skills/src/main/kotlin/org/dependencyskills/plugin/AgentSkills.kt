@@ -36,7 +36,8 @@ import java.security.MessageDigest
  * mess everywhere else. A `.claude/skills/<skill>` that is already a link is left alone — it points at
  * a copy this writes anyway.
  *
- * **Edits.** Every file written is recorded with its digest in `dependencyskills-lock.json` at the root,
+ * **Edits.** Every file written is recorded with its digest in `dependencyskills-lock.json` at the root —
+ * committed with the skills, like any lock file, so a fresh clone knows its copies are unedited —
  * the lock file the lightweight codex's installer keeps too, so `dependencyskills uninstall` reverses
  * either. A skill that no longer matches what was recorded has been edited, and [SkillRefresh] decides
  * what happens to it: replaced with a warning by default, or kept.
@@ -237,7 +238,9 @@ abstract class WriteAgentSkill : DefaultTask() {
         for (path in targets) {
             val recorded = AgentSkills.recorded(manifest, path)
             when (AgentSkills.reconcile(File(root, path), carried, recorded, refresh.getOrElse(SkillRefresh.Always))) {
-                AgentSkills.Outcome.Written -> logger.lifecycle("dependencyskills: wrote the $name skill to $path/")
+                AgentSkills.Outcome.Written -> logger.lifecycle(
+                    "dependencyskills: wrote the $name skill to $path/ — commit it together with dependencyskills-lock.json, which records it",
+                )
                 AgentSkills.Outcome.Updated ->
                     logger.lifecycle("dependencyskills: updated the $name skill in $path/ to the version this plugin carries")
                 AgentSkills.Outcome.Replaced -> logger.warn(

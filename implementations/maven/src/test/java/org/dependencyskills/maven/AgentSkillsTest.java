@@ -39,7 +39,7 @@ class AgentSkillsTest {
         String lock = Files.readString(root.resolve(AgentSkills.LOCK));
         assertTrue(lock.contains("\"path\": \".agents/skills/librarian\""), lock);
         assertTrue(lock.startsWith("{\n    \""), "four-space indentation, as the Gradle plugin writes it:\n" + lock);
-        assertEquals(List.of("dependencyskills: wrote the librarian skill to .agents/skills/librarian/"), lifecycle);
+        assertEquals(List.of("dependencyskills: wrote the librarian skill to .agents/skills/librarian/ — commit it together with dependencyskills-lock.json, which records it"), lifecycle);
     }
 
     @Test
