@@ -16,3 +16,13 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/dependencyskills_lightweight"]
+
+# The skills the installer puts in a project travel inside the package, so installing never fetches
+# instruction text: what the installer writes is what this pinned version was built with (#44).
+[tool.hatch.build.targets.wheel.force-include]
+"../agent-skills/librarian" = "dependencyskills_lightweight/skills/librarian"
+"../agent-skills/to-library-skill" = "dependencyskills_lightweight/skills/to-library-skill"
+
+[tool.hatch.build.targets.sdist.force-include]
+"../agent-skills/librarian" = "skills/librarian"
+"../agent-skills/to-library-skill" = "skills/to-library-skill"

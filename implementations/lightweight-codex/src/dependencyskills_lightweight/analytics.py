@@ -107,7 +107,7 @@ def stats(store):
              Counter(e["library"] for e in queries if e["command"] == "skill" and e["result"] == "no_skill")),
             ("Refused — not a dependency of the project that asked:",
              Counter(e["library"] for e in queries if e["result"] == "out_of_scope")),
-            ("Searched for with find_library:", Counter(e["asked"] for e in queries if e["command"] == "find")),
+            ("Searched for with search_libraries:", Counter(e["asked"] for e in queries if e["command"] == "find")),
         ]
         for title, counts in sections:
             if counts:

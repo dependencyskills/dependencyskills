@@ -20,18 +20,21 @@ class ServerTest(Machine):
             {"jsonrpc": "2.0", "method": "notifications/initialized"},
             {"jsonrpc": "2.0", "id": 2, "method": "tools/list"},
             {"jsonrpc": "2.0", "id": 3, "method": "tools/call",
-             "params": {"name": "get_dependency_skill", "arguments": {"library": "com.acme:acme-text"}}},
+             "params": {"name": "read_guide", "arguments": {"library": "com.acme:acme-text"}}},
             {"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {"name": "no_such_tool", "arguments": {}}},
+            {"jsonrpc": "2.0", "id": 5, "method": "tools/call",
+             "params": {"name": "read_guide", "arguments": {"library": "com.acme:acme-text", "file": "references/nothing.md"}}},
         ]
         done = subprocess.run([sys.executable, "-m", "dependencyskills_lightweight", "mcp"], cwd=self.project,
                               input="".join(json.dumps(r) + "\n" for r in requests), capture_output=True, text=True,
                               env={**os.environ, "PYTHONPATH": SOURCE}, timeout=60)
         answers = {m["id"]: m for m in map(json.loads, done.stdout.splitlines())}   # every line is protocol
 
-        self.assertEqual({1, 2, 3, 4}, set(answers))
-        self.assertEqual(4, len(answers[2]["result"]["tools"]))
+        self.assertEqual({1, 2, 3, 4, 5}, set(answers))
+        self.assertEqual(3, len(answers[2]["result"]["tools"]))
         self.assertIn("Call Acme.normalize.", answers[3]["result"]["content"][0]["text"])
         self.assertTrue(answers[4]["result"]["isError"])
+        self.assertIn("guide has no file references/nothing.md", answers[5]["result"]["content"][0]["text"])
 
 
 class HookTest(Machine):

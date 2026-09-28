@@ -14,3 +14,12 @@ it does not control, the standing tracking burden is carried here.
 - [agent-file-conventions.md](agent-file-conventions.md) — every file name and path
   an agent already looks for: instruction files, skill layouts, the distribution
   proposals, and the per-package documentation slot each language has.
+- [antigravity-customization-system.md](antigravity-customization-system.md) — the
+  discovery hierarchy, configuration schemas, lifecycle hooks, and context governance
+  of Google Antigravity across CLI, IDE, and desktop environments.
+- [claude-code-customization-system.md](claude-code-customization-system.md) — where
+  Claude Code reads instructions, rules, skills, subagents, plugins, settings, MCP
+  servers and hooks, and that it does not read `.agents/skills/`.
+- [agent-tool-customization-survey.md](agent-tool-customization-survey.md) — nineteen
+  other coding-agent tools compared: instruction files, which read `.agents/skills/`,
+  MCP config file and format, trust gates, hooks and plugin formats.

@@ -31,6 +31,7 @@ class Machine(unittest.TestCase):
         self.store = Store()
 
     def tearDown(self):
+        self.store.db.close()
         for key, value in self._environment.items():
             if value is None:
                 os.environ.pop(key, None)

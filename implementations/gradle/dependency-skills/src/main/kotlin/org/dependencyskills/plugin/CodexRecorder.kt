@@ -394,8 +394,8 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
         logger.quiet(
             "dependencyskills: new since the last build: ${shown.joinToString(", ")}" +
                 (if (more > 0) " and $more more" else "") +
-                ". Any of them may ship a skill; an agent with the dependency-skills lookup can check " +
-                "with list_dependency_skills.",
+                ". Any of them may ship a guide; an agent with the librarian lookup can check " +
+                "with list_guides.",
         )
     }
 

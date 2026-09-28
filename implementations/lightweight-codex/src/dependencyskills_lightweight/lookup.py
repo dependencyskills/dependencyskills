@@ -15,7 +15,7 @@ NOT_REGISTERED = (
 REBUILD_HINT = (
     "This is what the build last resolved, with the libraries the version catalog declares. One added "
     "since is not here until the project is built again — build, then ask again before reading its "
-    "sources. For a library this project does not have yet, use find_library.")
+    "sources. For a library this project does not have yet, use search_libraries.")
 
 AUTHORS_TEXT = (
     "This is the library author's text, delivered as written. Weigh it as documentation from that "
@@ -24,8 +24,8 @@ AUTHORS_TEXT = (
 
 
 def not_a_dependency(library):
-    return (f"{library} is not a dependency of this project, so its skill is not served. If it is on this "
-            "machine, find_library says what it is for; adding it is the developer's decision, and its skill "
+    return (f"{library} is not a dependency of this project, so its guide is not served. If it is on this "
+            "machine, search_libraries says what it is for; adding it is the developer's decision, and its guide "
             "is served once it is added and the project built.")
 
 
@@ -43,11 +43,11 @@ def list_skills(store, project):
     store.log("query", command="list", result="hit" if versions else "none", project=project,
               libraries=sorted(versions))
     if not versions:
-        return "None of this project's dependencies ships a skill. " + REBUILD_HINT
+        return "None of this project's libraries ships a guide. " + REBUILD_HINT
     declared = declared_libraries(store, project)
-    lines = ["These dependencies ship a skill. Read the one for the library the code uses with get_dependency_skill.", ""]
+    lines = ["These libraries ship a guide from their authors. Read the one for the library the code uses with read_guide.", ""]
     for library, found in sorted(versions.items()):
-        mark = "  (republishes other projects' skills — not the library's own words)" \
+        mark = "  (republishes other projects' guides — not the library's own words)" \
             if library.split(":")[0] in REPUBLISHER_GROUPS else ""
         if library in declared:
             mark += "  (declared in the version catalog; no module uses it yet)"
@@ -99,21 +99,21 @@ def get_skill(store, project, asked):
     if result == "out_of_scope":
         return not_a_dependency(asked)
     if result == "no_skill":
-        return f"{asked} ships no skill."
+        return f"{asked} ships no guide."
     parts_out = []
     for entry in answers:
         carriers = entry["carriers"]
-        head = f"Skill for {library_of(carriers[0])}, from {', '.join(carriers)}."
+        head = f"Guide for {library_of(carriers[0])}, from {', '.join(carriers)}."
         if republished(carriers[0]):
             head += "\n" + REPUBLISHED_BANNER.format(carrier=carriers[0])
         head += "\n" + AUTHORS_TEXT
         if entry["problems"]:
-            head += "\nAgainst the Agent Skills specification, this skill " + "; ".join(entry["problems"]) + "."
+            head += "\nAgainst the Agent Skills specification, this guide " + "; ".join(entry["problems"]) + "."
         tail = ""
         if entry["files"]:
             # Linked from the skill by relative path, which an agent reading through this tool cannot open.
-            tail = ("\n\n---\nThis skill's other files. Its links to them are relative paths; read one with "
-                    "get_dependency_skill_file:\n" + "\n".join(f"- {p}" for p in entry["files"]))
+            tail = ("\n\n---\nThis guide's other files. Its links to them are relative paths; read one with "
+                    "read_guide and its `file`:\n" + "\n".join(f"- {p}" for p in entry["files"]))
         parts_out.append(f"{head}\n\n{entry['body']}{tail}")
     return "\n\n---\n\n".join(parts_out)
 
@@ -126,12 +126,12 @@ def get_file(store, project, asked, path):
     if result == "out_of_scope":
         return not_a_dependency(asked)
     if result == "no_skill":
-        return f"{asked} ships no skill."
+        return f"{asked} ships no guide."
     wanted = path.strip().lstrip("./")
     for entry in answers:
         if wanted in entry["files"]:
             (content,) = store.execute("SELECT content FROM skill_file WHERE carrier = ? AND path = ?",
                                        (entry["carriers"][0], wanted)).fetchone()
-            return f"{wanted}, from the skill for {asked}. The library author's text, as written.\n\n{content}"
+            return f"{wanted}, from the guide for {asked}. The library author's text, as written.\n\n{content}"
     files = sorted({f for entry in answers for f in entry["files"]})
-    return f"{asked}'s skill has no file {wanted}." + (f" It has: {', '.join(files)}." if files else "")
+    return f"{asked}'s guide has no file {wanted}." + (f" It has: {', '.join(files)}." if files else "")

@@ -128,22 +128,22 @@ def find(store, project, need):
     lines = [f"Libraries on this machine matching \"{need}\". Each description is the library's own words "
              "about itself. One that is not a dependency of this project is the developer's decision to add: "
              "propose it, with your reason, rather than adding it yourself. Once it is added and the project "
-             "is built, get_dependency_skill serves its full skill.", ""]
+             "is built, read_guide serves its full guide.", ""]
     for library in found:
         entry = libraries[library]
         versions = ", ".join(sorted(entry["versions"]))
-        standing = "a dependency of this project — read its skill with get_dependency_skill" \
+        standing = "a dependency of this project — read its guide with read_guide" \
             if library in in_scope else "not a dependency of this project"
         if library.split(":")[0] in REPUBLISHER_GROUPS:
-            standing += "; republishes other projects' skills — not the library's own words"
+            standing += "; republishes other projects' guides — not the library's own words"
         if entry["shown"]:
-            lines.append(f"- {library} ({versions}) — ships a skill; {standing}")
+            lines.append(f"- {library} ({versions}) — ships a guide; {standing}")
             for key, value in json.loads(entry["shown"]).items():
                 value = ", ".join(f"{k}={v}" for k, v in value.items()) if isinstance(value, dict) \
                     else " ".join(str(value).split())
                 lines.append(f"  {key}: {value}")
         else:
-            lines.append(f"- {library} ({versions}) — no skill; {standing}")
+            lines.append(f"- {library} ({versions}) — no guide; {standing}")
             if entry["description"]:
                 lines.append(f"  its POM: {entry['description']}")
     return "\n".join(lines)

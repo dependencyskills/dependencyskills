@@ -5,7 +5,7 @@ import re
 from .names import MAX_NAME, NAME_RULE
 
 KNOWN_FIELDS = {"name", "description", "license", "compatibility", "metadata", "allowed-tools"}
-# What find_library may show of a skill the project did not choose: everything but a grant of tools.
+# What search_libraries may show of a skill the project did not choose: everything but a grant of tools.
 SHOWN_FIELDS = ("name", "description", "license", "compatibility", "metadata")
 MAX_DESCRIPTION = 1024
 MAX_COMPATIBILITY = 500

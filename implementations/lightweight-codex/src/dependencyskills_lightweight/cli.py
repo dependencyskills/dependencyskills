@@ -7,6 +7,10 @@ from . import __version__
 
 USAGE = """usage: dependencyskills <command>
 
+  install consumer|library [--harness claude,codex,gemini,antigravity] [--hook] [--source SPEC] [--apply]
+                      put this project's half in place: a skill, and for a consumer the MCP
+                      server; prints the plan, and changes nothing without --apply
+  uninstall [--apply] reverse what install recorded
   mcp                 serve the lookup over MCP on stdio; the agent's harness starts this
   skill <group:artifact>
                       print a dependency's skill, as the agent would read it
@@ -25,6 +29,22 @@ def main(argv=None):
     if command == "mcp":
         from .mcp import serve
         serve()
+        return 0
+    if command == "install" and rest[:1] in (["consumer"], ["library"]):
+        from . import install
+        options = rest[1:]
+        harnesses = _option(options, "--harness", "claude").split(",")
+        unknown = [h for h in harnesses if h not in install.HARNESSES]
+        if unknown:
+            print(f"unknown harness: {', '.join(unknown)}; choose from {', '.join(install.HARNESSES)}", file=sys.stderr)
+            return 2
+        proposal = install.plan(rest[0], os.getcwd(), harnesses, "--hook" in options,
+                                _option(options, "--source", install.DEFAULT_SOURCE))
+        print(install.render(proposal, install.apply(proposal) if "--apply" in options else None))
+        return 0
+    if command == "uninstall":
+        from . import install
+        print(install.uninstall(os.getcwd(), "--apply" in rest))
         return 0
     if command == "version":
         print(__version__)
@@ -60,3 +80,9 @@ def main(argv=None):
         print(USAGE, end="", file=sys.stderr)
         return 2
     return 0
+
+
+def _option(options, name, default):
+    if name in options and options.index(name) + 1 < len(options):
+        return options[options.index(name) + 1]
+    return default

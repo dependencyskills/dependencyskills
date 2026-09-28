@@ -44,7 +44,7 @@ class LookupTest(Machine):
         self.build([])
         project = self.lookup()
 
-        self.assertIn("None of this project's dependencies ships a skill", list_skills(self.store, project))
+        self.assertIn("None of this project's libraries ships a guide", list_skills(self.store, project))
         self.assertIn("is not a dependency", get_skill(self.store, project, "com.acme:acme-text"))
 
     def test_a_directory_no_build_reported_is_told_so(self):
@@ -56,7 +56,7 @@ class LookupTest(Machine):
         self.build([TEXT])
         project = self.lookup()
 
-        self.assertIn("ships no skill", get_skill(self.store, project, "com.acme:acme-text"))
+        self.assertIn("ships no guide", get_skill(self.store, project, "com.acme:acme-text"))
         log = [json.loads(line) for line in (self.temp / "log.jsonl").read_text().splitlines()]
         rejected = [r for e in log if e["event"] == "index" for r in e["rejected"]]
         self.assertIn(f"is filed as {other}", rejected[0]["reason"])
@@ -64,7 +64,7 @@ class LookupTest(Machine):
     def test_an_invalid_skill_is_not_served_and_scripts_never_are(self):
         self.publish(TEXT, {f"{NAME}/SKILL.md": skill_text(NAME, extra="author: someone\n")})
         self.build([TEXT])
-        self.assertIn("ships no skill", get_skill(self.store, self.lookup(), "com.acme:acme-text"))
+        self.assertIn("ships no guide", get_skill(self.store, self.lookup(), "com.acme:acme-text"))
 
         # A new version: a release is read once, and not again if republished unchanged in name.
         fixed = "com.acme:acme-text:1.1"

@@ -14,3 +14,6 @@ it does not control, the standing tracking burden is carried here.
 - [agent-file-conventions.md](Reference-Agent-File-Conventions) — every file name and path
   an agent already looks for: instruction files, skill layouts, the distribution
   proposals, and the per-package documentation slot each language has.
+- [antigravity-customization-system.md](Reference-Antigravity-Customization-System) — the
+  discovery hierarchy, configuration schemas, lifecycle hooks, and context governance
+  of Google Antigravity across CLI, IDE, and desktop environments.

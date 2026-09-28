@@ -14,6 +14,7 @@ documents/DOC-0001-canon.md	Documents-DOC-0001-Canon
 documents/README.md	Documents
 reference/README.md	Reference
 reference/agent-file-conventions.md	Reference-Agent-File-Conventions
+reference/antigravity-customization-system.md	Reference-Antigravity-Customization-System
 reference/doc-comment-systems.md	Reference-Doc-Comment-Systems
 reference/glossary.md	Reference-Glossary
 reference/landscape.md	Reference-Landscape
@@ -92,6 +93,8 @@ research/RAD-0074-a-skill-built-from-the-documentation.md	Research-RAD-0074-A-Sk
 research/RAD-0075-naming-the-skill-file.md	Research-RAD-0075-Naming-The-Skill-File
 research/RAD-0076-skills-republished-by-a-third-party.md	Research-RAD-0076-Skills-Republished-By-A-Third-Party
 research/RAD-0077-the-npm-in-package-skill.md	Research-RAD-0077-The-Npm-In-Package-Skill
+research/RAD-0078-recommending-a-dependency-the-project-does-not-have.md	Research-RAD-0078-Recommending-A-Dependency-The-Project-Does-Not-Have
+research/RAD-0079-what-each-ecosystem-needs-from-the-lightweight-codex.md	Research-RAD-0079-What-Each-Ecosystem-Needs-From-The-Lightweight-Codex
 research/README.md	Research
 research/postmortems/RAD-0046-v1-bundled-flat-files.md	Research-Postmortems-RAD-0046-V1-Bundled-Flat-Files
 research/postmortems/README.md	Research-Postmortems

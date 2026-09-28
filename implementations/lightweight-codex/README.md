@@ -14,10 +14,22 @@ It is the lightweight system, separate from the full codex in [`../codex`](../co
 
 | Tool | Answers with |
 |---|---|
-| `list_dependency_skills` | the project's dependencies that ship a skill, each with its description |
-| `get_dependency_skill` | one dependency's skill, as its authors wrote it |
-| `get_dependency_skill_file` | one of that skill's files under `references/` or `assets/` |
-| `find_library` | libraries already on this machine that match a need, with what each says it is for — never a skill's body, and marked as a dependency of the project or not |
+| `list_guides` | the project's libraries whose authors ship a guide, each with one line on what it is for |
+| `read_guide(library, file?)` | one library's guide, as its authors wrote it — or, with `file`, a file it links to under `references/` or `assets/` |
+| `search_libraries(need)` | the libraries that match a need, the project's own and others already on this machine, marked — never a guide's body for a library the project did not choose |
+
+The same vocabulary the `librarian` skill uses, and the one the full codex is to adopt, adding `read_symbol`. A guide is a library's Agent Skill, a `SKILL.md`; to the agent reading it through a tool it is documentation about someone else's library, and the name says so.
+
+## Installing it into a project
+
+```
+dependencyskills install consumer --harness claude,codex,gemini,antigravity    # a project that uses libraries
+dependencyskills install library --harness claude                  # a library that ships a skill
+```
+
+It prints what it would do and changes nothing until run again with `--apply`. A consumer gets the `librarian` skill in `.agents/skills/`, the standard place for a project's skills, copied rather than linked, and the MCP server registered with each chosen harness — Claude Code at its local scope, outside the project's git; Codex and Antigravity in their own user configuration, where it answers only in a project a build reported; Gemini in the project's settings. Antigravity, Codex and Gemini CLI read `.agents/skills/` themselves, as do most other agent tools; Claude Code reads only `.claude/skills/` ([the survey](../../docs/knowledge/reference/agent-tool-customization-survey.md)). `--hook` adds the Claude Code correction hook. A library gets the `to-library-skill` skill. Neither ever edits a build file: the Gradle plugin lines are printed as yours to add.
+
+It fetches nothing and reads nothing from the repository to decide what to do (#44): the skills are the ones this version carries, and the server it registers is this version, pinned — `--source` names another, such as a checkout while the package is unreleased. Every change is recorded with its digest in `.agents/dependencyskills-install.json`, and `dependencyskills uninstall --apply` reverses exactly those, leaving alone anything changed since.
 
 ## Running it
 
@@ -32,7 +44,7 @@ The same command offers `skill <group:artifact>` and `find <need>` for reading f
 ## What it never does
 
 - **Download anything** while an agent waits. The build fetches sources; this only reads caches.
-- **Serve a skill for a library the project did not choose.** `find_library` shows such a library's description of itself and nothing more; adding it is the developer's decision.
+- **Serve a skill for a library the project did not choose.** `search_libraries` shows such a library's description of itself and nothing more; adding it is the developer's decision.
 - **Serve `scripts/`**, or honour `allowed-tools`. A dependency's skill tells an agent how to use the library, never what to run.
 
 ## Tests

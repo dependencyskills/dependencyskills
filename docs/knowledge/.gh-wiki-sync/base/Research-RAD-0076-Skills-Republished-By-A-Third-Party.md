@@ -1,10 +1,12 @@
 # Skills Republished by a Third Party
 
-RAD-0076 · 2026-09-17
+RAD-0076 · 2026-09-17 · v2
 
 Keywords: SkillsJars; skills as jars on Maven Central; who authored this skill; repackaged skill collections; prompt injection through a dependency; allowed-tools as a permission grant; should we index skill jars; com.skillsjars; version drift in a republished skill; provenance of agent instructions.
 
 Measured against: the SkillsJars documentation and catalogue as read on 2026-08-16 and 2026-09-12 ([landscape](Reference-Landscape)), one published coordinate inspected on 2026-09-17, and this project's placement measurements in [RAD-0075](Research-RAD-0075-Naming-The-Skill-File).
+
+**v2 (2026-09-22) — a republisher's artifact is indexed as itself, not excluded.** v1 recommended refusing to harvest `com.skillsjars` outright. Withdrawn: refusing to index does not remove the text from the developer's disk, and it is not this tool's call which dependencies a developer may declare. What stays refused is the *attribution* — a skill is served as a library's own only when that library shipped it. See recommendation 1.
 
 ## Question
 
@@ -47,6 +49,21 @@ The JVM has one working in-artifact skill scheme: **SkillsJars** packages Agent 
 
 **Not claimed:** that any skill in the catalogue is malicious, that any account has been compromised, or that the operators intend anything but what their documentation says. The objections are properties of the scheme's shape, and per [ADR-0011](Decisions-ADR-0011-Publishing-Posture-For-Security-Findings) they are published as such.
 
+### What is worth taking
+
+Rejecting what the scheme distributes is not a reason to ignore how it is delivered. Two pieces of the delivery are independent of everything above, and both are better than anything this project currently has.
+
+**The setup guide is addressed to the agent, and served by content negotiation.** `curl -H "Accept: text/markdown" https://skillsjars.com/setup` returns a procedure — detect the build tool, add the plugin, choose skills, write the `AGENTS.md` entry that makes extraction happen before any work — from the same URL that serves a person the documentation page. The catalogue is served the same way, with `?q=` to search it. So nothing is copied and pasted, and nothing depends on the agent having been trained on the tool: the instructions arrive when they are wanted, in the form the reader takes. **The installer is a skill in everything but name**, and it is the one shape this project has no answer to — RAD-0073's pointer tells an agent what the resolved dependencies carry, but nothing tells an agent how to put the mechanism in place to begin with. *(read 2026-09-18)*
+
+**And it is [RAD-0071](Research-RAD-0071-The-Package-That-Did-Not-Exist-Yet)'s shape, which has to be said in the same breath as the praise.** A URL an agent fetches and follows is remote instruction text that nobody reviewed, acted on with write access to build files and instruction files. The convenience and the attack are one mechanism, and the fetch is the only review step there will ever be. Two exposures, and the second is the one that hides:
+
+- **The trusted source is itself the risk.** Whoever controls the URL controls what agents do inside other people's repositories, and can change it after adoption. Trust on first use, with no version, no pin and no signature.
+- **A trusted source can serve untrusted text.** The page need not be wholly authored by its operator — a catalogue entry, a package description, a rendered README, a comment field. An instruction planted in any of that arrives with the operator's authority, and the operator may never see it. **No compromise is required, only a page assembled from something its operator does not fully control.**
+
+This is not an argument against building one. It is the reason a copy of this pattern cannot simply be the convenient thing: what an agent acts on should be version-identified and digest-checked, bounded to declared effects, and forbidden to send the agent on to a further URL. Recorded as issue #44.
+
+**`allowed-tools` is mirrored into POM properties** as `skillsjars.skill.<name>.allowed-tools`, and the packaging plugin fails the build when the property and the `SKILL.md` disagree. A consumer can therefore see what permissions a skill will ask for without extracting the jar, which answers part of objection 3 and should be said plainly. It does not remove the objection — the property is published by the same party that publishes the skill, so it makes the grant *legible* rather than *accountable* — but it is the only place in the field where a skill's permission request is exposed to ordinary dependency tooling, and that idea is worth having.
+
 ## Findings
 
 **Observed, and checkable.**
@@ -63,14 +80,27 @@ The JVM has one working in-artifact skill scheme: **SkillsJars** packages Agent 
 - The scheme is a prompt-injection distribution channel: one publisher reaches 140 projects, the text arrives with a dependency's authority, and `allowed-tools` lets an injected skill request its own permissions. Nothing signs a skill against the project it names.
 - Extracting a catalogue's skills onto the skill path costs attention in proportion to the catalogue rather than the task.
 - The scheme reproduces both failures of this project's v1: a binary-only path, and an extraction step.
+- Its onboarding is separable from what it distributes and is better than anything this project has, and it is simultaneously the RAD-0071 carrier: a fetched instruction document, acted on with write access, where the fetch is the only review. A trusted operator does not remove the exposure, because a page assembled from a description, a README or a comment field can carry text its operator never saw.
 
 ## Recommendation
 
 **Rejected — do not adopt, build on, or index it.**
 
-1. **Exclude `com.skillsjars` from harvesting**, as an explicit rule with the reason in the code. Such a coordinate carries no API of its own, and its content is third-party instruction text.
+1. **Index a republisher's artifact as itself, never as the library it describes, and mark it wherever it appears.** An earlier version of this record recommended excluding `com.skillsjars` from harvesting outright. That is withdrawn: refusing to index does not remove the text — the jar is on the developer's disk either way, and an agent that goes looking finds it unmarked and unlogged — and refusing to index something a developer deliberately declared is a decision that is not this tool's to take.
+
+   What is not the developer's call is what the codex *claims*. Serving a third party's text in answer to "what is this library's skill" would be the codex asserting a provenance that is false, and a warning does not repair a false attribution; it only annotates it. So the artifact is indexed under its own coordinates, is never reachable by asking for the library it talks about, is reported as a warning when indexed the way any other problem is, and carries a marker in the pointer and a banner in the served text saying whose words these are and that they are not tied to the described library's version.
+
+   **The banner's effect on an agent is not measured**, and should not be assumed: [RAD-0006](Research-RAD-0006-Development-Time-Prompt-Injection) found data-framing necessary but not sufficient, beaten by placement and by meta-arguments. It is a marker for the developer that the agent also sees, not a control. An uptake arm carrying a third-party banner would settle what it is worth.
 2. **Treat authorship as a requirement.** A skill this project serves comes out of the artifact whose API it describes. That is the line between this scheme and [RAD-0073](Research-RAD-0073-A-Skill-Written-As-Source)'s.
+
+   **How the lightweight codex enforces it: a jar can only ship a skill for itself.** A skill is filed under the coordinate of the library it describes, `skills/<name>/SKILL.md` with `<name>` the coordinate made a legal skill name (`com.example.acme:acme-text` → `com-example-acme-acme-text`), and the indexer accepts it only when that name encodes the coordinate of the jar it came out of — allowing for a multiplatform library's platform variants, so `acme-text-jvm` may carry `acme-text`'s skill. A jar that files a skill under any other library's name is republishing, and its skill is refused and logged.
+
+   The reason is the whole of this record in one check. The coordinate a developer declares is the only trust decision they actually made; they chose that library, its authors, its releases. A skill arriving under a library's name from some other artifact carries that library's authority without its authors' consent, and has none of its version tie (objections 1 and 2 above). Requiring the path to match the carrier makes the question "who wrote this?" answerable from the jar alone, with no registry, signature or catalogue behind it.
+
+   **What it excludes, and what it does not.** It refuses anything filed under a real library's coordinates by someone else, which is the republishing pattern this record rejects, and that refusal is the load-bearing one: it is what stops an agent asking for a library's skill and being handed somebody else's words. SkillsJars as published today is not read at all, because its `META-INF/skills/` path is not the path the indexer looks for. A republisher that filed a skill under **its own** coordinates passes the check — correctly, since the path then matches the jar and no attribution is being borrowed — and is indexed as itself under recommendation 1, marked, and reachable only by asking for that artifact by name.
 3. **Keep the need in view.** The scheme exists because JVM libraries do not ship skills. That gap is real; who writes the file and where it lives is the disagreement.
+4. **Take the onboarding shape, and give this project's own components one — but not as a live URL.** An agent-addressed setup procedure is independent of who wrote the skills and where they sit, and it is the step this project currently leaves to a human reading a README. What it must not inherit is the delivery: a fetched document is the RAD-0071 carrier, so whatever an agent acts on should be pinned, digest-checked and bounded to declared effects. Issue #44 holds the constraints.
+5. **Expose the permission request to ordinary tooling.** Mirroring `allowed-tools` where a consumer can read it without opening the artifact is the right instinct, and it is worth doing for skills this project serves — with the provenance problem named rather than left implicit, since a grant published by the skill's own author is legible but not independently checked.
 
 **What would change the answer.** Libraries publishing skills under **their own** coordinates, versions and releases through this tooling. Only the `META-INF` placement would then remain against it, and that is a placement question rather than a trust one.
 
@@ -81,4 +111,5 @@ The JVM has one working in-artifact skill scheme: **SkillsJars** packages Agent 
 - [RAD-0077](Research-RAD-0077-The-Npm-In-Package-Skill) — the same gap solved by the library's own authors.
 - [RAD-0072](Research-RAD-0072-The-One-Thing-We-Are-Not-Doing) — the distribution field, and `allowed-tools` as a supply-chain surface.
 - [RAD-0065](Research-RAD-0065-What-V1-Skill-Authors-Wrote-Unprompted), RAD-0046 — why this project's own `META-INF` route failed.
+- [RAD-0071](Research-RAD-0071-The-Package-That-Did-Not-Exist-Yet) — a fetched guidance file acted on without review, and why the controls built against injection do not cover it.
 - [ADR-0011](Decisions-ADR-0011-Publishing-Posture-For-Security-Findings) — observations rather than verdicts.
