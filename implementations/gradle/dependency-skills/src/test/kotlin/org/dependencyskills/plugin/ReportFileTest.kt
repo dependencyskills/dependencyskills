@@ -1,5 +1,6 @@
 package org.dependencyskills.plugin
 
+import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -159,5 +160,21 @@ class ReportFileTest {
 
         val text = project.path(sbom).toFile().readText()
         assertTrue("\"components\": [\n  ]" in text, text)
+    }
+
+    @Test
+    fun `without a service URL the full codex is not told, and the build says nothing about it`() {
+        val project = TestProject.create().apply {
+            publish("com.example", "alpha", "1.0")
+            fullCodex = false
+            build("""dependencies { api("com.example:alpha:1.0") }""")
+        }
+        val output = project.run("classes").output
+
+        assertTrue(Files.isRegularFile(project.path("build/dependencyskills/bom.cdx.json")))
+        assertEquals(emptyList(), project.registrations())
+        assertEquals(emptyList(), project.warmings())
+        assertFalse("codex service" in output, output)
+        assertFalse("coordinates recorded" in output, output)
     }
 }

@@ -205,6 +205,12 @@ $plugins
     /** Null once [stopService] has been called, which is a test making a point about absence. */
     private var serviceUrl: String? = null
 
+    /**
+     * Whether the build is given a service URL at all. Off, the project uses only the lightweight
+     * codex, as most do: the plugin has no default and tells the full codex nothing.
+     */
+    var fullCodex = true
+
     fun run(vararg arguments: String): BuildResult = runner(*arguments).build()
 
     private fun runner(vararg arguments: String): GradleRunner = GradleRunner.create()
@@ -221,7 +227,7 @@ $plugins
             "-PdependencySkills.codexDir=${storeDirectory.toAbsolutePath()}",
             // Pointed at the stub when one is running, and at a port nothing answers on when not.
             // The second case is deliberate and is what most of these tests are about.
-            "-PdependencySkills.serviceUrl=${serviceUrl ?: UNREACHABLE}",
+            *(if (fullCodex) arrayOf("-PdependencySkills.serviceUrl=${serviceUrl ?: UNREACHABLE}") else emptyArray()),
         )
         .forwardOutput()
 

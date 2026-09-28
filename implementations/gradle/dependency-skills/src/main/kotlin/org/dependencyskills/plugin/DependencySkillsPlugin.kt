@@ -50,10 +50,11 @@ class DependencySkillsPlugin : Plugin<Project> {
         }
 
         val recorder = gradle.sharedServices.registerIfAbsent(SERVICE, CodexRecorder::class.java) {
+            // No default: the full codex is told only where a developer says where it listens. Most
+            // projects run only the lightweight codex, which reads the SBOM, and a line about a service
+            // they never installed would be noise on every build (#45).
             parameters.serviceUrl.set(
-                extension.serviceUrl
-                    .orElse(providers.gradleProperty(SERVICE_URL_PROPERTY))
-                    .orElse(DEFAULT_SERVICE_URL),
+                extension.serviceUrl.orElse(providers.gradleProperty(SERVICE_URL_PROPERTY)),
             )
             parameters.projectPath.set(layout.projectDirectory.asFile.absolutePath)
             // The path, not the project's name. A name groups several checkouts into one scope, so
@@ -149,9 +150,6 @@ class DependencySkillsPlugin : Plugin<Project> {
 
         /** The CycloneDX SBOM the lightweight codex reads, relative to the root build directory. */
         const val REPORT_FILE = "dependencyskills/bom.cdx.json"
-
-        /** Loopback, because the service holds one machine's dependency graph and stays on it. */
-        const val DEFAULT_SERVICE_URL = "http://127.0.0.1:8310"
     }
 }
 

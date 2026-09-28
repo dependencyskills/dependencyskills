@@ -36,7 +36,7 @@ import java.time.Duration
 abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable {
 
     interface Params : BuildServiceParameters {
-        /** Where the codex service is listening. */
+        /** Where the full codex service is listening; absent when the project uses only the lightweight codex. */
         val serviceUrl: Property<String>
 
         /** This project's directory — the identity the service files its scope under. */
@@ -342,6 +342,16 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
      * the service, which is the only thing that knows.
      */
     private fun report() {
+        // Only the lightweight codex, which needs nothing but the file: nothing to report at lifecycle
+        // level, and nothing about a full codex this project never asked for (#45).
+        if (parameters.serviceUrl.orNull.isNullOrBlank()) {
+            if (written != null) {
+                logger.info("dependencyskills: {} {} written to {}", resolved.size, plural(resolved.size, "coordinate", "coordinates"), written)
+            } else if (resolutions == 0) {
+                logger.info("dependencyskills: no compile classpath resolved, so nothing was recorded")
+            }
+            return
+        }
         // Not silence. Saying "recorded" would be a lie and saying nothing leaves a developer
         // wondering why their agent knows nothing, so it says what it saw and what became of it.
         unreachable?.let {

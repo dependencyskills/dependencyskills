@@ -12,7 +12,7 @@ import javax.inject.Inject
  * ```kotlin
  * dependencySkills {
  *     projectName = "acme-platform"          // optional; several checkouts can share one
- *     serviceUrl = "http://127.0.0.1:8310"   // where the codex service is
+ *     serviceUrl = "http://127.0.0.1:8310"   // the full codex service, if used; unset, it is not told
  *     harvester {
  *         transitive = true
  *         ignore("com.example:noisy-library")
@@ -60,7 +60,15 @@ abstract class DependencySkillsExtension @Inject constructor(objects: ObjectFact
     abstract val projectName: Property<String>
 
     /**
-     * Where the codex service is listening.
+     * Where the full codex service is listening — and whether to report to it at all.
+     *
+     * **Unset by default, which means the full codex is not told**: no warm-up signal, no report and no
+     * line about it in the build output. The lightweight codex needs none of that; it reads the SBOM the
+     * build writes either way. Set it to use the full codex, which listens on `http://127.0.0.1:8310`:
+     *
+     * ```
+     * ./gradlew build -PdependencySkills.serviceUrl=http://127.0.0.1:8310
+     * ```
      *
      * A URL rather than a path to the store, deliberately: the build says what it resolved and the
      * service decides what to do about it. Nothing here knows where the store lives, which is what
