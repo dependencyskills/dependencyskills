@@ -7,8 +7,10 @@ from pathlib import Path
 from . import index as indexing
 from .names import library, version
 
-# Where the Gradle plugin writes the SBOM, relative to the root project (DependencySkillsPlugin.REPORT_FILE).
-SBOM = Path("build") / "dependencyskills" / "bom.cdx.json"
+# Where each build plugin writes the SBOM, relative to the root project: Gradle's build directory
+# (DependencySkillsPlugin.REPORT_FILE) and Maven's (ConsumerMojo). The same file either way.
+SBOMS = (Path("build") / "dependencyskills" / "bom.cdx.json", Path("target") / "dependencyskills" / "bom.cdx.json")
+SBOM = SBOMS[0]
 _PURL = re.compile(r"^pkg:maven/([^/]+)/([^@/]+)@([^?#]+)")
 DECLARED = "dependencyskills:declared"
 
@@ -17,8 +19,9 @@ def find_sbom(start):
     """(project directory, SBOM) for the nearest build at or above `start`, or None."""
     here = Path(start).resolve()
     for directory in [here, *here.parents]:
-        if (directory / SBOM).is_file():
-            return directory, directory / SBOM
+        for sbom in SBOMS:
+            if (directory / sbom).is_file():
+                return directory, directory / sbom
     return None
 
 

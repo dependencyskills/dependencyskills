@@ -5,12 +5,13 @@ import time
 
 from .index import REPUBLISHED_BANNER, REPUBLISHER_GROUPS, republished
 from .names import library as library_of, parts, version as version_of
-from .project import SBOM, declared_libraries, scope_of
+from .project import SBOMS, declared_libraries, scope_of
 
 NOT_REGISTERED = (
-    "This project's dependencies have not been reported yet. Build it once with the "
-    "org.dependencyskills.plugin Gradle plugin applied; the build writes "
-    f"{SBOM.as_posix()}, and this reads it.")
+    "This project's dependencies have not been reported yet. Build it once with the dependency-skills "
+    "plugin applied — org.dependencyskills.plugin in Gradle, whose build writes "
+    f"{SBOMS[0].as_posix()}, or the dependency-skills-maven-plugin's consumer goal in Maven, which writes "
+    f"{SBOMS[1].as_posix()} — and this reads it.")
 
 REBUILD_HINT = (
     "This is what the build last resolved, with the libraries the version catalog declares. One added "
