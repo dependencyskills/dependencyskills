@@ -4,7 +4,7 @@ version = "0.0.1"
 description = "Serves the skills a project's dependencies ship to that project's coding agent, over MCP."
 readme = "README.md"
 license = "Apache-2.0"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = []
 
 [project.scripts]

@@ -14,7 +14,8 @@ import time
 import zipfile
 from pathlib import Path
 
-from . import caches, npm
+from . import caches, ecosystems
+from .packages import skills_in as package_skills
 from .index import MAX_FILE, REPUBLISHER_GROUPS, SERVED_DIRS, SKILL_ENTRY, stamp_of
 from .names import ecosystem, library as library_of, own_name, skill_name, version as version_of
 from .project import scope_of
@@ -54,18 +55,18 @@ def describe(coordinate, jar, version_dir):
     return caches.pom_description(version_dir, artifact, version_of(coordinate)), None
 
 
-def describe_package(coordinate, directory):
+def describe_package(package):
     """(description, frontmatter JSON or None) for an installed package: its own guide's shown fields, else
-    the first valid guide it ships under another name, else its package.json description. Never a body."""
-    own = own_name(library_of(coordinate))
-    skills = npm.skills_in(directory, SERVED_DIRS, MAX_FILE)
+    the first valid guide it ships under another name, else its own metadata's description. Never a body."""
+    own = own_name(library_of(package.coordinate))
+    skills = package_skills(package.root, SERVED_DIRS, MAX_FILE)
     for name in [own] + sorted(n for n in skills if n != own):
         text = skills.get(name, {}).get("text")
         if text:
             fields, _ = frontmatter(text)
             if fields and not check(fields, name)[0]:
                 return str(fields["description"]).strip(), json.dumps({k: fields[k] for k in SHOWN_FIELDS if k in fields})
-    return npm.description(directory), None
+    return package.description, None
 
 
 def scan(store):
@@ -117,10 +118,12 @@ def find(store, project, need):
     words = {stem(w) for w in re.findall(r"[a-z0-9]+", need.lower()) if len(w) > 2 and w not in STOP}
     libraries = {}
     rows = list(store.execute("SELECT carrier, library, description, frontmatter FROM cached ORDER BY carrier"))
-    # An npm project's node_modules is what is on this machine for it: every installed package, declared or not.
-    if project and npm.is_project(Path(project)):
-        for coordinate, directory in sorted(npm.everything_installed(Path(project)).items()):
-            rows.append((coordinate, library_of(coordinate), *describe_package(coordinate, directory)))
+    # A source-shipping project's installed packages are what is on this machine for it, declared or not:
+    # node_modules, the virtual environment, the modules go.mod records, the crates Cargo.lock resolved.
+    module = ecosystems.project_kind(Path(project)) if project else None
+    if module:
+        for package in sorted(module.everything(Path(project))):
+            rows.append((package.coordinate, library_of(package.coordinate), *describe_package(package)))
     for carrier, library, description, shown in rows:
         entry = libraries.setdefault(library, {"versions": set(), "description": "", "shown": None})
         entry["versions"].add(version_of(carrier))

@@ -6,7 +6,8 @@ import time
 import zipfile
 from pathlib import Path
 
-from . import caches, npm
+from . import caches
+from .packages import package_stamp, skills_in as package_skills
 from .names import ecosystem, library, own_name, version
 from .skillfile import check, frontmatter
 
@@ -79,13 +80,13 @@ def index_jar(store, coordinate, jar, rejected, warnings):
     return _accept(store, coordinate, found, stamp_of(jar), rejected, warnings)
 
 
-def index_directory(store, coordinate, directory, rejected, warnings):
-    """Index one installed package's directory under `coordinate`, replacing whatever was read from it before."""
+def index_directory(store, coordinate, root, rejected, warnings):
+    """Index one installed package under `coordinate`, from `root/skills`, replacing whatever was read before."""
     try:
-        found = npm.skills_in(directory, SERVED_DIRS, MAX_FILE)
+        found = package_skills(root, SERVED_DIRS, MAX_FILE)
     except OSError:
         return None
-    return _accept(store, coordinate, found, npm.package_stamp(directory), rejected, warnings)
+    return _accept(store, coordinate, found, package_stamp(root), rejected, warnings)
 
 
 def second_order(coordinate, path):
@@ -140,7 +141,7 @@ def _accept(store, coordinate, found, stamp, rejected, warnings):
 
 
 def index_packages(store, packages):
-    """Index installed packages, {coordinate: directory}, skipping any whose directory is as it was read.
+    """Index installed packages, each a `packages.Package`, skipping any whose directory is as it was read.
 
     A registry version never changes, but a local or linked package does, in place; comparing one stamp
     per package is what lets a rewritten one be read again.
@@ -148,10 +149,10 @@ def index_packages(store, packages):
     started = time.monotonic()
     known = dict(store.execute("SELECT carrier, stamp FROM indexed WHERE outcome = 'indexed'"))
     rejected, warnings, read, accepted = [], [], 0, 0
-    for coordinate, directory in sorted(packages.items()):
-        if known.get(coordinate) == npm.package_stamp(directory):
+    for package in sorted(packages):
+        if known.get(package.coordinate) == package_stamp(package.root):
             continue
-        count = index_directory(store, coordinate, directory, rejected, warnings)
+        count = index_directory(store, package.coordinate, package.root, rejected, warnings)
         if count is not None:
             read += 1
             accepted += count

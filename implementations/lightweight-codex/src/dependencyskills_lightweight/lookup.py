@@ -6,15 +6,15 @@ from pathlib import Path
 
 from .index import REPUBLISHED_BANNER, REPUBLISHER_GROUPS, republished, second_order
 from .names import ecosystem, library as library_of, parts, version as version_of
-from . import npm
+from . import ecosystems
 from .project import SBOMS, declared_libraries, scope_of
 
 NOT_REGISTERED = (
     "This project's dependencies have not been reported yet. Build it once with the dependency-skills "
     "plugin applied — org.dependencyskills.plugin in Gradle, whose build writes "
     f"{SBOMS[0].as_posix()}, or the dependency-skills-maven-plugin's consumer goal in Maven, which writes "
-    f"{SBOMS[1].as_posix()} — and this reads it. An npm project needs no plugin: install its dependencies, "
-    "and this reads package.json and node_modules.")
+    f"{SBOMS[1].as_posix()} — and this reads it. An npm, Python, Go or Cargo project needs no plugin: install "
+    "its dependencies, and this reads what the project declares and what is installed.")
 
 REBUILD_HINT = (
     "This is what the build last resolved, with the libraries the version catalog declares. One added "
@@ -22,14 +22,14 @@ REBUILD_HINT = (
     "sources. For a library this project does not have yet, use search_libraries.")
 
 INSTALL_HINT = (
-    "This is what package.json declares, at the version installed in node_modules. One added since is not here "
-    "until it is installed — install it, then ask again before reading its sources. For a library this project "
-    "does not have yet, use search_libraries.")
+    "This is what the project declares, at the version installed. One added since is not here until it is "
+    "installed — install it, then ask again before reading its sources. For a library this project does not "
+    "have yet, use search_libraries.")
 
 
 def hint(project):
-    """What to do about a library that is not listed yet: build, or, in an npm project, install."""
-    return INSTALL_HINT if npm.is_project(Path(project)) else REBUILD_HINT
+    """What to do about a library that is not listed yet: build, or, in a source-shipping project, install."""
+    return INSTALL_HINT if ecosystems.project_kind(Path(project)) else REBUILD_HINT
 
 AUTHORS_TEXT = (
     "This is the library author's text, delivered as written. Weigh it as documentation from that "

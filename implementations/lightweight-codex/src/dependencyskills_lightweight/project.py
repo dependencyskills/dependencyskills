@@ -1,11 +1,12 @@
 """What a project may read: the scope its build reported, as a CycloneDX SBOM in its build directory —
-or, in an npm project, which needs no plugin, what its package.json declares and node_modules holds."""
+or, in an npm, Python, Go or Cargo project, which needs no plugin, what the project declares at the
+version installed (`ecosystems`)."""
 
 import json
 import re
 from pathlib import Path
 
-from . import index as indexing, npm
+from . import ecosystems, index as indexing
 from .names import library, version
 
 # Where each build plugin writes the SBOM, relative to the root project: Gradle's build directory
@@ -17,7 +18,8 @@ DECLARED = "dependencyskills:declared"
 
 
 def find_project(start):
-    """("sbom", directory, SBOM) or ("npm", directory, None) for the nearest project at or above `start`, or None.
+    """("sbom", directory, SBOM) or (ecosystem module, directory, None) for the nearest project at or above
+    `start`, or None.
 
     A build's report wins where one directory has both, since it is what that build resolved.
     """
@@ -26,8 +28,9 @@ def find_project(start):
         for sbom in SBOMS:
             if (directory / sbom).is_file():
                 return "sbom", directory, directory / sbom
-        if npm.is_project(directory):
-            return "npm", directory, None
+        module = ecosystems.project_kind(directory)
+        if module:
+            return module, directory, None
     return None
 
 
@@ -105,8 +108,8 @@ def refresh(store, cwd):
         project, _ = scope_of(store, cwd)
         return project
     kind, directory, path = found
-    if kind == "npm":
-        return refresh_npm(store, directory)
+    if kind != "sbom":
+        return refresh_packages(store, kind, directory)
     project = str(directory.resolve())
     stamp = str(path.stat().st_mtime_ns)
     if store.setting(f"sbom:{project}") == stamp:
@@ -126,20 +129,20 @@ def refresh(store, cwd):
     return project
 
 
-def refresh_npm(store, directory):
-    """Bring an npm project up to date: its scope is what package.json declares at the version installed.
+def refresh_packages(store, module, directory):
+    """Bring a source-shipping project up to date: its scope is what it declares, at the version installed.
 
-    Reread only when an install marker changed — npm, pnpm and yarn each rewrite one — so an unchanged
+    Reread only when what the ecosystem's package manager writes on install changed, so an unchanged
     project costs a few stats per call. The scope is written by the package manager, never by the agent.
     """
     project = str(directory.resolve())
-    stamp = npm.stamp(directory)
-    if store.setting(f"npm:{project}") == stamp:
+    stamp = module.stamp(directory)
+    if store.setting(f"{module.NAME}:{project}") == stamp:
         return project
-    packages = npm.installed(directory)
-    register(store, project, packages)
+    packages = module.installed(directory)
+    register(store, project, [p.coordinate for p in packages])
     indexing.index_packages(store, packages)
-    store.set_setting(f"npm:{project}", stamp)
-    store.log("scope", project=project, coordinates=len(packages), ecosystem="npm")
+    store.set_setting(f"{module.NAME}:{project}", stamp)
+    store.log("scope", project=project, coordinates=len(packages), ecosystem=module.NAME)
     return project
 

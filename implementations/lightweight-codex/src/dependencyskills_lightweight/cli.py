@@ -11,7 +11,7 @@ USAGE = """usage: dependencyskills <command>
                       put this project's half in place: a skill, and for a consumer the MCP
                       server; prints the plan, and changes nothing without --apply
   uninstall [--apply] reverse what install recorded
-  name                for a library with no build plugin (npm): print its skill's name and path
+  name                for a library with no build plugin (npm, Python, Go, Cargo): print its skill's name and path
   check               for the same: say what would stop its skill shipping or being read
   mcp                 serve the lookup over MCP on stdio; the agent's harness starts this
   skill <group:artifact>
@@ -61,7 +61,8 @@ def main(argv=None):
         found = authoring.describe(os.getcwd())
         if command == "name":
             if found is None:
-                print("no package.json here: run this from the root of the library", file=sys.stderr)
+                print("no package.json, pyproject.toml, go.mod or Cargo.toml here: run this from the root of the library",
+                      file=sys.stderr)
                 return 1
             print(f"name: {found['name']}")
             print(f"path: {found['path']}")

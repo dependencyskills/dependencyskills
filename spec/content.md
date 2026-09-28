@@ -54,6 +54,9 @@ The Agent Skills specification fixes the directory's name, not where it sits. Pl
 | ecosystem | where the skill is authored | where it ships |
 |---|---|---|
 | npm | `skills/<name>/SKILL.md` at the package root | the same path in the package, by a `files` entry — the existing practice, conformed to |
+| PyPI | `<import package>/skills/<name>/SKILL.md`, e.g. `src/acme_text/skills/acme-text/` | inside the import package in the wheel, which is what installs; setuptools needs a `package-data` entry, hatchling and uv_build need nothing (RAD-0075) |
+| Go | `skills/<name>/SKILL.md` at the module root | the module zip, and so the module cache |
+| Cargo | `skills/<name>/SKILL.md` at the crate root | the `.crate`, unless `include` or `exclude` leaves it out |
 | JVM (Maven, Gradle) | `src/main/skills/<name>/SKILL.md` | `skills/<name>/` in the **sources jar**, added by the build |
 | Kotlin Multiplatform | `src/commonMain/skills/<name>/SKILL.md` | `commonMain/skills/<name>/` in every target's sources jar |
 
