@@ -26,3 +26,13 @@ packages = ["src/dependencyskills_lightweight"]
 [tool.hatch.build.targets.sdist.force-include]
 "../agent-skills/librarian" = "skills/librarian"
 "../agent-skills/to-library-skill" = "skills/to-library-skill"
+
+# Run from a checkout (`uvx --from <path>`), uv rebuilds only when these change. By default that is
+# pyproject.toml alone, so an edited module or skill kept serving the build from before the edit.
+[tool.uv]
+cache-keys = [
+    { file = "pyproject.toml" },
+    { file = "src/**/*.py" },
+    { file = "../agent-skills/librarian/**" },
+    { file = "../agent-skills/to-library-skill/**" },
+]
