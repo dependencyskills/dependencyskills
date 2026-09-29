@@ -13,7 +13,9 @@ USAGE = """usage: dependencyskills <command>
   uninstall [--apply] reverse what install recorded
   name                for a library with no build plugin (npm, Python, Go, Cargo): print its skill's name and path
   check               for the same: say what would stop its skill shipping or being read
-  mcp                 serve the lookup over MCP on stdio; the agent's harness starts this
+  mcp [--project DIR] serve the lookup over MCP on stdio; the agent's harness starts this. It serves the
+                      project it is started in, or DIR for a harness whose configuration is not per
+                      project and does not start it there
   skill <group:artifact>
                       print a dependency's skill, as the agent would read it
   find <need...>      search the libraries on this machine for one that does what you need
@@ -29,6 +31,13 @@ def main(argv=None):
     arguments = list(sys.argv[1:] if argv is None else argv)
     command, rest = (arguments[0], arguments[1:]) if arguments else ("", [])
     if command == "mcp":
+        # An IDE-wide configuration (Android Studio's) starts every server in one directory, not the project's.
+        project = _option(rest, "--project", None)
+        if project:
+            if not os.path.isdir(project):
+                print(f"--project {project}: no such directory", file=sys.stderr)
+                return 2
+            os.chdir(project)
         from .mcp import serve
         serve()
         return 0
@@ -41,7 +50,7 @@ def main(argv=None):
             print(f"unknown harness: {', '.join(unknown)}; choose from {', '.join(install.HARNESSES)}", file=sys.stderr)
             return 2
         proposal = install.plan(rest[0], os.getcwd(), harnesses, "--hook" in options,
-                                _option(options, "--source", install.DEFAULT_SOURCE))
+                                _option(options, "--source", None))
         print(install.render(proposal, install.apply(proposal) if "--apply" in options else None))
         return 0
     if command == "uninstall":

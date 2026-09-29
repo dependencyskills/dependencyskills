@@ -1,5 +1,5 @@
 [project]
-name = "dependencyskills-lightweight-codex"
+name = "dependencyskills"
 version = "0.0.1"
 description = "Serves the skills a project's dependencies ship to that project's coding agent, over MCP."
 readme = "README.md"

@@ -21,6 +21,16 @@ It is the lightweight system, separate from the full codex in [`../codex`](../co
 
 The same vocabulary the `librarian` skill uses, and the one the full codex is to adopt, adding `read_symbol`. A guide is a library's Agent Skill, a `SKILL.md`; to the agent reading it through a tool it is documentation about someone else's library, and the name says so.
 
+## Installing it on a machine
+
+The package is `dependencyskills`, and so is the command it installs. Install it once per machine:
+
+```
+uv tool install dependencyskills            # or: pipx install dependencyskills
+```
+
+Until it is published, install it from a checkout — `uv tool install ./implementations/lightweight-codex` — which builds a copy and keeps no link back to the checkout. Every harness then runs that installed command; nothing it registers points into anybody's source tree.
+
 ## Installing it into a project
 
 ```
@@ -30,15 +40,17 @@ dependencyskills install author --harness claude                   # a library t
 
 It prints what it would do and changes nothing until run again with `--apply`. A consumer gets the `librarian` skill in `.agents/skills/`, the standard place for a project's skills, copied rather than linked, and the MCP server registered with each chosen harness — Claude Code at its local scope, outside the project's git; Codex and Antigravity in their own user configuration, where it answers only in a project a build reported; Gemini in the project's settings. Antigravity, Codex and Gemini CLI read `.agents/skills/` themselves, as do most other agent tools; Claude Code reads only `.claude/skills/` ([the survey](../../docs/knowledge/reference/agent-tool-customization-survey.md)). `--hook` adds the Claude Code correction hook. An author — a project that publishes a library — gets the `to-library-skill` skill. Neither ever edits a build file: the Gradle plugin lines are printed as yours to add, and in a Gradle build the plugin's `consumer { }` and `author { }` blocks write and update the skills themselves.
 
-It fetches nothing and reads nothing from the repository to decide what to do (#44): the skills are the ones this version carries, and the server it registers is this version, pinned — `--source` names another, such as a checkout while the package is unreleased. What it records is split by where it may travel. The skills it copied, with their digests, go in `dependencyskills-lock.json` at the project root, which is meant to be committed and so names only paths inside the project. What it registered on this machine — MCP servers, the hook, the source it ran from — goes in a record under `~/.dependencyskills/installs/`, because those name this machine's paths and a commit would publish them. `dependencyskills uninstall --apply` reverses both, leaving alone anything changed since. **Commit `dependencyskills-lock.json` if and only if you commit the skills it records**, as with any lock file. Committed together, a fresh clone knows its copies are unedited, and an update shows in review as the skill's diff beside the lock file's. Skills committed without it look edited to every fresh clone: the next update overwrites them with a warning, or under `UnlessEdited` keeps them and warns every build. Ignore the skills, and ignore it too. It holds only paths inside the project and digests, and changes only when a skill does.
+It fetches nothing and reads nothing from the repository to decide what to do (#44): the skills are the ones this version carries, and the server it registers is the installed `dependencyskills` command, by its full path — a harness started from a desktop does not have the shell's `PATH` — or, where it is not installed, `uvx --quiet dependencyskills@<this version>`. `--source` registers a checkout or another spec instead, for working on the package itself. What it records is split by where it may travel. The skills it copied, with their digests, go in `dependencyskills-lock.json` at the project root, which is meant to be committed and so names only paths inside the project. What it registered on this machine — MCP servers, the hook, the source it ran from — goes in a record under `~/.dependencyskills/installs/`, because those name this machine's paths and a commit would publish them. `dependencyskills uninstall --apply` reverses both, leaving alone anything changed since. **Commit `dependencyskills-lock.json` if and only if you commit the skills it records**, as with any lock file. Committed together, a fresh clone knows its copies are unedited, and an update shows in review as the skill's diff beside the lock file's. Skills committed without it look edited to every fresh clone: the next update overwrites them with a warning, or under `UnlessEdited` keeps them and warns every build. Ignore the skills, and ignore it too. It holds only paths inside the project and digests, and changes only when a skill does.
 
 ## Running it
 
-No dependencies beyond Python 3.10. Registered with the agent's harness as a stdio MCP server, run inside the project:
+No dependencies beyond Python 3.11. Registered with the agent's harness as a stdio MCP server, run inside the project:
 
 ```
-uvx --from <path or URL of this directory> dependencyskills mcp
+dependencyskills mcp
 ```
+
+A harness whose configuration is IDE-wide rather than per project, and which does not start the server in the project — Android Studio's — passes the project instead: `dependencyskills mcp --project <directory>`.
 
 The same command offers `skill <group:artifact>` and `find <need>` for reading from a terminal, `log on|off` and `stats` for a local analytics log that is off by default, and `hook` and `hook-settings` for the optional correction hook. Its store and log live in `~/.dependencyskills`, or `DEPENDENCYSKILLS_HOME`.
 

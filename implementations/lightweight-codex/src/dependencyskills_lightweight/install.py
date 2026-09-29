@@ -5,8 +5,9 @@ with write access to build and instruction files. So this is not that. It is fix
 package, and:
 
 - **It fetches nothing.** The skills it writes travel inside this package; the MCP server it
-  registers is this package, pinned to this version, which the package manager checks against the
-  published digests.
+  registers is this package — the `dependencyskills` command installed on this machine, or, where it
+  is not installed, the published package pinned to this version, which the package manager checks
+  against the published digests. Never a path into somebody's checkout, unless `--source` asks for one.
 - **Its effects are declared and bounded**: a skill copied into `.agents/skills/`, the standard place
   for a project's skills, one MCP server entry per chosen harness, and — only when asked — the
   correction hook. No links. It never edits a build file; the plugin lines are printed, for the developer
@@ -39,7 +40,7 @@ SERVER = "librarian"
 # The lock file the Gradle plugin keeps too, at the root, on the `*-lock.json` convention. Committed, so
 # portable: skill entries only, every path relative to the project.
 MANIFEST = Path("dependencyskills-lock.json")
-DEFAULT_SOURCE = f"dependencyskills-lightweight-codex=={__version__}"
+PACKAGE = "dependencyskills"
 HARNESSES = ("claude", "codex", "gemini", "antigravity")
 SKILL_FOR = {"consumer": "librarian", "author": "to-library-skill"}
 
@@ -55,9 +56,28 @@ def bundled_skill(name):
     raise FileNotFoundError(f"this build of dependencyskills carries no skill named {name}")
 
 
-def server_command(source):
-    """The MCP server as a harness runs it: this package, at the pinned version, through uvx."""
-    return ["uvx", "--from", source, "dependencyskills", "mcp"]
+def launcher(source=None):
+    """How a harness runs this package's command, before the subcommand.
+
+    `--source` names where to run it from, for working on the package itself: a checkout, or a version
+    spec. Otherwise the `dependencyskills` command installed on this machine (`uv tool install`,
+    `pipx install`), by its full path, since a harness started from a desktop does not have the shell's
+    PATH. Otherwise the published package at this version, through uvx. `--quiet` in both uvx forms: a
+    harness that merges a server's stderr into its stdout — Android Studio's does — would read uvx's
+    install progress as broken protocol.
+    """
+    if source:
+        return ["uvx", "--quiet", "--from", source, PACKAGE]
+    installed = shutil.which(PACKAGE)
+    # Not a copy uvx put on PATH for this one run, which lives in its cache and is gone tomorrow.
+    if installed and "/.cache/uv/" not in installed and "/uv/archive-" not in installed:
+        return [os.path.abspath(installed)]
+    return ["uvx", "--quiet", f"{PACKAGE}@{__version__}"]
+
+
+def server_command(source=None):
+    """The MCP server as a harness runs it."""
+    return launcher(source) + ["mcp"]
 
 
 def digest(path):
@@ -147,7 +167,7 @@ def plan(role, project, harnesses, hook, source):
                             "where": "Antigravity's user configuration, for every project; it answers only where a build reported"})
         if hook:
             effects.append({"kind": "claude-hook", "path": ".claude/settings.local.json",
-                            "command": " ".join(["uvx", "--from", source, "dependencyskills", "hook"])})
+                            "command": " ".join(launcher(source) + ["hook"])})
     yours = [
         "Apply the Gradle plugin `org.dependencyskills.plugin` to every module "
         + ("whose dependencies the agent should see" if role == "consumer" else "that publishes a library")
@@ -180,8 +200,8 @@ def render(proposal, applied=None):
         lines.append(f"  - {describe(effect)}{outcome}")
     lines += ["", "Yours to do:"] + [f"  - {item}" for item in proposal["yours"]]
     if proposal["role"] == "consumer":
-        lines += ["", "Nothing was fetched: the skill is the one this version carries, and the server is this version, "
-                      f"pinned as {proposal['source']}."]
+        lines += ["", "Nothing was fetched: the skill is the one this version carries, and the server is "
+                      f"{' '.join(server_command(proposal['source']))}."]
     else:
         lines += ["", "Nothing was fetched: the skill is the one this version carries."]
     if applied is not None:

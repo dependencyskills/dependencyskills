@@ -29,7 +29,7 @@ class InstallTest(unittest.TestCase):
 
     def consumer(self, project=None, **options):
         return install.plan("consumer", project or self.project, options.get("harnesses", ["claude", "codex", "gemini", "antigravity"]),
-                            options.get("hook", True), "dependencyskills-lightweight-codex==0.0.1")
+                            options.get("hook", True), "dependencyskills==0.0.1")
 
     def files(self, root):
         return sorted(str(p.relative_to(root)) for p in root.rglob("*") if p.is_file() or p.is_symlink())
@@ -47,7 +47,7 @@ class InstallTest(unittest.TestCase):
         skill = self.project / ".agents/skills/librarian/SKILL.md"
         self.assertIn("name: librarian", skill.read_text())
         gemini = json.loads((self.project / ".gemini/settings.json").read_text())["mcpServers"]["librarian"]
-        self.assertEqual(["--from", "dependencyskills-lightweight-codex==0.0.1", "dependencyskills", "mcp"], gemini["args"])
+        self.assertEqual(["--quiet", "--from", "dependencyskills==0.0.1", "dependencyskills", "mcp"], gemini["args"])
         self.assertIn("[mcp_servers.librarian]", (self.temp / "codex/config.toml").read_text())
         antigravity = json.loads((self.temp / "home/.gemini/config/mcp_config.json").read_text())
         self.assertEqual("uvx", antigravity["mcpServers"]["librarian"]["command"])
@@ -107,7 +107,7 @@ class InstallTest(unittest.TestCase):
         self.assertNotIn("evil", json.dumps(json.loads((planted / ".gemini/settings.json").read_text())["mcpServers"]))
 
     def test_a_library_gets_the_authoring_skill_and_no_server(self):
-        proposal = install.plan("author", self.project, ["claude"], False, install.DEFAULT_SOURCE)
+        proposal = install.plan("author", self.project, ["claude"], False, None)
         install.apply(proposal)
 
         self.assertTrue((self.project / ".agents/skills/to-library-skill/assets/SKILL.template.md").is_file())
@@ -143,4 +143,18 @@ class InstallTest(unittest.TestCase):
         self.assertNotIn("dependencyskills hook", (self.project / ".claude/settings.local.json").read_text())
         self.assertFalse(lock.exists())
         self.assertFalse(local.exists())
+
+    def test_registers_the_installed_command_by_its_full_path_never_a_checkout(self):
+        bin_dir = self.temp / "tools-bin"
+        bin_dir.mkdir()
+        command = bin_dir / "dependencyskills"
+        command.write_text("#!/bin/sh\n")
+        command.chmod(0o755)
+        os.environ["PATH"] = str(bin_dir)
+
+        self.assertEqual([str(command), "mcp"], install.server_command())
+        self.assertEqual([str(command), "mcp"], install.plan("consumer", self.project, ["claude"], False, None)["effects"][1]["command"])
+
+    def test_with_nothing_installed_it_runs_the_published_package_pinned_and_quiet(self):
+        self.assertEqual(["uvx", "--quiet", "dependencyskills@" + install.__version__, "mcp"], install.server_command())
 
