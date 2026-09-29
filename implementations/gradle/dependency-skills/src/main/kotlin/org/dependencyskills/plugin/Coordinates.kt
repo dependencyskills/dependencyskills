@@ -1,9 +1,13 @@
 package org.dependencyskills.plugin
 
+import org.gradle.api.artifacts.component.ComponentSelector
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.api.artifacts.component.ModuleComponentSelector
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolutionResult
 import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
+import java.io.File
 
 /**
  * Turns what Gradle resolved into coordinates the store can key on.
@@ -26,26 +30,41 @@ internal object Coordinates {
      * importable set — declared dependencies plus only `api`-exposed transitives — computed by
      * Gradle, including the cases a hand-rolled walk gets wrong.
      */
-    fun of(result: ResolutionResult, transitive: Boolean): Set<Coordinate> {
-        val components =
-            if (transitive) result.allComponents
-            else result.root.dependencies
-                .filterIsInstance<ResolvedDependencyResult>()
-                .map { it.selected }
-        return components.mapNotNullTo(LinkedHashSet()) { coordinateOf(it) }
+    fun of(result: ResolutionResult, transitive: Boolean, includedBuilds: Map<String, File> = emptyMap()): Set<Coordinate> {
+        val build = (result.root.id as? ProjectComponentIdentifier)?.build?.buildPath
+        if (transitive) {
+            return result.allComponents.filter { it != result.root }
+                .mapNotNullTo(LinkedHashSet()) { coordinateOf(it, null, build, includedBuilds) }
+        }
+        return result.root.dependencies.filterIsInstance<ResolvedDependencyResult>()
+            .mapNotNullTo(LinkedHashSet()) { coordinateOf(it.selected, it.requested, build, includedBuilds) }
     }
 
     /**
      * A resolved component as a coordinate, or null when it is not one the store can hold.
      *
-     * Project components are excluded: they are the developer's own source, which has no
-     * published coordinate and is indexed by a different route. File dependencies have no
-     * identity at all.
+     * A project in **this** build ([build]) is excluded: it is the developer's own module, not a dependency.
+     * A project from an **included** build is not — `includeBuild` stands it in for a published module, and it
+     * is that library the code uses. It is named as the consumer asked for it, [requested], else by the
+     * coordinates its build gives it, at the included project's version, and carries the project's directory
+     * from [includedBuilds], where its skill is still source rather than in a jar: the lookup reads it there.
+     * File dependencies have no identity at all.
      */
-    fun coordinateOf(component: ResolvedComponentResult): Coordinate? =
-        (component.id as? ModuleComponentIdentifier)?.let {
-            Coordinate("maven", "${it.group}:${it.module}:${it.version}")
-        }
+    fun coordinateOf(
+        component: ResolvedComponentResult,
+        requested: ComponentSelector? = null,
+        build: String? = null,
+        includedBuilds: Map<String, File> = emptyMap(),
+    ): Coordinate? {
+        val id = component.id
+        if (id is ModuleComponentIdentifier) return Coordinate("maven", "${id.group}:${id.module}:${id.version}")
+        if (id !is ProjectComponentIdentifier || build == null || id.build.buildPath == build) return null
+        val version = component.moduleVersion ?: return null
+        val (group, module) = (requested as? ModuleComponentSelector)?.let { it.group to it.module }
+            ?: (version.group to version.name)
+        val source = includedBuilds[id.build.buildPath]?.resolve(id.projectPath.trimStart(':').replace(':', '/'))
+        return Coordinate("maven", "$group:$module:${version.version}", source?.absolutePath)
+    }
 
     /**
      * Whether a coordinate is one the project asked to be left alone.

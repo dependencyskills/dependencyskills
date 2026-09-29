@@ -7,6 +7,7 @@ import re
 from pathlib import Path
 
 from . import ecosystems, index as indexing
+from .packages import Package
 from .names import library, version
 
 # Where each build plugin writes the SBOM, relative to the root project: Gradle's build directory
@@ -15,6 +16,8 @@ SBOMS = (Path("build") / "dependencyskills" / "bom.cdx.json", Path("target") / "
 SBOM = SBOMS[0]
 _PURL = re.compile(r"^pkg:maven/([^/]+)/([^@/]+)@([^?#]+)")
 DECLARED = "dependencyskills:declared"
+# The directory of the included build's project that supplies a library, where its skill is still source.
+SOURCE = "dependencyskills:source"
 
 
 def find_project(start):
@@ -45,16 +48,35 @@ def find_sbom(start):
 
 
 def read_sbom(path):
-    """(coordinates, declared): every Maven component, and those a version catalog declares that no module resolves."""
-    coordinates, declared = set(), set()
+    """(coordinates, declared, sources): every Maven component; those a version catalog declares that no module
+    resolves; and, for a library a composite build's included project supplies, that project's directory."""
+    coordinates, declared, sources = set(), set(), {}
     for component in json.loads(Path(path).read_text("utf-8")).get("components", []):
         found = _PURL.match(component.get("purl") or "")
         if found:
             coordinate = ":".join(found.groups())
             coordinates.add(coordinate)
-            if any(p.get("name") == DECLARED for p in component.get("properties") or []):
+            properties = component.get("properties") or []
+            if any(p.get("name") == DECLARED for p in properties):
                 declared.add(coordinate)
-    return coordinates, declared
+            for p in properties:
+                if p.get("name") == SOURCE and p.get("value"):
+                    sources[coordinate] = p["value"]
+    return coordinates, declared, sources
+
+
+def source_packages(sources):
+    """A `Package` for each library an included build supplies, rooted where its source tree keeps `skills/`.
+
+    Read from source because no jar of it exists: `includeBuild` compiles the project in place. A multiplatform
+    project keeps its skill under `src/commonMain`, a JVM one under `src/main`, as the Gradle plugin packages it.
+    """
+    found = []
+    for coordinate, directory in sorted(sources.items()):
+        roots = [Path(directory) / "src" / s for s in ("commonMain", "main")]
+        root = next((r for r in roots if (r / "skills").is_dir()), None)
+        found.append(Package(coordinate, root, ""))
+    return found
 
 
 def register(store, project, coordinates, declared=()):
@@ -117,13 +139,21 @@ def refresh(store, cwd):
         changed = indexing.stale(store, in_scope)
         if changed:
             indexing.index(store, changed)
+        # An included build's skill is being written as the developer works: reread it when it changed.
+        indexing.index_packages(store, source_packages(json.loads(store.setting(f"sources:{project}") or "{}")))
         return project
     try:
-        coordinates, declared = read_sbom(path)
-    except (OSError, ValueError):
-        return project if store.setting(f"sbom:{project}") else None   # half-written: keep the last good scope
+        coordinates, declared, sources = read_sbom(path)
+    except (OSError, ValueError) as problem:
+        # Half-written, or broken: keep the last good scope, and say so in every answer until it reads again.
+        store.set_setting(f"sbom-error:{project}", f"{path} could not be read ({type(problem).__name__})")
+        store.log("scope", project=project, error=str(problem)[:200])
+        return project if store.setting(f"sbom:{project}") else None
+    store.set_setting(f"sbom-error:{project}", None)
     register(store, project, coordinates, declared)
-    indexing.index(store, coordinates)
+    indexing.index(store, set(coordinates) - set(sources))
+    indexing.index_packages(store, source_packages(sources))
+    store.set_setting(f"sources:{project}", json.dumps(sources))
     store.set_setting(f"sbom:{project}", stamp)
     store.log("scope", project=project, coordinates=len(coordinates), declared=len(declared))
     return project

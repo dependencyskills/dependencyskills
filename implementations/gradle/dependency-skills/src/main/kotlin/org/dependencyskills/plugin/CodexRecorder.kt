@@ -97,6 +97,9 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
      * no dependencies, where absence says this build did not look.
      */
     private val resolvedBy = LinkedHashMap<String, MutableSet<Coordinate>>()
+
+    /** `group:artifact:version` to the directory of the included build's project that supplies it; see [Coordinate.source]. */
+    private val sources = LinkedHashMap<String, String>()
     private var resolutions = 0
     private var broken = false
     private var unreachable: String? = null
@@ -148,6 +151,7 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
             if (counted.add("$projectPath:$configuration")) resolutions++
             resolved.addAll(coordinates)
             resolvedBy.getOrPut(projectPath) { LinkedHashSet() }.addAll(coordinates)
+            coordinates.forEach { c -> c.source?.let { sources[c.value] = it } }
         }
     }
 
@@ -203,6 +207,8 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
                 projects.filter { it !in resolvedBy && it in existing }
                     .forEach { byCoordinate.getOrPut(coordinate) { sortedSetOf() }.add(it) }
             }
+            // Where an included build supplies a library: this build's word for it, else the previous file's.
+            val sourceOf = (previous?.let(::sourcesIn).orEmpty()) + sources
 
             // Declared in a catalog and resolved by no project: listed, marked, and recomputed from the
             // catalogs every build rather than merged, since the catalog is the whole record of it.
@@ -213,8 +219,9 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
             val components = byCoordinate.map { (coordinate, projects) ->
                 val (group, artifact, version) = coordinate.split(':')
                 val purl = "pkg:maven/$group/$artifact@$version"
-                val properties = if (projects.isEmpty()) """{"name":"$DECLARED_PROPERTY","value":"true"}"""
-                else projects.joinToString(",") { """{"name":"$PROJECT_PROPERTY","value":${quote(it)}}""" }
+                val properties = (if (projects.isEmpty()) """{"name":"$DECLARED_PROPERTY","value":"true"}"""
+                else projects.joinToString(",") { """{"name":"$PROJECT_PROPERTY","value":${quote(it)}}""" }) +
+                    (sourceOf[coordinate]?.let { """,{"name":"$SOURCE_PROPERTY","value":${quote(it)}}""" } ?: "")
                 """    {"type":"library","bom-ref":${quote(purl)},"group":${quote(group)},""" +
                     """"name":${quote(artifact)},"version":${quote(version)},"purl":${quote(purl)},""" +
                     """"properties":[$properties]}"""
@@ -409,6 +416,14 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
         )
     }
 
+    /** `group:artifact:version` to the included build's project directory, for every component an SBOM marks so. */
+    private fun sourcesIn(sbom: String): Map<String, String> =
+        sbom.lineSequence().mapNotNull { line ->
+            val purl = PURL.find(line) ?: return@mapNotNull null
+            val source = SOURCE.find(line) ?: return@mapNotNull null
+            "${purl.groupValues[1]}:${purl.groupValues[2]}:${purl.groupValues[3]}" to source.groupValues[1]
+        }.toMap()
+
     /** The `group:artifact:version` of every component in an SBOM this class wrote. */
     private fun purls(sbom: String): Set<String> =
         PURL.findAll(sbom).map { "${it.groupValues[1]}:${it.groupValues[2]}:${it.groupValues[3]}" }.toSet()
@@ -423,6 +438,13 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
 
         /** The component property marking a library a catalog declares and no project resolves yet. */
         const val DECLARED_PROPERTY = "dependencyskills:declared"
+
+        /**
+         * The component property naming the directory of the included build's project that supplies the library,
+         * where the lookup reads its skill from source, since no jar of it exists.
+         */
+        const val SOURCE_PROPERTY = "dependencyskills:source"
+        val SOURCE = Regex(""""name":"$SOURCE_PROPERTY","value":"([^"]*)"""")
         val PROJECT = Regex(""""name":"$PROJECT_PROPERTY","value":"([^"]*)"""")
 
         /** Enough to recognise a change; a build that added more than this is a new project. */

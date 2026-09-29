@@ -115,6 +115,8 @@ class DependencySkillsPlugin : Plugin<Project> {
                 Sources.fetchBefore(project, configuration, compileTasks, fetching, claims)
                 tasks.configureEach { if (name in compileTasks) dependsOn(skillWriters) }
             },
+            // A composite build's `includeBuild`s, whose projects stand in for published modules.
+            includedBuilds = gradle.includedBuilds.associate { ":${it.name}" to it.projectDir },
         )
 
         // Ask the build for its compile classpaths; never model scope. A compile classpath
@@ -167,6 +169,8 @@ internal class Observer(
     private val ignored: SetProperty<String>,
     /** Called once for each configuration watched, with its compile tasks, so its dependencies' sources can be fetched. */
     private val onWatched: (Configuration, List<String>) -> Unit = { _, _ -> },
+    /** Each build this one includes, by its build path, to its directory: where an included project's skill is. */
+    private val includedBuilds: Map<String, java.io.File> = emptyMap(),
 ) {
 
     /** Watches one compile-dependency configuration, which the tasks named [compileTasks] compile against. */
@@ -192,7 +196,7 @@ internal class Observer(
             if (!enabled.get()) return@runCatching
             val ignores = ignored.get()
             val coordinates: List<Coordinate> =
-                Coordinates.of(dependencies.resolutionResult, transitive.get())
+                Coordinates.of(dependencies.resolutionResult, transitive.get(), includedBuilds)
                     .filterNot { Coordinates.ignored(it, ignores) }
             recorder.get().record(projectPath, configuration, coordinates)
         }

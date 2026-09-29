@@ -1,3 +1,4 @@
+import os
 import json
 
 from dependencyskills_lightweight.find import find
@@ -114,3 +115,43 @@ class LookupTest(Machine):
         self.assertIn("Format a date or time for display.", answer)
         self.assertIn("not a dependency of this project", answer)
         self.assertNotIn("SECRET BODY", answer)
+
+
+class IncludedBuildTest(Machine):
+    """A composite build: includeBuild stands a sibling project in for a published module, so no jar of it exists."""
+
+    def test_serves_an_included_projects_skill_from_its_source_tree_and_rereads_an_edit(self):
+        coordinate, name = "com.acme:acme-cal:0.0.1", skill_name("com.acme", "acme-cal")
+        sibling = self.temp / "capabilities" / "acme-cal"
+        skill = sibling / "src" / "commonMain" / "skills" / name / "SKILL.md"
+        skill.parent.mkdir(parents=True)
+        skill.write_text(skill_text(name, body="Use AcmeCal.recur."))
+        sbom = self.project / "build" / "dependencyskills" / "bom.cdx.json"
+        sbom.parent.mkdir(parents=True)
+        sbom.write_text(json.dumps({"bomFormat": "CycloneDX", "components": [{
+            "purl": f"pkg:maven/com.acme/acme-cal@0.0.1",
+            "properties": [{"name": "dependencyskills:project", "value": ":app"},
+                           {"name": "dependencyskills:source", "value": str(sibling)}]}]}))
+        project = refresh(self.store, self.project)
+
+        self.assertIn("com.acme:acme-cal 0.0.1", list_skills(self.store, project))
+        self.assertIn("Use AcmeCal.recur.", get_skill(self.store, project, "com.acme:acme-cal"))
+
+        skill.write_text(skill_text(name, body="Use AcmeCal.recur, never a hand-rolled RRULE."))
+        stamp = skill.stat().st_mtime_ns + 1_000_000_007
+        os.utime(skill, ns=(stamp, stamp))
+        self.assertIn("never a hand-rolled RRULE", get_skill(self.store, refresh(self.store, self.project), "com.acme:acme-cal"))
+
+    def test_an_unreadable_report_is_said_rather_than_looking_empty(self):
+        self.publish(TEXT)
+        self.build([TEXT])
+        refresh(self.store, self.project)
+        sbom = self.project / "build" / "dependencyskills" / "bom.cdx.json"
+        sbom.write_text('{"components": [{"purl": "pkg:maven/com.acme/acme-text@1.0", "properties": [},"{"]}]}')
+        stamp = sbom.stat().st_mtime_ns + 1_000_000_007
+        os.utime(sbom, ns=(stamp, stamp))
+        listing = list_skills(self.store, refresh(self.store, self.project))
+
+        self.assertIn("could not be read", listing)
+        self.assertIn("com.acme:acme-text 1.0", listing)   # the last good scope, still served
+

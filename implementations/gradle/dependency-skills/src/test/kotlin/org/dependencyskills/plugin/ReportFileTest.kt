@@ -177,4 +177,29 @@ class ReportFileTest {
         assertFalse("codex service" in output, output)
         assertFalse("coordinates recorded" in output, output)
     }
+
+    @Test
+    fun `a library an included build supplies is reported by its coordinates, with its project directory`() {
+        val project = TestProject.create()
+        project.build("""dependencies { api("com.example:inc:1.0") }""")
+        // A sibling build that publishes com.example:inc, standing in for the module through includeBuild.
+        project.file("../inc/settings.gradle.kts", "rootProject.name = \"inc\"")
+        project.file("../inc/build.gradle.kts", """
+            plugins { `java-library` }
+            group = "com.example"
+            version = "2.0"
+        """.trimIndent())
+        project.file("../inc/src/main/java/com/example/inc/Inc.java", "package com.example.inc; public class Inc {}")
+        project.file("settings.gradle.kts", project.path("settings.gradle.kts").toFile().readText() + "\nincludeBuild(\"../inc\")\n")
+        project.run("classes")
+
+        val sbom = project.path("build/dependencyskills/bom.cdx.json").toFile().readText()
+        // Parsed, not only searched: a reader that cannot parse the file keeps the last good scope, silently.
+        groovy.json.JsonSlurper().parseText(sbom)
+        assertContains(sbom, "\"purl\":\"pkg:maven/com.example/inc@2.0\"")
+        val included = project.path("../inc").toFile().canonicalFile
+        assertTrue(sbom.contains("\"name\":\"dependencyskills:source\",\"value\":\"") &&
+            sbom.substringAfter("dependencyskills:source\",\"value\":\"").substringBefore("\"").let { java.io.File(it).canonicalFile == included }, sbom)
+    }
 }
+

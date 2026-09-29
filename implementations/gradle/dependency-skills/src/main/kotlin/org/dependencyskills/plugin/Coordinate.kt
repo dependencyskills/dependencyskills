@@ -14,8 +14,11 @@ package org.dependencyskills.plugin
  * [ecosystem] is carried separately rather than parsed out of [value] because a build resolves
  * from more than one: a Kotlin Multiplatform build pulls npm packages through Gradle, and both
  * end up here. Two coordinates from different ecosystems never collide.
+ *
+ * [source] is set for a library an included build supplies in place of the published module — a composite
+ * build's `includeBuild` — and is that project's directory, where its skill is still source; otherwise null.
  */
-data class Coordinate(val ecosystem: String, val value: String) {
+data class Coordinate(val ecosystem: String, val value: String, val source: String? = null) {
     /** The scope file's line format, which is the whole contract with the service. */
     override fun toString() = "$ecosystem:$value"
 }

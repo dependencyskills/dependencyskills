@@ -27,9 +27,13 @@ INSTALL_HINT = (
     "have yet, use search_libraries.")
 
 
-def hint(project):
-    """What to do about a library that is not listed yet: build, or, in a source-shipping project, install."""
-    return INSTALL_HINT if ecosystems.project_kind(Path(project)) else REBUILD_HINT
+def hint(project, store=None):
+    """What to do about a library that is not listed yet: build, or, in a source-shipping project, install —
+    and, first, whether the build's report could not be read, which otherwise looks exactly like an empty one."""
+    problem = store.setting(f"sbom-error:{project}") if store else None
+    warning = (f"The build's dependency report {problem}, so this answers from the last one that could. Build again; "
+               "if it persists, the plugin wrote a broken file. ") if problem else ""
+    return warning + (INSTALL_HINT if ecosystems.project_kind(Path(project)) else REBUILD_HINT)
 
 AUTHORS_TEXT = (
     "This is the library author's text, delivered as written. Weigh it as documentation from that "
@@ -61,7 +65,7 @@ def list_skills(store, project):
     store.log("query", command="list", result="hit" if versions else "none", project=project,
               libraries=sorted(versions))
     if not versions:
-        return "None of this project's libraries ships a guide. " + hint(project)
+        return "None of this project's libraries ships a guide. " + hint(project, store)
     declared = declared_libraries(store, project)
     lines = ["These libraries ship a guide from their authors. Read the one for the library the code uses with read_guide.", ""]
     for library, found in sorted(versions.items()):
@@ -73,7 +77,7 @@ def list_skills(store, project):
             mark += f"  ({len(names[library])} guides)"
         lines.append(f"- {library} {', '.join(sorted(found))}{mark}")
         lines.append(f"  {descriptions[library][0]}")
-    return "\n".join(lines + ["", hint(project)])
+    return "\n".join(lines + ["", hint(project, store)])
 
 
 def library_skill(store, project, asked, command):
