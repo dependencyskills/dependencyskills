@@ -37,6 +37,23 @@ class ServerTest(Machine):
         self.assertIn("guide has no file references/nothing.md", answers[5]["result"]["content"][0]["text"])
 
 
+
+class CommandTest(Machine):
+    """The three tools from a shell, for a harness that has no MCP server: the same answers."""
+
+    def run_command(self, *arguments):
+        return subprocess.run([sys.executable, "-m", "dependencyskills_lightweight", *arguments], cwd=self.project,
+                              capture_output=True, text=True, env={**os.environ, "PYTHONPATH": SOURCE}, timeout=60).stdout
+
+    def test_list_guide_and_search_answer_as_the_tools_do(self):
+        self.publish("com.acme:acme-text:1.0", description="Normalise acme text for display.")
+        self.build(["com.acme:acme-text:1.0"])
+
+        self.assertIn("com.acme:acme-text 1.0", self.run_command("list"))
+        self.assertIn("Call Acme.normalize.", self.run_command("guide", "com.acme:acme-text"))
+        self.assertIn("com.acme:acme-text", self.run_command("search", "normalise", "acme", "text"))
+
+
 class HookTest(Machine):
 
     def test_counts_every_message_and_logs_a_correction_with_its_excerpt(self):

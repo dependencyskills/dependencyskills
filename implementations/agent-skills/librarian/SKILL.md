@@ -28,6 +28,16 @@ This project's dependencies have been indexed. Before writing code against a lib
 
 If a library you are about to use is not in `list_guides`, that does not mean it has none: build or install, and list again, before reading its sources.
 
+**Without the tools.** If `list_guides`, `read_guide` and `search_libraries` are not available in this session, the same answers come from the `dependencyskills` command, run from the project's directory:
+
+```
+dependencyskills list
+dependencyskills guide <library> [file]
+dependencyskills search <need>
+```
+
+Where an answer names a tool, use the matching command. If the command is not installed either, say so to the developer; do not install it yourself.
+
 ## When you find something
 
 **Use it.** A capability that already exists is tested, versioned, and someone else's maintenance; a near fit you adapt is almost always better than a perfect fit you write.

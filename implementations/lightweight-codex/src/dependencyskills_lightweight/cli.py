@@ -16,9 +16,11 @@ USAGE = """usage: dependencyskills <command>
   mcp [--project DIR] serve the lookup over MCP on stdio; the agent's harness starts this. It serves the
                       project it is started in, or DIR for a harness whose configuration is not per
                       project and does not start it there
-  skill <group:artifact>
-                      print a dependency's skill, as the agent would read it
-  find <need...>      search the libraries on this machine for one that does what you need
+  list                the project's libraries whose authors ship a guide       (the list_guides tool)
+  guide <library> [file]
+                      one library's guide, or a file it links to                (the read_guide tool)
+  search <need...>    the libraries on this machine that do what you need       (the search_libraries tool)
+                      The three answer as the MCP tools do, for a harness without them; run in the project.
   log [on [path]|off] switch the local analytics log; off by default
   stats               summarise the log
   hook                a Claude Code UserPromptSubmit hook: count messages and corrections
@@ -82,14 +84,20 @@ def main(argv=None):
         return 1 if problems else 0
     from .store import Store
     store = Store()
-    if command == "skill" and rest:
-        from .lookup import get_skill
-        from .project import refresh
-        print(get_skill(store, refresh(store, os.getcwd()), rest[0]))
-    elif command == "find" and rest:
-        from .find import find
-        from .project import refresh
-        print(find(store, refresh(store, os.getcwd()), " ".join(rest)))
+    # The three tools, from a shell: the same call, so the same answer and the same log entry. `skill` and
+    # `find` are the older names for the last two.
+    if command == "list":
+        from .mcp import call
+        print(call(store, "list_guides", {}))
+    elif command in ("guide", "skill") and rest:
+        from .mcp import call
+        arguments = {"library": rest[0]}
+        if len(rest) > 1:
+            arguments["file"] = rest[1]
+        print(call(store, "read_guide", arguments))
+    elif command in ("search", "find") and rest:
+        from .mcp import call
+        print(call(store, "search_libraries", {"need": " ".join(rest)}))
     elif command == "log":
         from .analytics import switch
         print(switch(store, rest))

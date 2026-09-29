@@ -52,7 +52,7 @@ dependencyskills mcp
 
 A harness whose configuration is IDE-wide rather than per project, and which does not start the server in the project — Android Studio's — passes the project instead: `dependencyskills mcp --project <directory>`.
 
-The same command offers `skill <group:artifact>` and `find <need>` for reading from a terminal, `log on|off` and `stats` for a local analytics log that is off by default, and `hook` and `hook-settings` for the optional correction hook. Its store and log live in `~/.dependencyskills`, or `DEPENDENCYSKILLS_HOME`.
+The same command offers `list`, `guide <library> [file]` and `search <need>` — the three tools' answers, for a harness without the MCP server, which the `librarian` skill falls back to — `log on|off` and `stats` for a local analytics log that is off by default, and `hook` and `hook-settings` for the optional correction hook. Its store and log live in `~/.dependencyskills`, or `DEPENDENCYSKILLS_HOME`.
 
 ## What it never does
 
