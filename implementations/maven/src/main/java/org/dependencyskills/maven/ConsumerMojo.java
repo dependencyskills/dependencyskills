@@ -24,8 +24,8 @@ import org.eclipse.aether.resolution.ArtifactResolutionException;
  *
  * <p><b>The report</b> is the CycloneDX SBOM the Gradle plugin writes, at
  * {@code target/dependencyskills/bom.cdx.json} in the root project: the compile classpath — what the
- * module can import — each component naming the modules that resolve it. Declared dependencies only, unless
- * {@code transitive} is set, as in the Gradle plugin.
+ * module can import — each component naming the modules that resolve it. Every importable library, unless
+ * {@code transitive} is switched off, as in the Gradle plugin.
  *
  * <p><b>The sources jars</b> are fetched because a build never downloads them, and a JVM library's skill
  * travels in one: on a machine that only builds from the command line the lookup would otherwise find
@@ -41,8 +41,12 @@ public class ConsumerMojo extends AbstractSkillsMojo {
 
     private final RepositorySystem repositorySystem;
 
-    /** Widen from what this module declared to everything its compile classpath resolved. Off by default. */
-    @Parameter(property = "dependencySkills.transitive", defaultValue = "false")
+    /**
+     * Report everything the compile classpath resolved — every library the code can import, a compile-scope
+     * dependency's own compile dependencies included — rather than only what this module declared. On by default,
+     * as in the Gradle plugin: a library that reaches the code through another is one its agent writes calls against.
+     */
+    @Parameter(property = "dependencySkills.transitive", defaultValue = "true")
     private boolean transitive;
 
     /** Whether to fetch the sources jar of every reported dependency. On by default. */
@@ -71,7 +75,7 @@ public class ConsumerMojo extends AbstractSkillsMojo {
         writeAgentSkill(AgentSkills.LIBRARIAN, "consumer");
     }
 
-    /** The compile classpath's module artifacts: declared ones only, unless transitive. */
+    /** The compile classpath's module artifacts: every one, or the declared ones only when transitive is off. */
     private List<Artifact> reported() {
         Set<String> declared = project.getDependencies().stream()
             .map(d -> d.getGroupId() + ":" + d.getArtifactId())

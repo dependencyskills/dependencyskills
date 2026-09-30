@@ -14,7 +14,7 @@ import javax.inject.Inject
  *     projectName = "acme-platform"          // optional; several checkouts can share one
  *     serviceUrl = "http://127.0.0.1:8310"   // the full codex service, if used; unset, it is not told
  *     harvester {
- *         transitive = true
+ *         transitive = false                  // only what this project declares; on by default
  *         ignore("com.example:noisy-library")
  *     }
  *     consumer { }                                   // write the librarian agent skill
@@ -146,12 +146,14 @@ abstract class DependencySkillsExtension @Inject constructor(objects: ObjectFact
 abstract class HarvesterSpec {
 
     /**
-     * Widen from what this project declared to everything the compile classpath resolved.
+     * Report everything the compile classpath resolved — every library the code can import — rather than only
+     * what this project declared.
      *
-     * Off by default, and the default is the conservative one rather than the good one.
-     * RAD-0022 measured 11 of 17 real capabilities living only in the transitive tail, so this
-     * is where most of the value is — but it is also where most of the volume is, and it is a
-     * trade an operator should take deliberately rather than inherit.
+     * **On by default.** The compile classpath is already the importable set: the declared dependencies, plus
+     * only what they expose with `api`, never a runtime-only dependency. A library that reaches the code through
+     * another one — a formatting library exposed by a module the project uses — is one its agent writes calls
+     * against, so its guide must be servable. RAD-0022 measured 11 of 17 real capabilities living only in that
+     * tail. Set it false to report only what the project declares, where volume matters more than reach.
      */
     abstract val transitive: Property<Boolean>
 

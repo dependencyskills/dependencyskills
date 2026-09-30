@@ -65,22 +65,22 @@ class DependencySkillsPluginTest {
     }
 
     @Test
-    fun `the transitive tail is an explicit opt-in`() {
+    fun `everything importable by default, and declared only as an explicit opt-out`() {
+        val importable = project()
+        importable.build("""dependencies { api("com.example:alpha:1.0") }""")
+        importable.run("classes")
+        run {
+            assertEquals(listOf("com.example:alpha:1.0", "com.example:beta:1.0"), importable.recordedCoordinates())
+        }
+
         val declaredOnly = project()
-        declaredOnly.build("""dependencies { api("com.example:alpha:1.0") }""")
+        declaredOnly.build("""
+            dependencies { api("com.example:alpha:1.0") }
+            dependencySkills { harvester { transitive = false } }
+        """.trimIndent())
         declaredOnly.run("classes")
         run {
             assertEquals(listOf("com.example:alpha:1.0"), declaredOnly.recordedCoordinates())
-        }
-
-        val widened = project()
-        widened.build("""
-            dependencies { api("com.example:alpha:1.0") }
-            dependencySkills { harvester { transitive = true } }
-        """.trimIndent())
-        widened.run("classes")
-        run {
-            assertEquals(listOf("com.example:alpha:1.0", "com.example:beta:1.0"), widened.recordedCoordinates())
         }
     }
 
@@ -230,14 +230,16 @@ class DependencySkillsPluginTest {
         // questions about a library the project no longer has, which is the containment boundary
         // widening quietly rather than a stale cache.
         val project = project()
-        project.build("""dependencies { api("com.example:alpha:1.0")
+        project.build("""dependencySkills { harvester { transitive = false } }
+dependencies { api("com.example:alpha:1.0")
             api("com.example:beta:1.0") }""")
         project.startService()
         try {
             project.run("classes")
             assertTrue(project.recordedCoordinates().any { it.endsWith("beta:1.0") })
 
-            project.build("""dependencies { api("com.example:alpha:1.0") }""")
+            project.build("""dependencySkills { harvester { transitive = false } }
+dependencies { api("com.example:alpha:1.0") }""")
             project.run("classes", "--rerun-tasks")
 
             val sent = project.recordedCoordinates()
@@ -267,7 +269,8 @@ class DependencySkillsPluginTest {
     @Test
     fun `nothing resolved reads differently from nothing new`() {
         val project = project()
-        project.build("""dependencies { api("com.example:alpha:1.0") }""")
+        project.build("""dependencySkills { harvester { transitive = false } }
+dependencies { api("com.example:alpha:1.0") }""")
 
         val nothingResolved = project.run("help")
         assertContains(nothingResolved.output, "no compile classpath resolved")
@@ -313,7 +316,8 @@ class DependencySkillsPluginTest {
     @Test
     fun `it works with the configuration cache`() {
         val project = project()
-        project.build("""dependencies { api("com.example:alpha:1.0") }""")
+        project.build("""dependencySkills { harvester { transitive = false } }
+dependencies { api("com.example:alpha:1.0") }""")
 
         val miss = project.run("classes", "--configuration-cache", "--warning-mode=all")
         assertTrue(miss.output.contains("BUILD SUCCESSFUL"))
@@ -351,10 +355,12 @@ class DependencySkillsPluginTest {
         // entry is discarded, the configuration phase runs, and the plugin sees the new
         // coordinate. This is why the boundary above is a boundary rather than a hole.
         val project = project()
-        project.build("""dependencies { api("com.example:alpha:1.0") }""")
+        project.build("""dependencySkills { harvester { transitive = false } }
+dependencies { api("com.example:alpha:1.0") }""")
         project.run("classes", "--configuration-cache")
 
         project.build("""
+            dependencySkills { harvester { transitive = false } }
             dependencies {
                 api("com.example:alpha:1.0")
                 implementation("com.example:only-compiled-against:1.0")

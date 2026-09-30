@@ -31,26 +31,24 @@ class ReportFileTest {
         val text = project.path(sbom).toFile().readText()
         assertContains(text, "\"bomFormat\": \"CycloneDX\"")
         assertContains(text, "\"purl\":\"pkg:maven/com.example/alpha@1.0\"")
-        // Declared dependencies only, by default - the transitive tail is opt-in (RAD-0022), and the
-        // SBOM is the same set the HTTP report carries, not a wider one.
-        assertFalse("beta" in text, text)
+        // Everything the code can import, by default: alpha exposes beta on the compile classpath. alpha's
+        // runtime-only gamma is not importable, so not in scope.
+        assertContains(text, "\"purl\":\"pkg:maven/com.example/beta@1.0\"")
         assertFalse("gamma" in text, text)
     }
 
     @Test
-    fun `with the transitive tail switched on, lists what is importable and nothing more`() {
+    fun `with transitive switched off, lists only what the project declares`() {
         val project = project()
         project.build("""
             dependencies { api("com.example:alpha:1.0") }
-            dependencySkills { harvester { transitive = true } }
+            dependencySkills { harvester { transitive = false } }
         """.trimIndent())
         project.run("classes")
 
         val text = project.path(sbom).toFile().readText()
-        // Exposed on the compile classpath by alpha, so importable, so in scope.
-        assertContains(text, "\"purl\":\"pkg:maven/com.example/beta@1.0\"")
-        // alpha's runtime-only dependency is not importable, so not in scope. An SBOM plugin
-        // describing the runtime classpath would list it; this one describes the compile classpath.
+        assertContains(text, "\"purl\":\"pkg:maven/com.example/alpha@1.0\"")
+        assertFalse("beta" in text, text)
         assertFalse("gamma" in text, text)
     }
 
@@ -91,6 +89,8 @@ class ReportFileTest {
         for ((module, library) in listOf("a" to "alpha", "b" to "gamma")) {
             file("$module/build.gradle.kts", """
                 plugins { `java-library`; id("org.dependencyskills.plugin") }
+                // Declared only: these tests follow one dependency per module, and alpha exposes beta.
+                dependencySkills { harvester { transitive = false } }
                 dependencies { api("com.example:$library:1.0") }
             """.trimIndent())
             file("$module/src/main/java/com/example/$module/Lib.java", "package com.example.$module; public class Lib {}")
@@ -109,6 +109,7 @@ class ReportFileTest {
         // Only :a is compiled. :b's dependency stays in scope - it used to vanish here.
         project.file("a/build.gradle.kts", """
             plugins { `java-library`; id("org.dependencyskills.plugin") }
+            dependencySkills { harvester { transitive = false } }
             dependencies { api("com.example:alpha:1.0"); api("com.example:beta:1.0") }
         """.trimIndent())
         val output = project.run(":a:classes", "-q").output

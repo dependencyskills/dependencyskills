@@ -31,7 +31,7 @@ plugins { id("org.dependencyskills.plugin") }
 
 dependencySkills {
     harvester {
-        transitive = true              // off by default; see RAD-0022
+        transitive = false             // only what the project declares; on by default, see below
         ignore("com.example:noisy")
     }
 }
@@ -97,7 +97,7 @@ The blocks are named for the project's role: `consumer` for a project that uses 
 Every build writes its resolved set for the lightweight codex, and reports it to the full codex only where a project says where that listens:
 
 - **To the full codex, over HTTP** — `POST /projects` to `serviceUrl`, and only when it is set: `-PdependencySkills.serviceUrl=http://127.0.0.1:8310`, or `serviceUrl` in the `dependencySkills` block. Unset, which is the default, the full codex is not told and the build says nothing about it.
-- **To the lightweight codex, as a file** — a CycloneDX 1.6 SBOM at `build/dependencyskills/bom.cdx.json` in the root build directory, listing the same set: the compile classpath, declared dependencies unless `transitive` is on, plus the libraries a version catalog declares that no module uses yet, marked as declared. Each entry names the module that resolved it, so building one module replaces only that module's entries. It is rewritten only when it changes, and a rewrite that added dependencies names them in the build output — `dependencyskills: new since the last build: …` — at quiet level, so an agent running `-q` still sees it. The lightweight codex ([`experiments/minimal-codex`](../../experiments/minimal-codex/), `pkgindex.py mcp`) is an MCP server over stdio that the agent's harness starts inside the project; it reads the file when an agent asks, and re-indexes when the file has changed. No process runs between sessions, and nothing watches anything.
+- **To the lightweight codex, as a file** — a CycloneDX 1.6 SBOM at `build/dependencyskills/bom.cdx.json` in the root build directory, listing the same set: the compile classpath — every library the code can import, or only the declared ones with `transitive = false` — plus the libraries a version catalog declares that no module uses yet, marked as declared. Each entry names the module that resolved it, so building one module replaces only that module's entries. It is rewritten only when it changes, and a rewrite that added dependencies names them in the build output — `dependencyskills: new since the last build: …` — at quiet level, so an agent running `-q` still sees it. The lightweight codex ([`experiments/minimal-codex`](../../experiments/minimal-codex/), `pkgindex.py mcp`) is an MCP server over stdio that the agent's harness starts inside the project; it reads the file when an agent asks, and re-indexes when the file has changed. No process runs between sessions, and nothing watches anything.
 
 **The build also fetches the sources jars**, because that is where a JVM library's skill travels and a build otherwise never downloads one — on a machine that only builds from the command line, the lookup would find nothing ([RAD-0079](../../docs/knowledge/research/RAD-0079-what-each-ecosystem-needs-from-the-lightweight-codex.md)). A `dependencySkillsSources<Classpath>` task runs before each compile task, asks Gradle for the sources variant of exactly what that classpath resolved and of what the catalog declares, and skips any library that has none. It goes through the project's own repositories and cache. `-PdependencySkills.fetchSources=false` turns it off.
 

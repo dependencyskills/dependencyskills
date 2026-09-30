@@ -37,7 +37,7 @@ class DependencySkillsPlugin : Plugin<Project> {
             enabled.convention(
                 providers.gradleProperty(ENABLED_PROPERTY).map(String::toBoolean).orElse(true),
             )
-            harvester.transitive.convention(false)
+            harvester.transitive.convention(true)
             fetchSources.convention(
                 providers.gradleProperty(FETCH_SOURCES_PROPERTY).map(String::toBoolean).orElse(true),
             )
