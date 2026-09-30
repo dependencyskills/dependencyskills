@@ -36,7 +36,7 @@ dependencies {
 val bundledSkills by tasks.registering(Sync::class) {
     val skills = "org/dependencyskills/plugin/skills"
     from(layout.projectDirectory.dir("../../agent-skills")) {
-        include("librarian/**", "to-library-skill/**")
+        include("librarian/**", "librarian-skill-author/**")
         exclude("**/scripts/**")
         into(skills)
     }
@@ -83,7 +83,7 @@ gradlePlugin {
             description = "Reports which of a project's dependencies the machine-level codex has " +
                 "never seen, and records them for harvesting out of band. Applied to a library, " +
                 "ships the library's own skill in its sources jar. Writes the librarian and " +
-                "to-library-skill agent skills into a project that declares their blocks."
+                "librarian-skill-author agent skills into a project that declares their blocks."
         }
     }
 }

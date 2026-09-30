@@ -22,7 +22,7 @@ import java.security.MessageDigest
  * ```kotlin
  * dependencySkills {
  *     consumer { }    // librarian: check what the dependencies offer before writing code
- *     author { }      // to-library-skill: write the guide this library ships
+ *     author { }      // librarian-skill-author: write the guide this library ships
  * }
  * ```
  *
@@ -46,7 +46,14 @@ internal object AgentSkills {
 
     /** The skills the plugin carries: `consumer { }` asks for the first, `author { }` for the second. */
     const val LIBRARIAN = "librarian"
-    const val TO_LIBRARY_SKILL = "to-library-skill"
+    const val AUTHOR_SKILL = "librarian-skill-author"
+
+    /**
+     * The names each skill was published under before, which the plugin removes where it wrote them. A skill's
+     * copy lands in a project's source tree, so a renamed one left behind would sit there — committed, and read
+     * by agents — beside its successor.
+     */
+    val FORMER_NAMES = mapOf(AUTHOR_SKILL to listOf("to-library-skill"))
 
     /**
      * The lock file, at the root, shared with the lightweight codex's installer: what was written, with
@@ -143,6 +150,24 @@ internal object AgentSkills {
     fun record(manifest: MutableMap<String, Any?>, path: String, files: Map<String, String>) {
         val changes = (manifest["changes"] as List<Map<String, Any?>>).filterNot { it["kind"] == "skill" && it["path"] == path }
         manifest["changes"] = changes + mapOf("kind" to "skill", "path" to path, "files" to files.toSortedMap(), "by" to "gradle-plugin")
+    }
+
+    /** Drops the manifest's record of whatever was written at [path]. */
+    @Suppress("UNCHECKED_CAST")
+    fun forget(manifest: MutableMap<String, Any?>, path: String) {
+        manifest["changes"] = (manifest["changes"] as List<Map<String, Any?>>).filterNot { it["kind"] == "skill" && it["path"] == path }
+    }
+
+    /**
+     * Removes the copy at [target] of a skill under a former name, if the plugin wrote it and nobody has edited it
+     * since. Returns true when it was removed; a copy it did not write, or one edited since, is left for the
+     * developer, since only they can say whether it is still wanted.
+     */
+    fun retire(target: File, recorded: Map<String, String>?): Boolean {
+        if (Files.isSymbolicLink(target.toPath()) || !target.isDirectory || recorded == null) return false
+        if (present(target) != recorded) return false
+        target.deleteRecursively()
+        return true
     }
 
     fun writeManifest(root: File, manifest: Map<String, Any?>) {
@@ -267,6 +292,23 @@ abstract class WriteAgentSkill : DefaultTask() {
             }
             AgentSkills.record(manifest, path, wanted)
             changed = true
+        }
+        // The same skill under a name it had before: removed where the plugin wrote it, reported where it cannot be.
+        for (former in AgentSkills.FORMER_NAMES[name].orEmpty()) {
+            for (path in listOf(".agents/skills/$former", ".claude/skills/$former")) {
+                val target = File(root, path)
+                if (!target.exists()) continue
+                if (AgentSkills.retire(target, AgentSkills.recorded(manifest, path))) {
+                    AgentSkills.forget(manifest, path)
+                    changed = true
+                    logger.lifecycle("dependencyskills: removed $path/, which is now the $name skill")
+                } else {
+                    logger.warn(
+                        "dependencyskills: $path/ is the $name skill's former name, and was edited or not written by this " +
+                            "plugin, so it was left in place. Delete it once anything in it you want is in $name.",
+                    )
+                }
+            }
         }
         if (changed) AgentSkills.writeManifest(root, manifest)
     }

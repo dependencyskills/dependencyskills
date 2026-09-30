@@ -18,9 +18,9 @@ assert log.contains("scripts/ directory is not packaged") : "the check warns abo
 assert !log.contains("`name` is") : "a correctly named skill draws no name warning"
 
 // The author's agent skill, recorded in a lock file that names nothing on this machine.
-assert new File(basedir, ".agents/skills/to-library-skill/SKILL.md").isFile()
-assert new File(basedir, ".agents/skills/to-library-skill/references/per-language.md").isFile()
+assert new File(basedir, ".agents/skills/librarian-skill-author/SKILL.md").isFile()
+assert new File(basedir, ".agents/skills/librarian-skill-author/references/per-language.md").isFile()
 def lock = new File(basedir, "dependencyskills-lock.json").text
-assert lock.contains('".agents/skills/to-library-skill"') : lock
+assert lock.contains('".agents/skills/librarian-skill-author"') : lock
 assert !lock.contains(basedir.absolutePath) : lock
 return true

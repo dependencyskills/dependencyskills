@@ -17,7 +17,7 @@
     <name>Dependency Skills Maven Plugin</name>
     <description>
         Ships a library's own agent skill in its sources jar, reports a consuming project's dependencies
-        for the lightweight codex, and writes the librarian and to-library-skill agent skills into a
+        for the lightweight codex, and writes the librarian and librarian-skill-author agent skills into a
         project whose build asks for them.
     </description>
     <licenses>
@@ -86,7 +86,7 @@
                 <targetPath>org/dependencyskills/maven/skills</targetPath>
                 <includes>
                     <include>librarian/**</include>
-                    <include>to-library-skill/**</include>
+                    <include>librarian-skill-author/**</include>
                 </includes>
                 <excludes>
                     <exclude>**/scripts/**</exclude>

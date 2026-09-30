@@ -38,7 +38,14 @@ import java.util.stream.Stream;
 final class AgentSkills {
 
     static final String LIBRARIAN = "librarian";
-    static final String TO_LIBRARY_SKILL = "to-library-skill";
+    static final String AUTHOR_SKILL = "librarian-skill-author";
+
+    /**
+     * The names each skill was published under before, which the plugin removes where it wrote them: a copy lands
+     * in the project's source tree, so a renamed one left behind would sit there, committed and read, beside its
+     * successor.
+     */
+    static final Map<String, List<String>> FORMER_NAMES = Map.of(AUTHOR_SKILL, List.of("to-library-skill"));
 
     /** The lock file, at the root: committed, so it names only paths inside the project. */
     static final String LOCK = "dependencyskills-lock.json";
@@ -209,6 +216,26 @@ final class AgentSkills {
             record(lock, path, wanted);
             changed = true;
         }
+        // The same skill under a name it had before: removed where the plugin wrote it, reported where it cannot be.
+        for (String former : FORMER_NAMES.getOrDefault(skill, List.of())) {
+            for (String path : List.of(".agents/skills/" + former, ".claude/skills/" + former)) {
+                Path target = root.resolve(path);
+                if (!Files.exists(target)) {
+                    continue;
+                }
+                Map<String, String> recorded = recorded(lock, path);
+                if (!Files.isSymbolicLink(target) && recorded != null && recorded.equals(present(target))) {
+                    delete(target);
+                    forget(lock, path);
+                    changed = true;
+                    lifecycle.accept("dependencyskills: removed " + path + "/, which is now the " + skill + " skill");
+                } else {
+                    warn.accept("dependencyskills: " + path + "/ is the " + skill + " skill's former name, and was edited "
+                        + "or not written by this plugin, so it was left in place. Delete it once anything in it you want "
+                        + "is in " + skill + ".");
+                }
+            }
+        }
         if (changed) {
             writeLock(root, lock);
         }
@@ -257,6 +284,18 @@ final class AgentSkills {
         entry.put("files", new TreeMap<>(files));
         entry.put("by", "maven-plugin");
         changes.add(entry);
+        lock.put("changes", changes);
+    }
+
+    /** Drops the lock file's record of whatever was written at {@code path}. */
+    @SuppressWarnings("unchecked")
+    static void forget(Map<String, Object> lock, String path) {
+        List<Object> changes = new ArrayList<>();
+        for (Object change : (List<Object>) lock.get("changes")) {
+            if (!(change instanceof Map<?, ?> entry && "skill".equals(entry.get("kind")) && path.equals(entry.get("path")))) {
+                changes.add(change);
+            }
+        }
         lock.put("changes", changes);
     }
 

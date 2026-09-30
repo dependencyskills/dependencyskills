@@ -6,7 +6,7 @@ Published under `org.dependencyskills.gradle`, so the coordinate says which buil
 
 | module | plugin id | what it is |
 |---|---|---|
-| `dependency-skills` | `org.dependencyskills.plugin` | reports which of a project's dependencies the codex has never seen; applied to a library, ships the library's own skill in its sources jar; writes the `librarian` and `to-library-skill` agent skills where their blocks are declared |
+| `dependency-skills` | `org.dependencyskills.plugin` | reports which of a project's dependencies the codex has never seen; applied to a library, ships the library's own skill in its sources jar; writes the `librarian` and `librarian-skill-author` agent skills where their blocks are declared |
 
 ## Naming
 
@@ -75,7 +75,7 @@ import org.dependencyskills.plugin.SkillRefresh
 
 dependencySkills {
     consumer { }                                   // librarian: check what the dependencies offer before writing code
-    author { refresh = SkillRefresh.UnlessEdited }  // to-library-skill: write the guide this library ships, keeping local edits
+    author { refresh = SkillRefresh.UnlessEdited }  // librarian-skill-author: write the guide this library ships, keeping local edits
 }
 ```
 

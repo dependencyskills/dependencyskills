@@ -42,7 +42,10 @@ SERVER = "librarian"
 MANIFEST = Path("dependencyskills-lock.json")
 PACKAGE = "dependencyskills"
 HARNESSES = ("claude", "codex", "gemini", "antigravity")
-SKILL_FOR = {"consumer": "librarian", "author": "to-library-skill"}
+SKILL_FOR = {"consumer": "librarian", "author": "librarian-skill-author"}
+# The names a skill was published under before. A copy lands in the project's source tree, so one left behind
+# under an old name would sit there, committed and read, beside its successor; it is removed where this wrote it.
+FORMER_NAMES = {"librarian-skill-author": ["to-library-skill"]}
 
 
 def bundled_skill(name):
@@ -176,7 +179,7 @@ def plan(role, project, harnesses, hook, source):
         + " { } }` has the plugin write and update the skill itself, and this installer is needed only for the rest.",
     ]
     if role == "author":
-        yours.append("Ask your agent to write the library's skill with the to-library-skill skill, and review it before release.")
+        yours.append("Ask your agent to write the library's skill with the librarian-skill-author skill, and review it before release.")
     else:
         yours.append("Build once, so the build writes the report the lookup reads.")
     return {"role": role, "project": str(project), "version": __version__, "source": source,
@@ -222,8 +225,25 @@ def apply(proposal):
         if record:
             changes.append(record)
     kept = [c for c in previous["changes"] if not any(_same(c, n) for n in changes)]
+    kept = [c for c in kept if not _retire(project, c, proposal["effects"])]
     _write(project, kept + changes, proposal["source"])
     return outcomes
+
+
+def _retire(project, change, effects):
+    """Remove a skill this wrote under a name the skill has since dropped, if nobody edited it. True when removed."""
+    if change["kind"] != "skill":
+        return False
+    installing = {e["skill"] for e in effects if e["kind"] == "skill"}
+    former = {old for skill in installing for old in FORMER_NAMES.get(skill, [])}
+    target = project / change["path"]
+    if Path(change["path"]).name not in former or not target.is_dir() or target.is_symlink():
+        return False
+    if not _unchanged(target, change["files"]):
+        return False   # edited since: the developer's to delete, once they have what they want from it
+    shutil.rmtree(target)
+    _prune(project, target.parent)
+    return True
 
 
 def _same(a, b):

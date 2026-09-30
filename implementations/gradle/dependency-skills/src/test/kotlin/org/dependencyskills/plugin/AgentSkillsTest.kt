@@ -49,7 +49,7 @@ class AgentSkillsTest {
         val output = project.run("classes").output
 
         assertEquals(librarian, project.text(".agents/skills/librarian/SKILL.md"))
-        assertFalse(Files.exists(project.path(".agents/skills/to-library-skill")))
+        assertFalse(Files.exists(project.path(".agents/skills/librarian-skill-author")))
         assertFalse(Files.exists(project.path(".claude")), "no .claude/ in the project, so no copy for Claude Code")
         assertContains(output, "dependencyskills: wrote the librarian skill to .agents/skills/librarian/")
         assertContains(output, "commit it together with dependencyskills-lock.json, which records it")
@@ -57,13 +57,13 @@ class AgentSkillsTest {
     }
 
     @Test
-    fun `the author block writes to-library-skill with its references and assets`() {
+    fun `the author block writes librarian-skill-author with its references and assets`() {
         val project = project("author { }")
         project.run("classes")
 
-        assertEquals(bundled("to-library-skill/SKILL.md"), project.text(".agents/skills/to-library-skill/SKILL.md"))
-        assertTrue(Files.isRegularFile(project.path(".agents/skills/to-library-skill/references/per-language.md")))
-        assertTrue(Files.isRegularFile(project.path(".agents/skills/to-library-skill/assets/SKILL.template.md")))
+        assertEquals(bundled("librarian-skill-author/SKILL.md"), project.text(".agents/skills/librarian-skill-author/SKILL.md"))
+        assertTrue(Files.isRegularFile(project.path(".agents/skills/librarian-skill-author/references/per-language.md")))
+        assertTrue(Files.isRegularFile(project.path(".agents/skills/librarian-skill-author/assets/SKILL.template.md")))
         assertFalse(Files.exists(project.path(".agents/skills/librarian")))
     }
 
@@ -115,10 +115,10 @@ class AgentSkillsTest {
     @Test
     fun `a same-named skill nothing recorded is treated as edited`() {
         val project = project("author { $keepEdits }")
-        project.file(".agents/skills/to-library-skill/SKILL.md", "somebody else's skill")
+        project.file(".agents/skills/librarian-skill-author/SKILL.md", "somebody else's skill")
         val output = project.run("classes").output
 
-        assertEquals("somebody else's skill", project.text(".agents/skills/to-library-skill/SKILL.md"))
+        assertEquals("somebody else's skill", project.text(".agents/skills/librarian-skill-author/SKILL.md"))
         assertContains(output, "remove the refresh setting from dependencySkills { author { } }")
     }
 
@@ -182,4 +182,29 @@ class AgentSkillsTest {
         assertContains(reused, "Reusing configuration cache")
         assertEquals(librarian, project.text(".agents/skills/librarian/SKILL.md"))
     }
+
+    @Test
+    fun `the author skill's former name is removed where the plugin wrote it`() {
+        val project = project("author { }")
+        project.file(".agents/skills/to-library-skill/SKILL.md", "the old author skill")
+        project.recordedAs(".agents/skills/to-library-skill", mapOf("SKILL.md" to "the old author skill"))
+        val output = project.run("classes").output
+
+        assertFalse(Files.exists(project.path(".agents/skills/to-library-skill")))
+        assertTrue(Files.isRegularFile(project.path(".agents/skills/librarian-skill-author/SKILL.md")))
+        assertContains(output, "dependencyskills: removed .agents/skills/to-library-skill/, which is now the librarian-skill-author skill")
+        assertFalse("to-library-skill" in project.text(AgentSkills.MANIFEST))
+    }
+
+    @Test
+    fun `an edited copy under the former name is left in place, and said`() {
+        val project = project("author { }")
+        project.file(".agents/skills/to-library-skill/SKILL.md", "the old author skill, edited")
+        project.recordedAs(".agents/skills/to-library-skill", mapOf("SKILL.md" to "the old author skill"))
+        val output = project.run("classes").output
+
+        assertEquals("the old author skill, edited", project.text(".agents/skills/to-library-skill/SKILL.md"))
+        assertContains(output, ".agents/skills/to-library-skill/ is the librarian-skill-author skill's former name")
+    }
 }
+

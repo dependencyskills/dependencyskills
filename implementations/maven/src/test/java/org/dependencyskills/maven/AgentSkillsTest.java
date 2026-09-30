@@ -44,11 +44,11 @@ class AgentSkillsTest {
 
     @Test
     void carriesReferencesAndAssetsAndCopiesForClaudeCode() throws Exception {
-        write(AgentSkills.TO_LIBRARY_SKILL, SkillRefresh.Always, true);
+        write(AgentSkills.AUTHOR_SKILL, SkillRefresh.Always, true);
 
-        assertTrue(Files.isRegularFile(root.resolve(".agents/skills/to-library-skill/references/per-language.md")));
-        assertTrue(Files.isRegularFile(root.resolve(".claude/skills/to-library-skill/assets/SKILL.template.md")));
-        assertFalse(Files.isSymbolicLink(root.resolve(".claude/skills/to-library-skill")));
+        assertTrue(Files.isRegularFile(root.resolve(".agents/skills/librarian-skill-author/references/per-language.md")));
+        assertTrue(Files.isRegularFile(root.resolve(".claude/skills/librarian-skill-author/assets/SKILL.template.md")));
+        assertFalse(Files.isSymbolicLink(root.resolve(".claude/skills/librarian-skill-author")));
     }
 
     @Test
@@ -97,12 +97,36 @@ class AgentSkillsTest {
     @Test
     void keepsWhatOthersRecordedInTheSharedLockFile() throws Exception {
         Files.writeString(root.resolve(AgentSkills.LOCK),
-            "{\"version\": \"0.0.1\", \"changes\": [{\"kind\": \"skill\", \"path\": \".agents/skills/to-library-skill\", \"files\": {}, \"by\": \"gradle-plugin\"}]}");
+            "{\"version\": \"0.0.1\", \"changes\": [{\"kind\": \"skill\", \"path\": \".agents/skills/librarian-skill-author\", \"files\": {}, \"by\": \"gradle-plugin\"}]}");
         write(AgentSkills.LIBRARIAN, SkillRefresh.Always, false);
 
         String lock = Files.readString(root.resolve(AgentSkills.LOCK));
         assertTrue(lock.contains("\"by\": \"gradle-plugin\""), lock);
         assertTrue(lock.contains("\"version\": \"0.0.1\""), lock);
+    }
+
+    @Test
+    void theAuthorSkillsFormerNameIsRemovedWhereThePluginWroteIt() throws Exception {
+        Path old = root.resolve(".agents/skills/to-library-skill/SKILL.md");
+        Files.createDirectories(old.getParent());
+        Files.writeString(old, "the old author skill");
+        recordAs(".agents/skills/to-library-skill", "the old author skill");
+        write(AgentSkills.AUTHOR_SKILL, SkillRefresh.Always, false);
+
+        assertFalse(Files.exists(old.getParent()));
+        assertTrue(lifecycle.contains("dependencyskills: removed .agents/skills/to-library-skill/, which is now the librarian-skill-author skill"), lifecycle.toString());
+    }
+
+    @Test
+    void anEditedCopyUnderTheFormerNameIsKept() throws Exception {
+        Path old = root.resolve(".agents/skills/to-library-skill/SKILL.md");
+        Files.createDirectories(old.getParent());
+        Files.writeString(old, "the old author skill, edited");
+        recordAs(".agents/skills/to-library-skill", "the old author skill");
+        write(AgentSkills.AUTHOR_SKILL, SkillRefresh.Always, false);
+
+        assertTrue(Files.exists(old));
+        assertTrue(warnings.get(0).contains("is the librarian-skill-author skill's former name"), warnings.toString());
     }
 
     private void editedEarlierCopy() throws Exception {

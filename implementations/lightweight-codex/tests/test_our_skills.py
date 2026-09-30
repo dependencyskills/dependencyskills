@@ -17,7 +17,7 @@ class OurSkillsTest(unittest.TestCase):
 
     def test_each_skill_we_ship_follows_the_specification(self):
         shipped = sorted(p.parent for p in SKILLS.glob("*/SKILL.md"))
-        self.assertEqual(["librarian", "to-library-skill"], [p.name for p in shipped])
+        self.assertEqual(["librarian", "librarian-skill-author"], [p.name for p in shipped])
         for directory in shipped:
             with self.subTest(skill=directory.name):
                 fields, body = frontmatter((directory / "SKILL.md").read_text())

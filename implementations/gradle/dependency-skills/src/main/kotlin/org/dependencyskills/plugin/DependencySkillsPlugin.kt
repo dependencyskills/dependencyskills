@@ -103,7 +103,7 @@ class DependencySkillsPlugin : Plugin<Project> {
         // The agent skills, each only where its block is declared, written before any compile task.
         val skillWriters = listOf(
             AgentSkills.register(project, "writeConsumerSkill", AgentSkills.LIBRARIAN, extension.consumer, extension.enabled, claims),
-            AgentSkills.register(project, "writeAuthorSkill", AgentSkills.TO_LIBRARY_SKILL, extension.author, extension.enabled, claims),
+            AgentSkills.register(project, "writeAuthorSkill", AgentSkills.AUTHOR_SKILL, extension.author, extension.enabled, claims),
         )
 
         val observer = Observer(

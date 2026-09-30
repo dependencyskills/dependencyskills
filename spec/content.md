@@ -2,7 +2,7 @@
 
 Design attempt: **v4** · Status: draft, normative intent · Not yet released
 
-**v4 (2026-09-23, extended 2026-09-28):** a skill is named for its library's coordinate — outside Maven coordinates, the package's namespace in the group's place, and a source-shipping package's own-named skill first-order and its others second-order; a dependency skill may direct nothing but the use of its own library; a Swift consumer of an XCFramework is reached through doc comments; validation checks `metadata.version` against the version being built. Each change follows an alpha that was built and run, not only argued.
+**v4 (2026-09-23, extended 2026-09-28 and 2026-09-30):** the description names every major capability as a searcher's task; a skill is named for its library's coordinate — outside Maven coordinates, the package's namespace in the group's place, and a source-shipping package's own-named skill first-order and its others second-order; a dependency skill may direct nothing but the use of its own library; a Swift consumer of an XCFramework is reached through doc comments; validation checks `metadata.version` against the version being built. Each change follows an alpha that was built and run, not only argued.
 
 The [Agent Skills specification](https://agentskills.io/specification)
 defines what a skill *is* — a directory containing `SKILL.md`, with optional
@@ -107,10 +107,9 @@ instead of writing their own**. That second clause is what makes it useful
 in an index: "an HTTP client" describes a category, "use instead of hand-
 rolling retry, backoff and connection reuse" describes a decision.
 
-Do not list features. Do not restate the name. Do not claim superiority
-over alternatives — the consuming project decides which of its dependencies
-it prefers, and a description that argues is noise in an index built from
-hundreds of them.
+**Name every major capability, as the task a caller would search for** — "format a date for display", "3 days ago", "file sizes in KB/MB/GB" — with the synonyms people use. It is also how a project that does not depend on the library yet finds it, and a capability left out is invisible to that search. This is a list of needs, not of features: the library's own type names are not it. In a family of sibling modules, say first what separates this one, and name a sibling at most once, by its coordinate. Leave out what the library re-exports and its dependencies' versions, which answer searches for the dependency. Measured on fourteen real skills, descriptions rewritten this way took the right library from 82% to 91% of searches in the top three, and from six searches with no match to one.
+
+Do not restate the name. Do not claim superiority over alternatives — the consuming project decides which of its dependencies it prefers, and a description that argues is noise in an index built from hundreds of them.
 
 ## Body
 

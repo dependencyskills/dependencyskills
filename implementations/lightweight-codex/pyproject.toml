@@ -21,11 +21,11 @@ packages = ["src/dependencyskills_lightweight"]
 # instruction text: what the installer writes is what this pinned version was built with (#44).
 [tool.hatch.build.targets.wheel.force-include]
 "../agent-skills/librarian" = "dependencyskills_lightweight/skills/librarian"
-"../agent-skills/to-library-skill" = "dependencyskills_lightweight/skills/to-library-skill"
+"../agent-skills/librarian-skill-author" = "dependencyskills_lightweight/skills/librarian-skill-author"
 
 [tool.hatch.build.targets.sdist.force-include]
 "../agent-skills/librarian" = "skills/librarian"
-"../agent-skills/to-library-skill" = "skills/to-library-skill"
+"../agent-skills/librarian-skill-author" = "skills/librarian-skill-author"
 
 # Run from a checkout (`uvx --from <path>`), uv rebuilds only when these change. By default that is
 # pyproject.toml alone, so an edited module or skill kept serving the build from before the edit.
@@ -34,5 +34,5 @@ cache-keys = [
     { file = "pyproject.toml" },
     { file = "src/**/*.py" },
     { file = "../agent-skills/librarian/**" },
-    { file = "../agent-skills/to-library-skill/**" },
+    { file = "../agent-skills/librarian-skill-author/**" },
 ]

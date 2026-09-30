@@ -14,7 +14,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  * The library author's half: ships this library's own skill in its sources jar, under the library's
- * coordinate, and writes the {@code to-library-skill} agent skill with which an agent writes it.
+ * coordinate, and writes the {@code librarian-skill-author} agent skill with which an agent writes it.
  *
  * <p>The author writes an Agent Skill directory named for the skill, which {@code name} prints:
  *
@@ -47,7 +47,7 @@ public class AuthorMojo extends AbstractSkillsMojo {
         if (skip) {
             return;
         }
-        writeAgentSkill(AgentSkills.TO_LIBRARY_SKILL, "author");
+        writeAgentSkill(AgentSkills.AUTHOR_SKILL, "author");
         if ("pom".equals(project.getPackaging())) {
             return;
         }

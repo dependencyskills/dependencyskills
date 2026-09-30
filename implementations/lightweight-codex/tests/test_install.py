@@ -110,7 +110,7 @@ class InstallTest(unittest.TestCase):
         proposal = install.plan("author", self.project, ["claude"], False, None)
         install.apply(proposal)
 
-        self.assertTrue((self.project / ".agents/skills/to-library-skill/assets/SKILL.template.md").is_file())
+        self.assertTrue((self.project / ".agents/skills/librarian-skill-author/assets/SKILL.template.md").is_file())
         self.assertEqual([], [e for e in proposal["effects"] if e["kind"].endswith("-mcp")])
 
     def test_the_lock_file_names_nothing_on_this_machine(self):
@@ -157,4 +157,16 @@ class InstallTest(unittest.TestCase):
 
     def test_with_nothing_installed_it_runs_the_published_package_pinned_and_quiet(self):
         self.assertEqual(["uvx", "--quiet", "dependencyskills@" + install.__version__, "mcp"], install.server_command())
+
+    def test_the_author_skills_former_name_is_removed_where_this_wrote_it(self):
+        old = self.project / ".agents/skills/to-library-skill"
+        old.mkdir(parents=True)
+        (old / "SKILL.md").write_text("the old author skill")
+        (self.project / "dependencyskills-lock.json").write_text(json.dumps({"changes": [
+            {"kind": "skill", "path": ".agents/skills/to-library-skill", "files": {"SKILL.md": install.digest(old / "SKILL.md")}}]}))
+        install.apply(install.plan("author", self.project, ["claude"], False, None))
+
+        self.assertFalse(old.exists())
+        self.assertTrue((self.project / ".agents/skills/librarian-skill-author/SKILL.md").is_file())
+        self.assertNotIn("to-library-skill", (self.project / "dependencyskills-lock.json").read_text())
 

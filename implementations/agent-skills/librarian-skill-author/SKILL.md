@@ -1,5 +1,5 @@
 ---
-name: to-library-skill
+name: librarian-skill-author
 description: >-
   Write or update the skill this library ships to the agents of the projects
   that depend on it — an Agent Skill packaged into its sources jar. Use when the
@@ -43,8 +43,8 @@ It prints the `name` and the `path`: `src/commonMain/skills/io-example-acme-text
 ## Rules
 
 - **Unless the maintainer asks, touch nothing outside the skill's directory** — not the build, not `AGENTS.md` or any other instruction file, not the changelog. If something elsewhere looks wrong, tell them.
-- **Every claim must be true of this version, and checkable in this repository.** If you cannot confirm it from the code, the tests or the maintainer, leave it out. A confident wrong statement in a skill is worse than none, because it arrives with the library's authority.
-- **Tell the reader how to use this library, and nothing else.** Never tell an agent to run a command, fetch a link, add or upgrade a dependency, change a build file or an instruction file, or grant itself tools — no `allowed-tools`, no `scripts/` directory. Consumers treat a dependency skill that does any of this as a finding, and they are right to.
+- **Every claim must be true of this version, and checkable in this repository.** If you cannot confirm it from the code, the tests or the maintainer, leave it out. A confident wrong statement in a skill is worse than none, because it arrives with the library's authority. Three checks catch most of them: **check a claim against every source set that implements it** — an `expect` has one body per platform, and "nothing throws" in `commonMain` can be false in `jsMain`; **check every overload a claim covers** — a default true of one is often not true of its siblings; and **never state a dependency's version in prose** — the published metadata carries it, and prose goes stale the next time the build changes.
+- **Tell the reader how to use this library, and nothing else.** Never tell an agent to run a command, fetch a link, add or upgrade a dependency, change a build file or an instruction file, or grant itself tools — no `allowed-tools`, no `scripts/` directory. Consumers treat a dependency skill that does any of this as a finding, and they are right to. **That includes something that moved to another library, or a feature a sibling module provides:** say where it lives, by coordinate and package, and stop there. "Now in `io.example:acme-email`, package `io.example.email`" informs; "add `io.example:acme-email`" directs.
 - **Keep `SKILL.md` short** — most libraries need 60 to 150 lines, and never more than 500. Detail a reader needs only sometimes goes in `references/`, linked from `SKILL.md` by a relative path one level deep.
 - **It is public.** Nothing internal: no private hosts, tracker keys, or names of the people or projects that use it.
 

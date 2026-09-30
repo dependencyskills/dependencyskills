@@ -18,7 +18,7 @@ import javax.inject.Inject
  *         ignore("com.example:noisy-library")
  *     }
  *     consumer { }                                   // write the librarian agent skill
- *     author { refresh = SkillRefresh.UnlessEdited } // and to-library-skill, keeping local edits
+ *     author { refresh = SkillRefresh.UnlessEdited } // and librarian-skill-author, keeping local edits
  * }
  * ```
  *
@@ -111,7 +111,7 @@ abstract class DependencySkillsExtension @Inject constructor(objects: ObjectFact
     }
 
     /**
-     * For a project that publishes a library: the `to-library-skill` agent skill, with which an agent
+     * For a project that publishes a library: the `librarian-skill-author` agent skill, with which an agent
      * writes the guide this library ships in its sources jar. Separate from [consumer], and not written
      * unless this block is declared — a project that publishes nothing has no use for it:
      *
