@@ -33,8 +33,8 @@ internal object Coordinates {
     fun of(result: ResolutionResult, transitive: Boolean, includedBuilds: Map<String, File> = emptyMap()): Set<Coordinate> {
         val build = (result.root.id as? ProjectComponentIdentifier)?.build?.buildPath
         if (transitive) {
-            return result.allComponents.filter { it != result.root }
-                .mapNotNullTo(LinkedHashSet()) { coordinateOf(it, null, build, includedBuilds) }
+            return withoutPlatformVariants(result.allComponents.filter { it != result.root }
+                .mapNotNullTo(LinkedHashSet()) { coordinateOf(it, null, build, includedBuilds) })
         }
         return result.root.dependencies.filterIsInstance<ResolvedDependencyResult>()
             .mapNotNullTo(LinkedHashSet()) { coordinateOf(it.selected, it.requested, build, includedBuilds) }
@@ -65,6 +65,30 @@ internal object Coordinates {
         val source = includedBuilds[id.build.buildPath]?.resolve(id.projectPath.trimStart(':').replace(':', '/'))
         return Coordinate("maven", "$group:$module:${version.version}", source?.absolutePath)
     }
+
+    /**
+     * [coordinates] without the platform module of a Kotlin Multiplatform library whose root is also there.
+     *
+     * Resolving a multiplatform library resolves its root component and the platform module the target
+     * selected — `format-datetime` and `format-datetime-jvm` — and across a project's targets, one per
+     * platform. They are one library with one skill, which the lookup finds through the platform module's
+     * sources jar when it is filed under the root; listed separately, they doubled a real project's report.
+     * A platform module whose root was not resolved is kept: it is then the only name the library has.
+     */
+    fun withoutPlatformVariants(coordinates: Set<Coordinate>): Set<Coordinate> {
+        val present = coordinates.mapTo(HashSet()) { it.value }
+        return coordinates.filterTo(LinkedHashSet()) { coordinate ->
+            val parts = coordinate.value.split(':')
+            if (parts.size != 3 || !PLATFORM_SUFFIX.containsMatchIn(parts[1])) return@filterTo true
+            "${parts[0]}:${PLATFORM_SUFFIX.replace(parts[1], "")}:${parts[2]}" !in present
+        }
+    }
+
+    /** The suffix a multiplatform library gives each platform module; the lookup's `PLATFORM_SUFFIX`, the same list. */
+    private val PLATFORM_SUFFIX = Regex(
+        "-(?:jvm|android|js|wasm-js|wasm-wasi|metadata|iosarm64|iosx64|iossimulatorarm64|" +
+            "macosarm64|macosx64|linuxx64|linuxarm64|mingwx64|tvos\\w*|watchos\\w*)$",
+    )
 
     /**
      * Whether a coordinate is one the project asked to be left alone.

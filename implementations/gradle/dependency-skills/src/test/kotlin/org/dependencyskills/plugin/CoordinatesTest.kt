@@ -1,6 +1,7 @@
 package org.dependencyskills.plugin
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -32,4 +33,18 @@ class CoordinatesTest {
         assertFalse(Coordinates.ignored(alpha, setOf("com.example:alphabet")))
         assertFalse(Coordinates.ignored(alpha, setOf("com.example")))
     }
+
+    @Test
+    fun `a multiplatform library's platform modules fold into it, and stand alone without it`() {
+        fun c(value: String) = Coordinate("maven", value)
+        val resolved = setOf(
+            c("io.acme:text:1.0"), c("io.acme:text-jvm:1.0"), c("io.acme:text-iosarm64:1.0"), c("io.acme:text-wasm-js:1.0"),
+            c("io.acme:solo-jvm:2.0"), c("io.acme:text-tools:1.0"),
+        )
+        assertEquals(
+            setOf(c("io.acme:text:1.0"), c("io.acme:solo-jvm:2.0"), c("io.acme:text-tools:1.0")),
+            Coordinates.withoutPlatformVariants(resolved),
+        )
+    }
 }
+
