@@ -14,6 +14,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.bundling.Zip
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 
 /**
@@ -197,6 +198,7 @@ internal object SkillPackaging {
  * Prints the skill's name and the directory it belongs in, so neither an author nor their agent
  * ever computes the coordinate encoding by hand.
  */
+@DisableCachingByDefault(because = "It only prints; there is no output to cache")
 abstract class DependencySkillName : DefaultTask() {
 
     @get:Input
@@ -224,6 +226,7 @@ abstract class DependencySkillName : DefaultTask() {
  * line in the build output. `spec/content.md` says a consumer rejects the naming ones outright, and
  * the lookup refuses a `description` over [MAX_DESCRIPTION] characters.
  */
+@DisableCachingByDefault(because = "It only warns; there is no output to cache")
 abstract class CheckDependencySkill : DefaultTask() {
 
     @get:InputFile
