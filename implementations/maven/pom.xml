@@ -20,12 +20,26 @@
         for the lightweight codex, and writes the librarian and librarian-skill-author agent skills into a
         project whose build asks for them.
     </description>
+    <url>https://github.com/dependencyskills/dependencyskills</url>
+    <inceptionYear>2026</inceptionYear>
     <licenses>
         <license>
             <name>Apache-2.0</name>
             <url>https://www.apache.org/licenses/LICENSE-2.0</url>
         </license>
     </licenses>
+    <developers>
+        <developer>
+            <id>bpappin</id>
+            <name>bpappin</name>
+            <url>https://github.com/bpappin</url>
+        </developer>
+    </developers>
+    <scm>
+        <url>https://github.com/dependencyskills/dependencyskills</url>
+        <connection>scm:git:https://github.com/dependencyskills/dependencyskills.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/dependencyskills/dependencyskills.git</developerConnection>
+    </scm>
 
     <prerequisites>
         <maven>3.9.0</maven>
@@ -120,6 +134,14 @@
                     <artifactId>maven-source-plugin</artifactId>
                     <version>3.4.0</version>
                 </plugin>
+                <plugin>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>3.12.0</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>3.2.8</version>
+                </plugin>
             </plugins>
         </pluginManagement>
 
@@ -158,6 +180,65 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- Maven Central requires both beside the plugin jar, in every build, so a local install is what ships. -->
+            <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!--
+          Maven Central, under the verified org.dependencyskills namespace: `./mvnw -P release deploy`.
+          Signed with the publisher's GPG key, and uploaded with the Central Portal token in settings.xml
+          under the server id `central` — both the publisher's, never this file. A plain install is not signed.
+        -->
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.11.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

@@ -11,7 +11,7 @@ from .project import SBOMS, declared_libraries, scope_of
 
 NOT_REGISTERED = (
     "This project's dependencies have not been reported yet. Build it once with the dependency-skills "
-    "plugin applied — org.dependencyskills.plugin in Gradle, whose build writes "
+    "plugin applied — org.dependencyskills in Gradle, whose build writes "
     f"{SBOMS[0].as_posix()}, or the dependency-skills-maven-plugin's consumer goal in Maven, which writes "
     f"{SBOMS[1].as_posix()} — and this reads it. An npm, Python, Go or Cargo project needs no plugin: install "
     "its dependencies, and this reads what the project declares and what is installed.")

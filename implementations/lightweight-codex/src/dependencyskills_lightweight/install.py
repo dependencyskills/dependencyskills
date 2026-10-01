@@ -20,7 +20,7 @@ package, and:
 - **What it records is split by where it may travel.** The skills it copied, with their digests, go in
   `dependencyskills-lock.json` at the project's root, which is meant to be committed and so holds only
   paths relative to the project. What it registered on this machine — MCP servers, the hook, the
-  source it ran from — goes in a record under `~/.dependencyskills/installs/`, never in the project,
+  source it ran from — goes in a record under `~/.dscodex/installs/`, never in the project,
   because it names this machine's paths and a commit would publish them.
 """
 
@@ -172,7 +172,7 @@ def plan(role, project, harnesses, hook, source):
             effects.append({"kind": "claude-hook", "path": ".claude/settings.local.json",
                             "command": " ".join(launcher(source) + ["hook"])})
     yours = [
-        "Apply the Gradle plugin `org.dependencyskills.plugin` to every module "
+        "Apply the Gradle plugin `org.dependencyskills` to every module "
         + ("whose dependencies the agent should see" if role == "consumer" else "that publishes a library")
         + f", at version {__version__}, the same version as this — this installer never edits a build file. "
         + "In a Gradle build, declaring `dependencySkills { " + role

@@ -221,7 +221,8 @@ abstract class DependencySkillName : DefaultTask() {
  *
  * Warnings rather than failures, for the alpha: the checks are what a library author most likely
  * gets wrong, and a publish failing on a new file's frontmatter is a worse first experience than a
- * line in the build output. `spec/content.md` says a consumer rejects the naming ones outright.
+ * line in the build output. `spec/content.md` says a consumer rejects the naming ones outright, and
+ * the lookup refuses a `description` over [MAX_DESCRIPTION] characters.
  */
 abstract class CheckDependencySkill : DefaultTask() {
 
@@ -287,7 +288,7 @@ abstract class CheckDependencySkill : DefaultTask() {
             )
         } else {
             val name = NAME.find(frontmatter)?.groupValues?.get(1)?.trim()?.trim('"', '\'')
-            val description = DESCRIPTION.find(frontmatter)?.groupValues?.get(1)?.trim()
+            val description = skillDescription(frontmatter)
             if (name != expected) {
                 logger.warn(
                     "dependencyskills: SKILL.md `name` is ${name?.let { "'$it'" } ?: "missing"}; it should be " +
@@ -296,6 +297,12 @@ abstract class CheckDependencySkill : DefaultTask() {
             }
             if (description.isNullOrBlank()) {
                 logger.warn("dependencyskills: SKILL.md has no `description`, which is what tells an agent when to read it")
+            } else if (description.length > MAX_DESCRIPTION) {
+                logger.warn(
+                    "dependencyskills: SKILL.md `description` is ${description.length} characters; the Agent Skills " +
+                        "specification allows $MAX_DESCRIPTION, and a consumer's lookup does not serve a skill over " +
+                        "it. Shorten it.",
+                )
             }
             // The specification allows six top-level fields and the reference validator rejects any
             // other; anything more belongs under `metadata`.
@@ -339,11 +346,34 @@ abstract class CheckDependencySkill : DefaultTask() {
     private companion object {
         val FRONTMATTER = Regex("""\A---\r?\n(.*?)\r?\n---""", RegexOption.DOT_MATCHES_ALL)
         val NAME = Regex("""(?m)^name:\s*(.+)$""")
-        val DESCRIPTION = Regex("""(?m)^description:\s*(.+)$""")
         val ALLOWED_TOOLS = Regex("""(?m)^allowed-tools:""")
         val TOP_LEVEL = Regex("""(?m)^([A-Za-z][\w-]*):""")
         val FIELDS = setOf("name", "description", "license", "compatibility", "metadata", "allowed-tools")
         /** `version:` indented under `metadata:`, which is where the specification puts it. */
         val VERSION = Regex("""(?m)^metadata:\s*\r?\n(?:[ \t]+.*\r?\n)*?[ \t]+version:\s*(.+)$""")
+    }
+}
+
+/** The longest `description` the Agent Skills specification allows; the reference validator rejects a longer one. */
+internal const val MAX_DESCRIPTION = 1024
+
+private val DESCRIPTION_LINE = Regex("""description:[ \t]*(.*)""")
+
+/**
+ * A skill's `description` as the specification writes it: a plain or quoted scalar, or a folded (`>`)
+ * or literal (`|`) block — the folded form being the one the author skill's template uses. The same
+ * reading as the lookup's, so the length the build checks is the length a consumer measures. Null when
+ * there is no `description`.
+ */
+internal fun skillDescription(frontmatter: String): String? {
+    val lines = frontmatter.lines()
+    val at = lines.indexOfFirst { DESCRIPTION_LINE.matches(it) }
+    if (at < 0) return null
+    val value = DESCRIPTION_LINE.matchEntire(lines[at])!!.groupValues[1].trim()
+    val block = lines.drop(at + 1).takeWhile { it.startsWith(" ") || it.startsWith("\t") || it.isBlank() }
+    return when (value.firstOrNull()) {
+        '>' -> block.map { it.trim() }.filter { it.isNotEmpty() }.joinToString(" ")
+        '|' -> block.joinToString("\n") { it.trim() }.trim('\n')
+        else -> value.removeSurrounding("\"").removeSurrounding("'")
     }
 }

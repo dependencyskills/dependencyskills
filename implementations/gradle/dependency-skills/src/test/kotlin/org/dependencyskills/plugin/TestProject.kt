@@ -165,7 +165,7 @@ internal class TestProject(
     }
 
     /** Writes the consuming project's build. [body] goes inside the build script verbatim. */
-    fun build(body: String) = buildWith("`java-library`\nid(\"org.dependencyskills.plugin\")", body)
+    fun build(body: String) = buildWith("`java-library`\nid(\"org.dependencyskills\")", body)
 
     /** As [build], with the plugins block spelled out. */
     fun buildWith(plugins: String, body: String) {

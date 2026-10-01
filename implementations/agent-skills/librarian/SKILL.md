@@ -26,6 +26,8 @@ This project's dependencies have been indexed. Before writing code against a lib
 3. **`search_libraries(need)`** — before writing something a library might already do, describe the need in plain words: *"format a date for display"*, *"retry a failed request with backoff"*. The project's own libraries come first, then others already on this machine, each marked. **A library that is not a dependency is the developer's decision to add:** propose it with your reason, and do not add it yourself unless they asked you to.
 4. **`read_symbol(name)`**, where the lookup offers it — the exact signature of one capability a search found.
 
+**Pass `project` with every call**: the absolute path of the project you are working in. Each tool takes it, and the server may have been started somewhere else — by an IDE that configures it once for every project, or for a checkout this session's worktree is not.
+
 If a library you are about to use is not in `list_guides`, that does not mean it has none: build or install, and list again, before reading its sources.
 
 **Without the tools.** If `list_guides`, `read_guide` and `search_libraries` are not available in this session, the same answers come from the `dependencyskills` command, run from the project's directory:

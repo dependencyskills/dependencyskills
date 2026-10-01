@@ -4,6 +4,8 @@ The Maven counterpart of the [Gradle plugin](../gradle/), `org.dependencyskills.
 
 It does what the Gradle plugin does, the same way, so the lightweight codex cannot tell which build system a project uses: the same skill name for a coordinate, the same SBOM, the same agent skills in the same places, and the same `dependencyskills-lock.json`.
 
+Maven resolves plugins from Central by default, so the declaration below is all a project needs. Releasing it is `./mvnw -P release deploy`: the `release` profile signs with the publisher's GPG key and uploads with the Central Portal token held in `settings.xml` under the server id `central`. A plain `install` signs nothing.
+
 ## The two goals
 
 A project declares the goal for each role it has. **A goal not declared is a role not configured**, the Maven equivalent of the Gradle plugin's `consumer { }` and `author { }` blocks.

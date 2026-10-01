@@ -88,7 +88,7 @@ class ReportFileTest {
         file("settings.gradle.kts", path("settings.gradle.kts").toFile().readText() + "\ninclude($include)\n")
         for ((module, library) in listOf("a" to "alpha", "b" to "gamma")) {
             file("$module/build.gradle.kts", """
-                plugins { `java-library`; id("org.dependencyskills.plugin") }
+                plugins { `java-library`; id("org.dependencyskills") }
                 // Declared only: these tests follow one dependency per module, and alpha exposes beta.
                 dependencySkills { harvester { transitive = false } }
                 dependencies { api("com.example:$library:1.0") }
@@ -108,7 +108,7 @@ class ReportFileTest {
 
         // Only :a is compiled. :b's dependency stays in scope - it used to vanish here.
         project.file("a/build.gradle.kts", """
-            plugins { `java-library`; id("org.dependencyskills.plugin") }
+            plugins { `java-library`; id("org.dependencyskills") }
             dependencySkills { harvester { transitive = false } }
             dependencies { api("com.example:alpha:1.0"); api("com.example:beta:1.0") }
         """.trimIndent())

@@ -13,9 +13,9 @@ USAGE = """usage: dependencyskills <command>
   uninstall [--apply] reverse what install recorded
   name                for a library with no build plugin (npm, Python, Go, Cargo): print its skill's name and path
   check               for the same: say what would stop its skill shipping or being read
-  mcp [--project DIR] serve the lookup over MCP on stdio; the agent's harness starts this. It serves the
-                      project it is started in, or DIR for a harness whose configuration is not per
-                      project and does not start it there
+  mcp [--project DIR] serve the lookup over MCP on stdio; the agent's harness starts this. Each tool
+                      answers for its `project` argument, else for DIR, else for the directory it is
+                      started in
   list                the project's libraries whose authors ship a guide       (the list_guides tool)
   guide <library> [file]
                       one library's guide, or a file it links to                (the read_guide tool)
@@ -33,7 +33,8 @@ def main(argv=None):
     arguments = list(sys.argv[1:] if argv is None else argv)
     command, rest = (arguments[0], arguments[1:]) if arguments else ("", [])
     if command == "mcp":
-        # An IDE-wide configuration (Android Studio's) starts every server in one directory, not the project's.
+        # The default project, for a configuration that serves one project but does not start the server in it;
+        # a tool's own `project` argument overrides it.
         project = _option(rest, "--project", None)
         if project:
             if not os.path.isdir(project):

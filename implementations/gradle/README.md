@@ -6,13 +6,29 @@ Published under `org.dependencyskills.gradle`, so the coordinate says which buil
 
 | module | plugin id | what it is |
 |---|---|---|
-| `dependency-skills` | `org.dependencyskills.plugin` | reports which of a project's dependencies the codex has never seen; applied to a library, ships the library's own skill in its sources jar; writes the `librarian` and `librarian-skill-author` agent skills where their blocks are declared |
+| `dependency-skills` | `org.dependencyskills` | reports which of a project's dependencies the codex has never seen; applied to a library, ships the library's own skill in its sources jar; writes the `librarian` and `librarian-skill-author` agent skills where their blocks are declared |
+
+## Getting it
+
+Published to Maven Central, plugin marker included, so a build finds it by id once `mavenCentral()` is among its plugin repositories — Gradle looks only at the Plugin Portal by default:
+
+```kotlin
+// settings.gradle.kts
+pluginManagement {
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+```
+
+Releasing it is `./gradlew :dependency-skills:publishToMavenCentral`, with the Central Portal token and signing key in the publisher's own Gradle properties (`mavenCentralUsername`, `mavenCentralPassword`, `signingInMemoryKey` and the rest). Only that task signs: `publishToMavenLocal` needs no key.
 
 ## Naming
 
-The plugin id had to be a namespace we own, because **a Gradle plugin id is also a Maven groupId** — declaring `id("X")` publishes a marker artifact at `X:X.gradle.plugin`. Central verifies groupId ownership against a domain and the Plugin Portal has the same rule, so a bare `dependency-skills` could be published to neither. The id follows the `io.ktor.plugin` shape: the owned namespace plus `.plugin`.
+The plugin id had to be a namespace we own, because **a Gradle plugin id is also a Maven groupId** — declaring `id("X")` publishes a marker artifact at `X:X.gradle.plugin`. Central verifies groupId ownership against a domain and the Plugin Portal has the same rule, so a bare `dependency-skills` could be published to neither. The id is the owned namespace itself, `org.dependencyskills`: it is the one public name the Gradle plugin has, and a suffix such as `.plugin` says nothing a build script's `plugins { }` block does not already say. Its marker is `org.dependencyskills:org.dependencyskills.gradle.plugin`, which Gradle derives and nobody types.
 
-The Kotlin package is `org.dependencyskills.plugin` — **the plugin id, not the group and module**. That is a deliberate exception to the rule the codex modules follow, and it is forced: the artifact name `dependency-skills` is hyphenated and cannot be a package segment. Matching the id is the next most useful thing for a reader holding a stack trace.
+The Kotlin package is `org.dependencyskills.plugin` — **neither the id nor the group and module**. That is a deliberate exception to the rule the codex modules follow, and it is forced twice over: the artifact name `dependency-skills` is hyphenated and cannot be a package segment, and the id is the project's root namespace, where the plugin's classes should not sit beside everything else the project publishes. A package one segment below the id is the next most useful thing for a reader holding a stack trace.
 
 ## `dependency-skills`
 
@@ -27,7 +43,7 @@ A consuming project applies it. On every build it watches the compile classpaths
 **Scope is never stored.** It belongs to the *(project, source set) → coordinate* edge, not to the coordinate: the same artifact is `api` in one project and `implementation` in another, and the store is machine-wide. Which coordinates a query may see is computed per project, at query time.
 
 ```kotlin
-plugins { id("org.dependencyskills.plugin") }
+plugins { id("org.dependencyskills") }
 
 dependencySkills {
     harvester {

@@ -18,7 +18,9 @@ final class SkillCheck {
 
     private static final Pattern FRONTMATTER = Pattern.compile("\\A---\\r?\\n(.*?)\\r?\\n---", Pattern.DOTALL);
     private static final Pattern NAME = Pattern.compile("(?m)^name:\\s*(.+)$");
-    private static final Pattern DESCRIPTION = Pattern.compile("(?m)^description:\\s*(.+)$");
+    private static final Pattern DESCRIPTION_LINE = Pattern.compile("description:[ \\t]*(.*)");
+    /** The longest {@code description} the Agent Skills specification allows; the reference validator rejects a longer one. */
+    static final int MAX_DESCRIPTION = 1024;
     private static final Pattern ALLOWED_TOOLS = Pattern.compile("(?m)^allowed-tools:");
     private static final Pattern TOP_LEVEL = Pattern.compile("(?m)^([A-Za-z][\\w-]*):");
     private static final Set<String> FIELDS = Set.of("name", "description", "license", "compatibility", "metadata", "allowed-tools");
@@ -49,13 +51,17 @@ final class SkillCheck {
         } else {
             String frontmatter = frontmatterMatch.group(1);
             String name = scalar(NAME, frontmatter);
-            String description = first(DESCRIPTION, frontmatter);
+            String description = description(frontmatter);
             if (!expectedName.equals(name)) {
                 warnings.add("SKILL.md `name` is " + (name == null ? "missing" : "'" + name + "'")
                     + "; it should be '" + expectedName + "', the library's coordinate as a skill name");
             }
             if (description == null || description.isBlank()) {
                 warnings.add("SKILL.md has no `description`, which is what tells an agent when to read it");
+            } else if (description.length() > MAX_DESCRIPTION) {
+                warnings.add("SKILL.md `description` is " + description.length() + " characters; the Agent Skills "
+                    + "specification allows " + MAX_DESCRIPTION + ", and a consumer's lookup does not serve a skill over it. "
+                    + "Shorten it.");
             }
             Set<String> unknown = new TreeSet<>();
             Matcher topLevel = TOP_LEVEL.matcher(frontmatter);
@@ -86,6 +92,44 @@ final class SkillCheck {
                 + "the library; it never gives the agent something to run.");
         }
         return warnings;
+    }
+
+    /**
+     * A skill's {@code description} as the specification writes it: a plain or quoted scalar, or a folded
+     * ({@code >}) or literal ({@code |}) block, the folded form being the one the author skill's template
+     * uses. The same reading as the lookup's, so the length the build checks is the length a consumer
+     * measures. Null when there is no {@code description}.
+     */
+    static String description(String frontmatter) {
+        String[] lines = frontmatter.split("\\r?\\n", -1);
+        for (int i = 0; i < lines.length; i++) {
+            Matcher line = DESCRIPTION_LINE.matcher(lines[i]);
+            if (!line.matches()) {
+                continue;
+            }
+            String value = line.group(1).trim();
+            List<String> block = new ArrayList<>();
+            for (int j = i + 1; j < lines.length
+                && (lines[j].startsWith(" ") || lines[j].startsWith("\t") || lines[j].isBlank()); j++) {
+                block.add(lines[j].trim());
+            }
+            if (value.startsWith(">")) {
+                return String.join(" ", block.stream().filter(b -> !b.isEmpty()).toList());
+            }
+            if (value.startsWith("|")) {
+                return String.join("\n", block).replaceAll("^\n+|\n+$", "");
+            }
+            return unquote(value);
+        }
+        return null;
+    }
+
+    private static String unquote(String value) {
+        if (value.length() >= 2 && value.charAt(0) == value.charAt(value.length() - 1)
+            && (value.charAt(0) == '"' || value.charAt(0) == '\'')) {
+            return value.substring(1, value.length() - 1);
+        }
+        return value;
     }
 
     private static String first(Pattern pattern, String text) {

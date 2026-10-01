@@ -23,8 +23,12 @@ CREATE TABLE IF NOT EXISTS setting (key TEXT PRIMARY KEY, value TEXT);
 
 
 def home():
-    """Where the store and the log live: `DEPENDENCYSKILLS_HOME`, or `~/.dependencyskills`."""
-    return Path(os.environ.get("DEPENDENCYSKILLS_HOME") or Path.home() / ".dependencyskills")
+    """Where the store and the log live: `DEPENDENCYSKILLS_CODEX_DIR`, or `~/.dscodex`.
+
+    The full codex's directory and its override, so a machine has one home for both: `skills.db` here
+    beside the full codex's `codex.db` and `usage.db`, which that service can read as well (ADR-0012).
+    """
+    return Path(os.environ.get("DEPENDENCYSKILLS_CODEX_DIR") or Path.home() / ".dscodex")
 
 
 class Store:
@@ -39,7 +43,7 @@ class Store:
     def __init__(self, directory=None):
         self.directory = Path(directory) if directory else home()
         self.directory.mkdir(parents=True, exist_ok=True)
-        self.db = sqlite3.connect(self.directory / "lightweight.db", timeout=30)
+        self.db = sqlite3.connect(self.directory / "skills.db", timeout=30)
         self.db.execute("PRAGMA journal_mode=WAL")
         self.db.execute("PRAGMA busy_timeout=30000")
         self.db.executescript(SCHEMA)

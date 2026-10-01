@@ -30,7 +30,7 @@ class MultiplatformTest {
         project.buildWith(
             plugins = """
                 kotlin("multiplatform")
-                id("org.dependencyskills.plugin")
+                id("org.dependencyskills")
             """.trimIndent(),
             body = """
                 kotlin {

@@ -1,6 +1,11 @@
 """An MCP server over stdio: newline-delimited JSON-RPC 2.0 on stdin and stdout.
 
-The harness starts it in the project and stops it when the session ends, so there is no daemon.
+The harness starts it and stops it when the session ends, so there is no daemon. Every tool takes an
+optional `project`, the absolute path of the project the agent is working in, and answers for the
+directory it was started in without one. A harness with one configuration for every project — Antigravity,
+Android Studio — starts it in its own directory rather than the project's, and a session in a git worktree
+is a different directory from the checkout it was registered for; the argument is what lets one server
+answer all of them.
 Stdout carries protocol messages and nothing else — a stray print would corrupt the stream — so
 everything else goes to stderr, which harnesses keep as a log.
 """
@@ -15,6 +20,11 @@ from .lookup import get_file, get_skill, list_skills
 from .project import refresh
 from .store import Store
 
+PROJECT = {
+    "type": "string",
+    "description": "optional: the absolute path of the project you are working in; default: where this server started",
+}
+
 TOOLS = [
     {
         "name": "list_guides",
@@ -23,7 +33,7 @@ TOOLS = [
             "what it is not for, and what goes wrong. Call it before writing, changing or fixing code that uses "
             "a library, even when the API looks familiar, and again after adding a dependency and building. "
             "Each entry says in one line what the library is for."),
-        "inputSchema": {"type": "object", "properties": {}, "additionalProperties": False},
+        "inputSchema": {"type": "object", "properties": {"project": PROJECT}, "additionalProperties": False},
     },
     {
         "name": "read_guide",
@@ -36,6 +46,7 @@ TOOLS = [
             "properties": {
                 "library": {"type": "string", "description": "group:artifact, e.g. com.example:acme-text"},
                 "file": {"type": "string", "description": "optional: a file the guide links to, e.g. references/swift.md"},
+                "project": PROJECT,
             },
             "required": ["library"],
             "additionalProperties": False,
@@ -50,7 +61,10 @@ TOOLS = [
             "library is the developer's decision: propose it."),
         "inputSchema": {
             "type": "object",
-            "properties": {"need": {"type": "string", "description": "what the code needs, in plain words, e.g. locale-aware date formatting"}},
+            "properties": {
+                "need": {"type": "string", "description": "what the code needs, in plain words, e.g. locale-aware date formatting"},
+                "project": PROJECT,
+            },
             "required": ["need"],
             "additionalProperties": False,
         },
@@ -58,9 +72,18 @@ TOOLS = [
 ]
 
 
+class ToolError(ValueError):
+    """An argument the tool cannot use, with what to do instead: answered as a tool error, not a protocol one."""
+
+
 def call(store, name, arguments):
-    """The text a tool answers with, or None for an unknown tool or bad arguments."""
-    project = refresh(store, os.getcwd())
+    """The text a tool answers with, or None for an unknown tool or bad arguments.
+
+    Answers for `arguments["project"]` when given, else for the working directory. Raises ToolError when
+    `project` is not the absolute path of a directory: a relative one would be resolved against where the
+    server started, which is exactly the directory the argument exists to override.
+    """
+    project = refresh(store, _directory(arguments.get("project")))
     if name == "list_guides":
         return list_skills(store, project)
     if name == "read_guide" and isinstance(arguments.get("library"), str):
@@ -71,6 +94,19 @@ def call(store, name, arguments):
     if name == "search_libraries" and isinstance(arguments.get("need"), str):
         return find(store, project, arguments["need"].strip())
     return None
+
+
+def _directory(project):
+    if project is None or (isinstance(project, str) and not project.strip()):
+        return os.getcwd()
+    if not isinstance(project, str):
+        raise ToolError("project must be a string: the absolute path of the project you are working in")
+    directory = os.path.expanduser(project.strip())
+    if not os.path.isabs(directory):
+        raise ToolError(f"project must be an absolute path, not {project}: the path of the project you are working in")
+    if not os.path.isdir(directory):
+        raise ToolError(f"project {project}: no such directory")
+    return directory
 
 
 def serve():
@@ -108,10 +144,14 @@ def serve():
             elif method == "tools/list":
                 result = {"tools": TOOLS}
             elif method == "tools/call":
-                text = call(store, params.get("name"), params.get("arguments") or {})
-                result = {"content": [{"type": "text", "text": text if text is not None
-                                       else f"unknown tool or arguments: {params.get('name')}"}],
-                          "isError": text is None}
+                try:
+                    text = call(store, params.get("name"), params.get("arguments") or {})
+                except ToolError as problem:
+                    text, error = str(problem), True
+                else:
+                    text, error = (text, False) if text is not None \
+                        else (f"unknown tool or arguments: {params.get('name')}", True)
+                result = {"content": [{"type": "text", "text": text}], "isError": error}
             else:
                 send({"jsonrpc": "2.0", "id": request_id, "error": {"code": -32601, "message": f"no method {method}"}})
                 continue

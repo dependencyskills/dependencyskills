@@ -24,9 +24,9 @@ class Machine(unittest.TestCase):
         self.project = self.temp / "project"
         self.project.mkdir()
         self._environment = {k: os.environ.get(k) for k in
-                             ("M2_REPO", "GRADLE_USER_HOME", "DEPENDENCYSKILLS_HOME", "DEPENDENCYSKILLS_LOG")}
+                             ("M2_REPO", "GRADLE_USER_HOME", "DEPENDENCYSKILLS_CODEX_DIR", "DEPENDENCYSKILLS_LOG")}
         os.environ.update(M2_REPO=str(self.maven), GRADLE_USER_HOME=str(self.gradle),
-                          DEPENDENCYSKILLS_HOME=str(self.temp / "home"),
+                          DEPENDENCYSKILLS_CODEX_DIR=str(self.temp / "home"),
                           DEPENDENCYSKILLS_LOG=str(self.temp / "log.jsonl"))
         self.store = Store()
 

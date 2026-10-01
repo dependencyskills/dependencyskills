@@ -14,9 +14,9 @@ class InstallTest(unittest.TestCase):
         self.project = self.temp / "project"
         self.project.mkdir()
         # No real harness is touched: Codex's configuration is a temporary one, and `claude` is off PATH.
-        self._saved = {k: os.environ.get(k) for k in ("CODEX_HOME", "PATH", "HOME", "DEPENDENCYSKILLS_HOME")}
+        self._saved = {k: os.environ.get(k) for k in ("CODEX_HOME", "PATH", "HOME", "DEPENDENCYSKILLS_CODEX_DIR")}
         os.environ["CODEX_HOME"] = str(self.temp / "codex")
-        os.environ["DEPENDENCYSKILLS_HOME"] = str(self.temp / "store")   # where this machine's record goes
+        os.environ["DEPENDENCYSKILLS_CODEX_DIR"] = str(self.temp / "store")   # where this machine's record goes
         os.environ["HOME"] = str(self.temp / "home")   # Antigravity's configuration is under it
         os.environ["PATH"] = str(self.temp / "empty-bin")
 

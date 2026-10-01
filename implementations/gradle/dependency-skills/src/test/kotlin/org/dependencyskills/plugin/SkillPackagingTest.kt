@@ -52,7 +52,7 @@ class SkillPackagingTest {
             plugins = """
                 `java-library`
                 `maven-publish`
-                id("org.dependencyskills.plugin")
+                id("org.dependencyskills")
             """.trimIndent(),
             body = JVM_BODY,
         )
@@ -82,7 +82,7 @@ class SkillPackagingTest {
             plugins = """
                 `java-library`
                 `maven-publish`
-                id("org.dependencyskills.plugin")
+                id("org.dependencyskills")
             """.trimIndent(),
             // Set in an afterEvaluate registered after this plugin's own, which is where a publishing
             // plugin's `coordinates(...)` lands: the name was still the default when the plugin looked.
@@ -113,7 +113,7 @@ class SkillPackagingTest {
     fun `a flat SKILL md still ships under the right name, and is told where to move`() {
         val project = TestProject.create()
         project.buildWith(
-            plugins = "`java-library`\n`maven-publish`\nid(\"org.dependencyskills.plugin\")",
+            plugins = "`java-library`\n`maven-publish`\nid(\"org.dependencyskills\")",
             body = JVM_BODY,
         )
         project.file("src/main/skills/SKILL.md", skill)
@@ -127,7 +127,7 @@ class SkillPackagingTest {
     fun `a wrongly named skill directory ships under the right name, and is told so`() {
         val project = TestProject.create()
         project.buildWith(
-            plugins = "`java-library`\n`maven-publish`\nid(\"org.dependencyskills.plugin\")",
+            plugins = "`java-library`\n`maven-publish`\nid(\"org.dependencyskills\")",
             body = JVM_BODY,
         )
         project.file("src/main/skills/acme-text/SKILL.md", skill)
@@ -163,6 +163,18 @@ class SkillPackagingTest {
     }
 
     @Test
+    fun `measures a folded description, and warns when it is over the limit`() {
+        // Forty lines of one sentence: folded, they are the sentence forty times over, joined by spaces.
+        val sentence = "Text normalization for acme."
+        val long = List(40) { sentence }.joinToString(" ")
+        val folded = List(40) { "  $sentence" }.joinToString("\n")
+        val project = jvmLibrary(skill.replace(Regex("description: .*"), "description: >-\n$folded"))
+        val result = project.run("sourcesJar")
+
+        assertContains(result.output, "`description` is ${long.length} characters")
+    }
+
+    @Test
     fun `warns about a frontmatter field the specification does not allow`() {
         val project = jvmLibrary(skill.replace("metadata:", "homepage: https://example.com\nmetadata:"))
         val result = project.run("sourcesJar")
@@ -195,7 +207,7 @@ class SkillPackagingTest {
     fun `a project with no skill is left exactly as it was`() {
         val project = TestProject.create()
         project.buildWith(
-            plugins = "`java-library`\nid(\"org.dependencyskills.plugin\")",
+            plugins = "`java-library`\nid(\"org.dependencyskills\")",
             body = "group = \"com.example.acme\"\nversion = \"0.1.0\"\njava { withSourcesJar() }",
         )
         val result = project.run("sourcesJar")
@@ -216,7 +228,7 @@ class SkillPackagingTest {
             plugins = """
                 kotlin("multiplatform")
                 `maven-publish`
-                id("org.dependencyskills.plugin")
+                id("org.dependencyskills")
             """.trimIndent(),
             body = """
                 group = "com.example.acme"

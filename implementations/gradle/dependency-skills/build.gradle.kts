@@ -2,13 +2,17 @@
 // configurations the build resolves anyway, diffs them against the store, and records what
 // the store has never seen.
 
+import com.vanniktech.maven.publish.GradlePlugin
+import com.vanniktech.maven.publish.JavadocJar
+import com.vanniktech.maven.publish.SourcesJar
+
 plugins {
     `kotlin-dsl`
     `java-gradle-plugin`
-    // `java-gradle-plugin` configures the publications; it does not apply this, so without it
-    // there are no publish tasks at all and `publishToMavenLocal` silently publishes nothing
-    // from this project.
-    `maven-publish`
+    // Publishes to Maven Central, signed, with the POM Central requires — and applies
+    // `maven-publish`, which `java-gradle-plugin` configures but does not apply: without it there
+    // are no publish tasks and `publishToMavenLocal` silently publishes nothing from this project.
+    id("com.vanniktech.maven.publish") version "0.37.0"
 }
 
 kotlin { jvmToolchain(17) }
@@ -77,7 +81,7 @@ testing.suites { getByName<JvmTestSuite>("test") { useJUnitJupiter() } }
 gradlePlugin {
     plugins {
         create("dependencySkills") {
-            id = "org.dependencyskills.plugin"
+            id = "org.dependencyskills"
             implementationClass = "org.dependencyskills.plugin.DependencySkillsPlugin"
             displayName = "Dependency Skills"
             description = "Reports which of a project's dependencies the machine-level codex has " +
@@ -86,4 +90,47 @@ gradlePlugin {
                 "librarian-skill-author agent skills into a project that declares their blocks."
         }
     }
+}
+
+// Maven Central, under the verified `org.dependencyskills` namespace: the plugin jar and its marker,
+// `org.dependencyskills:org.dependencyskills.gradle.plugin`, which is what lets a build
+// that lists `mavenCentral()` among its plugin repositories resolve the plugin by id. The credentials
+// and signing key are the publisher's Gradle properties, never this file.
+mavenPublishing {
+    publishToMavenCentral()
+    signAllPublications()
+    configure(GradlePlugin(javadocJar = JavadocJar.Empty(), sourcesJar = SourcesJar.Sources()))
+    pom {
+        name = "Dependency Skills Gradle Plugin"
+        description = "Ships a library's own agent skill in its sources jar, reports a consuming project's " +
+            "dependencies for the lightweight codex, and writes the librarian and librarian-skill-author " +
+            "agent skills into a project whose build asks for them."
+        inceptionYear = "2026"
+        url = "https://github.com/dependencyskills/dependencyskills"
+        licenses {
+            license {
+                name = "Apache-2.0"
+                url = "https://www.apache.org/licenses/LICENSE-2.0"
+            }
+        }
+        developers {
+            developer {
+                id = "bpappin"
+                name = "bpappin"
+                url = "https://github.com/bpappin"
+            }
+        }
+        scm {
+            url = "https://github.com/dependencyskills/dependencyskills"
+            connection = "scm:git:https://github.com/dependencyskills/dependencyskills.git"
+            developerConnection = "scm:git:ssh://git@github.com/dependencyskills/dependencyskills.git"
+        }
+    }
+}
+
+// Only a publish to Maven Central is signed. A local publish — what a trial project resolves from
+// `mavenLocal()` — needs no key, and must not fail on a machine whose signing setup is for another build.
+val publishingToCentral = gradle.startParameter.taskNames.any { "MavenCentral" in it }
+tasks.withType<Sign>().configureEach {
+    onlyIf("only a Maven Central publish is signed") { publishingToCentral }
 }

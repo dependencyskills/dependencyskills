@@ -5,7 +5,8 @@ import sys
 from pathlib import Path
 
 from dependencyskills_lightweight.analytics import prompt_hook
-from support import Machine
+from dependencyskills_lightweight.mcp import call
+from support import Machine, skill_text
 
 SOURCE = str(Path(__file__).resolve().parent.parent / "src")
 
@@ -36,6 +37,50 @@ class ServerTest(Machine):
         self.assertTrue(answers[4]["result"]["isError"])
         self.assertIn("guide has no file references/nothing.md", answers[5]["result"]["content"][0]["text"])
 
+
+    def test_answers_for_the_project_it_is_given_wherever_it_was_started(self):
+        # An IDE-wide configuration starts the server in the IDE's directory, not the project's.
+        self.publish("com.acme:acme-text:1.0")
+        self.build(["com.acme:acme-text:1.0"])
+        elsewhere = self.temp / "elsewhere"
+        elsewhere.mkdir()
+        requests = [
+            {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+             "params": {"name": "list_guides", "arguments": {"project": str(self.project)}}},
+            {"jsonrpc": "2.0", "id": 2, "method": "tools/call",
+             "params": {"name": "read_guide", "arguments": {"library": "com.acme:acme-text", "project": str(self.project)}}},
+            {"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "list_guides", "arguments": {}}},
+            {"jsonrpc": "2.0", "id": 4, "method": "tools/call",
+             "params": {"name": "list_guides", "arguments": {"project": "project"}}},
+            {"jsonrpc": "2.0", "id": 5, "method": "tools/call",
+             "params": {"name": "list_guides", "arguments": {"project": str(self.temp / "nothing")}}},
+        ]
+        done = subprocess.run([sys.executable, "-m", "dependencyskills_lightweight", "mcp"], cwd=elsewhere,
+                              input="".join(json.dumps(r) + "\n" for r in requests), capture_output=True, text=True,
+                              env={**os.environ, "PYTHONPATH": SOURCE}, timeout=60)
+        answers = {m["id"]: m["result"] for m in map(json.loads, done.stdout.splitlines())}
+        text = {i: a["content"][0]["text"] for i, a in answers.items()}
+
+        self.assertIn("com.acme:acme-text 1.0", text[1])
+        self.assertIn("Call Acme.normalize.", text[2])
+        self.assertNotIn("com.acme:acme-text", text[3])   # the directory it started in is not the project
+        self.assertFalse(answers[3]["isError"])
+        self.assertTrue(answers[4]["isError"])
+        self.assertIn("absolute path", text[4])
+        self.assertTrue(answers[5]["isError"])
+        self.assertIn("no such directory", text[5])
+
+    def test_the_project_argument_serves_a_package_project_too(self):
+        package = self.project / "node_modules" / "@acme" / "text"
+        (package / "skills" / "acme-text").mkdir(parents=True)
+        (package / "package.json").write_text(json.dumps({"name": "@acme/text", "version": "1.2.0"}))
+        (package / "skills" / "acme-text" / "SKILL.md").write_text(skill_text("acme-text"))
+        (self.project / "package.json").write_text(json.dumps({"name": "acme-app", "dependencies": {"@acme/text": "^1.2.0"}}))
+        (self.project / "node_modules" / ".package-lock.json").write_text("{}")
+
+        self.assertIn("npm:@acme/text 1.2.0", call(self.store, "list_guides", {"project": str(self.project)}))
+        self.assertIn("Call Acme.normalize.",
+                      call(self.store, "read_guide", {"library": "@acme/text", "project": str(self.project)}))
 
 
 class CommandTest(Machine):

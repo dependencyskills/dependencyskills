@@ -1,0 +1,78 @@
+name: Publish the plugins
+
+# Publishes the Gradle plugin and the Maven plugin to Maven Central, under the verified
+# org.dependencyskills namespace, when the `published` branch moves.
+#
+# Both land in the Central Portal as deployments awaiting release: nothing goes public until the
+# maintainer presses Publish there. A version Central already holds cannot be published again, so a
+# push that does not change the version fails at upload — bump `version` in
+# implementations/gradle/gradle.properties and implementations/maven/pom.xml together.
+#
+# Needs these repository or organisation secrets, the same names the aughtone libraries use:
+# MAVEN_CENTRAL_USERNAME and MAVEN_CENTRAL_PASSWORD (a Central Portal user token), and
+# GPG_KEY_CONTENTS, SIGNING_KEY_ID and SIGNING_PASSWORD (the ASCII-armoured signing key).
+
+on:
+  push:
+    branches: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  gradle-plugin:
+    name: Gradle plugin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # 17 is the plugin's toolchain; the last one listed runs Gradle, as the codex build it includes needs.
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: |
+            17
+            26
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      # setup-java exports JAVA_HOME_17_X64; naming it is what lets Gradle find the toolchain on a runner.
+      - name: Test and publish to Maven Central
+        working-directory: implementations/gradle
+        run: ./gradlew -Porg.gradle.java.installations.fromEnv=JAVA_HOME_17_X64 :dependency-skills:test :dependency-skills:publishToMavenCentral
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_KEY_CONTENTS }}
+
+  maven-plugin:
+    name: Maven plugin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Writes settings.xml with the `central` server the release profile uploads with.
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+          server-id: central
+          server-username: MAVEN_CENTRAL_USERNAME
+          server-password: MAVEN_CENTRAL_PASSWORD
+
+      # The Bouncy Castle signer reads the key from the environment, so no gpg keyring or agent is set up.
+      - name: Test and publish to Maven Central
+        working-directory: implementations/maven
+        run: ./mvnw -B -P release -Dgpg.signer=bc deploy
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          MAVEN_GPG_KEY: ${{ secrets.GPG_KEY_CONTENTS }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.SIGNING_PASSWORD }}

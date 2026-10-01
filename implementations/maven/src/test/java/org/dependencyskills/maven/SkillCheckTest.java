@@ -37,6 +37,35 @@ class SkillCheckTest {
     }
 
     @Test
+    void aFoldedDescriptionIsReadAndMeasured() {
+        // Forty lines of one sentence: folded, they are the sentence forty times over, joined by spaces (#46).
+        String sentence = "Format acme text for display in any locale.";
+        String folded = String.join("\n", java.util.Collections.nCopies(40, "  " + sentence));
+        String text = skill("name: " + NAME + "\ndescription: >-\n" + folded + "\nmetadata:\n  version: \"1.0\"");
+        int length = String.join(" ", java.util.Collections.nCopies(40, sentence)).length();
+
+        List<String> warnings = SkillCheck.warnings(text, NAME, NAME, "1.0", PATH, false);
+        assertEquals(1, warnings.size(), String.join("\n", warnings));
+        assertTrue(warnings.get(0).contains("`description` is " + length + " characters"), warnings.get(0));
+    }
+
+    @Test
+    void descriptionReadsEachFormTheSpecificationUses() {
+        assertEquals("Format acme text for display.", SkillCheck.description("description: >-\n  Format acme text\n  for display.\nlicense: MIT"));
+        assertEquals("one\ntwo", SkillCheck.description("description: |\n  one\n  two"));
+        assertEquals("Format: acme", SkillCheck.description("description: \"Format: acme\""));
+        assertEquals("", SkillCheck.description("description: >-\nlicense: MIT"));
+        assertEquals(null, SkillCheck.description("name: acme\nmetadata:\n  description: not this one"));
+    }
+
+    @Test
+    void anIndicatorWithNothingUnderItIsAMissingDescription() {
+        String text = skill("name: " + NAME + "\ndescription: >-\nmetadata:\n  version: \"1.0\"");
+        String all = String.join("\n", SkillCheck.warnings(text, NAME, NAME, "1.0", PATH, false));
+        assertTrue(all.contains("has no `description`"), all);
+    }
+
+    @Test
     void noFrontmatterIsOneWarningNotSix() {
         List<String> warnings = SkillCheck.warnings("# Just a heading\n", NAME, NAME, "1.0", PATH, false);
         assertEquals(1, warnings.size(), String.join("\n", warnings));
