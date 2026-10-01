@@ -126,6 +126,8 @@ internal class TestProject(
         version: String,
         compile: List<String> = emptyList(),
         runtime: List<String> = emptyList(),
+        /** Also publish a sources jar, carrying one source file, as a library normally does. */
+        sources: Boolean = false,
     ) {
         val dir = repository.resolve(group.replace('.', '/')).resolve(artifact).resolve(version)
         Files.createDirectories(dir)
@@ -135,6 +137,13 @@ internal class TestProject(
             it.putNextEntry(java.util.zip.ZipEntry("META-INF/MANIFEST.MF"))
             it.write("Manifest-Version: 1.0\n".toByteArray())
             it.closeEntry()
+        }
+        if (sources) {
+            java.util.zip.ZipOutputStream(Files.newOutputStream(dir.resolve("$artifact-$version-sources.jar"))).use {
+                it.putNextEntry(java.util.zip.ZipEntry("com/example/$artifact/Api.java"))
+                it.write("package com.example.$artifact; public class Api {}".toByteArray())
+                it.closeEntry()
+            }
         }
         fun deps(coordinates: List<String>, scope: String) = coordinates.joinToString("\n") {
             val (g, a, v) = it.split(':')
@@ -156,7 +165,7 @@ internal class TestProject(
     }
 
     /** Writes the consuming project's build. [body] goes inside the build script verbatim. */
-    fun build(body: String) = buildWith("`java-library`\nid(\"org.dependencyskills.plugin\")", body)
+    fun build(body: String) = buildWith("`java-library`\nid(\"org.dependencyskills\")", body)
 
     /** As [build], with the plugins block spelled out. */
     fun buildWith(plugins: String, body: String) {
@@ -187,8 +196,20 @@ $plugins
         Files.writeString(file, body)
     }
 
+    /** Writes any file into the project, for a test that needs more than a build script. */
+    fun file(path: String, body: String) = source(path, body)
+
+    /** A path inside the project, for reading back what a build produced. */
+    fun path(path: String): Path = projectDirectory.resolve(path)
+
     /** Null once [stopService] has been called, which is a test making a point about absence. */
     private var serviceUrl: String? = null
+
+    /**
+     * Whether the build is given a service URL at all. Off, the project uses only the lightweight
+     * codex, as most do: the plugin has no default and tells the full codex nothing.
+     */
+    var fullCodex = true
 
     fun run(vararg arguments: String): BuildResult = runner(*arguments).build()
 
@@ -206,7 +227,7 @@ $plugins
             "-PdependencySkills.codexDir=${storeDirectory.toAbsolutePath()}",
             // Pointed at the stub when one is running, and at a port nothing answers on when not.
             // The second case is deliberate and is what most of these tests are about.
-            "-PdependencySkills.serviceUrl=${serviceUrl ?: UNREACHABLE}",
+            *(if (fullCodex) arrayOf("-PdependencySkills.serviceUrl=${serviceUrl ?: UNREACHABLE}") else emptyArray()),
         )
         .forwardOutput()
 

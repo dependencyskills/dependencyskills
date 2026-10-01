@@ -1,0 +1,15 @@
+--- Kotlin Multiplatform (jvm, android, js, linuxX64), skill placed on every resource route · exit 0
+
+    artifact                                       what it carries
+    acme-text-android-0.1.0-sources.jar            nothing
+    acme-text-android-0.1.0.aar                    classes.jar!/META-INF/skills/acme-text.md res/raw/skill_acme_text.md 
+    acme-text-js-0.1.0-sources.jar                 nothing
+    acme-text-js-0.1.0.klib                        META-INF/skills/acme-text.md 
+    acme-text-jvm-0.1.0-sources.jar                nothing
+    acme-text-jvm-0.1.0.jar                        META-INF/skills/acme-text.md 
+    acme-text-linuxx64-0.1.0-sources.jar           nothing
+    acme-text-linuxx64-0.1.0.klib                  nothing
+    acme-text-0.1.0-sources.jar                    nothing
+    acme-text-0.1.0.jar                            nothing
+
+Which source set a META-INF entry came from is in the file's own first line.

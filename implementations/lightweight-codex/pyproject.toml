@@ -1,0 +1,38 @@
+[project]
+name = "dependencyskills"
+version = "0.0.1"
+description = "Serves the skills a project's dependencies ship to that project's coding agent, over MCP."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+dependencyskills = "dependencyskills_lightweight.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dependencyskills_lightweight"]
+
+# The skills the installer puts in a project travel inside the package, so installing never fetches
+# instruction text: what the installer writes is what this pinned version was built with (#44).
+[tool.hatch.build.targets.wheel.force-include]
+"../agent-skills/librarian" = "dependencyskills_lightweight/skills/librarian"
+"../agent-skills/librarian-skill-author" = "dependencyskills_lightweight/skills/librarian-skill-author"
+
+[tool.hatch.build.targets.sdist.force-include]
+"../agent-skills/librarian" = "skills/librarian"
+"../agent-skills/librarian-skill-author" = "skills/librarian-skill-author"
+
+# Run from a checkout (`uvx --from <path>`), uv rebuilds only when these change. By default that is
+# pyproject.toml alone, so an edited module or skill kept serving the build from before the edit.
+[tool.uv]
+cache-keys = [
+    { file = "pyproject.toml" },
+    { file = "src/**/*.py" },
+    { file = "../agent-skills/librarian/**" },
+    { file = "../agent-skills/librarian-skill-author/**" },
+]

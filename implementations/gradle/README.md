@@ -6,13 +6,29 @@ Published under `org.dependencyskills.gradle`, so the coordinate says which buil
 
 | module | plugin id | what it is |
 |---|---|---|
-| `dependency-skills` | `org.dependencyskills.plugin` | reports which of a project's dependencies the codex has never seen |
+| `dependency-skills` | `org.dependencyskills` | reports which of a project's dependencies the codex has never seen; applied to a library, ships the library's own skill in its sources jar; writes the `librarian` and `librarian-skill-author` agent skills where their blocks are declared |
+
+## Getting it
+
+Published to Maven Central, plugin marker included, so a build finds it by id once `mavenCentral()` is among its plugin repositories — Gradle looks only at the Plugin Portal by default:
+
+```kotlin
+// settings.gradle.kts
+pluginManagement {
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+```
+
+Releasing it is `./gradlew :dependency-skills:publishToMavenCentral`, with the Central Portal token and signing key in the publisher's own Gradle properties (`mavenCentralUsername`, `mavenCentralPassword`, `signingInMemoryKey` and the rest). Only that task signs: `publishToMavenLocal` needs no key.
 
 ## Naming
 
-The plugin id had to be a namespace we own, because **a Gradle plugin id is also a Maven groupId** — declaring `id("X")` publishes a marker artifact at `X:X.gradle.plugin`. Central verifies groupId ownership against a domain and the Plugin Portal has the same rule, so a bare `dependency-skills` could be published to neither. The id follows the `io.ktor.plugin` shape: the owned namespace plus `.plugin`.
+The plugin id had to be a namespace we own, because **a Gradle plugin id is also a Maven groupId** — declaring `id("X")` publishes a marker artifact at `X:X.gradle.plugin`. Central verifies groupId ownership against a domain and the Plugin Portal has the same rule, so a bare `dependency-skills` could be published to neither. The id is the owned namespace itself, `org.dependencyskills`: it is the one public name the Gradle plugin has, and a suffix such as `.plugin` says nothing a build script's `plugins { }` block does not already say. Its marker is `org.dependencyskills:org.dependencyskills.gradle.plugin`, which Gradle derives and nobody types.
 
-The Kotlin package is `org.dependencyskills.plugin` — **the plugin id, not the group and module**. That is a deliberate exception to the rule the codex modules follow, and it is forced: the artifact name `dependency-skills` is hyphenated and cannot be a package segment. Matching the id is the next most useful thing for a reader holding a stack trace.
+The Kotlin package is `org.dependencyskills.plugin` — **neither the id nor the group and module**. That is a deliberate exception to the rule the codex modules follow, and it is forced twice over: the artifact name `dependency-skills` is hyphenated and cannot be a package segment, and the id is the project's root namespace, where the plugin's classes should not sit beside everything else the project publishes. A package one segment below the id is the next most useful thing for a reader holding a stack trace.
 
 ## `dependency-skills`
 
@@ -27,11 +43,11 @@ A consuming project applies it. On every build it watches the compile classpaths
 **Scope is never stored.** It belongs to the *(project, source set) → coordinate* edge, not to the coordinate: the same artifact is `api` in one project and `implementation` in another, and the store is machine-wide. Which coordinates a query may see is computed per project, at query time.
 
 ```kotlin
-plugins { id("org.dependencyskills.plugin") }
+plugins { id("org.dependencyskills") }
 
 dependencySkills {
     harvester {
-        transitive = true              // off by default; see RAD-0022
+        transitive = false             // only what the project declares; on by default, see below
         ignore("com.example:noisy")
     }
 }
@@ -41,6 +57,70 @@ dependencySkills {
 
 On a **configuration-cache hit** the plugin observes nothing, because the configuration phase is skipped and the resolution results come out of the cache rather than being computed. That is sound as far as it goes — a hit means nothing about configuration changed, and dependency declarations are configuration — and the gap is a version that resolves differently without any build file changing: a dynamic version, or a changing module. It is asserted by a test rather than left to be discovered.
 
+### The library half: shipping a skill *(alpha)*
+
+Applied to a library, the same plugin ships the library's own skill. The author writes an Agent Skill directory named for the skill, so it is a valid skill where it is written:
+
+```
+src/main/skills/<name>/SKILL.md            a JVM library
+src/commonMain/skills/<name>/SKILL.md      a Kotlin Multiplatform library
+```
+
+and every sources jar the build produces carries that directory at `skills/<name>/` — prefixed `commonMain/` in a multiplatform jar, as that jar prefixes everything. `references/` and `assets/` travel with it; `scripts/` never does.
+
+**The build says what `<name>` is**, so nobody computes it: `./gradlew -q :<module>:dependencySkillName` prints the name and the path. A skill in a wrongly named directory, or the alpha's first flat `skills/SKILL.md`, still ships under the right name, and `checkDependencySkill` says where to move it.
+
+**`<name>` is the library's coordinate, made a legal skill name.** The Agent Skills specification requires the name to match its directory and allows only lowercase letters, digits and single hyphens, up to 64 characters — no dots, colons, underscores or `--`. So `com.example.acme:acme-text` is filed as `com-example-acme-acme-text`, and a coordinate that would run past 64 characters — about 2% of real libraries — has its group shrunk to the first and last letter of each segment while the artifact stays whole: `cm-ge-ad-as-cn-tg-ay-fk-accessibility-test-framework`. If even that is too long it is cut and ends in eight hex digits of a SHA-256 of `group:artifact`; one library in 3,184 surveyed needed that. Chosen by measurement over initials, which merged sibling groups ([RAD-0075](../../docs/knowledge/research/RAD-0075-naming-the-skill-file.md)). The encoding is one-way, and nothing decodes it: the codex knows each jar's real coordinate, encodes it the same way, and compares. It is the coordinate rather than the artifactId so that the name is unique per library — two groups can each publish a `core` — and it is npm's `skills/<name>/SKILL.md` exactly.
+
+**The author never types the coordinates.** They are read from the build's publication, so a library whose artifactId differs from its Gradle project name still files the skill under the name a consumer resolves. That matters because the codex takes a skill only from the artifact whose coordinates it is filed under, and would refuse a mismatch as republishing ([RAD-0076](../../docs/knowledge/research/RAD-0076-skills-republished-by-a-third-party.md)).
+
+**A `scripts/` directory is never shipped**, and the build says so. A library's skill tells an agent how to use the library; it never hands the agent something to run.
+
+**`checkDependencySkill` warns, for now, rather than fails**: a directory not named for the skill, missing frontmatter, a `name` that is not the coordinate's skill name, no `description`, `allowed-tools`, or a `metadata.version` that is absent or is not the version being built.
+
+A project with no skill file is untouched, which is every purely consuming one. Where the file lives and what it is called is still open — [RAD-0075](../../docs/knowledge/research/RAD-0075-naming-the-skill-file.md) — and this is the alpha of one answer, built to be tried.
+
+**Sources jars are matched as `Zip`, not `Jar`.** The java plugin's is a `bundling.Jar`; Kotlin Multiplatform's are `org.gradle.jvm.tasks.Jar`, which in Gradle 9 extends `Zip` directly. Matching on `Jar` shipped the skill for JVM libraries and silently skipped every multiplatform one.
+
+### The agent skills it writes
+
+The plugin carries two agent skills and writes each into the project only where its block is declared. A missing block means that skill is not configured, and nothing is written:
+
+```kotlin
+import org.dependencyskills.plugin.SkillRefresh
+
+dependencySkills {
+    consumer { }                                   // librarian: check what the dependencies offer before writing code
+    author { refresh = SkillRefresh.UnlessEdited }  // librarian-skill-author: write the guide this library ships, keeping local edits
+}
+```
+
+The blocks are named for the project's role: `consumer` for a project that uses libraries, `author` for one that publishes them — a project can be both. The `author` block writes only the author's skill; the library's own guide is packaged whenever it exists, block or not.
+
+**Where they go.** `.agents/skills/<skill>/` at the root of the build, always, and `.claude/skills/<skill>/` as well, by default wherever the root has a `.claude/` directory, since Claude Code reads only that (`claudeCode = false` turns it off). They are copies, never links. A `.claude/skills/<skill>` that is already a link is left alone. They are written before any compile task, once per build however many modules declare the block, so the skills always match the plugin version that wrote them.
+
+**Edits.** Each file written is recorded with its digest in `dependencyskills-lock.json` at the root — named on the `*-lock.json` convention, like the `skills` CLI's `skills-lock.json` — which the lightweight codex's installer also keeps, so `dependencyskills uninstall` reverses either. A copy nobody edited is updated when the plugin carries a newer version. A copy that differs from what was recorded, or that nothing recorded, has been edited, and `refresh` decides what happens to it:
+
+- **`Always`**, the default: replaced with the version the plugin carries on every build, with a warning in the build output that local edits were overwritten and how to keep them; edits that were committed remain in version control. A project that wants otherwise says so explicitly.
+- **`UnlessEdited`**: kept, with a warning that it was not updated and how to take the new version. When the edit is to the version already carried, nothing is being held back, and it is kept without a warning.
+
+**Commit `dependencyskills-lock.json` if and only if you commit the skills it records**, as with any lock file. Committed together, a fresh clone knows its copies are unedited, and an update shows in review as the skill's diff beside the lock file's. Skills committed without it look edited to every fresh clone: the next update overwrites them with a warning, or under `UnlessEdited` keeps them and warns every build. Ignore the skills, and ignore it too. It holds only paths inside the project and digests, and changes only when a skill does.
+
+`enabled = false` inside a block turns that skill off without deleting the block, and `-PdependencySkills.enabled=false` turns off the whole plugin, this included.
+
+### Two codexes, two handoffs
+
+Every build writes its resolved set for the lightweight codex, and reports it to the full codex only where a project says where that listens:
+
+- **To the full codex, over HTTP** — `POST /projects` to `serviceUrl`, and only when it is set: `-PdependencySkills.serviceUrl=http://127.0.0.1:8310`, or `serviceUrl` in the `dependencySkills` block. Unset, which is the default, the full codex is not told and the build says nothing about it.
+- **To the lightweight codex, as a file** — a CycloneDX 1.6 SBOM at `build/dependencyskills/bom.cdx.json` in the root build directory, listing the same set: the compile classpath — every library the code can import, or only the declared ones with `transitive = false` — plus the libraries a version catalog declares that no module uses yet, marked as declared. Each entry names the module that resolved it, so building one module replaces only that module's entries. It is rewritten only when it changes, and a rewrite that added dependencies names them in the build output — `dependencyskills: new since the last build: …` — at quiet level, so an agent running `-q` still sees it. The lightweight codex ([`experiments/minimal-codex`](../../experiments/minimal-codex/), `pkgindex.py mcp`) is an MCP server over stdio that the agent's harness starts inside the project; it reads the file when an agent asks, and re-indexes when the file has changed. No process runs between sessions, and nothing watches anything.
+
+**The build also fetches the sources jars**, because that is where a JVM library's skill travels and a build otherwise never downloads one — on a machine that only builds from the command line, the lookup would find nothing ([RAD-0079](../../docs/knowledge/research/RAD-0079-what-each-ecosystem-needs-from-the-lightweight-codex.md)). A `dependencySkillsSources<Classpath>` task runs before each compile task, asks Gradle for the sources variant of exactly what that classpath resolved and of what the catalog declares, and skips any library that has none. It goes through the project's own repositories and cache. `-PdependencySkills.fetchSources=false` turns it off.
+
+The file is also what keeps scope out of the agent's hands. Scope is what the build resolved, and it is written only by the build; were it set through the MCP interface the agent queries, the agent — or an instruction injected into it — could widen its own.
+
+An SBOM is the format because it is an existing convention for exactly this — the resolved dependency graph, written into the build directory — rather than one this project invented ([ADR-0007](../../docs/knowledge/decisions/ADR-0007-conform-to-existing-conventions.md)). It is not yet read from other SBOM plugins: those usually describe the runtime classpath, which is a wider scope than what a project can import, and are refreshed only when their own task runs.
+
 ## What used to be here
 
-`publisher/` held the v1 plugin, which validated agent skills a library author wrote by hand. That model is gone: [ADR-0009](../../docs/knowledge/decisions/ADR-0009-transport-is-sources-jar.md) settles that content comes from the sources jar a library already publishes, so there is nothing bespoke left to author and nothing for that plugin to check. A publish-side check that a library's *own* documentation is worth harvesting is a different tool and a later question.
+`publisher/` held the v1 plugin, which validated agent skills a library author wrote by hand into `META-INF/ai-skills/`. That placement failed — it never reached a sources jar ([RAD-0065](../../docs/knowledge/research/RAD-0065-what-v1-skill-authors-wrote-unprompted.md)) — and [ADR-0009](../../docs/knowledge/decisions/ADR-0009-transport-is-sources-jar.md) settled that content comes from the sources jar a library already publishes. The library half above is not that plugin back: it ships into the sources jar, from the source tree, under the library's own coordinates.

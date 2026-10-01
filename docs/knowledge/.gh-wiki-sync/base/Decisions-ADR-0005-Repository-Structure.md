@@ -1,7 +1,25 @@
 # One repository, split by whether a human is driving
 
-ADR-0005 · 2026-08-12 · Status: accepted · v2
-Keywords: how should this repository be laid out; one repo or one per ecosystem; why not -gradle, -maven, -ivy repos; where do spikes and prototypes live; poc versus experiments; what belongs in implementations; splitting by ecosystem versus by whether a human is driving.
+ADR-0005 · 2026-08-12 · Status: accepted · v4
+Keywords: how should this repository be laid out; one repo or one per ecosystem; why not -gradle, -maven, -ivy repos; where do spikes and prototypes live; poc versus experiments; what belongs in implementations; splitting by ecosystem versus by whether a human is driving; where does code that depends on no build system go; why the codex is not under gradle; one build root per directory; where did the publisher plugin go; why is there no publish-side implementation.
+
+**v4 (2026-08-27) — there is no publish-side implementation, and the paragraph below that assumes one is stale.**
+
+"Splitting `publish/` from `consume/`" argues against a directory split partly on the grounds that one Gradle jar would register both plugin ids. Only one id exists now: the v1 publisher was deleted when ADR-0009 settled that content comes from the sources jar a library already publishes, which leaves an author nothing bespoke to author and that plugin nothing to check. The decision is untouched — the split still belongs in the spec rather than the tree — but a reader should not go looking for the second half in the tree.
+
+**v3 (2026-08-27) — `implementations/` is one build root per directory, and not all of them are build systems.**
+
+This record said "one directory per **build system**" and then, four paragraphs later, "a CLI or an MCP server belongs here too". Both were true and they disagreed; building the codex made the disagreement load-bearing, so it is resolved here in favour of what turned out to be right.
+
+**The rule is now: each directory under `implementations/` is its own build root** — its own settings file, its own wrapper, buildable and releasable alone. Most are build-system implementations and the per-build-system reasoning below still governs those, unchanged. `codex/` is not one, and the exception is the point rather than an untidiness.
+
+**Why the codex cannot live under `gradle/`.** The store, and in time the harvester, the query layer and the server, depend on no build system at all. A Maven plugin, a CLI and the MCP server all have to use the store — so the store must not be a Gradle artifact. Filing it under `gradle/` would have made it one by proximity, which is the same mistake as filing by ecosystem, one level along: naming a thing after one of its consumers. The Gradle plugins depend on the codex; the codex depends on nothing of theirs, and separate build roots are what keeps that true rather than merely intended.
+
+A plugin reaches it with `includeBuild("../codex")`, which Gradle substitutes — so the seam costs nothing at the call site.
+
+**What this does not change.** One repository; the human-driving line between `implementations/` and `integrations/`; per-build-system filing for the directories that *are* build systems, including the KMP argument below, which is the load-bearing part of this record and is untouched.
+
+The trade is that "implementations" is now a slightly loose word for the directory — it holds deployables, and one of them is a library. That was accepted over the alternatives: a second top-level directory for one occupant is the prediction this record warns about under `integrations/`, and nesting the codex inside a build system is the error being avoided.
 
 ADR-0001 and ADR-0002 belong to an earlier project. Some later numbers are
 gaps, left where a premature record was withdrawn to be re-decided from
@@ -48,8 +66,12 @@ plugins. A JetBrains integration and a Gradle publisher would both be
 **One repository**, `dependencyskills/dependencyskills`, holding the spec,
 the implementations, the conformance harness, the fixtures and the experiments.
 
-**`implementations/`** — one directory per **build system**, not per package
-ecosystem. Headless: runs in a build, in CI, with no human present.
+**`implementations/`** — one **build root** per directory: its own settings
+file, its own wrapper, buildable alone. Headless: runs in a build, in CI,
+with no human present.
+
+Most are one per **build system**, not per package ecosystem. The exception
+is `codex/`, which depends on no build system and must not — see v3 above.
 
 The distinction only surfaces on cross-compiling toolchains, and Kotlin
 Multiplatform is the mainstream one: a single KMP source set publishes to
@@ -66,7 +88,8 @@ carries far more than the others, and its per-channel emit step is core
 rather than a later nicety. Without it a KMP library ships a skill its iOS
 and JS consumers cannot see.
 
-A CLI or an MCP server belongs here too.
+A CLI or an MCP server belongs here too — in `codex/`, since neither is
+tied to a build system.
 
 **`integrations/`** — editor and agent integrations, which have a human on
 the other end. **Not created yet, deliberately**, because there is nothing
@@ -103,9 +126,13 @@ match the tree's spelled-out naming.
   Maven and Gradle never unpack a dependency and need a published sidecar;
   npm and SPM already expose files on disk and need an emit step. The
   asymmetry is the argument the project is making.
-- This project's own skills live at `agent-skills/` in the root, not inside
-  any implementation. They are spec-level — the skill teaches the
-  convention, and only its install template differs per build system. A copy
+- This project's own skills live at `implementations/agent-skills/`, a
+  **sibling** of `gradle/` and `codex/` rather than inside either. (Moved from
+  the repository root on 2026-08-29; the reasoning below is unchanged and was
+  the reason for the sibling placement rather than a per-implementation copy.
+  What changed is only that it now sits with the rest of the source.)
+
+  They are spec-level — the skill teaches the convention, and only its install template differs per build system. A copy
   per implementation would drift, which is what the monorepo exists to
   prevent. It also dogfoods the rule libraries are asked to follow: one
   authoring location, many publication channels.

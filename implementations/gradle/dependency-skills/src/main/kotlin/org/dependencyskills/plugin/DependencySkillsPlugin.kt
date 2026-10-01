@@ -3,6 +3,7 @@ package org.dependencyskills.plugin
 import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ResolvableDependencies
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -10,7 +11,10 @@ import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.SourceSetContainer
 
 /**
- * Reports which of a consuming project's dependencies the codex has never seen.
+ * Reports which of a consuming project's dependencies the codex has never seen — and, applied to
+ * a library, ships that library's own skill in its sources jar ([SkillPackaging]). Where a project
+ * declares the `consumer { }` or `author { }` block, it also writes that agent skill into the
+ * project ([AgentSkills]).
  *
  * **The build detects; something out of band harvests.** That seam is the whole design. An
  * artifact transform looks like the natural fit — it runs per artifact, is cached by Gradle,
@@ -33,14 +37,24 @@ class DependencySkillsPlugin : Plugin<Project> {
             enabled.convention(
                 providers.gradleProperty(ENABLED_PROPERTY).map(String::toBoolean).orElse(true),
             )
-            harvester.transitive.convention(false)
+            harvester.transitive.convention(true)
+            fetchSources.convention(
+                providers.gradleProperty(FETCH_SOURCES_PROPERTY).map(String::toBoolean).orElse(true),
+            )
+            val claudeCode = rootProject.layout.projectDirectory.dir(".claude").asFile.isDirectory
+            listOf(consumer, author).forEach {
+                it.enabled.convention(false)
+                it.refresh.convention(SkillRefresh.Always)
+                it.claudeCode.convention(claudeCode)
+            }
         }
 
         val recorder = gradle.sharedServices.registerIfAbsent(SERVICE, CodexRecorder::class.java) {
+            // No default: the full codex is told only where a developer says where it listens. Most
+            // projects run only the lightweight codex, which reads the SBOM, and a line about a service
+            // they never installed would be noise on every build (#45).
             parameters.serviceUrl.set(
-                extension.serviceUrl
-                    .orElse(providers.gradleProperty(SERVICE_URL_PROPERTY))
-                    .orElse(DEFAULT_SERVICE_URL),
+                extension.serviceUrl.orElse(providers.gradleProperty(SERVICE_URL_PROPERTY)),
             )
             parameters.projectPath.set(layout.projectDirectory.asFile.absolutePath)
             // The path, not the project's name. A name groups several checkouts into one scope, so
@@ -48,6 +62,15 @@ class DependencySkillsPlugin : Plugin<Project> {
             parameters.projectName.set(
                 extension.projectName.orElse(layout.projectDirectory.asFile.absolutePath),
             )
+            // The root's build directory, because the recorder is one per build: a multi-module
+            // build's resolved set is one union, and one file at the root is where a reader starting
+            // anywhere in the checkout finds it.
+            parameters.reportFile.set(rootProject.layout.buildDirectory.file(REPORT_FILE))
+            // Every project in the build, so a module deleted from settings leaves the SBOM, while one
+            // this build simply did not compile keeps what it last resolved.
+            parameters.projectPaths.set(rootProject.allprojects.map { it.path })
+            // What the version catalogs declare, whether or not a module uses it yet; see Catalogs.
+            parameters.declared.set(provider { Catalogs.declared(project) })
         }
 
         // Instantiated for every build, but only once the build script has been evaluated.
@@ -71,11 +94,29 @@ class DependencySkillsPlugin : Plugin<Project> {
             if (extension.enabled.getOrElse(true)) service.signalSyncing()
         }
 
+        // Its own service rather than the recorder's: under the configuration cache a task's service
+        // is a fresh instance at execution, and the recorder's would then report, on close, that
+        // nothing resolved.
+        val claims = gradle.sharedServices.registerIfAbsent(SourcesClaims.NAME, SourcesClaims::class.java) {}
+        val fetching = extension.enabled.zip(extension.fetchSources) { on, fetch -> on && fetch }
+
+        // The agent skills, each only where its block is declared, written before any compile task.
+        val skillWriters = listOf(
+            AgentSkills.register(project, "writeConsumerSkill", AgentSkills.LIBRARIAN, extension.consumer, extension.enabled, claims),
+            AgentSkills.register(project, "writeAuthorSkill", AgentSkills.AUTHOR_SKILL, extension.author, extension.enabled, claims),
+        )
+
         val observer = Observer(
             recorder = recorder,
             enabled = extension.enabled,
             transitive = extension.harvester.transitive,
             ignored = extension.harvester.ignored,
+            onWatched = { configuration, compileTasks ->
+                Sources.fetchBefore(project, configuration, compileTasks, fetching, claims)
+                tasks.configureEach { if (name in compileTasks) dependsOn(skillWriters) }
+            },
+            // A composite build's `includeBuild`s, whose projects stand in for published modules.
+            includedBuilds = gradle.includedBuilds.associate { ":${it.name}" to it.projectDir },
         )
 
         // Ask the build for its compile classpaths; never model scope. A compile classpath
@@ -85,7 +126,9 @@ class DependencySkillsPlugin : Plugin<Project> {
         // get compileOnlyApi, feature variants and platform constraints wrong.
         pluginManager.withPlugin("java-base") {
             extensions.findByType(SourceSetContainer::class.java)?.configureEach {
-                observer.watch(project, compileClasspathConfigurationName)
+                // Java's and Kotlin's compile tasks for the source set: either may be the one that runs.
+                observer.watch(project, compileClasspathConfigurationName,
+                    listOf(compileJavaTaskName, getCompileTaskName("kotlin")))
             }
         }
 
@@ -94,6 +137,10 @@ class DependencySkillsPlugin : Plugin<Project> {
         pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
             MultiplatformCompilations.watchAll(project, observer)
         }
+
+        // The other half: a library applying this ships its own skill in its sources jar. Does
+        // nothing in a project that has no skill, which is every purely consuming one.
+        SkillPackaging.apply(project)
     }
 
     internal companion object {
@@ -101,9 +148,10 @@ class DependencySkillsPlugin : Plugin<Project> {
         const val SERVICE = "dependencySkillsCodex"
         const val ENABLED_PROPERTY = "dependencySkills.enabled"
         const val SERVICE_URL_PROPERTY = "dependencySkills.serviceUrl"
+        const val FETCH_SOURCES_PROPERTY = "dependencySkills.fetchSources"
 
-        /** Loopback, because the service holds one machine's dependency graph and stays on it. */
-        const val DEFAULT_SERVICE_URL = "http://127.0.0.1:8310"
+        /** The CycloneDX SBOM the lightweight codex reads, relative to the root build directory. */
+        const val REPORT_FILE = "dependencyskills/bom.cdx.json"
     }
 }
 
@@ -119,19 +167,28 @@ internal class Observer(
     private val enabled: Property<Boolean>,
     private val transitive: Property<Boolean>,
     private val ignored: SetProperty<String>,
+    /** Called once for each configuration watched, with its compile tasks, so its dependencies' sources can be fetched. */
+    private val onWatched: (Configuration, List<String>) -> Unit = { _, _ -> },
+    /** Each build this one includes, by its build path, to its directory: where an included project's skill is. */
+    private val includedBuilds: Map<String, java.io.File> = emptyMap(),
 ) {
 
-    fun watch(project: Project, configurationName: String) {
+    /** Watches one compile-dependency configuration, which the tasks named [compileTasks] compile against. */
+    fun watch(project: Project, configurationName: String, compileTasks: List<String>) {
+        val path = project.path
         // `matching` rather than `named`: the configuration may not exist yet, and a name that
         // never appears should be silence rather than a failure. Neither realises it, and
         // nothing here resolves anything at configuration time.
         project.configurations.matching { it.name == configurationName }.configureEach {
             // The explicit Action disambiguates from the Groovy Closure overload.
-            incoming.afterResolve(Action<ResolvableDependencies> { onResolved(this) })
+            val configuration = name
+            incoming.afterResolve(Action<ResolvableDependencies> { onResolved(path, configuration, this) })
+            onWatched(this, compileTasks)
         }
     }
 
-    private fun onResolved(dependencies: ResolvableDependencies) {
+    /** Records one resolved compile classpath against the Gradle project, by path, it belongs to. */
+    private fun onResolved(projectPath: String, configuration: String, dependencies: ResolvableDependencies) {
         // A broken index must not break a build. This is the outermost boundary: the callback
         // runs inside Gradle's resolution machinery, so anything escaping it fails the
         // resolution itself, and a project would stop compiling because its index is unwell.
@@ -139,9 +196,9 @@ internal class Observer(
             if (!enabled.get()) return@runCatching
             val ignores = ignored.get()
             val coordinates: List<Coordinate> =
-                Coordinates.of(dependencies.resolutionResult, transitive.get())
+                Coordinates.of(dependencies.resolutionResult, transitive.get(), includedBuilds)
                     .filterNot { Coordinates.ignored(it, ignores) }
-            recorder.get().record(coordinates)
+            recorder.get().record(projectPath, configuration, coordinates)
         }
     }
 }

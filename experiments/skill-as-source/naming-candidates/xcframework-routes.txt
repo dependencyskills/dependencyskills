@@ -1,0 +1,74 @@
+Gradle 9.7.1 · Kotlin 2.4.20 · Xcode 27.0 · Swift version 6.4
+
+--- link the release frameworks
+    exit 0
+    skill plugin hook: 1 bundle(s) in releaseFramework
+    skill plugin hook: 1 bundle(s) in releaseFramework
+    the bundle as it leaves the linker and its plugin hook:
+        . AcmeText Headers Headers/AcmeText.h Headers/AcmeTextSkill.h Info.plist Modules Modules/module.modulemap SKILL.md 
+
+--- what the linked .framework carries, by route
+    SOURCEFILE   ABSENT
+    RESOURCE     ABSENT
+    NATIVERES    ABSENT
+    RAWSTRING    ABSENT
+    HIDDENSTR    ABSENT
+    KDOC         Headers/AcmeText.h 
+    BUNDLECOPY   SKILL.md 
+    EXTRAHEADER  Headers/AcmeTextSkill.h 
+    PLIST        Info.plist 
+
+--- assemble the XCFramework
+    exit 0
+    . Info.plist ios-arm64 ios-arm64-simulator ios-arm64-simulator/AcmeText.framework ios-arm64-simulator/dSYMs ios-arm64/AcmeText.framework ios-arm64/dSYMs 
+    one slice in full: . AcmeText Headers Headers/AcmeText.h Headers/AcmeTextSkill.h Info.plist Modules Modules/module.modulemap SKILL.md 
+
+--- what the assembled XCFramework carries, by route
+    SOURCEFILE   ABSENT
+    RESOURCE     ABSENT
+    NATIVERES    ABSENT
+    RAWSTRING    ABSENT
+    HIDDENSTR    ABSENT
+    KDOC         ios-arm64-simulator/AcmeText.framework/Headers/AcmeText.h ios-arm64/AcmeText.framework/Headers/AcmeText.h 
+    BUNDLECOPY   ios-arm64-simulator/AcmeText.framework/SKILL.md ios-arm64/AcmeText.framework/SKILL.md 
+    EXTRAHEADER  ios-arm64-simulator/AcmeText.framework/Headers/AcmeTextSkill.h ios-arm64/AcmeText.framework/Headers/AcmeTextSkill.h 
+    PLIST        ios-arm64-simulator/AcmeText.framework/Info.plist ios-arm64/AcmeText.framework/Info.plist 
+
+--- inside the ios-arm64 binary, which grep does not read: Kotlin/Native holds literals as UTF-16
+    SOURCEFILE   ascii 0, utf-16 0
+    RESOURCE     ascii 0, utf-16 0
+    NATIVERES    ascii 0, utf-16 0
+    RAWSTRING    ascii 0, utf-16 1
+    HIDDENSTR    ascii 0, utf-16 0
+    KDOC         ascii 0, utf-16 0
+    BUNDLECOPY   ascii 0, utf-16 0
+    binary is 576896 bytes
+
+--- the Info.plist key, as delivered
+    PLIST-SENTINEL never hand-roll a case fold
+
+--- the KDoc in the generated umbrella header
+    147: * Text normalization for acme.
+    148- *
+    149- * KDOC-SENTINEL. Never hand-roll a case fold; call [normalize], which is locale-independent.
+    150- */
+    151-__attribute__((objc_subclassing_restricted))
+    --
+    157: * Text normalization for acme.
+    158- *
+    the raw-string constant is declared as:
+        170:@property (class, readonly) NSString *skill __attribute__((swift_name("skill")));
+
+--- the module map, which decides whether the extra header is importable
+    framework module "AcmeText" {
+        umbrella header "AcmeText.h"
+    
+        export *
+        module * { export * }
+    
+        use Foundation
+    }
+
+--- the same library without -Xexport-kdoc
+    exit 0
+    KDOC in the header: 2 occurrences, header is 175 lines

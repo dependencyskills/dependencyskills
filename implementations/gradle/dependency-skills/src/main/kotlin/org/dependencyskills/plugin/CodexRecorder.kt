@@ -1,7 +1,9 @@
 package org.dependencyskills.plugin
 
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import java.net.URI
@@ -19,10 +21,14 @@ import java.time.Duration
  * file at a path the service had to know how to find, which left the service — the one component
  * meant to be ecosystem-agnostic — knowing where Gradle keeps a project's directory.
  *
- * Now it reports over HTTP. The build knows its own coordinates and the service's address; the
- * service knows the store. Neither knows anything about the other's layout, which is what lets the
- * store move, and what lets a Maven or npm plugin use the same endpoint without teaching the
- * service anything new.
+ * Now it reports two ways, one per codex. **Over HTTP to the full service**: the build knows its own
+ * coordinates and the service's address; the service knows the store. Neither knows anything about
+ * the other's layout, which is what lets the store move, and what lets a Maven or npm plugin use the
+ * same endpoint without teaching the service anything new. **As a CycloneDX SBOM in the root build
+ * directory, for the lightweight codex**, which runs as a stdio MCP server started by the agent's
+ * harness, has no port to be told on, and reads the file when an agent asks. That reader does know
+ * where a Gradle build writes its output — the cost ADR-0012 v4 removed from the full service, taken
+ * back deliberately for the lightweight one, where it buys having no process to keep running.
  *
  * **Nothing here may fail a build.** The index is an aid; a project whose scope cannot be written
  * still compiles, says so once, and stops trying.
@@ -30,7 +36,7 @@ import java.time.Duration
 abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable {
 
     interface Params : BuildServiceParameters {
-        /** Where the codex service is listening. */
+        /** Where the full codex service is listening; absent when the project uses only the lightweight codex. */
         val serviceUrl: Property<String>
 
         /** This project's directory — the identity the service files its scope under. */
@@ -44,6 +50,34 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
          * so only the build knows it. The build reports it and the service keeps it.
          */
         val projectName: Property<String>
+
+        /**
+         * Where the resolved set is also written, as a CycloneDX SBOM — the root build directory.
+         *
+         * This is the handoff to the lightweight codex, which runs as an MCP server over stdio and
+         * has no port to be reported to: it reads this file when an agent asks, rather than being
+         * told when a build finishes. A file in the build's own output is the pattern SBOM plugins
+         * already use, adds nothing a project must ignore, and is gone after `clean`.
+         *
+         * It is also the channel that keeps scope out of the agent's reach. Scope is what the build
+         * resolved; if it were set through the same MCP interface the agent queries, the agent could
+         * widen its own.
+         */
+        val reportFile: RegularFileProperty
+
+        /**
+         * The path of every project in the build. The SBOM keeps what a project resolved in an
+         * earlier build until that project resolves again, so it needs to know which projects still
+         * exist: one deleted from settings is dropped rather than kept forever.
+         */
+        val projectPaths: SetProperty<String>
+
+        /**
+         * `group:artifact:version` of every library the build's version catalogs declare. One no
+         * module resolves goes into the SBOM marked as declared, so its skill is readable before the
+         * first build that uses it — which is when an agent decides whether to write its own.
+         */
+        val declared: SetProperty<String>
     }
 
     private val logger = Logging.getLogger(CodexRecorder::class.java)
@@ -56,6 +90,16 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
      * formed here rather than computed anywhere later.
      */
     private val resolved = LinkedHashSet<Coordinate>()
+
+    /**
+     * The same, by the Gradle project that resolved it. A project whose classpath resolved empty is
+     * here with an empty set, which is different from not being here: it says the project now has
+     * no dependencies, where absence says this build did not look.
+     */
+    private val resolvedBy = LinkedHashMap<String, MutableSet<Coordinate>>()
+
+    /** `group:artifact:version` to the directory of the included build's project that supplies it; see [Coordinate.source]. */
+    private val sources = LinkedHashMap<String, String>()
     private var resolutions = 0
     private var broken = false
     private var unreachable: String? = null
@@ -92,21 +136,139 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
         }.apply { isDaemon = true; name = "dependencyskills-warm" }.start()
     }
 
-    /** Called once per compile-dependency configuration that resolved. */
-    fun record(coordinates: Collection<Coordinate>) {
+    /** Configurations already counted, as `projectPath:configuration`. */
+    private val counted = HashSet<String>()
+
+    /**
+     * Called each time a compile-dependency configuration resolves, with its project's path.
+     *
+     * A configuration is counted once however often it reports: fetching its dependencies' sources
+     * reselects variants from the same graph and fires the same callback again.
+     */
+    fun record(projectPath: String, configuration: String, coordinates: Collection<Coordinate>) {
         synchronized(lock) {
             if (broken) return
-            resolutions++
+            if (counted.add("$projectPath:$configuration")) resolutions++
             resolved.addAll(coordinates)
+            resolvedBy.getOrPut(projectPath) { LinkedHashSet() }.addAll(coordinates)
+            coordinates.forEach { c -> c.source?.let { sources[c.value] = it } }
         }
     }
 
     override fun close() {
         synchronized(lock) {
+            writeReportFile()
             reportToService()
             report()
+            announceAdded()
         }
     }
+
+    private var written: String? = null
+
+    /** `group:artifact:version` of every component the SBOM gained over the one it replaced. */
+    private var added: List<String> = emptyList()
+
+    /**
+     * Writes the resolved set as a CycloneDX 1.6 SBOM, rewriting the file only when it changed.
+     *
+     * **Merged by project, not replaced.** Each component names the Gradle projects that resolved it.
+     * A build replaces the entries of the projects it resolved and keeps the rest from the file it
+     * replaces, so compiling one module leaves every other module's dependencies in scope — the file
+     * used to hold only what the last build happened to resolve, and building one module of a
+     * multi-module project dropped every other module's libraries. A project no longer in the build
+     * is dropped; a file from before projects were recorded is replaced whole. A library a version
+     * catalog declares and no project resolves is listed too, marked `dependencyskills:declared`.
+     *
+     * Only when something resolved, for the same reason as the HTTP report: an empty report would
+     * erase the last real one. A classpath that resolved and held nothing IS written, as an SBOM
+     * with no components — an empty scope, which is true. Unchanged content leaves the file alone,
+     * so its modification time says when the dependencies last changed rather than when the build
+     * last ran, and a reader checking it does no work between changes. What a rewrite adds over the
+     * file it replaces is kept for [announceAdded]. Nothing here may fail a build.
+     */
+    private fun writeReportFile() {
+        if (resolutions == 0) return
+        val file = parameters.reportFile.orNull?.asFile ?: return
+        runCatching {
+            val root = parameters.projectName.orNull?.takeIf { it.isNotBlank() }
+                ?: parameters.projectPath.orNull ?: "project"
+            val previous = if (file.isFile) file.readText() else null
+            val existing = parameters.projectPaths.orNull.orEmpty()
+
+            // coordinate -> the projects that resolve it: this build's, then what the previous file
+            // says of every project this build did not resolve and that still exists.
+            val byCoordinate = sortedMapOf<String, MutableSet<String>>()
+            resolvedBy.forEach { (project, coordinates) ->
+                coordinates.filter { it.ecosystem == "maven" && it.value.split(':').size == 3 }
+                    .forEach { byCoordinate.getOrPut(it.value) { sortedSetOf() }.add(project) }
+            }
+            previous?.let(::components)?.forEach { (coordinate, projects) ->
+                projects.filter { it !in resolvedBy && it in existing }
+                    .forEach { byCoordinate.getOrPut(coordinate) { sortedSetOf() }.add(it) }
+            }
+            // Where an included build supplies a library: this build's word for it, else the previous file's.
+            val sourceOf = (previous?.let(::sourcesIn).orEmpty()) + sources
+
+            // Declared in a catalog and resolved by no project: listed, marked, and recomputed from the
+            // catalogs every build rather than merged, since the catalog is the whole record of it.
+            parameters.declared.orNull.orEmpty()
+                .filter { it.split(':').size == 3 && it !in byCoordinate }
+                .forEach { byCoordinate[it] = sortedSetOf() }
+
+            val components = byCoordinate.map { (coordinate, projects) ->
+                val (group, artifact, version) = coordinate.split(':')
+                val purl = "pkg:maven/$group/$artifact@$version"
+                val properties = (if (projects.isEmpty()) """{"name":"$DECLARED_PROPERTY","value":"true"}"""
+                else projects.joinToString(",") { """{"name":"$PROJECT_PROPERTY","value":${quote(it)}}""" }) +
+                    (sourceOf[coordinate]?.let { """,{"name":"$SOURCE_PROPERTY","value":${quote(it)}}""" } ?: "")
+                """    {"type":"library","bom-ref":${quote(purl)},"group":${quote(group)},""" +
+                    """"name":${quote(artifact)},"version":${quote(version)},"purl":${quote(purl)},""" +
+                    """"properties":[$properties]}"""
+            }
+            val text = buildString {
+                append("{\n")
+                append("  \"bomFormat\": \"CycloneDX\",\n")
+                append("  \"specVersion\": \"1.6\",\n")
+                append("  \"version\": 1,\n")
+                append("  \"metadata\": {\n")
+                append("    \"tools\": {\"components\": [{\"type\": \"application\", \"name\": \"dependency-skills\"}]},\n")
+                append("    \"component\": {\"type\": \"application\", \"bom-ref\": \"root\", \"name\": ${quote(root)}},\n")
+                // Which classpath this is, since SBOM plugins usually describe the runtime one. This is
+                // the compile classpath: what the project can import, which is what its scope must be.
+                append("    \"properties\": [{\"name\": \"dependencyskills:classpath\", \"value\": \"compile\"}]\n")
+                append("  },\n")
+                append("  \"components\": [\n")
+                append(components.joinToString(",\n"))
+                if (components.isNotEmpty()) append('\n')
+                append("  ]\n")
+                append("}\n")
+            }
+            if (previous == text) {
+                written = file.path
+                return@runCatching
+            }
+            // Only against a file that was there: the first build, and the first after `clean`, have
+            // nothing to compare with, and calling every dependency new would say nothing.
+            if (previous != null) added = (purls(text) - purls(previous)).sorted()
+            file.parentFile.mkdirs()
+            file.writeText(text)
+            written = file.path
+        }
+    }
+
+    /**
+     * `group:artifact:version` to the projects that resolve it, for every component in an SBOM this
+     * class wrote — one component per line. A component with no project recorded is left out, so a
+     * file from before projects were recorded is replaced rather than merged.
+     */
+    private fun components(sbom: String): Map<String, List<String>> =
+        sbom.lineSequence().mapNotNull { line ->
+            val purl = PURL.find(line) ?: return@mapNotNull null
+            val projects = PROJECT.findAll(line).map { it.groupValues[1] }.toList()
+            if (projects.isEmpty()) return@mapNotNull null
+            "${purl.groupValues[1]}:${purl.groupValues[2]}:${purl.groupValues[3]}" to projects
+        }.toMap()
 
     /**
      * Tells the service what this build resolved.
@@ -187,12 +349,30 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
      * the service, which is the only thing that knows.
      */
     private fun report() {
+        // Only the lightweight codex, which needs nothing but the file: nothing to report at lifecycle
+        // level, and nothing about a full codex this project never asked for (#45).
+        if (parameters.serviceUrl.orNull.isNullOrBlank()) {
+            if (written != null) {
+                logger.info("dependencyskills: {} {} written to {}", resolved.size, plural(resolved.size, "coordinate", "coordinates"), written)
+            } else if (resolutions == 0) {
+                logger.info("dependencyskills: no compile classpath resolved, so nothing was recorded")
+            }
+            return
+        }
         // Not silence. Saying "recorded" would be a lie and saying nothing leaves a developer
         // wondering why their agent knows nothing, so it says what it saw and what became of it.
         unreachable?.let {
+            // Which of the two handoffs landed. The file is enough for the lightweight codex; only the
+            // full service needs to be told, and saying "not recorded" when the file was written
+            // would send someone looking for a problem that is not there.
             logger.lifecycle(
-                "dependencyskills: no codex service at $it, so ${resolved.size} " +
-                    "${plural(resolved.size, "coordinate was", "coordinates were")} not recorded",
+                if (written != null) {
+                    "dependencyskills: ${resolved.size} ${plural(resolved.size, "coordinate", "coordinates")} " +
+                        "written to $written; no codex service at $it, so the full codex was not told"
+                } else {
+                    "dependencyskills: no codex service at $it, so ${resolved.size} " +
+                        "${plural(resolved.size, "coordinate was", "coordinates were")} not recorded"
+                },
             )
             return
         }
@@ -211,9 +391,65 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
         )
     }
 
+    /**
+     * Names the dependencies this build added, so an agent reading the build's output knows to look.
+     *
+     * An agent that asked the lightweight codex early, got an empty list, then added a library and
+     * built, never asked again, and the library's skill was never read. The build's output is the
+     * one place every agent reads whatever harness it runs in, and it is read right after the change
+     * that made a new skill reachable — so the news goes there, rather than into a hook one harness
+     * has and another does not.
+     *
+     * It cannot say which of them ship a skill: the plugin never reads a sources jar, which is the
+     * codex's work. So it names what changed and where to ask. Quiet level, so a build run with `-q`,
+     * as agents often run one, still shows it; and only when something was added, so it is not noise.
+     */
+    private fun announceAdded() {
+        if (added.isEmpty()) return
+        val shown = added.take(MAX_ANNOUNCED).map { it.substringBeforeLast(':') }
+        val more = added.size - shown.size
+        logger.quiet(
+            "dependencyskills: new since the last build: ${shown.joinToString(", ")}" +
+                (if (more > 0) " and $more more" else "") +
+                ". Any of them may ship a guide; an agent with the librarian lookup can check " +
+                "with list_guides.",
+        )
+    }
+
+    /** `group:artifact:version` to the included build's project directory, for every component an SBOM marks so. */
+    private fun sourcesIn(sbom: String): Map<String, String> =
+        sbom.lineSequence().mapNotNull { line ->
+            val purl = PURL.find(line) ?: return@mapNotNull null
+            val source = SOURCE.find(line) ?: return@mapNotNull null
+            "${purl.groupValues[1]}:${purl.groupValues[2]}:${purl.groupValues[3]}" to source.groupValues[1]
+        }.toMap()
+
+    /** The `group:artifact:version` of every component in an SBOM this class wrote. */
+    private fun purls(sbom: String): Set<String> =
+        PURL.findAll(sbom).map { "${it.groupValues[1]}:${it.groupValues[2]}:${it.groupValues[3]}" }.toSet()
+
     private fun plural(n: Int, one: String, many: String) = if (n == 1) one else many
 
     private companion object {
+        val PURL = Regex(""""purl":"pkg:maven/([^/"]+)/([^@"]+)@([^"]+)"""")
+
+        /** The component property naming a Gradle project that resolves it, by path. */
+        const val PROJECT_PROPERTY = "dependencyskills:project"
+
+        /** The component property marking a library a catalog declares and no project resolves yet. */
+        const val DECLARED_PROPERTY = "dependencyskills:declared"
+
+        /**
+         * The component property naming the directory of the included build's project that supplies the library,
+         * where the lookup reads its skill from source, since no jar of it exists.
+         */
+        const val SOURCE_PROPERTY = "dependencyskills:source"
+        val SOURCE = Regex(""""name":"$SOURCE_PROPERTY","value":"([^"]*)"""")
+        val PROJECT = Regex(""""name":"$PROJECT_PROPERTY","value":"([^"]*)"""")
+
+        /** Enough to recognise a change; a build that added more than this is a new project. */
+        const val MAX_ANNOUNCED = 5
+
         // Short on purpose. A build waiting on a local service that is not running should notice
         // in the time it takes to fail a connection, not in the time it takes a request to expire.
         const val CONNECT_TIMEOUT_MS = 500L

@@ -1,0 +1,14 @@
+gradle 9.7.1 · kotlin 2.4.20 · AGP 9.3.2
+
+--- One library, SKILL.md in both src/main/kotlin and src/main/java · exit 1
+    FAILURE: Build failed with an exception.
+    Execution failed for task ':sourcesJar' (registered in build file 'build.gradle.kts').
+    > Entry com/example/acme/text/SKILL.md is a duplicate but no duplicate handling strategy has been set. Please refer to https://docs.gradle.org/9.7.1/dsl/org.gradle.api.tasks.Copy.html#org.gradle.api.tasks.Copy:duplicatesStrategy for details.
+--- Two libraries sharing the package com.example.acme.text
+    each publishes its own sources jar: 2 jars, each with one SKILL.md — nothing merges them
+    fat jar, Gradle's default duplicates strategy · exit 1
+        entries at META-INF/skills/acme-text.md: 0
+        the one that survived: 
+    fat jar with duplicatesStrategy = FAIL · exit 1
+--- An Android application depending on two libraries, each with res/raw/skill_acme_text.md · exit 0
+    the build succeeded; entries in the APK: 1

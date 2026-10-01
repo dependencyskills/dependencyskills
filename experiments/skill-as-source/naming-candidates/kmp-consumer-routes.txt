@@ -1,0 +1,30 @@
+Gradle 9.7.1 · Kotlin 2.4.20 · Swift version 6.4
+Skills placed in commonMain, jvmMain, jsMain and iosArm64Main, plus one as a commonMain resource.
+
+--- Maven artifacts, what a Kotlin consumer resolves · exit 0
+    acme-text-iosarm64-0.1.0-metadata.jar        nothing
+    acme-text-iosarm64-0.1.0-sources.jar         commonMain/com/example/acme/text/SKILL.md iosArm64Main/com/example/acme/text/SKILL.md 
+    acme-text-iosarm64-0.1.0.klib                nothing
+    acme-text-iossimulatorarm64-0.1.0-metadata.jar nothing
+    acme-text-iossimulatorarm64-0.1.0-sources.jar commonMain/com/example/acme/text/SKILL.md 
+    acme-text-iossimulatorarm64-0.1.0.klib       nothing
+    acme-text-js-0.1.0-sources.jar               commonMain/com/example/acme/text/SKILL.md jsMain/com/example/acme/text/SKILL.md 
+    acme-text-js-0.1.0.klib                      META-INF/skills/acme-text.md 
+    acme-text-jvm-0.1.0-sources.jar              commonMain/com/example/acme/text/SKILL.md jvmMain/com/example/acme/text/SKILL.md 
+    acme-text-jvm-0.1.0.jar                      META-INF/skills/acme-text.md 
+    acme-text-wasm-js-0.1.0-sources.jar          commonMain/com/example/acme/text/SKILL.md 
+    acme-text-wasm-js-0.1.0.klib                 META-INF/skills/acme-text.md 
+    acme-text-0.1.0-sources.jar                  commonMain/com/example/acme/text/SKILL.md 
+    acme-text-0.1.0.jar                          nothing
+--- Kotlin/JS npm package, what a JavaScript consumer installs · exit 0
+    productionLibrary                            META-INF/skills/acme-text.md 
+        it contains: META-INF acme-text.d.ts acme-text.js acme-text.js.map kotlin-kotlin-stdlib.js kotlin-kotlin-stdlib.js.map kotlin_org_jetbrains_kotlin_kotlin_dom_api_compat.js kotlin_org_jetbrains_kotlin_kotlin_dom_api_compat.js.map package.json 
+    acme-text                                    kotlin/META-INF/skills/acme-text.md 
+        it contains: kotlin node_modules package.json 
+--- Kotlin/Wasm npm package · exit 0
+    productionLibrary                            META-INF/skills/acme-text.md 
+        it contains: META-INF acme-text.import-object.mjs acme-text.js-builtins.mjs acme-text.mjs acme-text.wasm acme-text.wasm.map package.json 
+--- XCFramework, what a Swift consumer gets through SPM or CocoaPods · exit 0
+    AcmeText.xcframework                         nothing
+        it contains: . ios-arm64-simulator ios-arm64-simulator/AcmeText.framework ios-arm64-simulator/dSYMs ios-arm64 ios-arm64/AcmeText.framework 
+        header sources: 2 headers, 0 Kotlin files

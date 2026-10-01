@@ -1,0 +1,18 @@
+gradle 9.7.1 · kotlin 2.4.20 · kotlinc-jvm 2.4.10
+
+--- Kotlin Multiplatform (jvm, js, linuxX64), skill as a raw string constant · exit 0
+    acme-text-js-0.1.0-sources.jar               files carrying the skill text: 1
+    acme-text-js-0.1.0.klib                      files carrying the skill text: 1
+    acme-text-jvm-0.1.0-sources.jar              files carrying the skill text: 1
+    acme-text-jvm-0.1.0.jar                      files carrying the skill text: 1
+    acme-text-linuxx64-0.1.0-sources.jar         files carrying the skill text: 1
+    acme-text-linuxx64-0.1.0.klib                files carrying the skill text: 1
+    acme-text-0.1.0-sources.jar                  files carrying the skill text: 1
+    acme-text-0.1.0.jar                          files carrying the skill text: 0
+--- Dokka 2.2.0 · exit 0
+    public declaration appears in       5 files
+    its skill text appears in           0 files
+    the internal declaration appears in 0 files
+--- R8 9.4.14, release, min-api 24
+    no keep rule for the library             skill text in classes.dex: 0
+    with a keep rule for the library         skill text in classes.dex: 1

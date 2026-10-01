@@ -12,11 +12,13 @@ import javax.inject.Inject
  * ```kotlin
  * dependencySkills {
  *     projectName = "acme-platform"          // optional; several checkouts can share one
- *     serviceUrl = "http://127.0.0.1:8310"   // where the codex service is
+ *     serviceUrl = "http://127.0.0.1:8310"   // the full codex service, if used; unset, it is not told
  *     harvester {
- *         transitive = true
+ *         transitive = false                  // only what this project declares; on by default
  *         ignore("com.example:noisy-library")
  *     }
+ *     consumer { }                                   // write the librarian agent skill
+ *     author { refresh = SkillRefresh.UnlessEdited } // and librarian-skill-author, keeping local edits
  * }
  * ```
  *
@@ -58,7 +60,15 @@ abstract class DependencySkillsExtension @Inject constructor(objects: ObjectFact
     abstract val projectName: Property<String>
 
     /**
-     * Where the codex service is listening.
+     * Where the full codex service is listening — and whether to report to it at all.
+     *
+     * **Unset by default, which means the full codex is not told**: no warm-up signal, no report and no
+     * line about it in the build output. The lightweight codex needs none of that; it reads the SBOM the
+     * build writes either way. Set it to use the full codex, which listens on `http://127.0.0.1:8310`:
+     *
+     * ```
+     * ./gradlew build -PdependencySkills.serviceUrl=http://127.0.0.1:8310
+     * ```
      *
      * A URL rather than a path to the store, deliberately: the build says what it resolved and the
      * service decides what to do about it. Nothing here knows where the store lives, which is what
@@ -67,6 +77,56 @@ abstract class DependencySkillsExtension @Inject constructor(objects: ObjectFact
      * Defaults to the `dependencySkills.serviceUrl` Gradle property when set.
      */
     abstract val serviceUrl: Property<String>
+
+    /**
+     * Whether the build fetches the sources jar of every dependency on a compile classpath, and of
+     * every library the version catalog declares.
+     *
+     * On by default, because a JVM library's skill travels in its sources jar and a build never
+     * downloads one: without this, a machine that only builds from the command line has no skills to
+     * find (RAD-0079). Defaults to the `dependencySkills.fetchSources` Gradle property when set:
+     *
+     * ```
+     * ./gradlew build -PdependencySkills.fetchSources=false
+     * ```
+     */
+    abstract val fetchSources: Property<Boolean>
+
+    /**
+     * For a project that uses libraries: the `librarian` agent skill, written into the project's
+     * `.agents/skills/` so its agents check what the dependencies offer before writing code. Not written
+     * unless this block is declared:
+     *
+     * ```kotlin
+     * dependencySkills { consumer { } }
+     * ```
+     *
+     * See [AgentSkills] for where it goes and how edits are treated.
+     */
+    val consumer: AgentSkillSpec = objects.newInstance(AgentSkillSpec::class.java)
+
+    fun consumer(configure: Action<in AgentSkillSpec>) {
+        consumer.enabled.set(true)
+        configure.execute(consumer)
+    }
+
+    /**
+     * For a project that publishes a library: the `librarian-skill-author` agent skill, with which an agent
+     * writes the guide this library ships in its sources jar. Separate from [consumer], and not written
+     * unless this block is declared — a project that publishes nothing has no use for it:
+     *
+     * ```kotlin
+     * dependencySkills { author { } }
+     * ```
+     *
+     * Only the author's skill: the library's own guide is packaged whenever it exists, block or not.
+     */
+    val author: AgentSkillSpec = objects.newInstance(AgentSkillSpec::class.java)
+
+    fun author(configure: Action<in AgentSkillSpec>) {
+        author.enabled.set(true)
+        configure.execute(author)
+    }
 
     /** What the out-of-band harvester is fed. */
     val harvester: HarvesterSpec = objects.newInstance(HarvesterSpec::class.java)
@@ -86,12 +146,14 @@ abstract class DependencySkillsExtension @Inject constructor(objects: ObjectFact
 abstract class HarvesterSpec {
 
     /**
-     * Widen from what this project declared to everything the compile classpath resolved.
+     * Report everything the compile classpath resolved — every library the code can import — rather than only
+     * what this project declared.
      *
-     * Off by default, and the default is the conservative one rather than the good one.
-     * RAD-0022 measured 11 of 17 real capabilities living only in the transitive tail, so this
-     * is where most of the value is — but it is also where most of the volume is, and it is a
-     * trade an operator should take deliberately rather than inherit.
+     * **On by default.** The compile classpath is already the importable set: the declared dependencies, plus
+     * only what they expose with `api`, never a runtime-only dependency. A library that reaches the code through
+     * another one — a formatting library exposed by a module the project uses — is one its agent writes calls
+     * against, so its guide must be servable. RAD-0022 measured 11 of 17 real capabilities living only in that
+     * tail. Set it false to report only what the project declares, where volume matters more than reach.
      */
     abstract val transitive: Property<Boolean>
 

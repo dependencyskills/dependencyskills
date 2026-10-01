@@ -40,7 +40,8 @@ library reaches npm consumers through Gradle and never touches it.
 |---|---|---|
 | `codex/` | the store, the harvester, the query layer, the server — no build system. Publishes `org.dependencyskills.codex:…` | store built; the rest not started |
 | `gradle/` | Gradle plugins, `org.dependencyskills.gradle:…`. Channels: Maven (JVM, Android, native, JS), npm, SPM | the consumer plugin; the npm and SPM emit steps not started |
-| `maven/` | Maven plugins | not started |
+| `lightweight-codex/` | the lightweight system's lookup: reads the build's SBOM and the local caches, serves dependencies' skills over MCP. Python, no dependencies; separate from `codex/` | alpha |
+| `maven/` | the Maven plugin, `org.dependencyskills.maven:dependency-skills-maven-plugin`: the Gradle plugin's two halves as the `author` and `consumer` goals — the same skill names, SBOM, sources fetch, agent skills and lock file | alpha |
 | `npm/` | npm tooling | not started |
 | `swift/` | SPM tooling | not started |
 

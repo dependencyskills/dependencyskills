@@ -1,0 +1,12 @@
+{
+  "package": "com.example.acme.result",
+  "artifact": "acme-result",
+  "files": [
+    "src/main/kotlin/com/example/app/UserDirectory.kt",
+    "src/test/kotlin/com/example/app/UserDirectoryTest.kt"
+  ],
+  "misuse": "\\b(?:is|as\\??)\\s+(?:Outcome\\.)?(?:Success|Failure)\\b",
+  "operations": "\\.(?:fold|onSuccess|onFailure|valueOrNull|errorOrNull|map)\\s*[({]",
+  "marker": "Do not do it in calling code.",
+  "lint": "acme-result: Outcome matched by subtype."
+}

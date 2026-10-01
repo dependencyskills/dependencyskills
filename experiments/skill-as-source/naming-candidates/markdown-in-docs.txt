@@ -1,0 +1,18 @@
+Each generator renders a package holding one documented declaration and a SKILL.md beside it.
+The control column counts files carrying the real doc comment: 0 there means the run proves nothing.
+
+--- Javadoc 26.0.2.1
+    SKILL.md in the package            stays out (files with text: 0, with the name: 0, control: 4)
+--- Dokka 2.2.0 · exit 0
+    SKILL.md in the source directory   stays out (files with text: 0, with the name: 0, control: 2)
+--- go doc -all go1.27.1
+    SKILL.md beside the package        stays out (files with text: 0, with the name: 0, control: 1)
+--- rustdoc, cargo doc 1.98.1 · exit 0
+    SKILL.md in src/                   stays out (files with text: 0, with the name: 0, control: 2)
+--- pydoc 3.14.7, pdoc 16.0.0
+    pydoc acme_text                    stays out (files with text: 0, with the name: 0, control: 1)
+    pdoc acme_text (HTML)              stays out (files with text: 0, with the name: 0, control: 2)
+--- TypeDoc 0.28.20 · exit 0
+    SKILL.md in src/                   stays out (files with text: 0, with the name: 0, control: 1)
+--- DocC, swift-docc-plugin 1.5.0, SKILL.md excluded in Package.swift · exit 0
+    SKILL.md in the target             stays out (files with text: 0, with the name: 0, control: 2)

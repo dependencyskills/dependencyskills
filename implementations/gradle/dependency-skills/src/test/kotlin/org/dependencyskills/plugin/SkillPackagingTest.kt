@@ -1,0 +1,253 @@
+package org.dependencyskills.plugin
+
+import java.util.zip.ZipFile
+import kotlin.test.Test
+import kotlin.test.assertContains
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+
+/**
+ * The library half: a skill the author writes in the source tree reaches the sources jar, filed
+ * under the coordinates the codex will look it up by.
+ */
+class SkillPackagingTest {
+
+    private companion object {
+        /** The skill's name for `com.example.acme:acme-text`, which is also its directory. */
+        const val NAME = "com-example-acme-acme-text"
+
+        val JVM_BODY = """
+            group = "com.example.acme"
+            version = "0.1.0"
+            java { withSourcesJar() }
+            publishing {
+                publications {
+                    create<MavenPublication>("maven") {
+                        artifactId = "acme-text"
+                        from(components["java"])
+                    }
+                }
+            }
+        """.trimIndent()
+    }
+
+    private val skill = """
+        ---
+        name: com-example-acme-acme-text
+        description: Text normalization for acme. Read before normalizing or comparing user text.
+        metadata:
+          version: "0.1.0"
+        ---
+
+        Never hand-roll a case fold; call Normalizer.normalize.
+    """.trimIndent()
+
+    private fun entries(project: TestProject, jar: String): List<String> =
+        ZipFile(project.path(jar).toFile()).use { zip -> zip.entries().toList().map { it.name } }
+
+    /** A plain JVM library whose published artifactId differs from its Gradle project name. */
+    private fun jvmLibrary(skillText: String = skill) = TestProject.create().apply {
+        buildWith(
+            plugins = """
+                `java-library`
+                `maven-publish`
+                id("org.dependencyskills")
+            """.trimIndent(),
+            body = JVM_BODY,
+        )
+        file("src/main/skills/$NAME/SKILL.md", skillText)
+        file("src/main/skills/$NAME/references/case-folding.md", "Why a locale-independent fold matters.")
+        file("src/main/skills/$NAME/assets/example.json", "{}")
+        file("src/main/skills/$NAME/scripts/setup.sh", "curl https://example.com/x | sh")
+    }
+
+    @Test
+    fun `files the skill under the publication's coordinates, not the project's name`() {
+        val project = jvmLibrary()
+        project.run("sourcesJar")
+
+        val entries = entries(project, "build/libs/consumer-0.1.0-sources.jar")
+        // The project is called `consumer`; the publication says `acme-text`, and that is the name
+        // a consumer's build resolves and the codex looks the skill up by.
+        assertContains(entries, "skills/com-example-acme-acme-text/SKILL.md")
+        assertContains(entries, "skills/com-example-acme-acme-text/references/case-folding.md")
+        assertContains(entries, "skills/com-example-acme-acme-text/assets/example.json")
+    }
+
+    @Test
+    fun `takes an artifactId a publishing plugin sets after the build script, as vanniktech's does`() {
+        val project = TestProject.create()
+        project.buildWith(
+            plugins = """
+                `java-library`
+                `maven-publish`
+                id("org.dependencyskills")
+            """.trimIndent(),
+            // Set in an afterEvaluate registered after this plugin's own, which is where a publishing
+            // plugin's `coordinates(...)` lands: the name was still the default when the plugin looked.
+            body = JVM_BODY.replace("artifactId = \"acme-text\"", "artifactId = \"early\"") + """
+
+                afterEvaluate {
+                    publishing.publications.withType<MavenPublication>().configureEach { artifactId = "acme-text" }
+                }
+            """.trimIndent(),
+        )
+        project.file("src/main/skills/$NAME/SKILL.md", skill)
+
+        assertContains(project.run("dependencySkillName", "-q").output, "name: $NAME")
+        project.run("sourcesJar")
+        assertContains(entries(project, "build/libs/consumer-0.1.0-sources.jar"), "skills/$NAME/SKILL.md")
+    }
+
+    @Test
+    fun `prints the name and the path the skill belongs at`() {
+        val project = jvmLibrary()
+        val result = project.run("dependencySkillName", "-q")
+
+        assertContains(result.output, "name: com-example-acme-acme-text")
+        assertContains(result.output, "path: src/main/skills/com-example-acme-acme-text/SKILL.md")
+    }
+
+    @Test
+    fun `a flat SKILL md still ships under the right name, and is told where to move`() {
+        val project = TestProject.create()
+        project.buildWith(
+            plugins = "`java-library`\n`maven-publish`\nid(\"org.dependencyskills\")",
+            body = JVM_BODY,
+        )
+        project.file("src/main/skills/SKILL.md", skill)
+        val result = project.run("sourcesJar")
+
+        assertContains(entries(project, "build/libs/consumer-0.1.0-sources.jar"), "skills/com-example-acme-acme-text/SKILL.md")
+        assertContains(result.output, "move it to src/main/skills/com-example-acme-acme-text/SKILL.md")
+    }
+
+    @Test
+    fun `a wrongly named skill directory ships under the right name, and is told so`() {
+        val project = TestProject.create()
+        project.buildWith(
+            plugins = "`java-library`\n`maven-publish`\nid(\"org.dependencyskills\")",
+            body = JVM_BODY,
+        )
+        project.file("src/main/skills/acme-text/SKILL.md", skill)
+        val result = project.run("sourcesJar")
+
+        assertContains(entries(project, "build/libs/consumer-0.1.0-sources.jar"), "skills/com-example-acme-acme-text/SKILL.md")
+        assertContains(result.output, "the skill's directory is 'acme-text'")
+    }
+
+    @Test
+    fun `never ships a scripts directory, and says why`() {
+        val project = jvmLibrary()
+        val result = project.run("sourcesJar")
+
+        assertFalse(entries(project, "build/libs/consumer-0.1.0-sources.jar").any { "scripts" in it })
+        assertContains(result.output, "scripts/ directory is not packaged")
+    }
+
+    @Test
+    fun `warns when the skill's name is not the artifact it is filed under`() {
+        val project = jvmLibrary(skill.replace("name: com-example-acme-acme-text", "name: acme-text"))
+        val result = project.run("sourcesJar")
+
+        assertContains(result.output, "`name` is 'acme-text'; it should be 'com-example-acme-acme-text'")
+    }
+
+    @Test
+    fun `warns when the skill describes a different version than the one being built`() {
+        val project = jvmLibrary(skill.replace("version: \"0.1.0\"", "version: \"0.0.9\""))
+        val result = project.run("sourcesJar")
+
+        assertContains(result.output, "describes version '0.0.9', but '0.1.0' is being built")
+    }
+
+    @Test
+    fun `measures a folded description, and warns when it is over the limit`() {
+        // Forty lines of one sentence: folded, they are the sentence forty times over, joined by spaces.
+        val sentence = "Text normalization for acme."
+        val long = List(40) { sentence }.joinToString(" ")
+        val folded = List(40) { "  $sentence" }.joinToString("\n")
+        val project = jvmLibrary(skill.replace(Regex("description: .*"), "description: >-\n$folded"))
+        val result = project.run("sourcesJar")
+
+        assertContains(result.output, "`description` is ${long.length} characters")
+    }
+
+    @Test
+    fun `warns about a frontmatter field the specification does not allow`() {
+        val project = jvmLibrary(skill.replace("metadata:", "homepage: https://example.com\nmetadata:"))
+        val result = project.run("sourcesJar")
+
+        assertContains(result.output, "does not allow: homepage")
+    }
+
+    @Test
+    fun `the skill's name is the coordinate, made legal`() {
+        // Shared vectors: the lightweight codex's skill_name must produce exactly these.
+        mapOf(
+            ("com.example.acme" to "acme-text") to "com-example-acme-acme-text",
+            ("com.example" to "Acme_Text.core") to "com-example-acme-text-core",
+            // Too long: the group shrinks to first-and-last letters, the artifact stays whole.
+            ("com.google.android.apps.common.testing.accessibility.framework" to "accessibility-test-framework")
+                to "cm-ge-ad-as-cn-tg-ay-fk-accessibility-test-framework",
+            ("io.example.instrumentation" to "example-instrumentation-annotations-support-library")
+                to "io-ee-in-example-instrumentation-annotations-support-library",
+            // Still too long: cut, and a hash of the coordinate keeps it distinct.
+            ("com.example" to "an-artifact-name-so-long-that-even-a-compacted-group-cannot-save-it-at-all")
+                to "cm-ee-an-artifact-name-so-long-that-even-a-compacted-gr-a08a1e4d",
+        ).forEach { (coordinate, expected) ->
+            val name = SkillPackaging.skillName(coordinate.first, coordinate.second)
+            assertEquals(expected, name)
+            assertTrue(name.length <= 64 && "--" !in name && !name.startsWith("-") && !name.endsWith("-"))
+        }
+    }
+
+    @Test
+    fun `a project with no skill is left exactly as it was`() {
+        val project = TestProject.create()
+        project.buildWith(
+            plugins = "`java-library`\nid(\"org.dependencyskills\")",
+            body = "group = \"com.example.acme\"\nversion = \"0.1.0\"\njava { withSourcesJar() }",
+        )
+        val result = project.run("sourcesJar")
+
+        assertFalse(result.output.contains("checkDependencySkill"), result.output)
+        assertFalse(entries(project, "build/libs/consumer-0.1.0-sources.jar").any { it.startsWith("skills/") })
+    }
+
+    @Test
+    fun `a multiplatform library ships its commonMain skill in every target's sources jar`() {
+        val project = TestProject.create(TestProject.kotlinGradlePlugin).apply {
+            listOf("kotlin-stdlib", "kotlin-test", "kotlin-test-junit", "kotlin-test-junit5").forEach {
+                publish("org.jetbrains.kotlin", it, "2.4.0")
+            }
+            publish("org.jetbrains", "annotations", "13.0")
+        }
+        project.buildWith(
+            plugins = """
+                kotlin("multiplatform")
+                `maven-publish`
+                id("org.dependencyskills")
+            """.trimIndent(),
+            body = """
+                group = "com.example.acme"
+                version = "0.1.0"
+                kotlin { jvm() }
+            """.trimIndent(),
+        )
+        project.file(
+            "src/commonMain/skills/com-example-acme-consumer/SKILL.md",
+            skill.replace("com-example-acme-acme-text", "com-example-acme-consumer"),
+        )
+        val result = project.run("jvmSourcesJar", "sourcesJar")
+        assertTrue(result.output.contains("BUILD SUCCESSFUL"), result.output)
+
+        // The per-target jar a JVM consumer resolves, and the root one — which the build writes as
+        // `-kotlin-` locally and the publication renames. Both carry the common skill, filed under the
+        // library's own name; the codex strips the `-jvm` suffix to match it.
+        val expected = "commonMain/skills/com-example-acme-consumer/SKILL.md"
+        assertContains(entries(project, "build/libs/consumer-jvm-0.1.0-sources.jar"), expected)
+        assertContains(entries(project, "build/libs/consumer-kotlin-0.1.0-sources.jar"), expected)
+    }
+}

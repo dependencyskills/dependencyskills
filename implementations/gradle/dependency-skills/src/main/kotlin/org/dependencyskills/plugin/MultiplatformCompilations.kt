@@ -30,7 +30,7 @@ internal object MultiplatformCompilations {
         val kotlin = project.extensions.findByType(KotlinMultiplatformExtension::class.java) ?: return
         kotlin.targets.configureEach {
             compilations.configureEach {
-                observer.watch(project, compileDependencyConfigurationName)
+                observer.watch(project, compileDependencyConfigurationName, listOf(compileKotlinTaskName))
             }
         }
     }

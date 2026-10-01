@@ -1,0 +1,28 @@
+gradle 9.7.1 · maven 3.9.16 · uv 0.12.5 (Homebrew 2026-08-14 aarch64-apple-darwin) · npm 11.13.0 · Swift version 6.4
+Go module zips and Cargo crates ship every file in the module, not only sources; checked in run below.
+--- Gradle java-library, SKILL.md in src/main/java · exit 0
+    sources jar                                  SKILL.md: com/example/acme/text/SKILL.md 
+--- Gradle kotlin(jvm), SKILL.md in src/main/kotlin · exit 0
+    sources jar                                  SKILL.md: com/example/acme/text/SKILL.md 
+--- Kotlin Multiplatform (jvm, js, linuxX64), SKILL.md in commonMain/kotlin · exit 0
+    acme-text-js-0.1.0-sources.jar               SKILL.md: commonMain/com/example/acme/text/SKILL.md 
+    acme-text-jvm-0.1.0-sources.jar              SKILL.md: commonMain/com/example/acme/text/SKILL.md 
+    acme-text-linuxx64-0.1.0-sources.jar         SKILL.md: commonMain/com/example/acme/text/SKILL.md 
+    acme-text-0.1.0-sources.jar                  SKILL.md: commonMain/com/example/acme/text/SKILL.md 
+--- Maven, maven-source-plugin, SKILL.md in src/main/java · exit 0
+    sources jar                                  SKILL.md: com/example/acme/text/SKILL.md 
+    binary jar                                   SKILL.md: ABSENT
+--- Python, uv build, setuptools · exit 0
+    acme_text-0.1.0-py3-none-any.whl             SKILL.md: ABSENT
+    acme_text-0.1.0.tar.gz                       SKILL.md: ABSENT
+--- Python, uv build, hatchling · exit 0
+    acme_text-0.1.0-py2.py3-none-any.whl         SKILL.md: acme_text/SKILL.md 
+    acme_text-0.1.0.tar.gz                       SKILL.md: acme_text-0.1.0/src/acme_text/SKILL.md 
+--- Python, uv build, uv_build · exit 0
+    acme_text-0.1.0-py3-none-any.whl             SKILL.md: acme_text/SKILL.md 
+    acme_text-0.1.0.tar.gz                       SKILL.md: acme_text-0.1.0/src/acme_text/SKILL.md 
+--- npm, tsc then npm pack
+    no files field                               SKILL.md: package/src/SKILL.md 
+    files: [dist]                                SKILL.md: ABSENT
+--- SwiftPM build, SKILL.md in Sources/AcmeText · exit 0
+    warning: 'swift': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
