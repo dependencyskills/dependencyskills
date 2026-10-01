@@ -47,6 +47,8 @@ it: excluding the tail has been justified twice, for selection and for security,
 and on neither occasion was the *cost* measured. What that exclusion loses is
 [under investigation](/research/).
 
+*Since then (September 2026).* The lookup we are now trying departs from this on two points, as an experiment rather than a reversal. It covers everything a project's code can import by default, because when measured **11 of 17** capabilities a developer reached for lived only in the tail. And it hands an agent a library's own skill as written — marked as the authors' documentation, served only for libraries the project chose and for the version it resolved, never as permission to run or install anything — rather than a rewrite. That gives up the codex's control in exchange for a far smaller surface: text a library's own authors wrote for this purpose, not every comment in its source. The measurement above still says framing alone is not sufficient; whether the narrower surface holds is part of what the trial is for.
+
 **Publish security findings as observations, not verdicts.** Per-model results
 are reported as what was measured, on what date, at what sample size — never as
 a trust judgement about a vendor's model, because the samples are small and the
@@ -103,6 +105,7 @@ Current research directions, not commitments:
 - **A capability server**, local first, as a query front-end over the corpus.
   What injection means for it is now settled above; what remains open is the
   server's own shape.
+- **How the lighter half is packaged.** A library's skill ships in its sources jar with a few lines of build configuration ([how our libraries do it](/library-skills/)), so no build plugin is needed for that. What a developer installs to read it — a command, an MCP server registered once per machine, or the lookup carried inside an agent skill as a script — is open, and so is whether our Gradle and Maven plugins are published at all.
 
 The full trail is in [the research](/research/). When a direction hardens into
 a commitment, it graduates to a decision and moves up here.

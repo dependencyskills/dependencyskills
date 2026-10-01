@@ -31,4 +31,4 @@ one authoring location, many publication channels.
 
 ## Why `agent-skills/` and not `skills/`
 
-It matched `src/agent-skills/`, the authoring path [ADR-0003](../../docs/knowledge/decisions/ADR-0003-library-skills-via-repository-artifacts.md) specified for a library. That ADR is superseded, and the Gradle plugin's alpha reads a library's skill from `src/<sourceSet>/skills/` instead — where a library's skill lives is still open in [RAD-0075](../../docs/knowledge/research/RAD-0075-naming-the-skill-file.md), so this name is left as it is until that settles.
+It matched `src/agent-skills/`, the authoring path [ADR-0003](../../docs/knowledge/decisions/ADR-0003-library-skills-via-repository-artifacts.md) specified for a library. That ADR is superseded, and a library's skill is now written at `src/<sourceSet>/skills/` instead — where a library's skill lives is still open in [RAD-0075](../../docs/knowledge/research/RAD-0075-naming-the-skill-file.md), so this name is left as it is until that settles.

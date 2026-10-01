@@ -4,7 +4,7 @@ The Maven counterpart of the [Gradle plugin](../gradle/), `org.dependencyskills.
 
 It does what the Gradle plugin does, the same way, so the lightweight codex cannot tell which build system a project uses: the same skill name for a coordinate, the same SBOM, the same agent skills in the same places, and the same `dependencyskills-lock.json`.
 
-Maven resolves plugins from Central by default, so the declaration below is all a project needs. Releasing it is `./mvnw -P release deploy`: the `release` profile signs with the publisher's GPG key and uploads with the Central Portal token held in `settings.xml` under the server id `central`. A plain `install` signs nothing.
+> **Experimental, and not published.** Our own libraries ship their skill with a few lines of build configuration instead ([the site](https://dependencyskills.org/library-skills/)); whether this plugin is published at all is undecided. To try it, `./mvnw install` here puts it in the local repository, where a project on the same machine finds it with the declaration below. The build is set up for Maven Central should it go there: `./mvnw -P release deploy` signs with the publisher's GPG key and uploads with the Central Portal token held in `settings.xml` under the server id `central`. A plain `install` signs nothing.
 
 ## The two goals
 

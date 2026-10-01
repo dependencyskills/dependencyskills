@@ -1,16 +1,11 @@
 ---
 title: Dependency Skills
-description: A local index of what your dependencies can already do, built from what they already ship — so a coding agent stops reinventing them.
+description: Skills a library ships inside its own artifact, and a local lookup that finds them for the version a project uses — so a coding agent stops reinventing what its dependencies already do. Experimental.
 ---
 
-A coding agent should know what the libraries on your classpath can already do.
-This is the thing that tells it: **a local index of your dependencies'
-capabilities**, built from the documentation they already ship — current,
-version-matched, and reachable without drowning the context window.
+A coding agent should know what the libraries a project already depends on can do, and how their authors mean them to be used — for the version the project actually uses. We are trying to get it there in two halves: **a library ships a skill inside its own published artifact**, and **a small lookup on the developer's machine finds it** for the version in use, without drowning the context window.
 
-It is being built, and it is not adoptable yet. Everything on this site is the
-measurement that shaped it, including the parts that killed our own ideas.
-[How it works](/how-it-works/) is the shortest route to the design.
+It is experimental. We have set it up on our own libraries, and the first now carries its skill on Maven Central; the lookup is not published. Everything else on this site is the measurement that shaped it, including the parts that killed our own ideas. [How it works](/how-it-works/) is the shortest route to the design.
 
 ## What goes wrong
 
@@ -121,8 +116,8 @@ before the agent sees it, rather than a few read raw. That trade is worth
 arguing about, and [the measurements behind it](/injection/) are published in
 full, including [where it does not hold](/experiments/).
 
-:::note[Being built — not adoptable yet]
-The architecture is settled and the measurement behind it is published, but
-there is no release. Start with [how it works](/how-it-works/), then
-[what has been decided](/decisions/).
+**The lookup we are trying first does less than that, on purpose.** It serves only the skills a library's own authors put in its artifact, only for libraries the project chose, and only for the version it resolved — as written, marked as the authors' documentation rather than instructions, and never as permission to run or install anything. It does not rewrite them. That narrows what reaches the agent; it does not screen it, and the rewriting step stays with the [heavier design](/how-it-works/#the-heavier-design).
+
+:::note[Experimental]
+What exists today is [the skill format we went with, and how our libraries ship it](/library-skills/), with the skill we use to write one. The lookup that reads it is being tried on our own projects and is not published. Start with [how it works](/how-it-works/), then [what has been decided](/decisions/).
 :::

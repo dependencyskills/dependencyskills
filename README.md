@@ -1,13 +1,8 @@
 # Dependency Skills
 
-A coding agent should know what the libraries on its classpath can already do.
-This builds the thing that tells it — a local index of your dependencies'
-capabilities, harvested from what they already ship, across Maven, npm, SPM, Go
-and Python.
+A coding agent should know what the libraries a project depends on can already do, and how their authors mean them to be used — for the version the project actually uses. We are trying two halves: a library ships a skill inside its own published artifact, and a lookup on the developer's machine finds it.
 
-> **Being built, and not yet adoptable.** The architecture is settled and the
-> measurements behind it are published, but there is no release and no stable
-> spec. Do not publish anything against it yet.
+> **Experimental.** We have set this up on our own libraries, and the first carries its skill on Maven Central (`io.github.aughtone:types` 4.1.0). The lookup and the build plugins are not published. None of it is a recommendation, and any of it may change.
 >
 > **The measuring came first, and it is still most of what is here.**
 > Twenty-seven experiments and fifty-five research records, because the point was
@@ -15,14 +10,9 @@ and Python.
 > publish — several of which killed ideas this project had already committed to
 > in writing.
 >
-> The pipeline now runs end to end for Maven, Kotlin and Java: a sources jar goes
-> in, and a need written in plain words comes back with entries from your own
-> dependency graph, scoped to what your project actually resolved. What is
-> missing is the rewriter that makes library prose safe to show, and the server
-> an agent talks to. If you came looking for something to install, there still
-> isn't one.
+> Beside the two halves sits a heavier design, the codex, for libraries that ship no skill: it reads every library's own documentation and rewrites it with a local model. It is built and measured, and not in use.
 >
-> How it is shaped and why:
+> How it works: [the site](https://dependencyskills.org/how-it-works/). How the codex is shaped and why:
 > [ADR-0012](docs/knowledge/decisions/ADR-0012-a-shared-machine-level-index-store.md).
 > What the measurements found, including the ones that killed our own ideas:
 > [`docs/knowledge/research/`](docs/knowledge/research/).
@@ -115,8 +105,7 @@ Measurement showed the content it would have carried already ships in the
 publisher in the world to do new work for something already done
 ([ADR-0009](docs/knowledge/decisions/ADR-0009-transport-is-sources-jar.md),
 superseding [ADR-0003](docs/knowledge/decisions/ADR-0003-library-skills-via-repository-artifacts.md)).
-Nothing a library author does changes; the indexing happens on the consumer's
-machine, from what they already downloaded.
+For the codex nothing a library author does changes; the indexing happens on the consumer's machine, from what they already downloaded. The lighter half we are trying asks an author for one file, a skill, and it travels in that same sources jar.
 
 **Holding.** The two-layer design: a small always-resident entry whose only job
 is to fire at the right moment, and an on-demand index that maps a need to a
@@ -185,7 +174,7 @@ different in each ecosystem.
 | `experiments/` | The measurements — the cost model and twenty-seven numbered tests, plus the shared corpus, the summariser and the classifiers. Each self-contained: data plus a runnable harness |
 | `site/` | The published site at [dependencyskills.org](https://dependencyskills.org) |
 | `spec/` | The convention. Normative, and currently ahead of what has been decided — `discovery.md`, the hard part, is unwritten |
-| `implementations/` | Per build system, plus the codex itself and this project's own agent skills. Eight codex modules — the store, harvester, classifier, encoder, in-process runtime, vector index, summariser and MCP server — alongside the Gradle consumer plugin |
+| `implementations/` | Per build system, plus the lookup, the codex and this project's own agent skills: the lightweight lookup (`lightweight-codex/`), the Gradle and Maven plugins, the agent skills (`agent-skills/`), and the codex's modules — the store, harvester, classifier, encoder, in-process runtime, vector index, summariser, indexer and MCP server |
 | `conformance/` | Runs an implementation against the fixtures — **empty** |
 | `fixtures/` | Sample skills, expected archives, malformed cases — **empty** |
 
@@ -201,45 +190,32 @@ that channel. See
 
 ## State
 
-Nothing is published and nothing is adoptable. The measuring is done; the
-building is most of the way through one ecosystem.
+Experimental, and only on our own projects.
 
-**Settled.** Where library content comes from
-([ADR-0009](docs/knowledge/decisions/ADR-0009-transport-is-sources-jar.md)), and the
-shape of the indexer that consumes it
-([ADR-0012](docs/knowledge/decisions/ADR-0012-a-shared-machine-level-index-store.md)):
-a shared machine-level store keyed by coordinate, so a library is indexed once
-per machine rather than once per project; declared dependencies by default with
-the transitive tail opt-in; and a boundary that decides what an agent is ever
-allowed to read.
+**What a library ships.** A skill at `src/commonMain/skills/<name>/SKILL.md`, or the ecosystem's equivalent, packaged into the sources jar by a few lines of build configuration. Four of our libraries do it, and `io.github.aughtone:types` 4.1.0 carries its skill on Maven Central. The format is [`spec/content.md`](spec/content.md); how we set it up is [on the site](https://dependencyskills.org/library-skills/); the skill we write it with is [`librarian-skill-author`](implementations/agent-skills/librarian-skill-author/).
 
-**Built**, for Maven with Kotlin and Java sources:
+**What finds it.** [`implementations/lightweight-codex/`](implementations/lightweight-codex/) reads what a project uses, finds the skills in the local caches and installed packages, and answers an agent over MCP or from a command — for the version the project resolved, and only with the library authors' own text, marked as theirs. Tried on our own projects; not published, and how it is packaged is open ([RAD-0081](docs/knowledge/research/RAD-0081-tools-carried-in-the-librarian-skill.md)).
+
+**The build plugins.** Gradle and Maven plugins that report a project's dependencies, fetch their sources jars, check a library's skill and write the agent skills. Our libraries no longer need them to ship a skill. They are not published, and may not be.
+
+**The codex.** Where library content comes from ([ADR-0009](docs/knowledge/decisions/ADR-0009-transport-is-sources-jar.md)) and the shape of the indexer ([ADR-0012](docs/knowledge/decisions/ADR-0012-a-shared-machine-level-index-store.md)) are settled: a shared machine-level store keyed by coordinate, so a library is indexed once per machine rather than once per project; everything a project's code can import by default; and a boundary that decides what an agent is ever allowed to read. Built, for Maven with Kotlin and Java sources, in [`implementations/codex/`](implementations/codex/):
 
 | | |
 |---|---|
 | the store | content-addressed entries, scoped per project, SQLite |
 | the harvester | a sources jar read in place, tree-sitter, each doc comment bound to the declaration it belongs to |
-| the Gradle plugin | reports which of a project's dependencies the store has never seen |
 | the query layer | a need in plain words, lexical, scoped to what this project resolved |
 | the classifier | degrades suspect prose without losing the entry — 0.170% flagged on real harvested documentation |
 | the runtime | llama.cpp in process, one native library per platform, generation and embedding from the same one |
 | the index | two vectors per entry, never concatenated, scope enforced inside the search rather than over its results |
+| the summariser | the rewriter: library prose in, one factual sentence out, the original never leaves |
+| the server | MCP, returning only the rewrite and the signature |
 
-**Unwritten.** The summariser — the rewriter that is the quarantine, and the
-reason library prose would never reach an agent verbatim. The MCP server. The
-npm and SPM harvesters. Both skills.
+It is not in use; the lookup above is what we are trying.
 
-**Open.** Whether prose a filter misses is prose an agent would have obeyed —
-the gap between catching text and preventing harm.
+**Open.** Whether prose a filter misses is prose an agent would have obeyed — the gap between catching text and preventing harm.
 
-**And one that is no longer open, because it was measured and the answer is
-poor.** Retrieval at the size a real dependency graph produces: over 11,155
-entries harvested from one project's 59 dependencies, lexical search puts the
-right answer in the first ten for **2 of 17** needs and the two-faced vector
-index for **4**. Double, and nowhere near enough. The rewrite face helps
-sharply where it exists but covers 3.6% of entries until the summariser is
-written, so the number should move. Publishing it now is the point: a retrieval
-design with no baseline cannot tell an improvement from a change.
+**And one that is no longer open, because it was measured and the answer is poor.** Retrieval at the size a real dependency graph produces: over 11,155 entries harvested from one project's 59 dependencies, lexical search puts the right answer in the first ten for **2 of 17** needs and the two-faced vector index for **4**. Double, and nowhere near enough. The rewrite face helps sharply where it exists but covered 3.6% of entries when measured, so the number should move. Publishing it is the point: a retrieval design with no baseline cannot tell an improvement from a change.
 
 ## If you are working on this too
 

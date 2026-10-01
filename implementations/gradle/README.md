@@ -10,19 +10,25 @@ Published under `org.dependencyskills.gradle`, so the coordinate says which buil
 
 ## Getting it
 
-Published to Maven Central, plugin marker included, so a build finds it by id once `mavenCentral()` is among its plugin repositories — Gradle looks only at the Plugin Portal by default:
+> **Experimental, and not published.** Our own libraries no longer use this plugin to ship a skill — a few lines of build configuration do that, and [the site](https://dependencyskills.org/library-skills/) shows them. Whether the plugin is published at all is undecided.
+
+To try it, publish it to the local Maven repository from here, and list `mavenLocal()` among the plugin repositories of the build that applies it:
+
+```
+./gradlew :dependency-skills:publishToMavenLocal
+```
 
 ```kotlin
 // settings.gradle.kts
 pluginManagement {
     repositories {
-        mavenCentral()
         gradlePluginPortal()
+        mavenLocal()
     }
 }
 ```
 
-Releasing it is `./gradlew :dependency-skills:publishToMavenCentral`, with the Central Portal token and signing key in the publisher's own Gradle properties (`mavenCentralUsername`, `mavenCentralPassword`, `signingInMemoryKey` and the rest). Only that task signs: `publishToMavenLocal` needs no key.
+The build is set up for Maven Central, should it go there: the plugin marker is published with it, so a build would find it by id with `mavenCentral()` among its plugin repositories. Releasing is `./gradlew :dependency-skills:publishToMavenCentral`, with the Central Portal token and signing key in the publisher's own Gradle properties (`mavenCentralUsername`, `mavenCentralPassword`, `signingInMemoryKey` and the rest), or the `published` branch's workflow. Only that task signs: `publishToMavenLocal` needs no key.
 
 ## Naming
 
