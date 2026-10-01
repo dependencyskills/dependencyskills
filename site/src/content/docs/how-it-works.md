@@ -1,10 +1,35 @@
 ---
 title: How it works
-description: The shape of the indexer — a shared machine-level store keyed by coordinate, and the trust boundary that decides what a coding agent ever sees.
+description: The two halves we are trying — a skill a library ships in its own artifact, and a lookup that finds it for the version a project uses — and the heavier design measured before them. Experimental.
 ---
 
-An agent gets an index of what your dependencies can do. Two things decide the shape of the
-thing that builds it: **what it costs**, and **what the agent is allowed to read**.
+:::caution[Experimental]
+This describes what we are trying on our own projects. None of the lookup is published yet, and any of it may change.
+:::
+
+An agent should know what the libraries a project already depends on can do, and how their authors mean them to be used — for the version the project actually uses. We are trying that in two halves: the library ships the guidance, and a lookup on the developer's machine finds it.
+
+## What a library ships
+
+A library's authors write a skill — an ordinary [Agent Skill](https://agentskills.io/specification), a `SKILL.md` — and it travels inside the library's own published artifact: the sources jar on the JVM, the package itself for npm, PyPI, Go and Cargo. Because it ships with the code, it always describes that version. [How our libraries ship a skill](/library-skills/) has the format, where it lives, and how we set it up.
+
+## What finds it
+
+The other half is a small lookup that runs on the developer's machine, beside the coding agent.
+
+**It learns what the project uses from the project.** A Gradle or Maven build writes down what the code compiles against — everything it can import, not only what it declares — in a standard SBOM file, which in our setup a build plugin of ours produces. An npm, Python, Go or Cargo project needs nothing extra: the lookup reads what the project declares and what is installed.
+
+**It finds the skills where they already are.** On the JVM that is the sources jars in the Gradle cache and the local Maven repository; for the other ecosystems it is the installed package's own directory. It never downloads anything; a Gradle or Maven build does not fetch sources jars by default, so our build plugin fetches them for what it reports. What it finds is indexed once per library version, in one cache per machine that it can always rebuild.
+
+**It answers for the version the project resolved.** The agent can list the libraries in the project that ship a skill, read one library's skill or a file it links to, and search by need — *"format a date for display"* — for a library that already does the job. Search also covers libraries elsewhere on the machine, but for those it shows only what each says it is for: a library the project did not choose may describe itself, and may not instruct.
+
+**It hands over the authors' text as written, and says whose it is.** Every answer is marked as the library authors' documentation rather than instructions from the developer, and it never authorises running a command, fetching a link or installing anything.
+
+An agent reaches it as an MCP server or, where none is set up, through the same answers from a command. A skill of our own tells the agent when to look. How all of this is packaged — what is installed where, and what an agent needs on a machine with nothing set up — is still open.
+
+## The heavier design
+
+Before the lookup, we designed and measured something heavier, for the libraries that ship no skill at all: read the documentation in every library's own source, rewrite each piece into one plain sentence with a local model, and search the result by meaning. It is built in the repository and not in use. The lookup above is the part we are trying; what follows is the design it was measured against, and the reasoning that still shapes the lookup — one store per machine, and answers scoped to the project.
 
 <svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 680 554" role="img" aria-labelledby="hiwT hiwD" style="max-width:680px;height:auto;margin:1.5rem 0">
 <title id="hiwT">How the indexer works</title>
@@ -64,7 +89,7 @@ thing that builds it: **what it costs**, and **what the agent is allowed to read
 <g class="hiw">
 <rect class="blue-b" x="140" y="50" width="400" height="54" rx="4"/>
 <text class="t blue-t" x="340" y="74" text-anchor="middle">this project resolves its dependencies</text>
-<text class="ts blue-s" x="340" y="92" text-anchor="middle">declared by default, transitive opt-in</text>
+<text class="ts blue-s" x="340" y="92" text-anchor="middle">everything its code can import</text>
 <rect class="region" x="40" y="134" width="600" height="212" rx="12"/>
 <text class="t lead" x="56" y="157">shared store — keyed by coordinate and version</text>
 <text class="ts plain" x="56" y="175">built once per library version, reused by every project on the machine</text>
@@ -109,7 +134,7 @@ thing that builds it: **what it costs**, and **what the agent is allowed to read
 
 <p style="margin-top:0.75rem"><a href="/how-it-works.svg" download>Download this diagram (SVG)</a></p>
 
-## The cost problem, and why the store is shared
+### The cost problem, and why the store is shared
 
 The expensive step is rewriting each piece of documentation into a sentence in a caller's own
 words, and that is one local model call **per documented declaration**. A single small project —
@@ -126,7 +151,7 @@ first project to use a library pays. Every project after that pays nothing. With
 design does not work, and the rewriting step — which is also the security control — would have to
 be dropped.
 
-## The per-project part is small, and it is a boundary
+### The per-project part is small, and it is a boundary
 
 A project resolves its dependencies and writes down what it resolved. That is the entire build-time cost: no database is opened, nothing is indexed, and nothing is fetched. A small service on the machine does the rest — it works out which of those coordinates it has never seen, and indexes only those. Everything else is already there. The build stays out of it deliberately: a store opened from the build would put a database on every consuming project's build classpath, and make every build daemon on the machine a writer to a single file.
 
@@ -136,11 +161,9 @@ has ever pulled in, and without the scope a poisoned entry dragged in by one pro
 reachable from another that never depended on it — a laundering route created by our own caching
 decision. The scope is what closes it.
 
-By default the index covers **declared** dependencies only. The transitive tail is opt-in, and it
-is a real trade rather than a free default: when we measured it, **11 of 17** capabilities a
-developer actually reached for lived only in the tail.
+By default the index covers **everything the project's code can import** — what it declares, and what those libraries expose to it — not only the declared dependencies. That was a measured choice: **11 of 17** capabilities a developer actually reached for lived only in that tail.
 
-## Two faces, because they fail on different questions
+### Two faces, because they fail on different questions
 
 Each entry is stored twice over: once as the library's **own documentation**, and once as the
 **rewritten sentence**. Both are searchable; only the rewrite is ever displayed.
@@ -154,7 +177,7 @@ put the right answer in the first ten **15 times out of 17**, against 13 for the
 alone and 10 for the rewrite alone. Gluing the two texts into a single key is *worse* than either —
 the gain needs them kept apart.
 
-## The boundary at the bottom
+### The boundary at the bottom
 
 Library documentation is written by whoever published the library, and
 [some of it is hostile](/injection/). The rewriting step exists so that text never reaches the

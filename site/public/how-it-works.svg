@@ -58,7 +58,7 @@
 <g class="hiw">
 <rect class="blue-b" x="140" y="50" width="400" height="54" rx="4"/>
 <text class="t blue-t" x="340" y="74" text-anchor="middle">this project resolves its dependencies</text>
-<text class="ts blue-s" x="340" y="92" text-anchor="middle">declared by default, transitive opt-in</text>
+<text class="ts blue-s" x="340" y="92" text-anchor="middle">everything its code can import</text>
 <rect class="region" x="40" y="134" width="600" height="212" rx="12"/>
 <text class="t lead" x="56" y="157">shared store — keyed by coordinate and version</text>
 <text class="ts plain" x="56" y="175">built once per library version, reused by every project on the machine</text>
