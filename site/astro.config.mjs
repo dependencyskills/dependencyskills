@@ -35,6 +35,7 @@ export default defineConfig({
 				{ label: 'Overview', link: '/' },
 				{ label: 'How it works', link: '/how-it-works/' },
 				{ label: 'How our libraries ship a skill', link: '/library-skills/' },
+				{ label: 'The heavier design', link: '/codex/' },
 				{ label: 'Adopted Standards', link: '/standards/' },
 				{ label: 'What we do not adopt', link: '/not-adopted/' },
 				{

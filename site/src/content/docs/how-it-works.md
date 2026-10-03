@@ -1,6 +1,6 @@
 ---
 title: How it works
-description: The two halves we are trying — a skill a library ships in its own artifact, and a lookup that finds it for the version a project uses — and the heavier design measured before them. Experimental.
+description: The two halves we are trying — a skill a library ships in its own artifact, and a lookup on the developer's machine that finds it for the version a project uses. Experimental.
 ---
 
 :::caution[Experimental]
@@ -15,176 +15,119 @@ A library's authors write a skill — an ordinary [Agent Skill](https://agentski
 
 ## What finds it
 
-The other half is a small lookup that runs on the developer's machine, beside the coding agent.
+The other half is a small lookup that runs on the developer's machine, beside the coding agent. It has no service, no model and nothing running between sessions: the agent's tools start it, and it stops with them.
 
-**It learns what the project uses from the project.** A Gradle or Maven build writes down what the code compiles against — everything it can import, not only what it declares — in a standard SBOM file, which in our setup a build plugin of ours produces. An npm, Python, Go or Cargo project needs nothing extra: the lookup reads what the project declares and what is installed.
-
-**It finds the skills where they already are.** On the JVM that is the sources jars in the Gradle cache and the local Maven repository; for the other ecosystems it is the installed package's own directory. It never downloads anything; a Gradle or Maven build does not fetch sources jars by default, so our build plugin fetches them for what it reports. What it finds is indexed once per library version, in one cache per machine that it can always rebuild.
-
-**It answers for the version the project resolved.** The agent can list the libraries in the project that ship a skill, read one library's skill or a file it links to, and search by need — *"format a date for display"* — for a library that already does the job. Search also covers libraries elsewhere on the machine, but for those it shows only what each says it is for: a library the project did not choose may describe itself, and may not instruct.
-
-**It hands over the authors' text as written, and says whose it is.** Every answer is marked as the library authors' documentation rather than instructions from the developer, and it never authorises running a command, fetching a link or installing anything.
-
-An agent reaches it as an MCP server or, where none is set up, through the same answers from a command. A skill of our own tells the agent when to look. How all of this is packaged — what is installed where, and what an agent needs on a machine with nothing set up — is still open.
-
-## The heavier design
-
-Before the lookup, we designed and measured something heavier, for the libraries that ship no skill at all: read the documentation in every library's own source, rewrite each piece into one plain sentence with a local model, and search the result by meaning. It is built in the repository and not in use. The lookup above is the part we are trying; what follows is the design it was measured against, and the reasoning that still shapes the lookup — one store per machine, and answers scoped to the project.
-
-<svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 680 554" role="img" aria-labelledby="hiwT hiwD" style="max-width:680px;height:auto;margin:1.5rem 0">
-<title id="hiwT">How the indexer works</title>
-<desc id="hiwD">A project resolves its dependencies and records them; a service on the machine works out which coordinates are not yet indexed. A shared machine-level store, keyed by coordinate and version, runs harvest, parse, classify and summarise once per library version and holds a two-faced index. Queries are scoped to the coordinates this project resolved, and only the rewritten sentence crosses a trust boundary to the coding agent.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 680 510" role="img" aria-labelledby="lkT lkD" style="max-width:680px;height:auto;margin:1.5rem 0">
+<title id="lkT">How the lighter lookup works</title>
+<desc id="lkD">A library's authors write its skill in the source tree, and it ships inside the library's published artifact: the sources jar, or the package itself. A project's build reports what its code can import, at the resolved version, and fetches the sources jars. A lookup on the developer's machine reads that report and finds the skills in the local caches, then answers the coding agent for this project and this version. The agent lists, reads and searches the skills and gets the authors' text marked as theirs; a skill of ours, the librarian, tells it when to look.</desc>
 <style>
-  .hiw text { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
-  .hiw .t { font-size:14px; font-weight:500; }
-  .hiw .ts { font-size:12px; font-weight:400; }
-  .hiw .gray-b { fill:#F1F3F5; stroke:#A8B0B8; stroke-width:1; }
-  .hiw .gray-t { fill:#2B3238; }
-  .hiw .gray-s { fill:#5A646E; }
-  .hiw .blue-b { fill:#E6F1FB; stroke:#5B8DC4; stroke-width:1; }
-  .hiw .blue-t { fill:#0C447C; }
-  .hiw .blue-s { fill:#2E6BA8; }
-  .hiw .amber-b { fill:#FDF3E3; stroke:#D9A441; stroke-width:1; }
-  .hiw .amber-t { fill:#7A4E0B; }
-  .hiw .amber-s { fill:#A5701A; }
-  .hiw .teal-b { fill:#E3F4F1; stroke:#4C9E93; stroke-width:1; }
-  .hiw .teal-t { fill:#0F4F49; }
-  .hiw .teal-s { fill:#2A776E; }
-  .hiw .purple-b { fill:#EFEAFA; stroke:#8B76C4; stroke-width:1; }
-  .hiw .purple-t { fill:#40317A; }
-  .hiw .purple-s { fill:#61509E; }
-  .hiw .green-b { fill:#E8F4EA; stroke:#5C9A68; stroke-width:1; }
-  .hiw .green-t { fill:#1E4F2B; }
-  .hiw .green-s { fill:#3B7448; }
-  .hiw .edge { stroke:#7D8590; stroke-width:1.5; fill:none; }
-  .hiw .head { fill:none; stroke:#7D8590; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
-  .hiw .region { fill:none; stroke:#B6BFC9; stroke-width:1; stroke-dasharray:4 4; }
-  .hiw .plain { fill:#57606A; }
-  .hiw .lead { fill:#2B3238; }
-  :root[data-theme='dark'] .hiw .gray-b { fill:#242A30; stroke:#4A545E; stroke-width:1; }
-  :root[data-theme='dark'] .hiw .gray-t { fill:#E6EDF3; }
-  :root[data-theme='dark'] .hiw .gray-s { fill:#A5B0BA; }
-  :root[data-theme='dark'] .hiw .blue-b { fill:#10304F; stroke:#4B7FB5; stroke-width:1; }
-  :root[data-theme='dark'] .hiw .blue-t { fill:#CFE3F7; }
-  :root[data-theme='dark'] .hiw .blue-s { fill:#9CC2E6; }
-  :root[data-theme='dark'] .hiw .amber-b { fill:#3A2B10; stroke:#B98B2E; stroke-width:1; }
-  :root[data-theme='dark'] .hiw .amber-t { fill:#F6E2BC; }
-  :root[data-theme='dark'] .hiw .amber-s { fill:#DCC08A; }
-  :root[data-theme='dark'] .hiw .teal-b { fill:#103733; stroke:#3F8E83; stroke-width:1; }
-  :root[data-theme='dark'] .hiw .teal-t { fill:#C7EAE4; }
-  :root[data-theme='dark'] .hiw .teal-s { fill:#93CFC6; }
-  :root[data-theme='dark'] .hiw .purple-b { fill:#241C3D; stroke:#7A66B4; stroke-width:1; }
-  :root[data-theme='dark'] .hiw .purple-t { fill:#DDD3F5; }
-  :root[data-theme='dark'] .hiw .purple-s { fill:#B7A7E4; }
-  :root[data-theme='dark'] .hiw .green-b { fill:#14301B; stroke:#4C8459; stroke-width:1; }
-  :root[data-theme='dark'] .hiw .green-t { fill:#CDE8D3; }
-  :root[data-theme='dark'] .hiw .green-s { fill:#9CCBA6; }
-  :root[data-theme='dark'] .hiw .edge { stroke:#7D8590; stroke-width:1.5; fill:none; }
-  :root[data-theme='dark'] .hiw .head { fill:none; stroke:#7D8590; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
-  :root[data-theme='dark'] .hiw .region { fill:none; stroke:#3D444D; stroke-width:1; stroke-dasharray:4 4; }
-  :root[data-theme='dark'] .hiw .plain { fill:#9AA4AE; }
-  :root[data-theme='dark'] .hiw .lead { fill:#E6EDF3; }
+  .lk text { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+  .lk .t { font-size:14px; font-weight:500; }
+  .lk .ts { font-size:12px; font-weight:400; }
+  .lk .gray-b { fill:#F1F3F5; stroke:#A8B0B8; stroke-width:1; }
+  .lk .gray-t { fill:#2B3238; }
+  .lk .gray-s { fill:#5A646E; }
+  .lk .blue-b { fill:#E6F1FB; stroke:#5B8DC4; stroke-width:1; }
+  .lk .blue-t { fill:#0C447C; }
+  .lk .blue-s { fill:#2E6BA8; }
+  .lk .amber-b { fill:#FDF3E3; stroke:#D9A441; stroke-width:1; }
+  .lk .amber-t { fill:#7A4E0B; }
+  .lk .amber-s { fill:#A5701A; }
+  .lk .teal-b { fill:#E3F4F1; stroke:#4C9E93; stroke-width:1; }
+  .lk .teal-t { fill:#0F4F49; }
+  .lk .teal-s { fill:#2A776E; }
+  .lk .purple-b { fill:#EFEAFA; stroke:#8B76C4; stroke-width:1; }
+  .lk .purple-t { fill:#40317A; }
+  .lk .purple-s { fill:#61509E; }
+  .lk .green-b { fill:#E8F4EA; stroke:#5C9A68; stroke-width:1; }
+  .lk .green-t { fill:#1E4F2B; }
+  .lk .green-s { fill:#3B7448; }
+  .lk .edge { stroke:#7D8590; stroke-width:1.5; fill:none; }
+  .lk .head { fill:none; stroke:#7D8590; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
+  .lk .region { fill:none; stroke:#B6BFC9; stroke-width:1; stroke-dasharray:4 4; }
+  .lk .plain { fill:#57606A; }
+  .lk .lead { fill:#2B3238; }
+  :root[data-theme='dark'] .lk .gray-b { fill:#242A30; stroke:#4A545E; stroke-width:1; }
+  :root[data-theme='dark'] .lk .gray-t { fill:#E6EDF3; }
+  :root[data-theme='dark'] .lk .gray-s { fill:#A5B0BA; }
+  :root[data-theme='dark'] .lk .blue-b { fill:#10304F; stroke:#4B7FB5; stroke-width:1; }
+  :root[data-theme='dark'] .lk .blue-t { fill:#CFE3F7; }
+  :root[data-theme='dark'] .lk .blue-s { fill:#9CC2E6; }
+  :root[data-theme='dark'] .lk .amber-b { fill:#3A2B10; stroke:#B98B2E; stroke-width:1; }
+  :root[data-theme='dark'] .lk .amber-t { fill:#F6E2BC; }
+  :root[data-theme='dark'] .lk .amber-s { fill:#DCC08A; }
+  :root[data-theme='dark'] .lk .teal-b { fill:#103733; stroke:#3F8E83; stroke-width:1; }
+  :root[data-theme='dark'] .lk .teal-t { fill:#C7EAE4; }
+  :root[data-theme='dark'] .lk .teal-s { fill:#93CFC6; }
+  :root[data-theme='dark'] .lk .purple-b { fill:#241C3D; stroke:#7A66B4; stroke-width:1; }
+  :root[data-theme='dark'] .lk .purple-t { fill:#DDD3F5; }
+  :root[data-theme='dark'] .lk .purple-s { fill:#B7A7E4; }
+  :root[data-theme='dark'] .lk .green-b { fill:#14301B; stroke:#4C8459; stroke-width:1; }
+  :root[data-theme='dark'] .lk .green-t { fill:#CDE8D3; }
+  :root[data-theme='dark'] .lk .green-s { fill:#9CCBA6; }
+  :root[data-theme='dark'] .lk .edge { stroke:#7D8590; stroke-width:1.5; fill:none; }
+  :root[data-theme='dark'] .lk .head { fill:none; stroke:#7D8590; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
+  :root[data-theme='dark'] .lk .region { fill:none; stroke:#3D444D; stroke-width:1; stroke-dasharray:4 4; }
+  :root[data-theme='dark'] .lk .plain { fill:#9AA4AE; }
+  :root[data-theme='dark'] .lk .lead { fill:#E6EDF3; }
 </style>
-<defs><marker id="hiwArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head" d="M0,1 L9,5 L0,9"/></marker></defs>
-<g class="hiw">
-<rect class="blue-b" x="140" y="50" width="400" height="54" rx="4"/>
-<text class="t blue-t" x="340" y="74" text-anchor="middle">this project resolves its dependencies</text>
-<text class="ts blue-s" x="340" y="92" text-anchor="middle">everything its code can import</text>
-<rect class="region" x="40" y="134" width="600" height="212" rx="12"/>
-<text class="t lead" x="56" y="157">shared store — keyed by coordinate and version</text>
-<text class="ts plain" x="56" y="175">built once per library version, reused by every project on the machine</text>
-<rect class="gray-b" x="60" y="186" width="126" height="48" rx="4"/>
-<text class="t gray-t" x="123" y="208" text-anchor="middle">harvest</text>
-<text class="ts gray-s" x="123" y="225" text-anchor="middle">source or class</text>
-<rect class="gray-b" x="206" y="186" width="126" height="48" rx="4"/>
-<text class="t gray-t" x="269" y="208" text-anchor="middle">parse</text>
-<text class="ts gray-s" x="269" y="225" text-anchor="middle">dedupe</text>
-<rect class="amber-b" x="352" y="186" width="126" height="48" rx="4"/>
-<text class="t amber-t" x="415" y="208" text-anchor="middle">classify</text>
-<text class="ts amber-s" x="415" y="225" text-anchor="middle">the gate</text>
-<rect class="teal-b" x="498" y="186" width="126" height="48" rx="4"/>
-<text class="t teal-t" x="561" y="208" text-anchor="middle">summarise</text>
-<text class="ts teal-s" x="561" y="225" text-anchor="middle">quarantine</text>
-<rect class="purple-b" x="76" y="262" width="250" height="64" rx="4"/>
-<text class="t purple-t" x="201" y="288" text-anchor="middle">raw documentation</text>
-<text class="ts purple-s" x="201" y="306" text-anchor="middle">vector only, never shown</text>
-<rect class="green-b" x="354" y="262" width="250" height="64" rx="4"/>
-<text class="t green-t" x="479" y="288" text-anchor="middle">rewritten sentence</text>
-<text class="ts green-s" x="479" y="306" text-anchor="middle">vector and shown text</text>
-<rect class="blue-b" x="140" y="380" width="400" height="54" rx="4"/>
-<text class="t blue-t" x="340" y="404" text-anchor="middle">query — scoped to this project</text>
-<text class="ts blue-s" x="340" y="422" text-anchor="middle">only coordinates this project resolved</text>
-<text class="ts plain" x="352" y="124">only coordinates not already indexed</text>
-<path class="edge" d="M340,104 V134" marker-end="url(#hiwArrow)"/>
-<path class="edge" d="M186,210 H206" marker-end="url(#hiwArrow)"/>
-<path class="edge" d="M332,210 H352" marker-end="url(#hiwArrow)"/>
-<path class="edge" d="M478,210 H498" marker-end="url(#hiwArrow)"/>
-<path class="edge" d="M340,234 V262" marker-end="url(#hiwArrow)"/>
-<path class="edge" d="M340,346 V380" marker-end="url(#hiwArrow)"/>
-<path class="edge" d="M340,464 V480" marker-end="url(#hiwArrow)"/>
-<path class="edge" d="M340,434 V464"/>
-<line x1="40" y1="464" x2="640" y2="464" stroke="#C0392B" stroke-width="1.5" stroke-dasharray="6 4"/>
-<text class="ts plain" x="636" y="458" text-anchor="end">trust boundary — only the rewrite crosses</text>
-<rect class="green-b" x="200" y="480" width="280" height="54" rx="4"/>
-<text class="t green-t" x="340" y="504" text-anchor="middle">the coding agent</text>
-<text class="ts green-s" x="340" y="522" text-anchor="middle">sees the rewrite and the signature</text>
+<defs><marker id="lkArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head" d="M0,1 L9,5 L0,9"/></marker></defs>
+<g class="lk">
+<rect class="blue-b" x="220" y="20" width="360" height="54" rx="4"/>
+<text class="t blue-t" x="400" y="44" text-anchor="middle">a library's authors write its skill</text>
+<text class="ts blue-s" x="400" y="62" text-anchor="middle">src/commonMain/skills/&lt;name&gt;/SKILL.md</text>
+<line class="edge" x1="400" y1="74" x2="400" y2="110" marker-end="url(#lkArrow)"/>
+<text class="ts plain" x="412" y="96">inside its published artifact</text>
+<rect class="gray-b" x="220" y="112" width="360" height="54" rx="4"/>
+<text class="t gray-t" x="400" y="136" text-anchor="middle">the sources jar, or the package itself</text>
+<text class="ts gray-s" x="400" y="154" text-anchor="middle">Maven Central, npm, PyPI, Go, Cargo</text>
+<line class="edge" x1="400" y1="166" x2="400" y2="202" marker-end="url(#lkArrow)"/>
+<text class="ts plain" x="412" y="188">fetched by the project's build</text>
+<rect class="amber-b" x="220" y="204" width="360" height="54" rx="4"/>
+<text class="t amber-t" x="400" y="228" text-anchor="middle">the project's build reports what it uses</text>
+<text class="ts amber-s" x="400" y="246" text-anchor="middle">what its code can import, at the resolved version</text>
+<line class="edge" x1="400" y1="258" x2="400" y2="294" marker-end="url(#lkArrow)"/>
+<text class="ts plain" x="412" y="280">the report the lookup reads</text>
+<rect class="teal-b" x="220" y="296" width="360" height="54" rx="4"/>
+<text class="t teal-t" x="400" y="320" text-anchor="middle">the lookup, on the developer's machine</text>
+<text class="ts teal-s" x="400" y="338" text-anchor="middle">finds the skills in the local caches</text>
+<line class="edge" x1="400" y1="350" x2="400" y2="418" marker-end="url(#lkArrow)"/>
+<text class="ts plain" x="412" y="388">this project, this version</text>
+<rect class="green-b" x="220" y="420" width="360" height="70" rx="4"/>
+<text class="t green-t" x="400" y="444" text-anchor="middle">the coding agent</text>
+<text class="ts green-s" x="400" y="462" text-anchor="middle">lists, reads and searches the skills</text>
+<text class="ts green-s" x="400" y="478" text-anchor="middle">gets the authors' text, marked as theirs</text>
+<rect class="purple-b" x="20" y="428" width="160" height="54" rx="4"/>
+<text class="t purple-t" x="100" y="452" text-anchor="middle">librarian skill</text>
+<text class="ts purple-s" x="100" y="470" text-anchor="middle">tells it when to look</text>
+<line class="edge" x1="180" y1="455" x2="218" y2="455" marker-end="url(#lkArrow)"/>
 </g>
 </svg>
 
+### What the project tells it
 
-<p style="margin-top:0.75rem"><a href="/how-it-works.svg" download>Download this diagram (SVG)</a></p>
+A Gradle or Maven build writes down what the code compiles against — everything it can import, not only what it declares — in a standard SBOM file, which in our setup a build plugin of ours produces. The same build fetches the sources jars of what it reports, because a build does not download them by default. An npm, Python, Go or Cargo project needs nothing extra: the lookup reads what the project declares and what is installed.
 
-### The cost problem, and why the store is shared
+### Where it finds the skills
 
-The expensive step is rewriting each piece of documentation into a sentence in a caller's own
-words, and that is one local model call **per documented declaration**. A single small project —
-99 dependencies — produces about **5,400** of them once duplicates are removed. Rebuilding that
-for every project, on every machine, in front of every checkout, is not a thing anyone would run
-twice.
+Where they already are. On the JVM that is the sources jars in the Gradle cache and the local Maven repository; for the other ecosystems, the installed package's own directory. It never downloads anything. A library's skill is taken only from the artifact whose coordinate its name encodes, so one library cannot speak for another. What it finds is indexed once per library version, in one index per machine that it can always rebuild.
 
-But a resolved dependency never changes. `io.ktor:ktor-client-core:3.5.1` is the same artifact
-everywhere, for ever, so what we extract from it is the same too. That makes it cacheable with no
-invalidation problem at all — the same property the Gradle and Maven caches already rely on.
+### What the agent can ask
 
-So the store lives **on the machine, not in the project**, keyed by coordinate and version. The
-first project to use a library pays. Every project after that pays nothing. Without this the
-design does not work, and the rewriting step — which is also the security control — would have to
-be dropped.
+Three things, and every answer is for the version this project resolved:
 
-### The per-project part is small, and it is a boundary
+- **What do my dependencies offer?** The libraries in the project that ship a skill, each with one line on what it is for.
+- **How is this one meant to be used?** One library's skill, or a file it links to — a Swift or JavaScript reference, say.
+- **Does something already do this?** A need in plain words — *"format a date for display"*, *"retry a failed request"* — matched against what the project's libraries say they do. It also searches the other libraries already on the machine, but for those it shows only what each says it is for: a library the project did not choose may describe itself, and may not instruct.
 
-A project resolves its dependencies and writes down what it resolved. That is the entire build-time cost: no database is opened, nothing is indexed, and nothing is fetched. A small service on the machine does the rest — it works out which of those coordinates it has never seen, and indexes only those. Everything else is already there. The build stays out of it deliberately: a store opened from the build would put a database on every consuming project's build classpath, and make every build daemon on the machine a writer to a single file.
+### What it will and will not hand over
 
-Queries are then **scoped to the coordinates that project actually resolved**. This is not a
-performance filter. A shared store holds entries from every library any project on the machine
-has ever pulled in, and without the scope a poisoned entry dragged in by one project would be
-reachable from another that never depended on it — a laundering route created by our own caching
-decision. The scope is what closes it.
+The library authors' own text, as written, and marked as theirs — documentation from that library, not instructions from the developer, and never permission to run a command, fetch a link or install anything. It does not rewrite it, and it does not screen it: what keeps the surface small is that only a library's own authors wrote it, only for libraries the project chose. [The heavier design](/codex/) is the one that rewrites.
 
-By default the index covers **everything the project's code can import** — what it declares, and what those libraries expose to it — not only the declared dependencies. That was a measured choice: **11 of 17** capabilities a developer actually reached for lived only in that tail.
+### How an agent reaches it
 
-### Two faces, because they fail on different questions
+As an MCP server, or, where none is set up, through the same answers from a command. A skill of ours, `librarian`, sits in the project and tells the agent when to look: before calling into a library, and before writing something a library might already do — the moment an agent is least likely to think of asking.
 
-Each entry is stored twice over: once as the library's **own documentation**, and once as the
-**rewritten sentence**. Both are searchable; only the rewrite is ever displayed.
+## What is still open
 
-That is safe because a search key is a list of numbers, and nothing reads it. The original text
-can decide *which* entry surfaces without ever reaching the agent — which also means an entry
-whose rewrite was rejected can still be **found**, rather than silently vanishing from search.
-
-Keeping both is measurably better than either alone: on the same questions, both faces together
-put the right answer in the first ten **15 times out of 17**, against 13 for the documentation
-alone and 10 for the rewrite alone. Gluing the two texts into a single key is *worse* than either —
-the gain needs them kept apart.
-
-### The boundary at the bottom
-
-Library documentation is written by whoever published the library, and
-[some of it is hostile](/injection/). The rewriting step exists so that text never reaches the
-agent verbatim, and a cheap classifier sits in front of it to catch
-[the casual attempts](/experiments/) before they get that far.
-
-What crosses the line to the agent is the rewrite and the signature. Nothing else does.
-
-The decision behind all of this, including what was rejected, is
-[ADR-0012](https://github.com/dependencyskills/dependencyskills/blob/master/docs/knowledge/decisions/ADR-0012-a-shared-machine-level-index-store.md).
+How it is packaged. What a developer installs, where an MCP server is registered when one configuration serves every project, and whether the lookup should travel inside the `librarian` skill as a script so it works with nothing installed — sandboxes, worktrees and cloud sessions included — are all undecided. So is whether our build plugins are published at all; a library does not need them to ship a skill.

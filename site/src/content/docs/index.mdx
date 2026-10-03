@@ -7,6 +7,13 @@ A coding agent should know what the libraries a project already depends on can d
 
 It is experimental. We have set it up on our own libraries, and the first now carries its skill on Maven Central; the lookup is not published. Everything else on this site is the measurement that shaped it, including the parts that killed our own ideas. [How it works](/how-it-works/) is the shortest route to the design.
 
+## What we are trying
+
+- **A library ships its own guidance.** Its authors write a skill — an ordinary [Agent Skill](https://agentskills.io/specification), a `SKILL.md` — and it travels in what the library already publishes: the sources jar on the JVM, the package itself elsewhere. It always describes the version it shipped with. [How our libraries do it](/library-skills/).
+- **A lookup on the developer's machine finds it.** It learns from the build what the project's code can import, finds those libraries' skills in the local caches, and answers the coding agent for the version the project resolved: what the libraries offer, how one is meant to be used, and whether one already does what the agent was about to write.
+- **The agent is told when to look.** A small skill of ours sits in the project and fires before the agent calls into a library or writes a helper a library might already provide.
+- **Only the authors' own text, for libraries the project chose.** Marked as documentation, never as instructions. [How it works](/how-it-works/) has the detail; [the heavier design](/codex/) is what we built for libraries that ship no skill.
+
 ## What goes wrong
 
 Three failures, in the order a developer meets them.
@@ -116,7 +123,7 @@ before the agent sees it, rather than a few read raw. That trade is worth
 arguing about, and [the measurements behind it](/injection/) are published in
 full, including [where it does not hold](/experiments/).
 
-**The lookup we are trying first does less than that, on purpose.** It serves only the skills a library's own authors put in its artifact, only for libraries the project chose, and only for the version it resolved — as written, marked as the authors' documentation rather than instructions, and never as permission to run or install anything. It does not rewrite them. That narrows what reaches the agent; it does not screen it, and the rewriting step stays with the [heavier design](/how-it-works/#the-heavier-design).
+**The lookup we are trying first does less than that, on purpose.** It serves only the skills a library's own authors put in its artifact, only for libraries the project chose, and only for the version it resolved — as written, marked as the authors' documentation rather than instructions, and never as permission to run or install anything. It does not rewrite them. That narrows what reaches the agent; it does not screen it, and the rewriting step stays with the [heavier design](/codex/).
 
 :::note[Experimental]
 What exists today is [the skill format we went with, and how our libraries ship it](/library-skills/), with the skill we use to write one. The lookup that reads it is being tried on our own projects and is not published. Start with [how it works](/how-it-works/), then [what has been decided](/decisions/).
