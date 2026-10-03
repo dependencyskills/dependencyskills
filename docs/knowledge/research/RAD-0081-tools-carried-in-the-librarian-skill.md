@@ -74,6 +74,14 @@ Android Studio's agent, run with an on-device Gemma 4 model, is a useful test of
 
 Whether this chain holds end to end is an uptake run, and the cheapest one this record could ask for: it needs no cloud account and runs on one machine.
 
+### An init script in place of the build plugin
+
+The lookup learns a JVM project's scope from the report the build plugin writes, and our libraries no longer apply the plugin; one consuming project had to drop it because its CI could not resolve it. A Gradle init script delivers the same work without touching the build: `./gradlew --init-script <file> dependencySkillsReport` resolves each module's main compile classpaths, fetches their sources jars through Gradle's own repositories and cache, and writes the same `build/dependencyskills/bom.cdx.json`. A script carried in the `librarian` skill could run it. The experiment is [`experiments/gradle-init-report/`](../../../experiments/gradle-init-report/).
+
+**Measured on one real consumer, 2026-10-03** — 64 Gradle projects, Kotlin Multiplatform and server modules, with one included build: 32 seconds cold, 3 seconds warm, and no tracked file changed. Against the plugin's last report from the same project: 902 components against 900 resolved, the 27 libraries from the included build identical down to their source directories, and about 20 coordinates either side apart — the plugin's side test libraries, the script's side newer versions from Android release classpaths — not yet reconciled. Catalog entries no module resolves are not reported; the plugin reports them.
+
+What it costs is the earlier list: it runs the project's own build, so a sandbox that refuses writes to `~/.gradle` or the network refuses it, and an agent tool asks before running it. It is a refresh, run when build files change, not per question.
+
 ### A copy per project
 
 A script in the skill is code copied into every consuming project at the plugin's version. The refresh already written for the skill covers it: `Always` rewrites every file on every build and records each one's digest in `dependencyskills-lock.json`. Under `UnlessEdited` an edited script is kept — and then keeps running at its old version, which is worth a warning of its own rather than the one a prose edit gets.
