@@ -5,17 +5,24 @@ A coding agent should know what the libraries a project depends on can already d
 > **Experimental.** We have set this up on our own libraries, and the first carries its skill on Maven Central (`io.github.aughtone:types` 4.1.0). The lookup and the build plugins are not published. None of it is a recommendation, and any of it may change.
 >
 > **The measuring came first, and it is still most of what is here.**
-> Twenty-seven experiments and fifty-five research records, because the point was
+> Twenty-nine experiments and seventy-seven research records, because the point was
 > to find out whether this works before writing it. It does, with limits we
 > publish — several of which killed ideas this project had already committed to
 > in writing.
 >
 > Beside the two halves sits a heavier design, the codex, for libraries that ship no skill: it reads every library's own documentation and rewrites it with a local model. It is built and measured, and not in use.
 >
-> How it works: [the site](https://dependencyskills.org/how-it-works/). How the codex is shaped and why:
+> How the lighter half works: [How it works](https://dependencyskills.org/how-it-works/). The codex: [The heavier design](https://dependencyskills.org/codex/), and why it is shaped that way,
 > [ADR-0012](docs/knowledge/decisions/ADR-0012-a-shared-machine-level-index-store.md).
 > What the measurements found, including the ones that killed our own ideas:
 > [`docs/knowledge/research/`](docs/knowledge/research/).
+
+## What we are trying
+
+- **A library ships its own guidance.** Its authors write a skill — an ordinary [Agent Skill](https://agentskills.io/specification), a `SKILL.md` — and it travels in what the library already publishes: the sources jar on the JVM, the package itself for npm, PyPI, Go and Cargo. It always describes the version it shipped with. [How our libraries do it](https://dependencyskills.org/library-skills/).
+- **A lookup on the developer's machine finds it.** It learns from the build what the project's code can import, finds those libraries' skills in the local caches, and answers the coding agent for the version the project resolved: what the libraries offer, how one is meant to be used, and whether one already does what the agent was about to write.
+- **The agent is told when to look.** A small skill of ours, `librarian`, sits in the project and fires before the agent calls into a library or writes a helper a library might already provide.
+- **Only the authors' own text, for libraries the project chose.** Marked as documentation, never as instructions, and never rewritten — the [codex](https://dependencyskills.org/codex/) is the design that rewrites, for libraries that ship no skill.
 
 ## What actually goes wrong
 
@@ -126,7 +133,7 @@ completed.
 
 ## The research
 
-Fifty-five records in [`docs/knowledge/research/`](docs/knowledge/research/),
+Seventy-seven records in [`docs/knowledge/research/`](docs/knowledge/research/),
 numbered 0001–0055 with no gaps. Each states what was asked, the trail including
 the dead ends, what was measured against what, and a recommendation that is
 explicitly *not* a commitment — that separation is the point, and it is why
@@ -171,7 +178,7 @@ different in each ecosystem.
 | Path | What it holds |
 |---|---|
 | `docs/knowledge/` | Research records, decisions, postmortems and reference material |
-| `experiments/` | The measurements — the cost model and twenty-seven numbered tests, plus the shared corpus, the summariser and the classifiers. Each self-contained: data plus a runnable harness |
+| `experiments/` | The measurements — the cost model and twenty-nine numbered tests, plus the shared corpus, the summariser and the classifiers. Each self-contained: data plus a runnable harness |
 | `site/` | The published site at [dependencyskills.org](https://dependencyskills.org) |
 | `spec/` | The convention. Normative, and currently ahead of what has been decided — `discovery.md`, the hard part, is unwritten |
 | `implementations/` | Per build system, plus the lookup, the codex and this project's own agent skills: the lightweight lookup (`lightweight-codex/`), the Gradle and Maven plugins, the agent skills (`agent-skills/`), and the codex's modules — the store, harvester, classifier, encoder, in-process runtime, vector index, summariser, indexer and MCP server |
