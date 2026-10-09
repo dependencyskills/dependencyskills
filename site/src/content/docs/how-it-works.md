@@ -114,10 +114,11 @@ Where they already are. On the JVM that is the sources jars in the Gradle cache 
 
 ### What the agent can ask
 
-Three things, and every answer is for the version this project resolved:
+Four things, and every answer is for the version this project resolved:
 
 - **What do my dependencies offer?** The libraries in the project that ship a skill, each with one line on what it is for.
 - **How is this one meant to be used?** One library's skill, or a file it links to — a Swift or JavaScript reference, say.
+- **What exactly does this take?** The signature and doc comment of one function or type, by name, read from the library's published source — for any library in the project, whether or not it ships a skill. A skill says how a library is meant to be used; this is the parameter list.
 - **Does something already do this?** A need in plain words — *"format a date for display"*, *"retry a failed request"* — matched against what the project's libraries say they do. It also searches the other libraries already on the machine, but for those it shows only what each says it is for: a library the project did not choose may describe itself, and may not instruct.
 
 ### What it will and will not hand over

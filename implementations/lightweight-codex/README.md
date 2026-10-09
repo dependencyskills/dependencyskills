@@ -19,11 +19,12 @@ It is the lightweight system, separate from the full codex in [`../codex`](../co
 |---|---|
 | `list_guides(project?)` | the project's libraries whose authors ship a guide, each with one line on what it is for |
 | `read_guide(library, file?, project?)` | one library's guide, as its authors wrote it — or, with `file`, a file it links to under `references/` or `assets/` |
+| `read_symbol(library, name, project?)` | the exact signature and doc comment of one declaration, from the library's published source at the resolved version — for any library in the project, with a guide or without; a lookup by name, never a search |
 | `search_libraries(need, project?)` | the libraries that match a need, the project's own and others already on this machine, marked — never a guide's body for a library the project did not choose |
 
 `project` is the absolute path of the project the agent is working in; without it a tool answers for the directory the server was started in. It is what lets one server, registered once, answer every project — a harness whose MCP configuration is the same for every project starts it in its own directory, and a session in a git worktree is not the checkout it was registered for. The `librarian` skill tells the agent to pass it on every call.
 
-The same vocabulary the `librarian` skill uses, and the one the full codex is to adopt, adding `read_symbol`. A guide is a library's Agent Skill, a `SKILL.md`; to the agent reading it through a tool it is documentation about someone else's library, and the name says so.
+The same vocabulary the `librarian` skill uses, and the one the full codex is to adopt. A guide is a library's Agent Skill, a `SKILL.md`; to the agent reading it through a tool it is documentation about someone else's library, and the name says so.
 
 ## Installing it on a machine
 
@@ -56,7 +57,7 @@ dependencyskills mcp
 
 A harness whose configuration is IDE-wide rather than per project, and which does not start the server in the project — Android Studio's, Antigravity's — gets its answer from each tool's `project` argument, which the agent passes. `dependencyskills mcp --project <directory>` sets the default for a configuration that serves one project only.
 
-The same command offers `list`, `guide <library> [file]` and `search <need>` — the three tools' answers, for a harness without the MCP server, which the `librarian` skill falls back to — `log on|off` and `stats` for a local analytics log that is off by default, and `hook` and `hook-settings` for the optional correction hook. Its index, `skills.db`, and its log live in `~/.dscodex`, or `DEPENDENCYSKILLS_CODEX_DIR` — the full codex's directory and override, so one machine has one home, and `skills.db` sits beside the full codex's `codex.db` for that service to read too.
+The same command offers `list`, `guide <library> [file]`, `symbol <library> <name>` and `search <need>` — the four tools' answers, for a harness without the MCP server, which the `librarian` skill falls back to — `log on|off` and `stats` for a local analytics log that is off by default, and `hook` and `hook-settings` for the optional correction hook. Its index, `skills.db`, and its log live in `~/.dscodex`, or `DEPENDENCYSKILLS_CODEX_DIR` — the full codex's directory and override, so one machine has one home, and `skills.db` sits beside the full codex's `codex.db` for that service to read too.
 
 ## What it never does
 

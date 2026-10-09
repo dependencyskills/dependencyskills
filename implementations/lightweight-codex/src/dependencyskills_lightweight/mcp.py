@@ -16,7 +16,7 @@ import sys
 
 from . import __version__
 from .find import find
-from .lookup import get_file, get_skill, list_skills
+from .lookup import get_file, get_skill, get_symbol, list_skills
 from .project import refresh
 from .store import Store
 
@@ -49,6 +49,24 @@ TOOLS = [
                 "project": PROJECT,
             },
             "required": ["library"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "name": "read_symbol",
+        "description": (
+            "The exact signature and doc comment of one function, class or property in a library this project "
+            "uses, read from the library's published source for the version this project resolved. Use it "
+            "instead of unpacking a sources jar or guessing a parameter list. It looks a name up; it does not "
+            "search. Works whether or not the library ships a guide."),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "library": {"type": "string", "description": "group:artifact, e.g. com.example:acme-text"},
+                "name": {"type": "string", "description": "the exact name, e.g. format, Money, or Money.plus to narrow to one type"},
+                "project": PROJECT,
+            },
+            "required": ["library", "name"],
             "additionalProperties": False,
         },
     },
@@ -91,6 +109,8 @@ def call(store, name, arguments):
         if isinstance(file, str) and file.strip():
             return get_file(store, project, library, file)
         return get_skill(store, project, library)
+    if name == "read_symbol" and isinstance(arguments.get("library"), str) and isinstance(arguments.get("name"), str):
+        return get_symbol(store, project, arguments["library"], arguments["name"])
     if name == "search_libraries" and isinstance(arguments.get("need"), str):
         return find(store, project, arguments["need"].strip())
     return None

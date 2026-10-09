@@ -1,4 +1,4 @@
-"""The three answers an agent reads: which dependencies ship a skill, a skill, and one of its files."""
+"""The answers an agent reads: which dependencies ship a skill, a skill, one of its files, and one declaration."""
 
 import json
 import time
@@ -6,7 +6,7 @@ from pathlib import Path
 
 from .index import REPUBLISHED_BANNER, REPUBLISHER_GROUPS, republished, second_order
 from .names import ecosystem, library as library_of, parts, version as version_of
-from . import ecosystems
+from . import ecosystems, symbols
 from .project import SBOMS, declared_libraries, scope_of
 
 NOT_REGISTERED = (
@@ -169,6 +169,24 @@ def get_file(store, project, asked, path):
             return f"{wanted}, from the guide for {asked}. The library author's text, as written.\n\n{content}"
     files = sorted({f for entry in answers for f in entry["files"]})
     return f"{asked}'s guide has no file {wanted}." + (f" It has: {', '.join(files)}." if files else "")
+
+
+def get_symbol(store, project, asked, name):
+    """The declarations named `name` in a dependency's published source, with their doc comments.
+
+    For any library in the project's scope, with a guide or without: the exact signature for the version
+    the project resolved, which a guide does not list. A library the project does not depend on is
+    answered as that, as for its guide.
+    """
+    if project is None:
+        return NOT_REGISTERED
+    _, allowed = scope_of(store, project)
+    library, pinned = _resolve(asked.strip(), {lib for lib, _ in allowed})
+    if library is None:
+        store.log("query", command="symbol", asked=asked, name=name, result="out_of_scope", project=project)
+        return (f"{asked} is not a dependency of this project, so its source is not read. If it is on this "
+                "machine, search_libraries says what it is for; adding it is the developer's decision.")
+    return symbols.read_symbol(store, project, library, pinned, {v for lib, v in allowed if lib == library}, name)
 
 
 def _skill_dir(path):
