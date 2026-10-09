@@ -82,6 +82,8 @@ The lookup learns a JVM project's scope from the report the build plugin writes,
 
 What it costs is the earlier list: it runs the project's own build, so a sandbox that refuses writes to `~/.gradle` or the network refuses it, and an agent tool asks before running it. It is a refresh, run when build files change, not per question.
 
+**Since 2026-10-08 the `librarian` skill carries it**, at `scripts/report.init.gradle.kts`, and the skill and the lookup's "not reported yet" answer both name the command; the plugins and the installer no longer strip `scripts/` from that skill. The lookup itself is still installed separately, which is the part of this record that stays open.
+
 ### A copy per project
 
 A script in the skill is code copied into every consuming project at the plugin's version. The refresh already written for the skill covers it: `Always` rewrites every file on every build and records each one's digest in `dependencyskills-lock.json`. Under `UnlessEdited` an edited script is kept — and then keeps running at its old version, which is worth a warning of its own rather than the one a prose edit gets.

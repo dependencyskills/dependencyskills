@@ -10,16 +10,19 @@ from . import ecosystems
 from .project import SBOMS, declared_libraries, scope_of
 
 NOT_REGISTERED = (
-    "This project's dependencies have not been reported yet. Build it once with the dependency-skills "
-    "plugin applied — org.dependencyskills in Gradle, whose build writes "
-    f"{SBOMS[0].as_posix()}, or the dependency-skills-maven-plugin's consumer goal in Maven, which writes "
-    f"{SBOMS[1].as_posix()} — and this reads it. An npm, Python, Go or Cargo project needs no plugin: install "
-    "its dependencies, and this reads what the project declares and what is installed.")
+    "This project's dependencies have not been reported yet. In a Gradle project, run the script the librarian "
+    "skill carries, from the project's root: ./gradlew --init-script "
+    ".agents/skills/librarian/scripts/report.init.gradle.kts dependencySkillsReport --no-configuration-cache "
+    f"— it writes {SBOMS[0].as_posix()}, and this reads it. A build with the org.dependencyskills plugin "
+    "applied writes the same file, and in Maven the dependency-skills-maven-plugin's consumer goal writes "
+    f"{SBOMS[1].as_posix()}. An npm, Python, Go or Cargo project needs neither: install its dependencies, "
+    "and this reads what the project declares and what is installed.")
 
 REBUILD_HINT = (
-    "This is what the build last resolved, with the libraries the version catalog declares. One added "
-    "since is not here until the project is built again — build, then ask again before reading its "
-    "sources. For a library this project does not have yet, use search_libraries.")
+    "This is what the project's dependency report last recorded. A library added since is not here until "
+    "the report is written again — in a Gradle project, run the librarian skill's report script, or build "
+    "if the project applies the plugin — then ask again before reading its sources. For a library this "
+    "project does not have yet, use search_libraries.")
 
 INSTALL_HINT = (
     "This is what the project declares, at the version installed. One added since is not here until it is "
@@ -32,7 +35,7 @@ def hint(project, store=None):
     and, first, whether the build's report could not be read, which otherwise looks exactly like an empty one."""
     problem = store.setting(f"sbom-error:{project}") if store else None
     warning = (f"The build's dependency report {problem}, so this answers from the last one that could. Build again; "
-               "if it persists, the plugin wrote a broken file. ") if problem else ""
+               "if it persists, whatever wrote the report wrote a broken file. ") if problem else ""
     return warning + (INSTALL_HINT if ecosystems.project_kind(Path(project)) else REBUILD_HINT)
 
 AUTHORS_TEXT = (

@@ -54,6 +54,9 @@ class AgentSkillsTest {
         assertContains(output, "dependencyskills: wrote the librarian skill to .agents/skills/librarian/")
         assertContains(output, "commit it together with dependencyskills-lock.json, which records it")
         assertContains(project.text(AgentSkills.MANIFEST), "\"path\": \".agents/skills/librarian\"")
+        // The report script travels with the skill, and is recorded like any other file of it.
+        assertTrue(Files.isRegularFile(project.path(".agents/skills/librarian/scripts/report.init.gradle.kts")))
+        assertContains(project.text(AgentSkills.MANIFEST), "scripts/report.init.gradle.kts")
     }
 
     @Test

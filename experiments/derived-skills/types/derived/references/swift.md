@@ -1,0 +1,36 @@
+# Calling it from Swift
+
+This covers only what the library's published source states or shows about Swift callers. Nothing here was measured against a Kotlin or Xcode toolchain, and the source does not show how an Apple framework is packaged [uncited]; the export names below are the ones the library's own doc comments give.
+
+## Overloads that differ only by number type
+
+Objective-C cannot express two overloads that differ only by number type, so the `Long` forms of `Money` multiplication and division arrive with a trailing underscore [src: commonMain/io/github/aughtone/types/financial/Money.kt:222]. `times(scalar_:)` is the `Long` overload and `times(scalar:)` the `Double` one [src: commonMain/io/github/aughtone/types/financial/Money.kt:221]; `div(scalar_:)` is the `Long` overload, `div(scalar:)` the `Double` one, and `div(other:)` divides by another `Money` and returns a ratio rather than an amount [src: commonMain/io/github/aughtone/types/financial/Money.kt:234] [src: commonMain/io/github/aughtone/types/financial/Money.kt:236]. The underscore is the only thing telling them apart, and picking the wrong one silently changes which arithmetic runs [src: commonMain/io/github/aughtone/types/financial/Money.kt:223].
+
+The same split exists in Kotlin for addition and subtraction, where a `Long` is a count of minor units and a `Double` an amount in major units [src: commonMain/io/github/aughtone/types/financial/Money.kt:187] [src: commonMain/io/github/aughtone/types/financial/Money.kt:155]. The source does not state the Swift names of those overloads [uncited]; `plusMinorUnits` and `minusMinorUnits` are separately named functions with no overload to confuse [src: commonMain/io/github/aughtone/types/financial/Money.kt:205] [src: commonMain/io/github/aughtone/types/financial/Money.kt:212].
+
+## Results that Swift can take apart
+
+`kotlin.Result` is a value class with no stable representation outside Kotlin, so it reaches Swift as an opaque box [src: commonMain/io/github/aughtone/types/outcome/Outcome.kt:17]. `Outcome` is a sealed class instead: a Swift caller branches on the concrete type, `Success` or `Failure`, and reads the payload as data [src: commonMain/io/github/aughtone/types/outcome/Outcome.kt:20]. `Success` carries `data` [src: commonMain/io/github/aughtone/types/outcome/Outcome.kt:46] and `Failure` carries `exception` [src: commonMain/io/github/aughtone/types/outcome/Outcome.kt:61]. `Failure.message` is a non-null string provided for Swift and JavaScript callers, where reaching through an exported `Throwable` for a nullable field is awkward [src: commonMain/io/github/aughtone/types/outcome/Outcome.kt:66] [src: commonMain/io/github/aughtone/types/outcome/Outcome.kt:67].
+
+## Calls that throw
+
+No declaration in the source carries `@Throws` [uncited]. In Kotlin/Native generally, an exception from a function without that annotation does not become a Swift `Error` [uncited] (this is general Kotlin/Native behaviour, not something this library's source states). So for a Swift caller the non-throwing alternative matters. The table lists the entry points most likely to be reached, not every `require` in the library:
+
+| Throws | When | Alternative that does not |
+|---|---|---|
+| `uri`, `url`, `geoUri` | the string is malformed [src: commonMain/io/github/aughtone/types/uri/UriParsing.kt:79] [src: commonMain/io/github/aughtone/types/uri/UriParsing.kt:103] [src: commonMain/io/github/aughtone/types/uri/UriParsing.kt:167] | `uriOrNull`, `urlOrNull`, `geoUriOrNull` [src: commonMain/io/github/aughtone/types/uri/UriParsing.kt:94] [src: commonMain/io/github/aughtone/types/uri/UriParsing.kt:158] [src: commonMain/io/github/aughtone/types/uri/UriParsing.kt:209] |
+| `urn` | the string or its namespace is invalid [src: commonMain/io/github/aughtone/types/uri/Urn.kt:141] | `urnOrNull` [src: commonMain/io/github/aughtone/types/uri/UriParsing.kt:212] |
+| `Locale.current` | the platform reports no locale [src: commonMain/io/github/aughtone/types/locale/Locale.kt:86] | `Locale.currentOrNull` [src: commonMain/io/github/aughtone/types/locale/Locale.kt:101] |
+| `Currency.current`, and any `Money` built without a currency | no currency is mapped to the current locale [src: commonMain/io/github/aughtone/types/financial/Currency.kt:99] [src: commonMain/io/github/aughtone/types/financial/Money.kt:34] | `Currency.currentOrNull` [src: commonMain/io/github/aughtone/types/financial/Currency.kt:112], or a currency from `currencyFor(code)`, which returns `null` when unknown [src: commonMain/io/github/aughtone/types/financial/Currency.functions.kt:12] |
+| `localizedDisplayName`, `localizedDisplayNameOrNull` with `displayIn` left out | `displayIn` defaults to `Locale.current` [src: commonMain/io/github/aughtone/types/locale/Locale.functions.kt:227] | pass `displayIn` explicitly |
+| `Money` `plus`, `minus`, `times`, `div`, `compareTo` with another `Money` | the currencies differ [src: commonMain/io/github/aughtone/types/financial/Money.kt:114] [src: commonMain/io/github/aughtone/types/financial/Money.kt:70] | compare `currency` first |
+| `Distance` and `Speed` subtraction | the right side is larger [src: commonMain/io/github/aughtone/types/quantitative/Distance.kt:70] [src: commonMain/io/github/aughtone/types/quantitative/Speed.kt:70] | compare `meters` or `mps` first |
+| `Coordinates`, `Azimuth`, `GeoUri` construction | a value is out of range [src: commonMain/io/github/aughtone/types/quantitative/Coordinates.kt:51] [src: commonMain/io/github/aughtone/types/quantitative/Azimuth.kt:30] [src: commonMain/io/github/aughtone/types/uri/GeoUri.kt:37] | check the range first |
+| `geoPolygon` | a ring is wound the wrong way [src: commonMain/io/github/aughtone/types/geo/GeoValidation.kt:118] | `geoPolygonRewinding`, which still throws on structural errors [src: commonMain/io/github/aughtone/types/geo/GeoValidation.kt:130] |
+| `BigDecimal` division without a scale | the quotient does not terminate, or the divisor is zero [src: commonMain/io/github/aughtone/types/number/BigDecimal.kt:198] | `divide(other, scale, roundingMode)`, which still throws on a zero divisor [src: commonMain/io/github/aughtone/types/number/BigDecimal.kt:247] |
+| `UrlBuilder.build` | `scheme` or `host` is unset [src: commonMain/io/github/aughtone/types/uri/UrlBuilder.kt:101] | set both first |
+| `UrlEncoder.decode`, `decodeFormData` | a percent sequence is malformed or not UTF-8 [src: commonMain/io/github/aughtone/types/uri/UrlEncoder.kt:100] [src: commonMain/io/github/aughtone/types/uri/UrlEncoder.kt:111] | none in the source [uncited] |
+| `Outcome.getOrThrow` | the outcome is a failure [src: commonMain/io/github/aughtone/types/outcome/Outcome.kt:122] | `getOrNull`, `exceptionOrNull` [src: commonMain/io/github/aughtone/types/outcome/Outcome.kt:109] [src: commonMain/io/github/aughtone/types/outcome/Outcome.kt:114] |
+| `BitSet` `get`, `set`, `clear` | the index is outside the fixed size [src: commonMain/io/github/aughtone/types/util/BitSet.kt:110] | `hasIndex` [src: commonMain/io/github/aughtone/types/util/BitSet.kt:120] |
+
+`UriParseException` is a named type so that a failure can be identified across the language boundary, where a bare `IllegalArgumentException` from `require` cannot [src: commonMain/io/github/aughtone/types/uri/UriParsing.kt:10].

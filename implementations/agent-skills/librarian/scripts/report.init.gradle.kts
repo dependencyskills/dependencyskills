@@ -1,12 +1,13 @@
 // The dependency report the lookup reads, written by an init script instead of a plugin: nothing is added
-// to the build, and nothing has to be published for a build to find it.
+// to the build, and nothing has to be published for a build to find it. From the project's root:
 //
 //   ./gradlew --init-script <this file> dependencySkillsReport --no-configuration-cache
 //
-// Each project resolves its own compile classpaths, fetches their sources jars through Gradle's own
-// repositories and cache, and writes a fragment; the root task merges them into
-// build/dependencyskills/bom.cdx.json, the same CycloneDX file the build plugins write. An experiment
-// (RAD-0081): whether a script an agent skill carries can stand in for the build plugin's consumer half.
+// Each project resolves its own main compile classpaths, fetches their sources jars through Gradle's own
+// repositories and cache — a library's skill travels in its sources jar, and a build does not download
+// those by default — and writes a fragment; the root task merges them into
+// build/dependencyskills/bom.cdx.json, the same CycloneDX file the build plugins write. The `librarian`
+// skill carries this file and says when to run it (RAD-0081).
 
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier

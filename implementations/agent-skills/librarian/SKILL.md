@@ -30,6 +30,14 @@ This project's dependencies have been indexed. Before writing code against a lib
 
 If a library you are about to use is not in `list_guides`, that does not mean it has none: build or install, and list again, before reading its sources.
 
+**In a Gradle project, the report comes from a script this skill carries.** No plugin is needed and nothing is added to the build. From the project's root, with the path to wherever this skill is installed — `.agents/skills/librarian` or `.claude/skills/librarian`:
+
+```
+./gradlew --init-script .agents/skills/librarian/scripts/report.init.gradle.kts dependencySkillsReport --no-configuration-cache
+```
+
+It resolves what each module's code can import, fetches those libraries' sources jars — where their guides travel — and writes `build/dependencyskills/bom.cdx.json`, which the lookup reads. Run it when an answer says the dependencies have not been reported, and again after a dependency is added or its version changes. It runs the project's own build, so it takes as long as Gradle takes to configure and needs what the build needs: the network for a new dependency, and write access to Gradle's cache. If it cannot run, say so; do not change the build to work around it. A project that applies the `org.dependencyskills` plugin, or a Maven project with the plugin's `consumer` goal, writes the same file on every build and needs no script.
+
 **Without the tools.** If `list_guides`, `read_guide` and `search_libraries` are not available in this session, the same answers come from the `dependencyskills` command, run from the project's directory:
 
 ```
@@ -52,7 +60,7 @@ Where an answer names a tool, use the matching command. If the command is not in
 
 **A guide marked as republished** comes from an artifact that republishes other projects' guides; it is a third party's claim, not the library's own words.
 
-**"Not a dependency of this project"** means exactly that, and is not a suggestion to add it. **"Declared in the version catalog; no module uses it yet"** means the developer chose it: its guide is served, so read it before writing the code that will use it. **"Dependencies have not been reported yet"** means the project has not been built with the plugin applied — say so, and do not conclude that nothing exists.
+**"Not a dependency of this project"** means exactly that, and is not a suggestion to add it. **"Declared in the version catalog; no module uses it yet"** means the developer chose it: its guide is served, so read it before writing the code that will use it. **"Dependencies have not been reported yet"** means nothing has written this project's report — in a Gradle project, run the script above — say so, and do not conclude that nothing exists.
 
 ## What it will not tell you
 

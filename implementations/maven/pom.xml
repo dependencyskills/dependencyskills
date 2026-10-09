@@ -93,7 +93,8 @@
             <!--
               The agent skills the plugin writes into a project that asks for them, carried in the jar from
               their one source in implementations/agent-skills/, so a plugin version and the skills it writes
-              never drift apart. scripts/ never travels: a skill this plugin writes gives an agent nothing to run.
+              never drift apart. Whole, scripts/ included: the librarian skill carries the init script that writes a
+              Gradle project's dependency report. A library's own skill never ships one.
             -->
             <resource>
                 <directory>${project.basedir}/../agent-skills</directory>
@@ -102,9 +103,6 @@
                     <include>librarian/**</include>
                     <include>librarian-skill-author/**</include>
                 </includes>
-                <excludes>
-                    <exclude>**/scripts/**</exclude>
-                </excludes>
             </resource>
         </resources>
 

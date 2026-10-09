@@ -46,6 +46,10 @@ class InstallTest(unittest.TestCase):
 
         skill = self.project / ".agents/skills/librarian/SKILL.md"
         self.assertIn("name: librarian", skill.read_text())
+        # The report script travels with the skill, and is recorded like any other file of it.
+        self.assertTrue((skill.parent / "scripts/report.init.gradle.kts").is_file())
+        lock = json.loads((self.project / "dependencyskills-lock.json").read_text())
+        self.assertIn("scripts/report.init.gradle.kts", lock["changes"][0]["files"])
         gemini = json.loads((self.project / ".gemini/settings.json").read_text())["mcpServers"]["librarian"]
         self.assertEqual(["--quiet", "--from", "dependencyskills==0.0.1", "dependencyskills", "mcp"], gemini["args"])
         self.assertIn("[mcp_servers.librarian]", (self.temp / "codex/config.toml").read_text())

@@ -106,7 +106,7 @@ The other half is a small lookup that runs on the developer's machine, beside th
 
 ### What the project tells it
 
-A Gradle or Maven build writes down what the code compiles against — everything it can import, not only what it declares — in a standard SBOM file, which in our setup a build plugin of ours produces. The same build fetches the sources jars of what it reports, because a build does not download them by default. An npm, Python, Go or Cargo project needs nothing extra: the lookup reads what the project declares and what is installed.
+What the code compiles against — everything it can import, not only what it declares — is written down in a standard SBOM file. In a Gradle project a script the `librarian` skill carries does it: a Gradle init script, so nothing is added to the build and there is no plugin to find. The same run fetches the sources jars of what it reports, because a build does not download them by default. A build plugin of ours writes the same file, for a Gradle or Maven project that would rather have it on every build. An npm, Python, Go or Cargo project needs nothing extra: the lookup reads what the project declares and what is installed.
 
 ### Where it finds the skills
 
@@ -130,4 +130,4 @@ As an MCP server, or, where none is set up, through the same answers from a comm
 
 ## What is still open
 
-How it is packaged. What a developer installs, where an MCP server is registered when one configuration serves every project, and whether the lookup should travel inside the `librarian` skill as a script so it works with nothing installed — sandboxes, worktrees and cloud sessions included — are all undecided. So is whether our build plugins are published at all; a library does not need them to ship a skill.
+How it is packaged. The `librarian` skill now carries the script that reports a Gradle project's dependencies; the lookup itself is still something a developer installs. What that install is, where an MCP server is registered when one configuration serves every project, and whether the lookup should travel inside the skill as well so it works with nothing installed — sandboxes, worktrees and cloud sessions included — are undecided. So is whether our build plugins are published at all; a library does not need them to ship a skill.
