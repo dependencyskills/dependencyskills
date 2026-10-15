@@ -1,0 +1,8 @@
+#!/bin/sh
+# Forgets the unit once it is gone. The data directory and the account are kept, even on purge: the
+# store is the operator's, and removing a package is not a request to delete what it collected.
+set -e
+
+if { [ "$1" = remove ] || [ "$1" = purge ]; } && [ -d /run/systemd/system ]; then
+    systemctl daemon-reload || true
+fi

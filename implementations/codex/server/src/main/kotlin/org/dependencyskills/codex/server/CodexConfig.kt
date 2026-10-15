@@ -9,7 +9,8 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 /**
- * What the operator gets to decide, read from `~/.dscodex/config.toml`.
+ * What the operator gets to decide, read from `config.toml` beside the store — `~/.dscodex/config.toml` on a
+ * developer's machine — or from the file `--config` names.
  *
  * **A file rather than only flags, because the interesting settings are about the machine.** How
  * much memory this may hold and whether it holds it between passes is a property of where the
@@ -20,12 +21,23 @@ import java.nio.file.Path
  * Beside the store, because they are the same decision: this is the directory that belongs to this
  * tool on this machine, and a developer who knows where one is can find the other.
  *
+ * **On a server the file is somewhere else.** An installed service keeps its settings under `/etc` and its
+ * data on whatever partition holds data, so `--config <file>` (or `DSCODEX_CONFIG`) names the file, and
+ * [store] in it names the database. Without either, both are found together in the developer's
+ * directory, as before.
+ *
  * **Absent is not an error.** A machine with no config file gets the defaults, and the defaults are
  * the conservative ones — one coordinate at a time, model unloaded when idle. Someone who wants the
  * service to hold a model resident is making a deliberate choice about their machine, and should
  * have to write it down.
  */
 data class CodexConfig(
+    /**
+     * The database, as a path, for a config file that does not sit beside it. Null means the usual
+     * place: `--store`, then the environment, then `~/.dscodex/codex.db`. An installed service sets it,
+     * so its data lives where the operator put it rather than in a home directory.
+     */
+    val store: String? = null,
     val server: ServerSettings = ServerSettings(),
     val indexing: IndexingSettings = IndexingSettings(),
     val usage: UsageSettings = UsageSettings(),
@@ -40,15 +52,14 @@ data class CodexConfig(
             (store.parent ?: CodexLocation.directory()).resolve(FILE_NAME)
 
         /**
-         * Reads the config beside [store], or returns defaults when there is none.
+         * Reads the config at [path] — beside [store] unless named — or returns defaults when there is none.
          *
          * A malformed file is **reported and refused**, not silently replaced with defaults. Config
          * that quietly does not apply is worse than config that fails: a developer who capped this
          * to one worker and finds it running eight has no way to discover their typo.
          */
         @OptIn(ExperimentalHoplite::class)
-        fun load(store: Path): CodexConfig {
-            val path = file(store)
+        fun load(store: Path, path: Path = file(store)): CodexConfig {
             if (!Files.isRegularFile(path)) {
                 logger.info("no config at {}; using defaults", path)
                 return CodexConfig()

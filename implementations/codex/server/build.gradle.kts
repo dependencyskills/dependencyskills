@@ -10,6 +10,8 @@ plugins {
     // A build reports what it resolved as JSON, and `@Serializable` generates nothing without it.
     kotlin("plugin.serialization") version "2.4.0"
     application
+    // The .deb for a Debian server. The base plugin only: it adds the task type and no tasks of its own.
+    id("com.netflix.nebula.ospackage-base") version "12.3.0"
 }
 
 kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_22) } }
@@ -124,3 +126,54 @@ tasks.withType<JavaExec>().configureEach {
 
 // A one-liner so a person can start the server by hand and look at what it says.
 tasks.register("printClasspath") { doLast { println(sourceSets["main"].runtimeClasspath.asPath) } }
+
+// The service as a Debian package, for a server that runs it under systemd: the jars, a launcher
+// that finds a Java new enough, the unit, and a settings file that names the data directory.
+//
+// One per architecture, because each carries its own Linux native; everything else is the same.
+// The model is not in either - see `indexing.model` in config.toml.
+val debs = mapOf("amd64" to "linux-x86_64", "arm64" to "linux-aarch64").map { (arch, platform) ->
+    tasks.register<com.netflix.gradle.plugins.deb.Deb>("deb${arch.replaceFirstChar(Char::uppercase)}") {
+        group = "distribution"
+        description = "Builds the dscodex service as a Debian package for $arch."
+        packageName = "dscodex"
+        archStr = arch
+        maintainer = "dependencyskills"
+        // Owned by root on the server, whoever built it. Left unset, every file carries the build
+        // machine's user name, and dpkg gives it to a server account of that name if one exists.
+        user = "root"
+        permissionGroup = "root"
+        uid = 0
+        gid = 0
+        summary = "dependencyskills codex service"
+        packageDescription = "dependencyskills codex: an MCP service over a store of library documentation"
+        // Java 22 or later. 25 is what current Debian ships; the launcher accepts any at or above 22.
+        requires("openjdk-25-jre-headless").or("java25-runtime-headless")
+        requires("libstdc++6")
+        requires("libgcc-s1")
+
+        postInstall(file("src/deb/scripts/postinst"))
+        preUninstall(file("src/deb/scripts/prerm"))
+        postUninstall(file("src/deb/scripts/postrm"))
+
+        from(tasks.jar) { into("/usr/share/dscodex/lib") }
+        from(configurations.runtimeClasspath) { into("/usr/share/dscodex/lib") }
+        from(layout.projectDirectory.file("../inference/src/jvmMain/resources/dscodex/$platform/libdscodex.so")) {
+            into("/usr/lib/dscodex")
+        }
+        from("src/deb/dscodex") {
+            into("/usr/bin")
+            filePermissions { unix("0755") }
+        }
+        from("src/deb/dscodex.service") { into("/usr/lib/systemd/system") }
+        from("src/deb/config.toml") { into("/etc/dscodex") }
+        // A conffile, so an edited copy survives an upgrade.
+        configurationFile("/etc/dscodex/config.toml")
+    }
+}
+
+tasks.register("deb") {
+    group = "distribution"
+    description = "Builds the dscodex service as a Debian package for each architecture."
+    dependsOn(debs)
+}

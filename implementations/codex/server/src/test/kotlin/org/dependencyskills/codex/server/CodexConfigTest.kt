@@ -108,4 +108,15 @@ class CodexConfigTest {
         assertEquals(1, CodexConfig.load(store).indexing.concurrency)
         assertEquals("127.0.0.1", CodexConfig.load(store).server.host)
     }
+
+    @Test
+    fun `a named file anywhere is read, and says where the store is`() {
+        val dir = createTempDirectory("etc")
+        val file = dir.resolve("config.toml")
+        file.writeText("store = \"/data/dscodex/codex.db\"\n[server]\nport = 8311\n")
+
+        val config = CodexConfig.load(store(), file)
+        assertEquals("/data/dscodex/codex.db", config.store)
+        assertEquals(8311, config.server.port)
+    }
 }

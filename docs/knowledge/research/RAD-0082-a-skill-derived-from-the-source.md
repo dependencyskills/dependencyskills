@@ -82,7 +82,9 @@ The generator reads attacker-controlled prose — doc comments are the library p
 
 **What it cost.** Five to twelve minutes and 150–330 thousand tokens to write one skill, and about as much again to score it.
 
-**What this does not show.** The scorer is the same model as the writer, so a shared blind spot scores as agreement; a different model, or running the code, would be a stronger check. Traps were traced by hand in the Kotlin libraries, not run. Two of the five writers saw that an authored skill existed — a file name in a listing, never its contents — before the layout was fixed. And five libraries by one publisher and one npm package are a small, friendly sample: clean source, doc comments, no hostile prose.
+**Run afterwards, for one library.** On 2026-10-10 the agent maintaining format-readable ran every reported claim on the JVM against the 4.1.0 code. All reproduced, the three scored *cannot tell* included — ten million formats as "1", `NaN` throws, and the two declarations are ambiguous — and running turned up four more defects of the same kind. So for that library the hand traces held, and the same-model scoring did not hide an error.
+
+**What this does not show.** The scorer is the same model as the writer, so a shared blind spot scores as agreement; a different model, or running the code, would be a stronger check. Traps were traced by hand in the Kotlin libraries, not run, except format-readable's afterwards. Two of the five writers saw that an authored skill existed — a file name in a listing, never its contents — before the layout was fixed. And five libraries by one publisher and one npm package are a small, friendly sample: clean source, doc comments, no hostile prose.
 
 ## Findings
 

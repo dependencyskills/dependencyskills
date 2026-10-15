@@ -1,0 +1,38 @@
+# The codex as a system service. Its settings are /etc/dscodex/config.toml; its data is wherever
+# `store` there says, /data/dscodex unless changed. A store moved elsewhere needs that directory added
+# to ReadWritePaths with a drop-in (systemctl edit dscodex), or the service cannot write it.
+[Unit]
+Description=dependencyskills codex
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=dscodex
+Group=dscodex
+ExecStart=/usr/bin/dscodex --config /etc/dscodex/config.toml
+# The codex's own directory, which models are unpacked into. Without it they go under the account's
+# home, which is the data directory too, but as a hidden .dscodex inside it.
+Environment=DEPENDENCYSKILLS_CODEX_DIR=/data/dscodex
+Restart=on-failure
+# A JVM stopped by SIGTERM exits 143. That is a clean stop, not a failure.
+SuccessExitStatus=143
+RestartSec=5
+
+# Owner-only files, and nothing writable but the data directory.
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ReadWritePaths=/data/dscodex
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+# Not MemoryDenyWriteExecute: the JVM compiles code at run time and needs writable, executable memory.
+
+[Install]
+WantedBy=multi-user.target

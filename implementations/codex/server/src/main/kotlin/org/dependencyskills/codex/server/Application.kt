@@ -74,24 +74,17 @@ private val logger = LoggerFactory.getLogger("org.dependencyskills.codex.server.
 fun main(args: Array<String>) {
     System.setProperty("java.awt.headless", "true")
 
-    // `--store` ahead of the environment ahead of the default, so an operator can put the store
-    // wherever they keep data without touching a build or exporting anything.
-    val store = option(args, "store")?.let { Path.of(it) } ?: storeFile()
+    // A named config file first: an installed service keeps it under /etc, and it says where the store
+    // is. Otherwise `--store` ahead of the environment ahead of the default, with the config beside it,
+    // so an operator can put the store wherever they keep data without touching a build.
+    val named = (option(args, "config") ?: System.getenv("DSCODEX_CONFIG"))?.let { Path.of(it) }
+    val fromFile = named?.let { loadOrExit(storeFile(), it) }
+    val store = option(args, "store")?.let { Path.of(it) } ?: fromFile?.store?.let { Path.of(it) } ?: storeFile()
     reportLegacyStore(store)
 
     // An argument beats the environment beats the file beats the default. The file is where the
     // decisions about this machine live; the rest are for one invocation.
-    val config = try {
-        CodexConfig.load(store)
-    } catch (e: Exception) {
-        // Exception, not Throwable. A bad setting is a config problem and this is the message for
-        // it; a NoClassDefFoundError is not, and saying "your config could not be read" when the
-        // real fault is a broken classpath sends whoever reads it to the wrong file. Errors carry
-        // on to the outer handler, which claims nothing about the cause.
-        logger.error("CRITICAL: ${CodexConfig.file(store)} is not valid: ${e.message}")
-        logger.error("fix it or remove it; the service will not start on a configuration it cannot apply")
-        exitProcess(1)
-    }
+    val config = fromFile ?: loadOrExit(store, CodexConfig.file(store))
     val port = System.getenv("PORT")?.toIntOrNull() ?: config.server.port
     val host = System.getenv("HOST") ?: config.server.host
 
@@ -115,6 +108,18 @@ fun main(args: Array<String>) {
         logger.error("CRITICAL: failed to start the codex server on $host:$port", e)
         exitProcess(1)
     }
+}
+
+/** The config at [path], or the process ends saying why: a service must not start on settings it cannot apply. */
+private fun loadOrExit(store: Path, path: Path): CodexConfig = try {
+    CodexConfig.load(store, path)
+} catch (e: Exception) {
+    // Exception, not Throwable. A bad setting is a config problem and this is the message for it; a
+    // NoClassDefFoundError is not, and saying "your config could not be read" when the real fault is a
+    // broken classpath sends whoever reads it to the wrong file. Errors carry on to the outer handler.
+    logger.error("CRITICAL: $path is not valid: ${e.message}")
+    logger.error("fix it or remove it; the service will not start on a configuration it cannot apply")
+    exitProcess(1)
 }
 
 /**

@@ -1,0 +1,16 @@
+# Settings for the codex service. Kept on upgrade: a changed copy here is yours, and a new default
+# arrives beside it as config.toml.dpkg-dist.
+
+# The database. Fetched sources are staged beside it, and the usage record sits beside it too.
+store = "/data/dscodex/codex.db"
+
+[server]
+# Loopback until the service is meant to be reached from other machines. Then set 0.0.0.0, or this
+# machine's address, and restart: systemctl restart dscodex
+host = "127.0.0.1"
+port = 8310
+
+[indexing]
+# The generative model that writes summaries, as a path the service can read. Not shipped and never
+# downloaded; with none set, nothing is summarised and queries answer from what is already stored.
+# model = "/data/dscodex/models/<model>.gguf"
