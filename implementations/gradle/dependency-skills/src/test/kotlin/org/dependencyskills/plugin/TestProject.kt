@@ -38,6 +38,12 @@ internal class TestProject(
     private val registrations = mutableListOf<String>()
     private val warmings = mutableListOf<String>()
 
+    /** The key the stub asks for, as the real service does when one is set; null asks for none. */
+    var requiredKey: String? = null
+
+    /** The key the build is given, as `-PdependencySkills.serviceKey`; null gives it none. */
+    var serviceKey: String? = null
+
     init {
         // Running by default. "What did the plugin report" is what almost every test here asks,
         // and a test that wants the service absent is making a point that deserves to be visible
@@ -55,6 +61,12 @@ internal class TestProject(
             // registration, which reads as the plugin reporting twice. Ktor routes the two
             // separately; only this double had to be told.
             val body = exchange.requestBody.readBytes().decodeToString()
+            val key = requiredKey
+            if (key != null && exchange.requestHeaders.getFirst("Authorization") != "Bearer $key") {
+                exchange.sendResponseHeaders(401, -1)
+                exchange.close()
+                return@createContext
+            }
             if (exchange.requestURI.path == "/projects") {
                 synchronized(registrations) { registrations += body }
             } else {
@@ -228,6 +240,7 @@ $plugins
             // Pointed at the stub when one is running, and at a port nothing answers on when not.
             // The second case is deliberate and is what most of these tests are about.
             *(if (fullCodex) arrayOf("-PdependencySkills.serviceUrl=${serviceUrl ?: UNREACHABLE}") else emptyArray()),
+            *(serviceKey?.let { arrayOf("-PdependencySkills.serviceKey=$it") } ?: emptyArray()),
         )
         .forwardOutput()
 

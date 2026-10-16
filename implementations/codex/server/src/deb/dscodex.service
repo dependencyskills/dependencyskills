@@ -14,6 +14,9 @@ ExecStart=/usr/bin/dscodex --config /etc/dscodex/config.toml
 # The codex's own directory, which models are unpacked into. Without it they go under the account's
 # home, which is the data directory too, but as a hidden .dscodex inside it.
 Environment=DEPENDENCYSKILLS_CODEX_DIR=/data/dscodex
+# The key, if any, as DSCODEX_KEY=<key>. Not shipped, so it is never a conffile and never overwritten;
+# without it the service asks for no key.
+EnvironmentFile=-/etc/dscodex/environment
 Restart=on-failure
 # A JVM stopped by SIGTERM exits 143. That is a clean stop, not a failure.
 SuccessExitStatus=143

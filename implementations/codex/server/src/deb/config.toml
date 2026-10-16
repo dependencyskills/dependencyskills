@@ -7,6 +7,9 @@ store = "/data/dscodex/codex.db"
 [server]
 # Loopback until the service is meant to be reached from other machines. Then set 0.0.0.0, or this
 # machine's address, and restart: systemctl restart dscodex
+#
+# A service on a network should have a key. It is never set here, so this file holds no secret: put
+# DSCODEX_KEY=<key> in /etc/dscodex/environment instead, and clients send Authorization: Bearer <key>.
 host = "127.0.0.1"
 port = 8310
 

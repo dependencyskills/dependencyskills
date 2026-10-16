@@ -66,6 +66,8 @@ No runtime, no network, no model download: the weights are fitted offline and co
 - installs `dscodex.service`, which runs `dscodex --config /etc/dscodex/config.toml` with nothing writable but `/data/dscodex`, and starts it — again on every upgrade;
 - ships `/etc/dscodex/config.toml` as a conffile, so an edited copy survives an upgrade. It binds loopback on 8310 and names `store = "/data/dscodex/codex.db"`; a store moved elsewhere needs that directory added to the unit's `ReadWritePaths` with `systemctl edit dscodex`.
 
+**A key is optional.** With none, the service answers anyone who can reach it, which is the default because it listens on loopback. Before it listens on a network, give it one: put `DSCODEX_KEY=<key>` in `/etc/dscodex/environment`, which the package never ships or overwrites and keeps owner-only, and restart. Every route but `/health` then needs `Authorization: Bearer <key>`. The key is never in `config.toml`, so that file holds no secret. Listening off loopback with no key is logged as a warning at start.
+
 The generative model is not in the package and nothing downloads it: set `indexing.model` to a file the service can read, under `/data/dscodex`, or nothing is summarised. Removing the package, even with purge, keeps the data directory and the account.
 
 The source files are in `server/src/deb/`. Rehearsed on a Debian 13 arm64 VM: install, upgrade over an edited config, purge, reinstall.

@@ -75,6 +75,15 @@ abstract class DependencySkillsExtension @Inject constructor(objects: ObjectFact
      * lets the store move without touching a build script.
      *
      * Defaults to the `dependencySkills.serviceUrl` Gradle property when set.
+     *
+     * **A service that asks for a key** gets it from the `dependencySkills.serviceKey` Gradle property, or from the
+     * `DSCODEX_KEY` environment variable — never from here, so it is not committed with the build. The user's own
+     * `~/.gradle/gradle.properties` is the usual place:
+     *
+     * ```
+     * dependencySkills.serviceUrl=http://codex.example.com:8310
+     * dependencySkills.serviceKey=<key>
+     * ```
      */
     abstract val serviceUrl: Property<String>
 

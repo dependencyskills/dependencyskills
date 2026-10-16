@@ -87,6 +87,7 @@ fun main(args: Array<String>) {
     val config = fromFile ?: loadOrExit(store, CodexConfig.file(store))
     val port = System.getenv("PORT")?.toIntOrNull() ?: config.server.port
     val host = System.getenv("HOST") ?: config.server.host
+    val key = serviceKey()
 
     try {
         logger.info("listening on {}:{}", host, port)
@@ -96,11 +97,17 @@ fun main(args: Array<String>) {
             if (config.indexing.keepModelResident) "held resident"
             else "unloaded after ${config.indexing.unloadAfterIdleSeconds}s idle",
         )
+        when {
+            key != null -> logger.info("a key is required on every route but {}", OPEN_PATH)
+            // Said loudly only where it matters: on loopback, no key is the ordinary case.
+            !isLoopback(host) -> logger.warn("no key set ({}): anyone who can reach {}:{} can use this service", KEY_ENV, host, port)
+            else -> logger.info("no key set; open to this machine only")
+        }
         embeddedServer(
             factory = Netty,
             port = port,
             host = host,
-            module = { codexModule(store, config) },
+            module = { codexModule(store, config, key) },
         ).start(wait = true)
     } catch (e: Throwable) {
         // Loudly, and with a non-zero exit. A service that fails to start and lingers is worse
@@ -122,14 +129,26 @@ private fun loadOrExit(store: Path, path: Path): CodexConfig = try {
     exitProcess(1)
 }
 
+/** Whether [host] is this machine only, which is the one place an open service is the ordinary case. */
+private fun isLoopback(host: String): Boolean =
+    host == "localhost" || runCatching { java.net.InetAddress.getByName(host).isLoopbackAddress }.getOrDefault(false)
+
 /**
  * Everything the service installs, separate from starting it so a test can run the same
  * application without binding a port.
+ *
+ * With a [key], every route but `/health` requires it; without one, the service answers anyone who can reach it.
+ * Null by default rather than read from the environment here, so a test runs the same whatever the machine
+ * running it has set; `main` reads it.
  */
 fun Application.codexModule(
     store: Path = storeFile(),
     config: CodexConfig = CodexConfig.load(store),
+    key: String? = null,
 ) {
+    // First, so nothing below answers a call that has not shown the key.
+    key?.let { requireKey(it) }
+
     install(Koin) {
         slf4jLogger(level = Level.ERROR)
         modules(codexRuntimeModule(store, recordUse = config.usage.record))

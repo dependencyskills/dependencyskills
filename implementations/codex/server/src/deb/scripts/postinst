@@ -15,6 +15,11 @@ if [ "$1" = configure ]; then
     chown root:dscodex /etc/dscodex /etc/dscodex/config.toml
     chmod 0750 /etc/dscodex
     chmod 0640 /etc/dscodex/config.toml
+    # The key file is the operator's, but it holds a secret, so it is kept owner-only whoever wrote it.
+    if [ -f /etc/dscodex/environment ]; then
+        chown root:dscodex /etc/dscodex/environment
+        chmod 0640 /etc/dscodex/environment
+    fi
 
     if [ -d /run/systemd/system ]; then
         systemctl daemon-reload
