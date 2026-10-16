@@ -1,4 +1,4 @@
-"""The three answers an agent reads: which dependencies ship a skill, a skill, and one of its files."""
+"""The answers an agent reads: which dependencies ship a skill, a skill, one of its files, and one declaration."""
 
 import json
 import time
@@ -6,20 +6,23 @@ from pathlib import Path
 
 from .index import REPUBLISHED_BANNER, REPUBLISHER_GROUPS, republished, second_order
 from .names import ecosystem, library as library_of, parts, version as version_of
-from . import ecosystems
+from . import ecosystems, symbols
 from .project import SBOMS, declared_libraries, scope_of
 
 NOT_REGISTERED = (
-    "This project's dependencies have not been reported yet. Build it once with the dependency-skills "
-    "plugin applied — org.dependencyskills in Gradle, whose build writes "
-    f"{SBOMS[0].as_posix()}, or the dependency-skills-maven-plugin's consumer goal in Maven, which writes "
-    f"{SBOMS[1].as_posix()} — and this reads it. An npm, Python, Go or Cargo project needs no plugin: install "
-    "its dependencies, and this reads what the project declares and what is installed.")
+    "This project's dependencies have not been reported yet. In a Gradle project, run the script the librarian "
+    "skill carries, from the project's root: ./gradlew --init-script "
+    ".agents/skills/librarian/scripts/report.init.gradle.kts dependencySkillsReport --no-configuration-cache "
+    f"— it writes {SBOMS[0].as_posix()}, and this reads it. A build with the org.dependencyskills plugin "
+    "applied writes the same file, and in Maven the dependency-skills-maven-plugin's consumer goal writes "
+    f"{SBOMS[1].as_posix()}. An npm, Python, Go or Cargo project needs neither: install its dependencies, "
+    "and this reads what the project declares and what is installed.")
 
 REBUILD_HINT = (
-    "This is what the build last resolved, with the libraries the version catalog declares. One added "
-    "since is not here until the project is built again — build, then ask again before reading its "
-    "sources. For a library this project does not have yet, use search_libraries.")
+    "This is what the project's dependency report last recorded. A library added since is not here until "
+    "the report is written again — in a Gradle project, run the librarian skill's report script, or build "
+    "if the project applies the plugin — then ask again before reading its sources. For a library this "
+    "project does not have yet, use search_libraries.")
 
 INSTALL_HINT = (
     "This is what the project declares, at the version installed. One added since is not here until it is "
@@ -32,7 +35,7 @@ def hint(project, store=None):
     and, first, whether the build's report could not be read, which otherwise looks exactly like an empty one."""
     problem = store.setting(f"sbom-error:{project}") if store else None
     warning = (f"The build's dependency report {problem}, so this answers from the last one that could. Build again; "
-               "if it persists, the plugin wrote a broken file. ") if problem else ""
+               "if it persists, whatever wrote the report wrote a broken file. ") if problem else ""
     return warning + (INSTALL_HINT if ecosystems.project_kind(Path(project)) else REBUILD_HINT)
 
 AUTHORS_TEXT = (
@@ -166,6 +169,24 @@ def get_file(store, project, asked, path):
             return f"{wanted}, from the guide for {asked}. The library author's text, as written.\n\n{content}"
     files = sorted({f for entry in answers for f in entry["files"]})
     return f"{asked}'s guide has no file {wanted}." + (f" It has: {', '.join(files)}." if files else "")
+
+
+def get_symbol(store, project, asked, name):
+    """The declarations named `name` in a dependency's published source, with their doc comments.
+
+    For any library in the project's scope, with a guide or without: the exact signature for the version
+    the project resolved, which a guide does not list. A library the project does not depend on is
+    answered as that, as for its guide.
+    """
+    if project is None:
+        return NOT_REGISTERED
+    _, allowed = scope_of(store, project)
+    library, pinned = _resolve(asked.strip(), {lib for lib, _ in allowed})
+    if library is None:
+        store.log("query", command="symbol", asked=asked, name=name, result="out_of_scope", project=project)
+        return (f"{asked} is not a dependency of this project, so its source is not read. If it is on this "
+                "machine, search_libraries says what it is for; adding it is the developer's decision.")
+    return symbols.read_symbol(store, project, library, pinned, {v for lib, v in allowed if lib == library}, name)
 
 
 def _skill_dir(path):

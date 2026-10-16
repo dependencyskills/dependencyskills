@@ -260,7 +260,7 @@ def _apply(project, effect, previous):
             return "left alone: something else is already there", None
         if target.exists():
             shutil.rmtree(target)
-        shutil.copytree(source, target, ignore=shutil.ignore_patterns("scripts", "__pycache__"))
+        shutil.copytree(source, target, ignore=shutil.ignore_patterns("__pycache__"))
         files = {str(p.relative_to(target)): digest(p) for p in sorted(target.rglob("*")) if p.is_file()}
         return "done", {"kind": "skill", "path": effect["path"], "files": files}
     if kind == "claude-mcp":

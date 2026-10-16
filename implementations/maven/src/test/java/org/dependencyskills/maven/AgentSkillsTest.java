@@ -38,6 +38,9 @@ class AgentSkillsTest {
         assertFalse(Files.exists(root.resolve(".claude")));
         String lock = Files.readString(root.resolve(AgentSkills.LOCK));
         assertTrue(lock.contains("\"path\": \".agents/skills/librarian\""), lock);
+        // The report script travels with the skill, and is recorded like any other file of it.
+        assertTrue(Files.isRegularFile(root.resolve(".agents/skills/librarian/scripts/report.init.gradle.kts")));
+        assertTrue(lock.contains("scripts/report.init.gradle.kts"), lock);
         assertTrue(lock.startsWith("{\n    \""), "four-space indentation, as the Gradle plugin writes it:\n" + lock);
         assertEquals(List.of("dependencyskills: wrote the librarian skill to .agents/skills/librarian/ — commit it together with dependencyskills-lock.json, which records it"), lifecycle);
     }

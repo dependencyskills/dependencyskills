@@ -106,7 +106,7 @@ The other half is a small lookup that runs on the developer's machine, beside th
 
 ### What the project tells it
 
-A Gradle or Maven build writes down what the code compiles against — everything it can import, not only what it declares — in a standard SBOM file, which in our setup a build plugin of ours produces. The same build fetches the sources jars of what it reports, because a build does not download them by default. An npm, Python, Go or Cargo project needs nothing extra: the lookup reads what the project declares and what is installed.
+What the code compiles against — everything it can import, not only what it declares — is written down in a standard SBOM file. In a Gradle project a script the `librarian` skill carries does it: a Gradle init script, so nothing is added to the build and there is no plugin to find. The same run fetches the sources jars of what it reports, because a build does not download them by default. A build plugin of ours writes the same file, for a Gradle or Maven project that would rather have it on every build. An npm, Python, Go or Cargo project needs nothing extra: the lookup reads what the project declares and what is installed.
 
 ### Where it finds the skills
 
@@ -114,10 +114,11 @@ Where they already are. On the JVM that is the sources jars in the Gradle cache 
 
 ### What the agent can ask
 
-Three things, and every answer is for the version this project resolved:
+Four things, and every answer is for the version this project resolved:
 
 - **What do my dependencies offer?** The libraries in the project that ship a skill, each with one line on what it is for.
 - **How is this one meant to be used?** One library's skill, or a file it links to — a Swift or JavaScript reference, say.
+- **What exactly does this take?** The signature and doc comment of one function or type, by name, read from the library's published source — for any library in the project, whether or not it ships a skill. A skill says how a library is meant to be used; this is the parameter list.
 - **Does something already do this?** A need in plain words — *"format a date for display"*, *"retry a failed request"* — matched against what the project's libraries say they do. It also searches the other libraries already on the machine, but for those it shows only what each says it is for: a library the project did not choose may describe itself, and may not instruct.
 
 ### What it will and will not hand over
@@ -130,4 +131,4 @@ As an MCP server, or, where none is set up, through the same answers from a comm
 
 ## What is still open
 
-How it is packaged. What a developer installs, where an MCP server is registered when one configuration serves every project, and whether the lookup should travel inside the `librarian` skill as a script so it works with nothing installed — sandboxes, worktrees and cloud sessions included — are all undecided. So is whether our build plugins are published at all; a library does not need them to ship a skill.
+How it is packaged. The `librarian` skill now carries the script that reports a Gradle project's dependencies; the lookup itself is still something a developer installs. What that install is, where an MCP server is registered when one configuration serves every project, and whether the lookup should travel inside the skill as well so it works with nothing installed — sandboxes, worktrees and cloud sessions included — are undecided. So is whether our build plugins are published at all; a library does not need them to ship a skill.

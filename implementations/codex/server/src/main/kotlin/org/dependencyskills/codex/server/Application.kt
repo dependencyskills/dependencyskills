@@ -74,26 +74,20 @@ private val logger = LoggerFactory.getLogger("org.dependencyskills.codex.server.
 fun main(args: Array<String>) {
     System.setProperty("java.awt.headless", "true")
 
-    // `--store` ahead of the environment ahead of the default, so an operator can put the store
-    // wherever they keep data without touching a build or exporting anything.
-    val store = option(args, "store")?.let { Path.of(it) } ?: storeFile()
+    // A named config file first: an installed service keeps it under /etc, and it says where the store
+    // is. Otherwise `--store` ahead of the environment ahead of the default, with the config beside it,
+    // so an operator can put the store wherever they keep data without touching a build.
+    val named = (option(args, "config") ?: System.getenv("DSCODEX_CONFIG"))?.let { Path.of(it) }
+    val fromFile = named?.let { loadOrExit(storeFile(), it) }
+    val store = option(args, "store")?.let { Path.of(it) } ?: fromFile?.store?.let { Path.of(it) } ?: storeFile()
     reportLegacyStore(store)
 
     // An argument beats the environment beats the file beats the default. The file is where the
     // decisions about this machine live; the rest are for one invocation.
-    val config = try {
-        CodexConfig.load(store)
-    } catch (e: Exception) {
-        // Exception, not Throwable. A bad setting is a config problem and this is the message for
-        // it; a NoClassDefFoundError is not, and saying "your config could not be read" when the
-        // real fault is a broken classpath sends whoever reads it to the wrong file. Errors carry
-        // on to the outer handler, which claims nothing about the cause.
-        logger.error("CRITICAL: ${CodexConfig.file(store)} is not valid: ${e.message}")
-        logger.error("fix it or remove it; the service will not start on a configuration it cannot apply")
-        exitProcess(1)
-    }
+    val config = fromFile ?: loadOrExit(store, CodexConfig.file(store))
     val port = System.getenv("PORT")?.toIntOrNull() ?: config.server.port
     val host = System.getenv("HOST") ?: config.server.host
+    val key = serviceKey()
 
     try {
         logger.info("listening on {}:{}", host, port)
@@ -103,11 +97,17 @@ fun main(args: Array<String>) {
             if (config.indexing.keepModelResident) "held resident"
             else "unloaded after ${config.indexing.unloadAfterIdleSeconds}s idle",
         )
+        when {
+            key != null -> logger.info("a key is required on every route but {}", OPEN_PATH)
+            // Said loudly only where it matters: on loopback, no key is the ordinary case.
+            !isLoopback(host) -> logger.warn("no key set ({}): anyone who can reach {}:{} can use this service", KEY_ENV, host, port)
+            else -> logger.info("no key set; open to this machine only")
+        }
         embeddedServer(
             factory = Netty,
             port = port,
             host = host,
-            module = { codexModule(store, config) },
+            module = { codexModule(store, config, key) },
         ).start(wait = true)
     } catch (e: Throwable) {
         // Loudly, and with a non-zero exit. A service that fails to start and lingers is worse
@@ -117,14 +117,38 @@ fun main(args: Array<String>) {
     }
 }
 
+/** The config at [path], or the process ends saying why: a service must not start on settings it cannot apply. */
+private fun loadOrExit(store: Path, path: Path): CodexConfig = try {
+    CodexConfig.load(store, path)
+} catch (e: Exception) {
+    // Exception, not Throwable. A bad setting is a config problem and this is the message for it; a
+    // NoClassDefFoundError is not, and saying "your config could not be read" when the real fault is a
+    // broken classpath sends whoever reads it to the wrong file. Errors carry on to the outer handler.
+    logger.error("CRITICAL: $path is not valid: ${e.message}")
+    logger.error("fix it or remove it; the service will not start on a configuration it cannot apply")
+    exitProcess(1)
+}
+
+/** Whether [host] is this machine only, which is the one place an open service is the ordinary case. */
+private fun isLoopback(host: String): Boolean =
+    host == "localhost" || runCatching { java.net.InetAddress.getByName(host).isLoopbackAddress }.getOrDefault(false)
+
 /**
  * Everything the service installs, separate from starting it so a test can run the same
  * application without binding a port.
+ *
+ * With a [key], every route but `/health` requires it; without one, the service answers anyone who can reach it.
+ * Null by default rather than read from the environment here, so a test runs the same whatever the machine
+ * running it has set; `main` reads it.
  */
 fun Application.codexModule(
     store: Path = storeFile(),
     config: CodexConfig = CodexConfig.load(store),
+    key: String? = null,
 ) {
+    // First, so nothing below answers a call that has not shown the key.
+    key?.let { requireKey(it) }
+
     install(Koin) {
         slf4jLogger(level = Level.ERROR)
         modules(codexRuntimeModule(store, recordUse = config.usage.record))

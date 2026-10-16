@@ -1,0 +1,29 @@
+#!/bin/sh
+# Creates the service account and the data directory, then starts the service, on every install and upgrade.
+set -e
+
+DATA=/data/dscodex
+
+if [ "$1" = configure ]; then
+    if ! getent passwd dscodex >/dev/null; then
+        # Its home is the data directory, so anything that looks under a home - Gradle's cache, for one -
+        # looks there rather than at a directory that does not exist.
+        useradd --system --user-group --home-dir "$DATA" --no-create-home \
+            --shell /usr/sbin/nologin --comment "dependencyskills codex" dscodex
+    fi
+    install -d -m 0700 -o dscodex -g dscodex "$DATA"
+    chown root:dscodex /etc/dscodex /etc/dscodex/config.toml
+    chmod 0750 /etc/dscodex
+    chmod 0640 /etc/dscodex/config.toml
+    # The key file is the operator's, but it holds a secret, so it is kept owner-only whoever wrote it.
+    if [ -f /etc/dscodex/environment ]; then
+        chown root:dscodex /etc/dscodex/environment
+        chmod 0640 /etc/dscodex/environment
+    fi
+
+    if [ -d /run/systemd/system ]; then
+        systemctl daemon-reload
+        systemctl enable dscodex.service >/dev/null
+        systemctl restart dscodex.service
+    fi
+fi

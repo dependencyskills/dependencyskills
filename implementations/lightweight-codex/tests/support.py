@@ -38,8 +38,9 @@ class Machine(unittest.TestCase):
             else:
                 os.environ[key] = value
 
-    def publish(self, coordinate, skills=None, prefix="", description=None):
-        """A sources jar in the local Maven repository. `skills` maps a path under skills/ to its content."""
+    def publish(self, coordinate, skills=None, prefix="", description=None, sources=None):
+        """A sources jar in the local Maven repository. `skills` maps a path under skills/ to its content,
+        and `sources` a path in the jar to a source file's."""
         group, artifact, version = coordinate.split(":")
         directory = self.maven.joinpath(*group.split("."), artifact, version)
         directory.mkdir(parents=True, exist_ok=True)
@@ -51,6 +52,8 @@ class Machine(unittest.TestCase):
             archive.writestr(f"{prefix}com/acme/Api.kt", "package com.acme\nclass Api\n")
             for path, content in skills.items():
                 archive.writestr(f"{prefix}skills/{path}", content)
+            for path, content in (sources or {}).items():
+                archive.writestr(f"{prefix}{path}", content)
         pom = f"<project><description>{description}</description></project>" if description else "<project/>"
         (directory / f"{artifact}-{version}.pom").write_text(pom)
         return jar

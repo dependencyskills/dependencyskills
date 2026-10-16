@@ -1,0 +1,42 @@
+#!/bin/sh
+# Starts the codex service with a Java new enough to run it.
+#
+# It needs 22 or later: inference binds to llama.cpp through java.lang.foreign, which is final in 22.
+# The first Java found at that level wins - DSCODEX_JAVA, then the one on the PATH, then the newest
+# under /usr/lib/jvm - so an older default Java beside a newer one does not stop it.
+set -e
+
+LIB=/usr/share/dscodex/lib
+NATIVE=/usr/lib/dscodex
+REQUIRED=22
+
+level() {
+    "$1" -XshowSettings:properties -version 2>&1 | sed -n 's/^ *java\.specification\.version = //p'
+}
+
+java=
+for candidate in "$DSCODEX_JAVA" "$(command -v java || true)" $(ls -d /usr/lib/jvm/*/bin/java 2>/dev/null | sort -rV); do
+    [ -n "$candidate" ] && [ -x "$candidate" ] || continue
+    case "$(level "$candidate")" in
+        1.*|'') continue ;;
+    esac
+    if [ "$(level "$candidate" | cut -d. -f1)" -ge "$REQUIRED" ]; then
+        java=$candidate
+        break
+    fi
+done
+
+if [ -z "$java" ]; then
+    echo "dscodex: needs Java $REQUIRED or later, and none was found; set DSCODEX_JAVA to one" >&2
+    exit 1
+fi
+
+# DSCODEX_JAVA_OPTS is split on spaces on purpose: it carries several options, such as -Xmx.
+# shellcheck disable=SC2086
+exec "$java" \
+    --enable-native-access=ALL-UNNAMED \
+    --add-modules jdk.incubator.vector \
+    -Ddscodex.native.dir="$NATIVE" \
+    $DSCODEX_JAVA_OPTS \
+    -cp "$LIB/*" \
+    org.dependencyskills.codex.server.ApplicationKt "$@"

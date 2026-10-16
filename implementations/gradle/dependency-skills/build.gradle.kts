@@ -36,12 +36,12 @@ dependencies {
 // The agent skills the plugin writes into a project that asks for them (AgentSkills), carried in
 // the jar from their one source in `implementations/agent-skills/`, so a plugin version and the
 // skills it writes can never drift apart. With an index, since a jar cannot list a directory.
-// `scripts/` never travels: a skill this plugin writes gives an agent nothing to run.
+// Whole, `scripts/` included: the `librarian` skill carries the init script that writes a project's
+// dependency report. That is our own skill, asked for by the project; a library's skill never ships one.
 val bundledSkills by tasks.registering(Sync::class) {
     val skills = "org/dependencyskills/plugin/skills"
     from(layout.projectDirectory.dir("../../agent-skills")) {
         include("librarian/**", "librarian-skill-author/**")
-        exclude("**/scripts/**")
         into(skills)
     }
     into(layout.buildDirectory.dir("bundled-skills"))

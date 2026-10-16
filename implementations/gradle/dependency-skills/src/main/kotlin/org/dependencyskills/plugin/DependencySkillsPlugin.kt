@@ -56,6 +56,10 @@ class DependencySkillsPlugin : Plugin<Project> {
             parameters.serviceUrl.set(
                 extension.serviceUrl.orElse(providers.gradleProperty(SERVICE_URL_PROPERTY)),
             )
+            // Never from the extension: a key in a build script is a key committed with the project.
+            parameters.serviceKey.set(
+                providers.gradleProperty(SERVICE_KEY_PROPERTY).orElse(providers.environmentVariable(SERVICE_KEY_ENV)),
+            )
             parameters.projectPath.set(layout.projectDirectory.asFile.absolutePath)
             // The path, not the project's name. A name groups several checkouts into one scope, so
             // a default anyone could collide with would merge unrelated projects silently.
@@ -148,6 +152,10 @@ class DependencySkillsPlugin : Plugin<Project> {
         const val SERVICE = "dependencySkillsCodex"
         const val ENABLED_PROPERTY = "dependencySkills.enabled"
         const val SERVICE_URL_PROPERTY = "dependencySkills.serviceUrl"
+        const val SERVICE_KEY_PROPERTY = "dependencySkills.serviceKey"
+
+        /** The same variable the service reads its key from, so one machine can set both. */
+        const val SERVICE_KEY_ENV = "DSCODEX_KEY"
         const val FETCH_SOURCES_PROPERTY = "dependencySkills.fetchSources"
 
         /** The CycloneDX SBOM the lightweight codex reads, relative to the root build directory. */

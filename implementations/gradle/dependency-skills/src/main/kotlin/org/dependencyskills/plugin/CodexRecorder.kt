@@ -39,6 +39,13 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
         /** Where the full codex service is listening; absent when the project uses only the lightweight codex. */
         val serviceUrl: Property<String>
 
+        /**
+         * The full codex service's key, sent as `Authorization: Bearer <key>`; absent when it asks for none.
+         *
+         * From a Gradle property or the environment, never a build script, so it is not committed with the project.
+         */
+        val serviceKey: Property<String>
+
         /** This project's directory — the identity the service files its scope under. */
         val projectPath: Property<String>
 
@@ -127,6 +134,7 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
                     .send(
                         HttpRequest.newBuilder(URI.create("$url/projects/syncing"))
                             .header("Content-Type", "application/json")
+                            .withKey()
                             .timeout(Duration.ofMillis(REQUEST_TIMEOUT_MS))
                             .POST(HttpRequest.BodyPublishers.ofString("""{"path":${quote(path)}}"""))
                             .build(),
@@ -308,12 +316,22 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
                 .send(
                     HttpRequest.newBuilder(URI.create("$url/projects"))
                         .header("Content-Type", "application/json")
+                        .withKey()
                         .timeout(Duration.ofMillis(REQUEST_TIMEOUT_MS))
                         .POST(HttpRequest.BodyPublishers.ofString(body))
                         .build(),
                     HttpResponse.BodyHandlers.discarding(),
                 )
-            if (response.statusCode() !in 200..299) {
+            if (response.statusCode() == 401) {
+                broken = true
+                logger.warn(
+                    if (parameters.serviceKey.orNull.isNullOrBlank()) {
+                        "dependencyskills: the codex service at $url needs a key; set $SERVICE_KEY_HINT"
+                    } else {
+                        "dependencyskills: the codex service at $url did not accept its key; check $SERVICE_KEY_HINT"
+                    },
+                )
+            } else if (response.statusCode() !in 200..299) {
                 broken = true
                 logger.warn("dependencyskills: the codex service refused this project (HTTP ${response.statusCode()})")
             }
@@ -323,6 +341,11 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
             unreachable = url
         }
     }
+
+    /** Adds the service key, when there is one. */
+    private fun HttpRequest.Builder.withKey(): HttpRequest.Builder =
+        parameters.serviceKey.orNull?.trim()?.takeIf { it.isNotEmpty() }
+            ?.let { header("Authorization", "Bearer $it") } ?: this
 
     /** Minimal JSON string escaping. A coordinate is not arbitrary text, but it is not ours either. */
     private fun quote(value: String): String = buildString {
@@ -454,5 +477,9 @@ abstract class CodexRecorder : BuildService<CodexRecorder.Params>, AutoCloseable
         // in the time it takes to fail a connection, not in the time it takes a request to expire.
         const val CONNECT_TIMEOUT_MS = 500L
         const val REQUEST_TIMEOUT_MS = 2000L
+
+        /** Where a key goes, for the message that says one is missing or wrong. */
+        const val SERVICE_KEY_HINT =
+            "${DependencySkillsPlugin.SERVICE_KEY_PROPERTY} in ~/.gradle/gradle.properties, or ${DependencySkillsPlugin.SERVICE_KEY_ENV}"
     }
 }

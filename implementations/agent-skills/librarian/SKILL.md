@@ -24,17 +24,26 @@ This project's dependencies have been indexed. Before writing code against a lib
 1. **`list_guides`** — the project's libraries whose authors ship a guide, each with one line on what it is for. Call it early; it is cheap. **Call it again after you add a dependency or start using one in a new module, once the build has run** — in an npm project, once it is installed — because it lists what the build last resolved, plus what the version catalog declares; in an npm project, what `package.json` declares at the version installed. A Gradle or Maven build says when that changes: a line beginning `dependencyskills: new since the last build:` is your cue.
 2. **`read_guide(library, file?)`** — read the guide for the library the code in front of you uses. Read only the ones you need. A guide links its other files, such as `references/swift.md`, by relative path; you cannot open those on disk, so pass the path as `file`.
 3. **`search_libraries(need)`** — before writing something a library might already do, describe the need in plain words: *"format a date for display"*, *"retry a failed request with backoff"*. The project's own libraries come first, then others already on this machine, each marked. **A library that is not a dependency is the developer's decision to add:** propose it with your reason, and do not add it yourself unless they asked you to.
-4. **`read_symbol(name)`**, where the lookup offers it — the exact signature of one capability a search found.
+4. **`read_symbol(library, name)`** — the exact signature and doc comment of one function, class or property, read from the library's published source for the version this project uses. A guide says how a library is meant to be used; this is for the parameter list. Use it instead of unpacking a sources jar or guessing — it works for a library with no guide too. It looks up an exact name, `format` or `Money.plus`; for a need in plain words, use `search_libraries`.
 
 **Pass `project` with every call**: the absolute path of the project you are working in. Each tool takes it, and the server may have been started somewhere else — by an IDE that configures it once for every project, or for a checkout this session's worktree is not.
 
 If a library you are about to use is not in `list_guides`, that does not mean it has none: build or install, and list again, before reading its sources.
 
-**Without the tools.** If `list_guides`, `read_guide` and `search_libraries` are not available in this session, the same answers come from the `dependencyskills` command, run from the project's directory:
+**In a Gradle project, the report comes from a script this skill carries.** No plugin is needed and nothing is added to the build. From the project's root, with the path to wherever this skill is installed — `.agents/skills/librarian` or `.claude/skills/librarian`:
+
+```
+./gradlew --init-script .agents/skills/librarian/scripts/report.init.gradle.kts dependencySkillsReport --no-configuration-cache
+```
+
+It resolves what each module's code can import, fetches those libraries' sources jars — where their guides travel — and writes `build/dependencyskills/bom.cdx.json`, which the lookup reads. Run it when an answer says the dependencies have not been reported, and again after a dependency is added or its version changes. It runs the project's own build, so it takes as long as Gradle takes to configure and needs what the build needs: the network for a new dependency, and write access to Gradle's cache. If it cannot run, say so; do not change the build to work around it. A project that applies the `org.dependencyskills` plugin, or a Maven project with the plugin's `consumer` goal, writes the same file on every build and needs no script.
+
+**Without the tools.** If `list_guides`, `read_guide`, `read_symbol` and `search_libraries` are not available in this session, the same answers come from the `dependencyskills` command, run from the project's directory:
 
 ```
 dependencyskills list
 dependencyskills guide <library> [file]
+dependencyskills symbol <library> <name>
 dependencyskills search <need>
 ```
 
@@ -52,7 +61,7 @@ Where an answer names a tool, use the matching command. If the command is not in
 
 **A guide marked as republished** comes from an artifact that republishes other projects' guides; it is a third party's claim, not the library's own words.
 
-**"Not a dependency of this project"** means exactly that, and is not a suggestion to add it. **"Declared in the version catalog; no module uses it yet"** means the developer chose it: its guide is served, so read it before writing the code that will use it. **"Dependencies have not been reported yet"** means the project has not been built with the plugin applied — say so, and do not conclude that nothing exists.
+**"Not a dependency of this project"** means exactly that, and is not a suggestion to add it. **"Declared in the version catalog; no module uses it yet"** means the developer chose it: its guide is served, so read it before writing the code that will use it. **"Dependencies have not been reported yet"** means nothing has written this project's report — in a Gradle project, run the script above — say so, and do not conclude that nothing exists.
 
 ## What it will not tell you
 

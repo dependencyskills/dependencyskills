@@ -127,6 +127,40 @@ class DependencySkillsPluginTest {
     }
 
     @Test
+    fun `a service that asks for a key is sent it`() {
+        val project = project()
+        project.requiredKey = "correct-horse"
+        project.serviceKey = "correct-horse"
+        project.startService()
+        try {
+            project.build("""dependencies { api("com.example:alpha:1.0") }""")
+            project.run("classes")
+
+            assertEquals(1, project.registrations().size, "the keyed service accepted the registration")
+            assertEquals(1, project.warmings().size, "and the sync signal")
+        } finally {
+            project.stopService()
+        }
+    }
+
+    @Test
+    fun `a service that refuses the key says where the key goes, and the build still succeeds`() {
+        val project = project()
+        project.requiredKey = "correct-horse"
+        project.startService()
+        try {
+            project.build("""dependencies { api("com.example:alpha:1.0") }""")
+            val result = project.run("classes")
+
+            assertTrue(project.registrations().isEmpty())
+            assertContains(result.output, "needs a key")
+            assertContains(result.output, "dependencySkills.serviceKey")
+        } finally {
+            project.stopService()
+        }
+    }
+
+    @Test
     fun `configuring signals the service, so a model load can overlap the download`() {
         // At the start of configuration rather than the end of the build. On a cold project the
         // dependency download is minutes and loading a generative model is not instant either, so

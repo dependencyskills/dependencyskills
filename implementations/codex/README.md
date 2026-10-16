@@ -56,3 +56,18 @@ No runtime, no network, no model download: the weights are fitted offline and co
 ## `encoder`
 
 `BAAI/bge-small-en-v1.5`, 78 MB jarred. Its own README covers why that model and how the weights are fetched and verified rather than committed.
+
+## `server`, as a Debian service
+
+`./gradlew :server:deb` builds `dscodex_<version>_amd64.deb` and `dscodex_<version>_arm64.deb` under `server/build/distributions/`; they differ only in the llama.cpp native each carries. Installed with `sudo apt-get install -y -o Dpkg::Options::=--force-confold ./dscodex_<version>_<arch>.deb`, it:
+
+- depends on `openjdk-25-jre-headless`, which apt installs beside any older Java; `/usr/bin/dscodex` picks the first Java 22 or later it finds, so the system default need not change;
+- creates a system account `dscodex` whose home is the data directory, `/data/dscodex`, owner-only;
+- installs `dscodex.service`, which runs `dscodex --config /etc/dscodex/config.toml` with nothing writable but `/data/dscodex`, and starts it — again on every upgrade;
+- ships `/etc/dscodex/config.toml` as a conffile, so an edited copy survives an upgrade. It binds loopback on 8310 and names `store = "/data/dscodex/codex.db"`; a store moved elsewhere needs that directory added to the unit's `ReadWritePaths` with `systemctl edit dscodex`.
+
+**A key is optional.** With none, the service answers anyone who can reach it, which is the default because it listens on loopback. Before it listens on a network, give it one: put `DSCODEX_KEY=<key>` in `/etc/dscodex/environment`, which the package never ships or overwrites and keeps owner-only, and restart. Every route but `/health` then needs `Authorization: Bearer <key>`. The key is never in `config.toml`, so that file holds no secret. Listening off loopback with no key is logged as a warning at start.
+
+The generative model is not in the package and nothing downloads it: set `indexing.model` to a file the service can read, under `/data/dscodex`, or nothing is summarised. Removing the package, even with purge, keeps the data directory and the account.
+
+The source files are in `server/src/deb/`. Rehearsed on a Debian 13 arm64 VM: install, upgrade over an edited config, purge, reinstall.

@@ -19,8 +19,10 @@ USAGE = """usage: dependencyskills <command>
   list                the project's libraries whose authors ship a guide       (the list_guides tool)
   guide <library> [file]
                       one library's guide, or a file it links to                (the read_guide tool)
+  symbol <library> <name>
+                      one declaration's exact signature and doc comment          (the read_symbol tool)
   search <need...>    the libraries on this machine that do what you need       (the search_libraries tool)
-                      The three answer as the MCP tools do, for a harness without them; run in the project.
+                      The four answer as the MCP tools do, for a harness without them; run in the project.
   log [on [path]|off] switch the local analytics log; off by default
   stats               summarise the log
   hook                a Claude Code UserPromptSubmit hook: count messages and corrections
@@ -85,7 +87,7 @@ def main(argv=None):
         return 1 if problems else 0
     from .store import Store
     store = Store()
-    # The three tools, from a shell: the same call, so the same answer and the same log entry. `skill` and
+    # The tools, from a shell: the same call, so the same answer and the same log entry. `skill` and
     # `find` are the older names for the last two.
     if command == "list":
         from .mcp import call
@@ -96,6 +98,9 @@ def main(argv=None):
         if len(rest) > 1:
             arguments["file"] = rest[1]
         print(call(store, "read_guide", arguments))
+    elif command == "symbol" and len(rest) >= 2:
+        from .mcp import call
+        print(call(store, "read_symbol", {"library": rest[0], "name": rest[1]}))
     elif command in ("search", "find") and rest:
         from .mcp import call
         print(call(store, "search_libraries", {"need": " ".join(rest)}))

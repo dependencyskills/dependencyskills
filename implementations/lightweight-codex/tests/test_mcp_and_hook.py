@@ -32,7 +32,7 @@ class ServerTest(Machine):
         answers = {m["id"]: m for m in map(json.loads, done.stdout.splitlines())}   # every line is protocol
 
         self.assertEqual({1, 2, 3, 4, 5}, set(answers))
-        self.assertEqual(3, len(answers[2]["result"]["tools"]))
+        self.assertEqual(4, len(answers[2]["result"]["tools"]))
         self.assertIn("Call Acme.normalize.", answers[3]["result"]["content"][0]["text"])
         self.assertTrue(answers[4]["result"]["isError"])
         self.assertIn("guide has no file references/nothing.md", answers[5]["result"]["content"][0]["text"])
